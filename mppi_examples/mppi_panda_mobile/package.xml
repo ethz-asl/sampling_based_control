@@ -11,9 +11,9 @@
   <depend>std_msgs</depend>
   <depend>roscpp</depend>
   <depend>mppi</depend>
+  <depend>mppi_ros</depend>
   <depend>eigen</depend>
   <depend>roslib</depend>
-<!--  <depend>robot_control_ros</depend>-->
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
 </package>

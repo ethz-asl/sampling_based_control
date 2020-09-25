@@ -21,44 +21,39 @@
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
 
-namespace mobile_panda{
+namespace panda_mobile{
 
-enum PandaDim{
-  STATE_DIMENSION = 10, // 7 joints plus x, y, yaw
-  INPUT_DIMENSION = 9   // 7 joints plus v and yaw_dot
+enum PandaMobileDim{
+  STATE_DIMENSION = 10,     // q, x, y, yaw
+  INPUT_DIMENSION = 10,     // q_dot, x_dot, y_dot, yaw_dot
+  REFERENCE_DIMENSION = 10  // x_t, x_q, obstacle_t
 };
 
-struct PandaDynamicsConfig{
-  double substeps = 1;
-};
-
-class PandaDynamics : public mppi::DynamicsBase {
+class PandaMobileDynamics : public mppi::DynamicsBase {
  public:
-  PandaDynamics(){
+  PandaMobileDynamics(){
 
-    x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
+    x_ = observation_t::Zero(PandaMobileDim::STATE_DIMENSION);
 
-    // initialize dynamics
-    std::string urdf_path = ros::package::getPath("mppi_mobile_panda");
+    // initialize model for forward kinematic
+    std::string urdf_path = ros::package::getPath("mppi_panda_mobile");
     urdf_path += "/resources/panda/panda.urdf";
     std::cout << "Parsing model from: " << urdf_path << std::endl;
     pinocchio::urdf::buildModel(urdf_path, model_);
     data_ = pinocchio::Data(model_);
   };
-  ~PandaDynamics() = default;
+  ~PandaMobileDynamics() = default;
 
  public:
-  void set_dynamic_properties(const PandaDynamicsConfig& config){ config_ = config;}
-
-  size_t get_input_dimension() override { return PandaDim::INPUT_DIMENSION; }
-  size_t get_state_dimension() override { return PandaDim::STATE_DIMENSION; }
+  size_t get_input_dimension() override { return PandaMobileDim::INPUT_DIMENSION; }
+  size_t get_state_dimension() override { return PandaMobileDim::STATE_DIMENSION; }
 
   dynamics_ptr create() override {
-    return std::make_shared<PandaDynamics>();
+    return std::make_shared<PandaMobileDynamics>();
   }
 
   dynamics_ptr clone() const override {
-    return std::make_shared<PandaDynamics>(*this);
+    return std::make_shared<PandaMobileDynamics>(*this);
   }
 
   void reset(const observation_t &x) override;
@@ -68,8 +63,6 @@ class PandaDynamics : public mppi::DynamicsBase {
 
  private:
   observation_t x_;
-  PandaDynamicsConfig config_;
-
   pinocchio::Model model_;
   pinocchio::Data data_;
 

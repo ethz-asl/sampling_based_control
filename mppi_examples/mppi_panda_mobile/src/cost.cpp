@@ -6,4 +6,4 @@
  * @brief    description
  */
 
-#include "mppi_mobile_panda/cost.h"
+#include "mppi_panda_mobile/cost.h"
