@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="pendulum_cart_ghost">
+    <!-- Inertia box Ixx = 1/12 * (ly*2 + lh*2)-->
+
+    <link name="odom"/>
+
+    <joint name="cart_ghost" type="prismatic">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="odom"/>
+        <child link="cart_link_ghost"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="1000" lower="-30.14" upper="30.14" velocity="1.0"/>
+    </joint>
+
+    <link name="cart_link_ghost">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+            <mass value="1.0" />
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167" />
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 0.3 0.3"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 .8 1"/>
+            </material>
+        </visual>
+
+    </link>
+
+    <joint name="pendulum_ghost" type="continuous">
+        <origin rpy="0 1.57079632 0" xyz="0.0 0.0 0.0"/>
+        <parent link="cart_link_ghost"/>
+        <child link="pendulum_link_ghost"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="1000" velocity="1.0"/>
+    </joint>
+
+    <link name="pendulum_link_ghost">
+        <inertial>
+            <origin xyz="0.5 0.0 0.0" rpy="0 0 0" />
+            <mass value="1.0" />
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167" />
+        </inertial>
+        <visual>
+            <origin xyz="0.5 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <box size="1 0.05 0.05"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 .8 1"/>
+            </material>
+        </visual>
+    </link>
+
+</robot>

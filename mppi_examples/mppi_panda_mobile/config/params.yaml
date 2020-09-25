@@ -1,0 +1,26 @@
+dynamics:
+  substeps: 1
+
+solver:
+  rollouts: 200 # 100
+  lambda: 0.000001 #0.001
+  step_size: 0.01
+  horizon: 1.0  # 1.5
+  caching_factor: 0.5
+  filtering: true
+  cost_threshold: 0.2
+  discount_factor: 1.0
+  debug_print: false
+  cost_ratio: 0.6
+  filter_type: 1
+  filter_order: 3
+  filter_window: 10
+  verbose: false
+  threads: 1
+
+noise_variance: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1]
+
+initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
+linear_weight: 10.0
+angular_weight: 1.0
+obstacle_radius: 0.2

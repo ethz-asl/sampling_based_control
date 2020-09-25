@@ -1,0 +1,14 @@
+<library path="lib/libpanda_stocopt_control">
+    <class name="mppi_panda/PandaControllerRos"
+           type="panda::PandaControllerRos"
+           base_class_type="controller_interface::ControllerBase">
+        <description> Kinematic Stochastic Optimal Controller for the Panda Arm</description>
+    </class>
+
+    <class name="mppi_panda/PandaControllerRosSim"
+           type="panda::PandaControllerRosSim"
+           base_class_type="controller_interface::ControllerBase">
+        <description> Kinematic Stochastic Optimal Controller for the Panda Arm</description>
+    </class>
+
+</library>

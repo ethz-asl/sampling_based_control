@@ -1,0 +1,32 @@
+dynamics:
+  mass_cart: 1.0
+  mass_pendulum: 0.5
+  length: 1.0
+  linear_friction: 1.0
+  angular_friction: 0.7
+  substep_size: 0.01
+
+solver:
+  rollouts: 200
+  lambda: 0.0001
+  step_size: 0.01
+  horizon: 2.0
+  caching_factor: 0.0
+  filtering: true
+  cost_ratio: 0.2
+  discount_factor: 1.0
+  filter_type: 0
+  filter_order: 3
+  filter_window: 3
+  debug_print: false
+  verbose: false
+  threads: 1
+
+noise_variance: 1.0
+
+visualization:
+  step_stride: 50
+  speed_up: 4
+  pause_between_rollouts: 0.01
+  rollout_stride: 40
+  default_visualization: true

@@ -1,0 +1,15 @@
+solver:
+  rollouts: 100
+  lambda: 0.01
+  caching_factor: 0.2
+  step_size: 0.01
+  horizon: 1.5
+  noise_variance: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
+  cost_ratio: 0.2
+  filtering: false
+  discount_factor: 1.0
+  debug_print: false
+  filter_type: 0
+  filter_order: 3
+  filter_window: 10
+  verbose: false

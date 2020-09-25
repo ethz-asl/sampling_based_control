@@ -1,0 +1,6 @@
+[submodule "mppi/submodules/imgui"]
+	path = mppi/submodules/imgui
+	url = git@github.com:ocornut/imgui.git
+[submodule "mppi/submodules/implot"]
+	path = mppi/submodules/implot
+	url = git@github.com:epezent/implot.git

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>mppi_control</name>
+    <version>0.1.0</version>
+    <description>mppi examples metapackage</description>
+    <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
+    <license>BSD</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <exec_depend>mppi</exec_depend>
+    <exec_depend>mppi_ros</exec_depend>
+    <exec_depend>mppi_pole_cart</exec_depend>
+    <exec_depend>mppi_panda</exec_depend>
+    <exec_depend>mppi_panda_mobile</exec_depend>
+
+    <export>
+        <metapackage />
+    </export>
+</package>
+
+
