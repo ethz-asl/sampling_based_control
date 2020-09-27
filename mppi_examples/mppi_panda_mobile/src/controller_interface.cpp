@@ -128,7 +128,10 @@ bool PandaMobileControllerInterface::update_reference() {
 pinocchio::SE3 PandaMobileControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x){
   pinocchio::forwardKinematics(model_, data_, x.head<7>());
   pinocchio::updateFramePlacements(model_, data_);
-  return data_.oMf[model_.getFrameId("panda_hand")];
+  Eigen::Matrix3d base_rotation(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ())) ;
+  Eigen::Vector3d base_translation(x(7), x(8), 0.0);
+  pinocchio::SE3 base_tf = pinocchio::SE3(base_rotation, base_translation);
+  return base_tf.act(data_.oMf[model_.getFrameId("panda_hand")]);
 }
 
 geometry_msgs::PoseStamped PandaMobileControllerInterface::get_pose_end_effector_ros(const Eigen::VectorXd& x){
@@ -161,7 +164,7 @@ void PandaMobileControllerInterface::publish_ros() {
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_){
-    pose_temp = get_pose_end_effector(x.head<7>());
+    pose_temp = get_pose_end_effector(x);
     pose_temp_ros.pose.position.x = pose_temp.translation()(0);
     pose_temp_ros.pose.position.y = pose_temp.translation()(1);
     pose_temp_ros.pose.position.z = pose_temp.translation()(2);

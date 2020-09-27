@@ -40,11 +40,13 @@ int main(int argc, char** argv){
   joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5",
                       "panda_joint6", "panda_joint7"};
   joint_state.position.resize(7);
-  joint_state.header.frame_id = "world";
+  joint_state.header.frame_id = "base";
 
   // base tf
-  geometry_msgs::TransformStamped world_base_tf;
   tf2_ros::TransformBroadcaster tf_broadcaster;
+  geometry_msgs::TransformStamped world_base_tf;
+  world_base_tf.header.frame_id = "world";
+  world_base_tf.child_frame_id = "base";
 
   ros::Publisher ee_publisher = nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   geometry_msgs::PoseStamped ee_pose;

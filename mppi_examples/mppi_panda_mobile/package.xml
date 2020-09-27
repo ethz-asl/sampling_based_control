@@ -12,6 +12,7 @@
   <depend>roscpp</depend>
   <depend>mppi</depend>
   <depend>mppi_ros</depend>
+  <depend>robot_control_ros</depend>
   <depend>eigen</depend>
   <depend>roslib</depend>
   <depend>tf2</depend>

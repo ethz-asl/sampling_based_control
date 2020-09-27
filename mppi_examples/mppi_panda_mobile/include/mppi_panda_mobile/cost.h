@@ -95,7 +95,7 @@ namespace panda_mobile{
      static double obstacle_cost = 0;
      static double reach_cost;
 
-     pose_current_ = get_current_pose(x.head<7>());
+     pose_current_ = get_current_pose(x);
      Eigen::Vector3d ref_t = ref.head<3>();
      Eigen::Quaterniond ref_q(ref.segment<4>(3));
      pose_reference_ = pinocchio::SE3(ref_q, ref_t);

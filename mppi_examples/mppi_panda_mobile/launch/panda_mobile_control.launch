@@ -5,17 +5,17 @@
     <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
-    <arg name="description_file" default="$(find mppi_mobile_panda)/resources/panda/panda.urdf"/>
+    <arg name="description_file" default="$(find mppi_panda_mobile)/resources/panda/panda.urdf"/>
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
 
     <!--  Run the test node-->
-    <node name="panda_mobile_control" type="panda_mobile_control" pkg="mppi_mobile_panda" output="screen"
+    <node name="panda_mobile_control" type="panda_mobile_control" pkg="mppi_panda_mobile" output="screen"
           launch-prefix="gdb -ex run --args">
-        <rosparam command="load" file="$(find mppi_mobile_panda)/config/params.yaml"/>
-        <param name="config_file" value="$(find mppi_mobile_panda)/config/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_panda_mobile)/config/params.yaml"/>
+        <param name="config_file" value="$(find mppi_panda_mobile)/config/params.yaml"/>
     </node>
 
     <!-- Publish robot state (joints) as TF -->
@@ -28,11 +28,11 @@
     </node>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_mobile_panda)/config/config.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_mobile)/config/config.rviz" output="screen"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot_cost)">
-        <arg name="mp_config" default="$(find mppi_mobile_panda)/resources/rqt_multiplot.xml"/>
+        <arg name="mp_config" default="$(find mppi_panda_mobile)/resources/rqt_multiplot.xml"/>
         <node name="rqt_multiplot_cost" pkg="rqt_multiplot" type="rqt_multiplot"
               args="--multiplot-config $(arg mp_config)"
               output="screen"/>
@@ -40,7 +40,7 @@
 
     <!--    Plot input-->
     <group if="$(arg plot_input)">
-        <arg name="mp_config_input" default="$(find mppi_mobile_panda)/resources/rqt_multiplot_input.xml"/>
+        <arg name="mp_config_input" default="$(find mppi_panda_mobile)/resources/rqt_multiplot_input.xml"/>
         <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
               args="--multiplot-config $(arg mp_config_input)"
               output="screen"/>
