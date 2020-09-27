@@ -8,25 +8,33 @@ dynamics:
 
 solver:
   rollouts: 200
-  lambda: 0.0001
+  lambda: 0.0001 #0.001
+  h: 10.0
   step_size: 0.01
   horizon: 2.0
-  caching_factor: 0.0
-  filtering: true
+
   cost_ratio: 0.2
-  discount_factor: 1.0
+  caching_factor: 0.1
+  filtering: false
+  substeps: 1
+
   filter_type: 0
-  filter_order: 3
-  filter_window: 3
-  debug_print: false
+  filter_order: 2
+  filter_window: 10
+
+  adaptive_sampling: false
+  input_variance: [1.0]
+
+  discount_factor: 1.0
   verbose: false
   threads: 1
+  debug_print: false
+  use_gui: true
 
-noise_variance: 1.0
+policy_update_rate: 0.0  # execute as fast as possible
+reference_update_rate: 10.0
+publish_ros: true
+ros_publish_rate: 10.0
 
-visualization:
-  step_stride: 50
-  speed_up: 4
-  pause_between_rollouts: 0.01
-  rollout_stride: 40
-  default_visualization: true
+static_optimization: false
+sim_dt: 0.025

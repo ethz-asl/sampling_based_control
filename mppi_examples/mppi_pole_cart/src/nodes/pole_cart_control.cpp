@@ -1,32 +1,24 @@
 /*!
- * @file     pendulum_cart_control.cpp
+ * @file     pole_cart_control.cpp
  * @author   Giuseppe Rizzi
  * @date     11.06.2020
  * @version  1.0
  * @brief    description
  */
+#include "mppi_pole_cart/controller_interface.h"
 
-#include <ros/ros.h>
 #include <chrono>
-#include <mppi/solver_config.h>
-#include <mppi/controller/mppi.h>
-#include <mppi/sampler/gaussian_sampler.h>
-
-#include "mppi_pole_cart/dynamics.h"
-#include "mppi_pole_cart/ros_interface.h"
-#include "mppi_pole_cart/cost.h"
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 
 using namespace pole_cart;
-using namespace std::chrono;
 
 int main(int argc, char** argv){
-
   // ros interface
-  ros::init(argc, argv, "pendulum_cart_control_node");
+  ros::init(argc, argv, "panda_control_node");
   ros::NodeHandle nh("~");
-  auto ros_interface = PoleCartRosInterface(nh);
+  auto controller = PoleCartControllerInterface(nh);
 
-  // dynamics and cost
   auto dynamics_config = PoleCartDynamicsConfig();
   dynamics_config.mc = nh.param<double>("dynamics/mass_cart", 1.0);
   dynamics_config.mp = nh.param<double>("dynamics/mass_pendulum", 0.5);
@@ -34,98 +26,47 @@ int main(int argc, char** argv){
   dynamics_config.mux = nh.param<double>("dynamics/linear_friction", 10.0);
   dynamics_config.mutheta = nh.param<double>("dynamics/angular_friction", 0.7);
   dynamics_config.dt_internal = nh.param<double>("dynamics/substep_size", 0.001);
+  PoleCartDynamics simulation(dynamics_config);
 
-  auto pole_cart_dynamics = PoleCartDynamics();
-  pole_cart_dynamics.set_dynamic_properties(dynamics_config);
-  mppi::DynamicsBase::dynamics_ptr dynamics = pole_cart_dynamics.clone();
-  mppi::DynamicsBase::dynamics_ptr simulation = pole_cart_dynamics.clone();
-
-  mppi::CostBase::cost_ptr cost = std::make_shared<PoleCartCost>();
-
-  // set initial state
-  PoleCartDynamics::input_t x = PoleCartDynamics::input_t::Zero(PoleCartDim::STATE_DIMENSION);
+  Eigen::VectorXd x = Eigen::VectorXd::Zero(PoleCartDim::STATE_DIMENSION);
   x(1) = 0.0;
   x(3) = 0.0;
-  pole_cart_dynamics.reset(x);
+  simulation.reset(x);
 
-  // sampler
-  auto noise_sampler = mppi::GaussianSampler(PoleCartDim::INPUT_DIMENSION);
-  double noise_sigma = nh.param<double>("noise_variance", 1.0);
-  noise_sampler.set_noise_variance(noise_sigma);
-  mppi::SamplerBase::sampler_ptr sampler = std::shared_ptr<mppi::GaussianSampler>(&noise_sampler);
+  mppi::DynamicsBase::input_t u;
+  u = simulation.get_zero_input(x);
 
-  // solver config
-  auto solver_config = mppi::SolverConfig();
-  std::string config_file = nh.param<std::string>("config_file", "");
-  if (!solver_config.init_from_file(config_file)){
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return -1;
+  ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  sensor_msgs::JointState joint_state;
+  joint_state.name.push_back("cart");
+  joint_state.name.push_back("pendulum");
+  joint_state.position.resize(2);
+  joint_state.header.frame_id = "world";
+
+  bool static_optimization = nh.param<bool>("static_optimization", false);
+  double sim_dt = nh.param<double>("sim_dt", 0.01);
+
+  // sim loop
+  double sim_time = 0.0;
+  controller.start();
+  while(ros::ok()){
+    auto start = std::chrono::steady_clock::now();
+    controller.set_observation(x, sim_time);
+    controller.get_input(x, u, sim_time);
+    if (!static_optimization){
+      x = simulation.step(u, sim_dt);
+      sim_time += sim_dt;
+    }
+
+    for(size_t i=0; i<7; i++) joint_state.position[i] = x(i);
+    joint_state.header.stamp = ros::Time::now();
+    state_publisher.publish(joint_state);
+
+    auto end = std::chrono::steady_clock::now();
+    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;
+    if (sim_dt - elapsed >0)
+      ros::Duration(sim_dt - elapsed).sleep();
+
+    ros::spinOnce();
   }
-
-  auto solver = mppi::PathIntegral(dynamics, cost, sampler, solver_config);
-
-  double sim_time=0.0;
-  mppi::DynamicsBase::input_t u = Eigen::VectorXd::Zero(PoleCartDim::INPUT_DIMENSION);
-  double stage_cost;
-
-  ros::Duration(5.0).sleep();
-  size_t iterations = 0;
-  std::mutex x_mutex;
-  std::mutex u_mutex;
-
-  // thread 1: control loop
-  std::thread tc([&](){
-    while(ros::ok()){
-      auto start = steady_clock::now();
-      solver.update_policy();
-      auto end = steady_clock::now();
-      ROS_INFO_STREAM_THROTTLE(1.0, "Controller update took: " << duration_cast<milliseconds>(end - start).count() << " ms.");
-    }
-  });
-
-
-  // thread 2: sim loop
-  std::thread ts([&](){
-    while(ros::ok()){
-      {
-        std::lock_guard<std::mutex> xlock(x_mutex);
-        std::lock_guard<std::mutex> ulock(u_mutex);
-        solver.set_observation(x, sim_time);
-        solver.get_input(x, u, sim_time);
-        x = simulation->step(u, solver_config.step_size);
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds((int)(solver_config.step_size * 1000.)));
-      sim_time += solver_config.step_size;
-    }
-  });
-
-
-  std::thread tr([&](){
-    // thread 3: publish to ros
-    while(ros::ok()) {
-      std::lock_guard<std::mutex> xlock(x_mutex);
-      std::lock_guard<std::mutex> ulock(u_mutex);
-      ros_interface.publish_state(x(0), x(1));
-      ros_interface.publish_force(u(0));
-      ros_interface.publish_cost(cost->get_stage_cost(x));
-    }
-  });
-
-  tc.join();
-  ts.join();
-  tr.join();
-
-//   try sequentially first
-//  while(ros::ok()){
-//    x = simulation->step(u, solver_config.step_size);
-//    solver.set_observation(x, sim_time);
-//    solver.get_input(x, u, sim_time);
-//    solver.update_policy();
-//
-//    ros_interface.publish_state(x(0), x(1));
-//    ros_interface.publish_force(u(0));
-//    ros_interface.publish_cost(cost->get_stage_cost(x));
-//    sim_time += solver_config.step_size;
-//    //std::this_thread::sleep_for(std::chrono::milliseconds((int)(solver_config.step_size * 1000.)));
-//  }
 }

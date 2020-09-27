@@ -17,8 +17,9 @@
 namespace pole_cart{
 
 enum PoleCartDim{
-  STATE_DIMENSION = 4,
-  INPUT_DIMENSION = 1
+  STATE_DIMENSION = 4, // x, xd, theta, thetad
+  INPUT_DIMENSION = 1, // F
+  REFERENCE_DIMENSION = 2 // x, theta
 };
 
 struct PoleCartDynamicsConfig{
@@ -36,6 +37,11 @@ class PoleCartDynamics : public mppi::DynamicsBase {
     x_ = observation_t::Zero(PoleCartDim::STATE_DIMENSION);
     xd_ = observation_t::Zero(PoleCartDim::STATE_DIMENSION);
   };
+
+  explicit PoleCartDynamics(const PoleCartDynamicsConfig& config) : PoleCartDynamics(){
+    config_ = config;
+  };
+
   ~PoleCartDynamics() = default;
 
  public:

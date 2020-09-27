@@ -20,7 +20,6 @@ namespace pole_cart{
  private:
    double w_theta = 10;
    double w_origin = 1;
-   double w_input = 0;
    double c_x_limit = 10000;
    double x_limit = 3.0;
 
@@ -35,17 +34,19 @@ namespace pole_cart{
 
    // When the limit is violeted than the cost is only almost the max cost.
    // adding an increasing cost can push the agent to enter the violated limits again
-   cost_t get_stage_cost(const Eigen::VectorXd& x, const double t=0) override {
-    double cost = 0.0;
+   cost_t compute_cost(const mppi::observation_t& x,
+                       const mppi::reference_t& ref, const double t) override {
+
+     double cost = 0.0;
     if (x(0) > x_limit || x(0) < -x_limit)
       cost += c_x_limit * ( 1  +  w_origin * ((std::abs(x(0)) - x_limit)*(std::abs(x(0)) - x_limit)));
 
     double theta = std::fmod(x(1), 2 * M_PI);
-    double delta = (theta < 0) ? M_PI + theta : M_PI - theta;
+    double delta = (theta < 0) ? ref(1) + theta : ref(1) - theta;
     cost += w_theta * std::pow(delta, 2);
 
-    if (std::abs(delta) < 10.0*M_PI/180.0) {
-      cost += w_origin * (x(0)*x(0));
+    if (std::abs(delta) < 10.0*ref(1)/180.0) {
+      cost += w_origin * std::pow(x(0)-ref(0), 2);
     }
 
     return cost;
