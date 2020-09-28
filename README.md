@@ -2,6 +2,7 @@
 
 Create a ROS workspace and install the following dependencies. 
 ### Dependencies
+- Install the `pinocchio` library following the instructions from the [ufficial documentation](https://stack-of-tasks.github.io/pinocchio/download.html). This is the Rigid Body Dynamics (RBD) modeling library we use. 
 - Clone and install the _Savitzky-Golay filetr_ **from source**, following the instructions in [the repo](https://github.com/arntanguy/gram_savitzky_golay).
 - Clone the following repos in the src folder of your catkin workspace:
     - Dependency of `any_worker`: `git clone git@github.com:ANYbotics/message_logger.git`
