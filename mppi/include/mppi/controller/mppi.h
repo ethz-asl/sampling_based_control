@@ -24,7 +24,6 @@
 #include "mppi/controller/rollout.h"
 #include "mppi/sampler/gaussian_sampler.h"
 #include "mppi/utils/thread_pool.h"
-#include "mppi/gui/gui.h"
 
 namespace mppi{
 
@@ -269,8 +268,6 @@ class PathIntegral{
   std::atomic_bool reference_set_;          // flag to check that reference has ever been set
   std::shared_mutex reference_mutex_;       // protects access to the reference trajectory
   reference_trajectory_t rr_tt_ref_;        // reference used during optimization
-
-  std::unique_ptr<mppi_gui::MppiGui> gui_;
 };
 
 }

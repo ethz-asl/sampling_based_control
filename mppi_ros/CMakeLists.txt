@@ -4,7 +4,15 @@ project(mppi_ros)
 set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED 3.3)
 
-set(PACKAGE_DEPENDENCIES rosbag mppi sensor_msgs std_msgs roscpp any_worker param_io)
+set(PACKAGE_DEPENDENCIES
+  rosbag
+  mppi
+  sensor_msgs
+  std_msgs
+  roscpp
+  any_worker
+  param_io)
+
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES} message_generation)
 find_package(gram_savitzky_golay)
 
@@ -17,7 +25,6 @@ catkin_package(
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES})
 
-
 set(COMMON_LIBRARIES  ${catkin_LIBRARIES})
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
@@ -26,12 +33,8 @@ include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Libraries
 add_library(${PROJECT_NAME}
-        src/visualization/mppi_visualizer_ros.cpp
         src/controller_interface.cpp)
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
-
-add_executable(filter_test test/filter_test.cpp)
-target_link_libraries(filter_test ${COMMON_LIBRARIES} gram_savitzky_golay::gram_savitzky_golay)
 
 ## Testing
 if (CATKIN_ENABLE_TESTING)
