@@ -11,10 +11,6 @@
 
 using namespace pole_cart;
 
-bool PoleCartControllerInterface::init_ros() {
-  return true;
-}
-
 bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral> &controller) {
   
   // -------------------------------
@@ -55,7 +51,7 @@ bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathInteg
   // cart at the origin, pole up
   ref_.rr.resize(1, mppi::observation_t::Zero(PoleCartDim::REFERENCE_DIMENSION));
   ref_.rr[0](0) = 0.0;
-  ref_.rr[0](0) = M_PI;
+  ref_.rr[0](1) = M_PI;
   ref_.tt.resize(1, 0.0);
   return true;
 }

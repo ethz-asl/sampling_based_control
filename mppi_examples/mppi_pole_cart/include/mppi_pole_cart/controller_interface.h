@@ -21,7 +21,7 @@ class PoleCartControllerInterface : public mppi_ros::ControllerRos {
   explicit PoleCartControllerInterface(ros::NodeHandle& nh): ControllerRos(nh){};
   ~PoleCartControllerInterface() = default;
 
-  bool init_ros() override;
+  bool init_ros() override { return true;};
   void publish_ros() override;
   bool update_reference() override;
 
@@ -32,17 +32,8 @@ class PoleCartControllerInterface : public mppi_ros::ControllerRos {
   mppi::SolverConfig config_;
 
  private:
-  mppi::input_array_t u_opt_;
-  mppi::observation_array_t x_opt_;
-
-  size_t last_ee_ref_id_;
-  size_t last_ob_ref_id_;
   bool reference_set_ = false;
   mppi::reference_trajectory_t ref_;
-
-  // ros
-  ros::Publisher optimal_trajectory_publisher_;
-  nav_msgs::Path optimal_path_;
 };
 
 }

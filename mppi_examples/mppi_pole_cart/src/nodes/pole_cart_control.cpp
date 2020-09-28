@@ -29,12 +29,14 @@ int main(int argc, char** argv){
   PoleCartDynamics simulation(dynamics_config);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PoleCartDim::STATE_DIMENSION);
+  x(0) = 0.0;
   x(1) = 0.0;
-  x(3) = 0.0;
+  x(2) = 0.1;
   simulation.reset(x);
 
   mppi::DynamicsBase::input_t u;
   u = simulation.get_zero_input(x);
+  std::cout << "First input: " << u.transpose() << std::endl;
 
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
@@ -58,7 +60,7 @@ int main(int argc, char** argv){
       sim_time += sim_dt;
     }
 
-    for(size_t i=0; i<7; i++) joint_state.position[i] = x(i);
+    for(size_t i=0; i<2; i++) joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 

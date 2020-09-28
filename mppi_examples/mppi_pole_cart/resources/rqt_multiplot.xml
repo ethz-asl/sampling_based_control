@@ -35,7 +35,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/cost</topic>
+                                    <topic>/min_rollout_cost</topic>
                                     <type>std_msgs/Float64</type>
                                 </x_axis>
                                 <y_axis>
@@ -48,7 +48,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/cost</topic>
+                                    <topic>/min_rollout_cost</topic>
                                     <type>std_msgs/Float64</type>
                                 </y_axis>
                             </axes>
@@ -72,7 +72,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>pendulum upright cost</title>
+                            <title>cost</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -86,11 +86,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/force</topic>
-                                    <type>std_msgs/Float64</type>
+                                    <topic>/input</topic>
+                                    <type>std_msgs/Float32MultiArray</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>data</field>
+                                    <field>data/0</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -99,8 +99,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/force</topic>
-                                    <type>std_msgs/Float64</type>
+                                    <topic>/input</topic>
+                                    <type>std_msgs/Float32MultiArray</type>
                                 </y_axis>
                             </axes>
                             <color>
