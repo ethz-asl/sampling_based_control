@@ -29,7 +29,6 @@ solver:
   verbose: false
   threads: 1
   debug_print: false
-  use_gui: true
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0

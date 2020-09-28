@@ -22,8 +22,6 @@ solver:
   threads: 1
   debug_print: false
 
-  use_gui: true
-
 
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
 linear_weight: 10.0

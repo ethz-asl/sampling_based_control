@@ -36,7 +36,6 @@ struct SolverConfig {
 
   bool verbose = true;
   bool debug_print = false;
-  bool use_gui = false;
 
   InputFilterType filter_type = InputFilterType::NONE;
   uint filter_window = 10;

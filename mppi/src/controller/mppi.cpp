@@ -62,9 +62,6 @@ void PathIntegral::init_data() {
   }
   observation_set_ = false;
   reference_set_ = false;
-
-  if (config_.use_gui)
-    gui_ = std::make_unique<mppi_gui::MppiGui>();
 }
 
 void PathIntegral::init_filter() {
@@ -109,11 +106,6 @@ void PathIntegral::update_policy() {
       filter_input();
     }
     swap_policies();
-  }
-
-  if (config_.use_gui){
-    gui_->set_data(omega, rollouts_cost_);
-    gui_->render();
   }
 }
 

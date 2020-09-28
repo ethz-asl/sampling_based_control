@@ -47,7 +47,6 @@ bool SolverConfig::init_from_file(const std::string &file) {
   filtering       = parse_key_quiet<bool>(solver_options, "filtering").value_or(filtering);
   cost_ratio      = parse_key_quiet<double>(solver_options, "cost_ratio").value_or(cost_ratio);
   discount_factor = parse_key_quiet<double>(solver_options, "discount_factor").value_or(discount_factor);
-  use_gui         = parse_key_quiet<bool>(solver_options, "use_gui").value_or(use_gui);
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
@@ -87,7 +86,6 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " cost ratio:       " << config.cost_ratio << std::endl;
 
   os << "Other stuff: " << std::endl;
-  os << " use gui:          " << config.use_gui << std::endl;
   os << " discount factor:  " << config.discount_factor << std::endl;
   os << " verbose:          " << config.verbose << std::endl;
   os << " debug_print:      " << config.debug_print << std::endl;
