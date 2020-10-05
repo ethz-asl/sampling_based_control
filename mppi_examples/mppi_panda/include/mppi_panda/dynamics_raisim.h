@@ -28,7 +28,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
     joint_p_gain.setZero(7);
     joint_p_gain.setConstant(200);
     joint_d_gain.setZero(7);
-    joint_d_gain.setConstant(10);
+    joint_d_gain.setConstant(10.0);
     joint_p_desired.setZero(7);
     joint_v_desired.setZero(7);
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);

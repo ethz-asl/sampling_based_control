@@ -107,12 +107,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link0.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link0.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <link name="panda_link1">
     <inertial>
@@ -129,12 +129,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link1.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link1.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint1" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -159,12 +159,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link2.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link2.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint2" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-1.7628" soft_upper_limit="1.7628"/>
@@ -189,12 +189,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link3.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link3.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint3" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -219,12 +219,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link4.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link4.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint4" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-3.0718" soft_upper_limit="0.0698"/>
@@ -251,12 +251,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link5.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link5.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint5" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -281,12 +281,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link6.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link6.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint6" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-0.0175" soft_upper_limit="3.7525"/>
@@ -311,12 +311,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link7.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link7.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
   <joint name="panda_joint7" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -380,12 +380,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        urdf   <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/>
-      </geometry>
-    </collision>
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        urdf   <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
   </link>
 <!--  <link name="panda_leftfinger">-->
 <!--    <inertial>-->

@@ -32,6 +32,8 @@ int main(int argc, char** argv){
     simulation = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
+  Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
+
   auto initial_configuration = nh.param<std::vector<double>>("initial_configuration", {});
   for(size_t i=0; i<initial_configuration.size(); i++)
     x(i) = initial_configuration[i];
@@ -53,14 +55,14 @@ int main(int argc, char** argv){
   bool static_optimization = nh.param<bool>("static_optimization", false);
   double sim_dt = nh.param<double>("sim_dt", 0.01);
 
-  u << 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   // sim loop
   double sim_time = 0.0;
   controller.start();
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
-//    controller.set_observation(x, sim_time);
-//    controller.get_input(x, u, sim_time);
+    controller.set_observation(x, sim_time);
+    controller.get_input(x, u, sim_time);
+    controller.get_input_state(x, x_nom, u, sim_time);
 
     if (!static_optimization){
       x = simulation->step(u, sim_dt);

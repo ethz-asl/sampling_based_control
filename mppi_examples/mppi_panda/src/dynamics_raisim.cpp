@@ -14,7 +14,8 @@ namespace  panda{
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t &u, const double dt) {
 
   x_cmd_.head(7) += u*dt;
-  panda->setPdTarget(x_cmd_.head(7), u);
+//  panda->setPdTarget(x_cmd_.head(7) + u*dt, Eigen::VectorXd::Zero(7));
+  panda->setPdTarget(u, Eigen::VectorXd::Zero(7));
   panda->getState(joint_p, joint_v);
   sim_.integrate();
   x_.head<7>() = joint_p;
