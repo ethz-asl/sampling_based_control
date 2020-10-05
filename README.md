@@ -22,8 +22,9 @@ Create a ROS workspace and install the following dependencies.
 ## Run the examples
 
 - `roslaunch mppi_panda panda_control.launch`
-- `roslaunch mppi_panda_mobile panda_mobile_control.launch`
 - `roslaunch mppi_pole_cart pole_cart_control.launch`
+
+NOTE: the `panda_mobile` example is not ready yet since the urdf still contains the old hard coded paths. 
 
 ### References
 - [Information Theoretic Model Predictive Control: Theory and Applications to Autonomous Driving](https://arxiv.org/abs/1707.02342), _Willias at al._
