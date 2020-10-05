@@ -12,12 +12,9 @@
 
 using namespace panda;
 
-PandaCost::PandaCost(double linear_weight, double angular_weight, double obstacle_radius){
+PandaCost::PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius){
 
-  std::string urdf_path = ros::package::getPath("mppi_panda");
-  urdf_path += "/resources/panda/panda.urdf";
-  std::cout << "Panda cost: parsing model from: " << urdf_path << std::endl;
-  pinocchio::urdf::buildModel(urdf_path, model_);
+  pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
   frame_id_ = model_.getFrameId(tracked_frame_);
   Q_linear_ = Eigen::Matrix3d::Identity() * linear_weight;

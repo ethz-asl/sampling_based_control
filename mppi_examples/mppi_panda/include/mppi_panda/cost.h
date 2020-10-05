@@ -23,8 +23,8 @@ namespace panda{
 
 class PandaCost: public mppi::CostBase{
  public:
-   PandaCost(): PandaCost(1.0, 1.0, 0.0){};
-   PandaCost(double linear_weight, double angular_weight, double obstacle_radius);
+   PandaCost(): PandaCost("", 1.0, 1.0, 0.0){};
+   PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius);
    ~PandaCost() = default;
 
  private:
@@ -44,7 +44,6 @@ class PandaCost: public mppi::CostBase{
 
    Eigen::Matrix<double, 7, 1> joint_limits_lower_;
    Eigen::Matrix<double, 7, 1> joint_limits_upper_;
-
 
  public:
    cost_ptr create() override { return std::make_shared<PandaCost>(); }

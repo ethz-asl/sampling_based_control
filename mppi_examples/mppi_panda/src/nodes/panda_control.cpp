@@ -20,7 +20,8 @@ int main(int argc, char** argv){
   auto controller = PandaControllerInterface(nh);
 
   bool kinematic_simulation = nh.param<bool>("dynamics/kinematic_simulation", true);
-  auto simulation = PandaDynamics(kinematic_simulation);
+  std::string robot_description = nh.param<std::string>("/robot_description", "");
+  auto simulation = PandaDynamics(robot_description, kinematic_simulation);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   auto initial_configuration = nh.param<std::vector<double>>("initial_configuration", {});
