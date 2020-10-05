@@ -32,13 +32,17 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
     joint_p_desired.setZero(7);
     joint_v_desired.setZero(7);
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
+    x_cmd_ = x_;
 
     sim_.setTimeStep(dt);
     sim_.setERP(0.,0.);
     dt_ = dt;
     robot_description_ = robot_description;
-    panda = sim_.addArticulatedSystem(robot_description_);
-    panda->setControlMode(raisim::ControlMode::VELOCITY_PLUS_FEEDFORWARD_TORQUE);
+    panda = sim_.addArticulatedSystem(robot_description_, "/");
+    panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+    panda->setPdGains(joint_p_gain, joint_d_gain);
+    panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+
   };
 
   ~PandaRaisimDynamics() = default;
@@ -60,7 +64,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
 
  private:
   observation_t x_;
-  observation_t xdd_;
+  observation_t x_cmd_;
 
   double dt_;
   std::string robot_description_;

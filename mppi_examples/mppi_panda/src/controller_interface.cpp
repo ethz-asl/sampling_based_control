@@ -68,8 +68,13 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   bool raisim_backend = param_io::param(nh_, "raisim_backend", true);
   double dt = 0.01; // TODO remove hard coded value
   mppi::DynamicsBase::dynamics_ptr dynamics;
-  if (raisim_backend)
-    dynamics = std::make_shared<PandaRaisimDynamics>(robot_description, dt);
+  if (raisim_backend){
+    std::string robot_description_raisim;
+    if(!nh_.param<std::string>("/robot_description_raisim", robot_description_raisim, "")){
+      throw std::runtime_error("Could not parse robot_description_raisim. Is the parameter set?");
+    }
+    dynamics = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, dt);
+  }
   else
     dynamics = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
 

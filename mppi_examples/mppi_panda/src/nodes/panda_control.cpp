@@ -20,17 +20,25 @@ int main(int argc, char** argv){
   auto controller = PandaControllerInterface(nh);
 
   bool kinematic_simulation = nh.param<bool>("dynamics/kinematic_simulation", true);
+  bool raisim_backend = nh.param<bool>("raisim_backend", false);
+
   std::string robot_description = nh.param<std::string>("/robot_description", "");
-  auto simulation = PandaDynamics(robot_description, kinematic_simulation);
+  std::string robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
+
+  mppi::DynamicsBase::dynamics_ptr simulation;
+  if (raisim_backend)
+    simulation = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, 0.01);
+  else
+    simulation = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   auto initial_configuration = nh.param<std::vector<double>>("initial_configuration", {});
   for(size_t i=0; i<initial_configuration.size(); i++)
     x(i) = initial_configuration[i];
-  simulation.reset(x);
+  simulation->reset(x);
 
   mppi::DynamicsBase::input_t u;
-  u = simulation.get_zero_input(x);
+  u = simulation->get_zero_input(x);
 
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
@@ -45,15 +53,17 @@ int main(int argc, char** argv){
   bool static_optimization = nh.param<bool>("static_optimization", false);
   double sim_dt = nh.param<double>("sim_dt", 0.01);
 
+  u << 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   // sim loop
   double sim_time = 0.0;
   controller.start();
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
-    controller.set_observation(x, sim_time);
-    controller.get_input(x, u, sim_time);
+//    controller.set_observation(x, sim_time);
+//    controller.get_input(x, u, sim_time);
+
     if (!static_optimization){
-      x = simulation.step(u, sim_dt);
+      x = simulation->step(u, sim_dt);
       sim_time += sim_dt;
     }
 

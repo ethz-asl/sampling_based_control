@@ -1,15 +1,15 @@
-raisim_backend: false
+raisim_backend: true
 
 dynamics:
   substeps: 1
   kinematic_simulation: true
 
 solver:
-  rollouts: 200
+  rollouts: 10
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
-  horizon: 2.0
+  horizon: 0.5
 
   cost_ratio: 0.2
   caching_factor: 0.3

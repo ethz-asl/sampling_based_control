@@ -47,6 +47,10 @@ add_library(panda_stocopt_control src/controller_ros.cpp )
 target_link_libraries(panda_stocopt_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_control ${PROJECT_NAME})
 
+add_executable(panda_raisim src/tests/panda_raisim.cpp)
+target_link_libraries(panda_raisim ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_raisim ${PROJECT_NAME})
+
 install(DIRECTORY launch resources
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
