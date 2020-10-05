@@ -6,11 +6,11 @@
     <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
-    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda.urdf"/>
+    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda.urdf.xacro"/>
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>    
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
