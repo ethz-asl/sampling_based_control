@@ -6,11 +6,11 @@
     <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
-    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda.urdf"/>
+    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>    
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
@@ -31,9 +31,7 @@
     </group>
 
     <node name="panda_control" type="panda_control" pkg="mppi_panda" output="screen"
-          launch-prefix="gdb -ex run --args">
-        <param name="urdf_path" value="$(find mppi_panda)/resources/panda/panda.urdf"/>
-    </node>
+          launch-prefix="gdb -ex run --args"/>
 
     <include file="$(find mppi_panda)/launch/common.launch">
         <arg name="plot_cost"       value="$(arg plot_cost)"/>

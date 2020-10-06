@@ -35,17 +35,14 @@ struct PandaDynamicsConfig{
 
 class PandaDynamics : public mppi::DynamicsBase {
  public:
-  PandaDynamics(bool kinematic_simulation=true):
+  PandaDynamics(const std::string& robot_description="", bool kinematic_simulation=true):
   kinematic_simulation_(kinematic_simulation){
 
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
     previous_u_ = input_t::Zero(PandaDim::INPUT_DIMENSION);
 
-    // initialize dynamics
-    std::string urdf_path = ros::package::getPath("mppi_panda");
-    urdf_path += "/resources/panda/panda.urdf";
-    std::cout << "Parsing model from: " << urdf_path << std::endl;
-    pinocchio::urdf::buildModel(urdf_path, model_);
+    // initialize model
+    pinocchio::urdf::buildModelFromXML(robot_description, model_);
     data_ = pinocchio::Data(model_);
   };
   ~PandaDynamics() = default;

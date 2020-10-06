@@ -31,15 +31,12 @@ enum PandaMobileDim{
 
 class PandaMobileDynamics : public mppi::DynamicsBase {
  public:
-  PandaMobileDynamics(){
+  PandaMobileDynamics(const std::string& robot_description): robot_description_(robot_description){
 
     x_ = observation_t::Zero(PandaMobileDim::STATE_DIMENSION);
 
-    // initialize model for forward kinematic
-    std::string urdf_path = ros::package::getPath("mppi_panda_mobile");
-    urdf_path += "/resources/panda/panda.urdf";
-    std::cout << "Parsing model from: " << urdf_path << std::endl;
-    pinocchio::urdf::buildModel(urdf_path, model_);
+    // init model
+    pinocchio::urdf::buildModelFromXML(robot_description_, model_);
     data_ = pinocchio::Data(model_);
   };
   ~PandaMobileDynamics() = default;
@@ -49,7 +46,7 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
   size_t get_state_dimension() override { return PandaMobileDim::STATE_DIMENSION; }
 
   dynamics_ptr create() override {
-    return std::make_shared<PandaMobileDynamics>();
+    return std::make_shared<PandaMobileDynamics>(robot_description_);
   }
 
   dynamics_ptr clone() const override {
@@ -63,6 +60,8 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
 
  private:
   observation_t x_;
+
+  std::string robot_description_;
   pinocchio::Model model_;
   pinocchio::Data data_;
 

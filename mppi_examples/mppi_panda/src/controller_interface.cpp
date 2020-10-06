@@ -45,32 +45,34 @@ bool PandaControllerInterface::init_ros() {
   return true;
 }
 
-void PandaControllerInterface::init_model(){
-  std::string urdf_path = ros::package::getPath("mppi_panda");
-  urdf_path += "/resources/panda/panda.urdf";
-  pinocchio::urdf::buildModel(urdf_path, model_);
+void PandaControllerInterface::init_model(const std::string& robot_description){
+  pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
 }
 
 bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral> &controller) {
+  std::string robot_description;
+  if(!nh_.param<std::string>("/robot_description", robot_description, "")){
+    throw std::runtime_error("Could not parse robot description. Is the parameter set?");
+  };
+
   // -------------------------------
   // internal model
   // -------------------------------
-  init_model();
+  init_model(robot_description);
 
   // -------------------------------
   // dynamics
   // -------------------------------
   bool kinematic_simulation = param_io::param(nh_, "dynamics/kinematic_simulation", true);
-  auto panda_dynamics = PandaDynamics(kinematic_simulation);
-  auto dynamics = std::make_shared<PandaDynamics>(kinematic_simulation);
+  auto dynamics = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
 
   // -------------------------------
   // cost
   // -------------------------------
   double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
-  auto cost = std::make_shared<PandaCost>(linear_weight, angular_weight, obstacle_radius_);
+  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight, obstacle_radius_);
 
   // -------------------------------
   // config

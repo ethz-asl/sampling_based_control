@@ -23,17 +23,14 @@ namespace panda_mobile{
 
  class PandaMobileCost: public mppi::CostBase{
  public:
-   PandaMobileCost(){
-     // init model for forward kinematic
-     std::string urdf_path = ros::package::getPath("mppi_panda_mobile");
-     urdf_path += "/resources/panda/panda.urdf";
-     std::cout << "Parsing model from: " << urdf_path << std::endl;
-     pinocchio::urdf::buildModel(urdf_path, model_);
+   PandaMobileCost(const std::string& robot_description): robot_description_(robot_description){
+     pinocchio::urdf::buildModelFromXML(robot_description_, model_);
      data_ = pinocchio::Data(model_);
      frame_id_ = model_.getFrameId(tracked_frame_);
    }
 
-   PandaMobileCost(const double linear_weight, const double angular_weight, const double obstacle_radius): PandaMobileCost(){
+   PandaMobileCost(const std::string& robot_description, const double linear_weight, const double angular_weight, const double obstacle_radius):
+     PandaMobileCost(robot_description){
      Q_linear_ = Eigen::Matrix3d::Identity() * linear_weight;
      Q_angular_ = Eigen::Matrix3d::Identity() * angular_weight;
      obstacle_radius_ = obstacle_radius;
@@ -42,6 +39,7 @@ namespace panda_mobile{
    ~PandaMobileCost() = default;
 
  private:
+   std::string robot_description_;
    pinocchio::Model model_;
    pinocchio::Data data_;
 
@@ -61,7 +59,7 @@ namespace panda_mobile{
 
  public:
    cost_ptr create() override {
-     return std::make_shared<PandaMobileCost>();
+     return std::make_shared<PandaMobileCost>(robot_description_);
    }
 
    cost_ptr clone() const override {
