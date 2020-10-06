@@ -115,6 +115,15 @@ void PathIntegral::set_observation(const observation_t& x, const double t){
     x0_ = x;
     reset_time_ = t;
   }
+
+  // initialization of rollouts data
+  if (first_step_){
+    copy_observation();
+    initialize_rollouts();
+    first_step_ = false;
+    return;
+  }
+
   observation_set_ = true;
 }
 
@@ -127,35 +136,28 @@ void PathIntegral::copy_observation() {
 void PathIntegral::initialize_rollouts() {
   std::shared_lock<std::shared_mutex> lock_state(state_mutex_);
   opt_roll_.clear();
-  opt_roll_.uu.resize(steps_, dynamics_->get_zero_input(x0_internal_));
+  std::fill(opt_roll_.uu.begin(), opt_roll_.uu.end(), dynamics_->get_zero_input(x0_internal_));
 
   std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-  opt_roll_cache_.clear();
-  opt_roll_cache_.uu.resize(steps_, x0_internal_);
-  opt_roll_cache_.uu.resize(steps_, dynamics_->get_zero_input(x0_internal_));
+  std::fill(opt_roll_cache_.xx.begin(), opt_roll_cache_.xx.end(), x0_internal_);
+  std::fill(opt_roll_cache_.uu.begin(), opt_roll_cache_.uu.end(), dynamics_->get_zero_input(x0_internal_));
   for(size_t i=0; i<steps_; i++) {
     opt_roll_cache_.tt[i] = t0_internal_ + config_.step_size * i;
   }
+  std::cout << "Done initializing rollouts" << std::endl;
 }
 
 void PathIntegral::prepare_rollouts() {
-  // initialization
-  if (first_step_){
-    initialize_rollouts();
-    first_step_ = false;
-    return;
-  }
-
   // find trim index
   size_t offset;
   {
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
     auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t0_internal_);
     if (lower == opt_roll_cache_.tt.end()) {
-      std::stringstream error;
-      error << "Resetting to time " << t0_internal_
-            << ", greater than the last available time: " << opt_roll_cache_.tt.back();
-      throw std::runtime_error(error.str());
+      std::stringstream warning;
+      warning << "Resetting to time " << t0_internal_
+              << ", greater than the last available time: " << opt_roll_cache_.tt.back();
+      log_warning(warning.str());
     }
     offset = std::distance(opt_roll_cache_.tt.begin(), lower);
   }
@@ -338,6 +340,7 @@ void PathIntegral::get_input_state(const observation_t & x, observation_t& x_nom
       log_warning_throttle(1.0, warning.str());
       x_nom = opt_roll_cache_.xx.front();
       u_nom = dynamics_->get_zero_input(x);
+      return;
     }
 
     auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t);
