@@ -45,10 +45,8 @@ bool PandaMobileControllerInterface::init_ros() {
   return true;
 }
 
-void PandaMobileControllerInterface::init_model(){
-  std::string urdf_path = ros::package::getPath("mppi_panda_mobile");
-  urdf_path += "/resources/panda/panda.urdf";
-  pinocchio::urdf::buildModel(urdf_path, model_);
+void PandaMobileControllerInterface::init_model(const std::string& robot_description){
+  pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
 }
 
@@ -56,19 +54,24 @@ bool PandaMobileControllerInterface::set_controller(std::shared_ptr<mppi::PathIn
   // -------------------------------
   // internal model
   // -------------------------------
-  init_model();
+  std::string robot_description;
+  if(!nh_.param<std::string>("/robot_description", robot_description, "")){
+    throw std::runtime_error("robot_description has not been set!");
+  }
+
+  init_model(robot_description);
 
   // -------------------------------
   // dynamics
   // -------------------------------
-  auto dynamics = std::make_shared<PandaMobileDynamics>();
+  auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description);
 
   // -------------------------------
   // cost
   // -------------------------------
   double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
-  auto cost = std::make_shared<PandaMobileCost>(linear_weight, angular_weight, obstacle_radius_);
+  auto cost = std::make_shared<PandaMobileCost>(robot_description, linear_weight, angular_weight, obstacle_radius_);
 
   // -------------------------------
   // config

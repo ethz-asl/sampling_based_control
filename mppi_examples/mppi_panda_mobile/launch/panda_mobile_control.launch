@@ -5,11 +5,11 @@
     <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
-    <arg name="description_file" default="$(find mppi_panda_mobile)/resources/panda/panda.urdf"/>
+    <arg name="description_file" default="$(find mppi_panda_mobile)/resources/panda/panda_mobile.urdf.xacro"/>
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
 
     <!--  Run the test node-->
     <node name="panda_mobile_control" type="panda_mobile_control" pkg="mppi_panda_mobile" output="screen"
