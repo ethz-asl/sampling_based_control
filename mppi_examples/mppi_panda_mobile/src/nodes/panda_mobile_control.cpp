@@ -23,7 +23,8 @@ int main(int argc, char** argv){
   ros::NodeHandle nh("~");
   auto controller = PandaMobileControllerInterface(nh);
 
-  auto simulation = PandaMobileDynamics();
+  std::string robot_description = nh.param<std::string>("/robot_description", "");
+  auto simulation = PandaMobileDynamics(robot_description);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
   auto initial_configuration = nh.param<std::vector<double>>("initial_configuration", {});

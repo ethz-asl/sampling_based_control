@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="panda" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find mppi_panda)/resources/panda/panda.urdf.xacro" />
+  <xacro:include filename="$(find mppi_panda_mobile)/resources/panda/base.urdf.xacro" />
+
+  <xacro:property name="base_name" value="base"/>
+
+  <xacro:panda_base base_link="${base_name}"/>
+  <xacro:panda_robot parent_link="${base_name}"/>
+
+</robot>
