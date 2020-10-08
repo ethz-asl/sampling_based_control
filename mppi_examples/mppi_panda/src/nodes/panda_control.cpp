@@ -20,49 +20,63 @@ int main(int argc, char** argv){
   auto controller = PandaControllerInterface(nh);
 
   bool kinematic_simulation = nh.param<bool>("dynamics/kinematic_simulation", true);
-  bool raisim_backend = nh.param<bool>("raisim_backend", false);
-
   std::string robot_description = nh.param<std::string>("/robot_description", "");
-  std::string robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
 
   mppi::DynamicsBase::dynamics_ptr simulation;
-  if (raisim_backend)
-    simulation = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, 0.01);
-  else
-    simulation = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  simulation = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
 
-  auto initial_configuration = nh.param<std::vector<double>>("initial_configuration", {});
-  for(size_t i=0; i<initial_configuration.size(); i++)
-    x(i) = initial_configuration[i];
+  // set initial state
+  auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
+  for(size_t i=0; i<x0.size(); i++) x(i) = x0[i];
   simulation->reset(x);
 
+  // init control input
   mppi::DynamicsBase::input_t u;
   u = simulation->get_zero_input(x);
 
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  ros::Publisher ee_publisher = nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
+  ros::Publisher ee_desired_publisher = nh.advertise<geometry_msgs::PoseStamped>("/ee_desired_nominal", 10);
+
   sensor_msgs::JointState joint_state;
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5",
-                      "panda_joint6", "panda_joint7"};
+  joint_state.name = {"panda_joint1",
+                      "panda_joint2",
+                      "panda_joint3",
+                      "panda_joint4",
+                      "panda_joint5",
+                      "panda_joint6",
+                      "panda_joint7"};
   joint_state.position.resize(7);
   joint_state.header.frame_id = "world";
 
-  ros::Publisher ee_publisher = nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   geometry_msgs::PoseStamped ee_pose;
+  geometry_msgs::PoseStamped ee_pose_desired;
 
   bool static_optimization = nh.param<bool>("static_optimization", false);
   double sim_dt = nh.param<double>("sim_dt", 0.01);
 
-  // sim loop
   double sim_time = 0.0;
+
+  // init the controller
+  bool ok = controller.init();
+  if (!ok){
+    throw std::runtime_error("Failed to initialzied controller!");
+  }
+
+  // set the very first observation
+  controller.set_observation(x, sim_time);
+
+  // start controller
   controller.start();
+
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
+
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
-    controller.get_input_state(x, x_nom, u, sim_time);
 
     if (!static_optimization){
       x = simulation->step(u, sim_dt);
@@ -75,6 +89,9 @@ int main(int argc, char** argv){
 
     ee_pose = controller.get_pose_end_effector_ros(x);
     ee_publisher.publish(ee_pose);
+
+    ee_pose_desired = controller.get_pose_end_effector_ros(x_nom);
+    ee_desired_publisher.publish(ee_pose_desired);
 
     auto end = std::chrono::steady_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;

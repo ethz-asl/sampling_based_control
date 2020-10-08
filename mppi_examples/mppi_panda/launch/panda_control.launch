@@ -12,7 +12,6 @@
     <!-- Load robot description -->
 
     <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
-    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision_format:='obj'"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>

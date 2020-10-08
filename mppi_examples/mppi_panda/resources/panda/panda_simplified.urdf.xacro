@@ -15,83 +15,7 @@
     <child link="panda_link0"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
   </joint>
-  <gazebo>
-    <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
-      <robotNamespace>/</robotNamespace>
-    </plugin>
-  </gazebo>
-  <gazebo reference="panda_link0"/>
-  <gazebo reference="panda_link1"/>
-  <gazebo reference="panda_link2"/>
-  <gazebo reference="panda_link3"/>
-  <gazebo reference="panda_link4"/>
-  <gazebo reference="panda_link5"/>
-  <gazebo reference="panda_link6"/>
-  <gazebo reference="panda_link7"/>
-  <gazebo reference="panda_link8"/>
-  <transmission name="panda_joint1_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint1">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint1_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="panda_joint2_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint2">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint2_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="panda_joint3_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint3_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="panda_joint4_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint4">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint4_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="panda_joint5_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint5">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint5_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="panda_joint6_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint6">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint6_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="panda_joint7_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint7">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="panda_joint7_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
+
   <link name="panda_link0">
     <inertial>
       <mass value="2.92"/>
@@ -110,7 +34,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link0.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -132,7 +56,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link1.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -160,9 +84,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.2 0.2 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link2.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -192,7 +116,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link3.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -222,7 +146,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link4.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -254,7 +178,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link5.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -282,9 +206,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.2 0.2 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link6.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -314,7 +238,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link7.${collision_format}"/>
+        <cylinder length="0.1" radius="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -339,112 +263,6 @@
     <child link="panda_link8"/>
     <axis xyz="0 0 0"/>
   </joint>
-  <joint name="panda_hand_joint" type="fixed">
-    <parent link="panda_link8"/>
-    <child link="panda_hand"/>
-    <origin rpy="0 0 -0.785398163397" xyz="0 0 0"/>
-  </joint>
-<!--  <gazebo reference="panda_hand"/>-->
-<!--  <gazebo reference="panda_leftfinger"/>-->
-<!--  <gazebo reference="panda_rightfinger"/>-->
-<!--  <transmission name="panda_finger_joint1_trans">-->
-<!--    <type>transmission_interface/SimpleTransmission</type>-->
-<!--    <joint name="panda_finger_joint1">-->
-<!--      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>-->
-<!--    </joint>-->
-<!--    <actuator name="panda_finger_joint1_motor">-->
-<!--      <mechanicalReduction>1</mechanicalReduction>-->
-<!--    </actuator>-->
-<!--  </transmission>-->
-<!--  <transmission name="panda_finger_joint2_trans">-->
-<!--    <type>transmission_interface/SimpleTransmission</type>-->
-<!--    <joint name="panda_finger_joint2">-->
-<!--      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>-->
-<!--    </joint>-->
-<!--    <actuator name="panda_finger_joint2_motor">-->
-<!--      <mechanicalReduction>1</mechanicalReduction>-->
-<!--    </actuator>-->
-<!--  </transmission>-->
-  <link name="panda_hand">
-    <inertial>
-      <mass value="0.73"/>
-      <origin rpy="0 0 0" xyz="0 0.0015244 0.0275912"/>
-      <inertia ixx="0.00278560230025" ixy="0.0" ixz="0.0" iyy="0.000400033405336" iyz="0.0" izz="0.00256378041832"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/hand.dae"/>
-      </geometry>
-      <material name="">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/>
-      </geometry>
-    </collision>
-  </link>
-<!--  <link name="panda_leftfinger">-->
-<!--    <inertial>-->
-<!--      <mass value="0.1"/>-->
-<!--      <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>-->
-<!--      <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0" izz="6.95125211657e-06"/>-->
-<!--    </inertial>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>-->
-<!--      </geometry>-->
-<!--      <material name="">-->
-<!--        <color rgba="1 1 1 1"/>-->
-<!--      </material>-->
-<!--    </visual>-->
-<!--    <collision>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>-->
-<!--      </geometry>-->
-<!--    </collision>-->
-<!--  </link>-->
-<!--  <link name="panda_rightfinger">-->
-<!--    <inertial>-->
-<!--      <mass value="0.1"/>-->
-<!--      <origin rpy="0 0 3.14159265359" xyz="0 0.0145644 0.0227941"/>-->
-<!--      <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0" izz="6.95125211657e-06"/>-->
-<!--    </inertial>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>-->
-<!--      </geometry>-->
-<!--      <material name="">-->
-<!--        <color rgba="1 1 1 1"/>-->
-<!--      </material>-->
-<!--    </visual>-->
-<!--    <collision>-->
-<!--      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>-->
-<!--      </geometry>-->
-<!--    </collision>-->
-<!--  </link>-->
-<!--  <joint name="panda_finger_joint1" type="prismatic">-->
-<!--    <parent link="panda_hand"/>-->
-<!--    <child link="panda_leftfinger"/>-->
-<!--    <origin rpy="0 0 0" xyz="0 0 0.0584"/>-->
-<!--    <axis xyz="0 1 0"/>-->
-<!--    <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>-->
-<!--  </joint>-->
-<!--  <joint name="panda_finger_joint2" type="prismatic">-->
-<!--    <parent link="panda_hand"/>-->
-<!--    <child link="panda_rightfinger"/>-->
-<!--    <origin rpy="0 0 0" xyz="0 0 0.0584"/>-->
-<!--    <axis xyz="0 -1 0"/>-->
-<!--    <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>-->
-<!--  </joint>-->
 </robot>
 
 

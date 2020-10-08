@@ -8,7 +8,6 @@
 #pragma once
 #include "mppi_panda/cost.h"
 #include "mppi_panda/dynamics.h"
-#include "mppi_panda/dynamics_raisim.h"
 #include <mppi_ros/controller_interface.h>
 
 #include <nav_msgs/Path.h>
