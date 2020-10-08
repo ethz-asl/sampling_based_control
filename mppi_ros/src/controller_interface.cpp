@@ -11,8 +11,6 @@
 using namespace mppi_ros;
 
 ControllerRos::ControllerRos(ros::NodeHandle& nh): nh_(nh){
-  init_default_params();
-  init_default_ros();
 }
 
 ControllerRos::~ControllerRos(){
@@ -33,12 +31,20 @@ void ControllerRos::init_default_ros() {
   max_rollout_cost_publisher_ = nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
 }
 
-bool ControllerRos::start() {
-  init_ros();
+bool ControllerRos::init() {
+  init_default_params();
+  init_default_ros();
 
+  init_ros();
   bool ok = set_controller(controller_);
-  if (controller_ == nullptr || !ok)
-    return false;
+  if (controller_ == nullptr || !ok) return false;
+
+  initialized_ = true;
+  return initialized_;
+}
+
+bool ControllerRos::start() {
+
 
   any_worker::WorkerOptions update_policy_opt;
   update_policy_opt.name_ = "update_policy_thread";

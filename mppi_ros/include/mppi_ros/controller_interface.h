@@ -39,6 +39,12 @@ class ControllerRos{
   virtual void publish_ros(){};
 
   /**
+   * @brief Init the ros pub/sub and set the controller object
+   * @return true if initialization was successful
+   */
+  bool init();
+
+  /**
    * @brief Set the controller and starts all the threads
    * @return
    */
@@ -64,6 +70,8 @@ class ControllerRos{
   bool publish_ros_l(const any_worker::WorkerEvent& event);
 
  private:
+  bool initialized_;
+
   any_worker::WorkerManager worker_manager_;
 
   mppi::CostBase::cost_ptr cost_;
