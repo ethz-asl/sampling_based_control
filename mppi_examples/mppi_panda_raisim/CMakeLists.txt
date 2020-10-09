@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-project(mppi_panda)
+project(mppi_panda_raisim)
 
 set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
+find_package(raisim CONFIG REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
     sensor_msgs
@@ -25,7 +26,7 @@ set(PACKAGE_DEPENDENCIES
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 catkin_package(
-  LIBRARIES mppi_panda
+  LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
   CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
   DEPENDS pinocchio)
@@ -35,15 +36,15 @@ add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
 
-add_executable(panda_control src/nodes/panda_control.cpp)
-target_link_libraries(panda_control ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_control ${PROJECT_NAME})
+add_executable(panda_raisim_control src/nodes/panda_control.cpp)
+target_link_libraries(panda_raisim_control ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_raisim_control ${PROJECT_NAME})
 
-add_library(panda_stocopt_control src/controller_ros.cpp )
-target_link_libraries(panda_stocopt_control ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_control ${PROJECT_NAME})
+add_executable(panda_raisim src/tests/panda_raisim.cpp)
+target_link_libraries(panda_raisim ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_raisim ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

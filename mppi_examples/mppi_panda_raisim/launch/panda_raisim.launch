@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_simplified.urdf.xacro"/>
+    <arg name="tf_prefix" default=""/>
+
+    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
+    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision:=false collision_format:='obj'"/>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static"     value="true"/>
+        <param name="tf_prefix"         value="$(arg tf_prefix)"/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states"      to="/joint_states"/>
+    </node>
+
+    <node name="panda_raisim" type="panda_raisim" pkg="mppi_panda" output="screen"
+          launch-prefix="gdb -ex run --args"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>
+
+</launch>

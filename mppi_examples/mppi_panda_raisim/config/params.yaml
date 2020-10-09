@@ -1,3 +1,5 @@
+raisim_backend: true
+
 dynamics:
   substeps: 1
   kinematic_simulation: true
@@ -19,7 +21,7 @@ solver:
   filter_window: 10
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
 
   discount_factor: 1.0
   verbose: false
@@ -36,5 +38,5 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-static_optimization: false
-sim_dt: 0.025
+static_optimization: true
+sim_dt: 0.01
