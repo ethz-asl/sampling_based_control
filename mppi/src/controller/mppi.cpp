@@ -27,11 +27,12 @@
 
 namespace mppi {
 
-PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost, const SolverConfig &config, sampler_ptr sampler)
+PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost, const SolverConfig &config, sampler_ptr sampler, renderer_ptr renderer)
     : cost_(std::move(cost)),
       dynamics_(std::move(dynamics)),
       config_(config),
-      sampler_(std::move(sampler)) {
+      sampler_(std::move(sampler)),
+      renderer_(std::move(renderer)){
 
   init_data();
   init_filter();
@@ -67,11 +68,10 @@ void PathIntegral::init_data() {
 void PathIntegral::init_filter() {
   switch (config_.filter_type){
     case InputFilterType::NONE: {
-      filter_ = nullptr;
       break;
     }
     case InputFilterType::SAVITZKY_GOLEY: {
-      filter_ = std::make_unique<SavGolFilter>(nu_, config_.filter_window, config_.filter_order);
+      filter_ = SavGolFilter(steps_, nu_, config_.filter_window, config_.filter_order);
       break;
     }
     default: {
@@ -106,6 +106,8 @@ void PathIntegral::update_policy() {
       filter_input();
     }
     swap_policies();
+
+    if(renderer_) renderer_->render(rollouts_);
   }
 }
 
@@ -121,7 +123,6 @@ void PathIntegral::set_observation(const observation_t& x, const double t){
     copy_observation();
     initialize_rollouts();
     first_step_ = false;
-    return;
   }
 
   observation_set_ = true;
@@ -280,17 +281,23 @@ void PathIntegral::optimize() {
 
   // optimal rollout
   dynamics_->reset(x0_internal_);
-  for (size_t t = 0; t < steps_-1; t++) {
-    opt_roll_.xx[t+1] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+  for (size_t t = 0; t < steps_; t++) {
+    opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
   }
 }
 
 void PathIntegral::filter_input() {
-  if (config_.filter_type)
-    for (auto& u : opt_roll_.uu){
-      filter_->filter(u);
+  if (config_.filter_type){
+    filter_.reset(t0_internal_);
+
+    for (size_t i=0; i<opt_roll_.uu.size(); i++){
+      filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
-    //shift_back(opt_roll_.uu, opt_roll_.uu.back(), filter_->window());
+
+    for (size_t i=0; i<opt_roll_.uu.size(); i++){
+      filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
+    }
+  }
 }
 
 void PathIntegral::get_input(const observation_t & x, input_t &u, const double t) {

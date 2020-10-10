@@ -34,7 +34,7 @@ class ControllerRos{
    * @brief Must implement to set the reference for the controller
    * @return
    */
-  virtual bool update_reference() = 0;
+  virtual bool update_reference();
   virtual bool init_ros(){};
   virtual void publish_ros(){};
 
@@ -45,7 +45,7 @@ class ControllerRos{
   bool init();
 
   /**
-   * @brief Set the controller and starts all the threads
+   * @brief Starts all the threads
    * @return
    */
   bool start();
@@ -53,21 +53,36 @@ class ControllerRos{
   inline std::shared_ptr<PathIntegral>& get_controller() { return controller_; };
   const ros::NodeHandle& get_node_handle() {return nh_; }
 
+  // TODO(giuseppe) this is dangerous since one might not use correctly this class
+  // TODO(giuseppe) split a sync vs an async class
+  /**
+   * Methods to use in a synchronous setup. In this case the call should follow
+   * the pattern:
+   * 1. set_observation: set last estimated state
+   * 2. update_policy: optimize from just set observation)
+   * 3.
+   *  a. get_input : only feedforward term required
+   *  b. get_input_state: feedforward + nominal state
+   * 4. (optional) publish_ros_default: run default publishing behavior
+   * 5. (optional) publish_ros: run custom ros publishing
+   */
   void set_observation(const observation_t& x, const mppi::time_t& t);
+  bool update_policy();
   void get_input(const observation_t& x, input_t& u, const mppi::time_t& t);
   void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u, const mppi::time_t& t);
+  bool publish_ros_default();
 
  private:
   void init_default_ros();
   bool init_default_params();
 
-  bool update_policy(const any_worker::WorkerEvent& event);
-  bool update_reference_l(const any_worker::WorkerEvent& event);
+  bool update_policy_thread(const any_worker::WorkerEvent& event);
+  bool update_reference_thread(const any_worker::WorkerEvent& event);
+  bool publish_ros_thread(const any_worker::WorkerEvent& event);
 
   void publish_stage_cost();
   void publish_rollout_cost();
   void publish_input();
-  bool publish_ros_l(const any_worker::WorkerEvent& event);
 
  private:
   bool initialized_;

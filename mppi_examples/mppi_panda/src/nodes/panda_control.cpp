@@ -70,18 +70,24 @@ int main(int argc, char** argv){
   controller.set_observation(x, sim_time);
 
   // start controller
-  controller.start();
+//  controller.start();
 
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
 
+    controller.update_reference();
     controller.set_observation(x, sim_time);
+    controller.update_policy();
     controller.get_input(x, u, sim_time);
+    controller.publish_ros_default();
+    controller.publish_ros();
+
 
     if (!static_optimization){
       x = simulation->step(u, sim_dt);
       sim_time += sim_dt;
     }
+
 
     for(size_t i=0; i<7; i++) joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
@@ -94,9 +100,12 @@ int main(int argc, char** argv){
     ee_desired_publisher.publish(ee_pose_desired);
 
     auto end = std::chrono::steady_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;
+    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
     if (sim_dt - elapsed >0)
       ros::Duration(sim_dt - elapsed).sleep();
+    else{
+      ROS_WARN_STREAM_THROTTLE(3.0, "Simulation slower than real time: last dt=" << elapsed << "s.");
+    }
 
     ros::spinOnce();
   }
