@@ -19,11 +19,12 @@
 
 #include "mppi/cost/cost_base.h"
 #include "mppi/dynamics/dynamics_base.h"
-#include "mppi/filters/filter_base.h"
+#include "mppi/filters/savgol_filter.h"
 #include "mppi/solver_config.h"
 #include "mppi/controller/rollout.h"
 #include "mppi/sampler/gaussian_sampler.h"
 #include "mppi/utils/thread_pool.h"
+#include "mppi/visualization/rederer.h"
 
 namespace mppi{
 
@@ -32,13 +33,13 @@ class PathIntegral{
   using solver_ptr = std::shared_ptr<PathIntegral>;
   using dynamics_ptr = DynamicsBase::dynamics_ptr;
   using cost_ptr = CostBase::cost_ptr ;
-  using filter_ptr = FilterBase::filter_ptr;
   using sampler_ptr = GaussianSampler::sampler_ptr;
   using config_t = SolverConfig;
   using input_t = DynamicsBase::input_t;
   using input_array_t = std::vector<input_t>;
   using observation_t = DynamicsBase::observation_t ;
   using observation_array_t = std::vector<observation_t>;
+  using renderer_ptr = std::shared_ptr<Renderer>;
 
   /**
    * @brief Path Integral Control class
@@ -52,7 +53,8 @@ class PathIntegral{
       DynamicsBase::dynamics_ptr dynamics,
       CostBase::cost_ptr cost,
       const SolverConfig& config,
-      sampler_ptr sampler=nullptr);
+      sampler_ptr sampler=nullptr,
+      renderer_ptr rendere=nullptr);
   PathIntegral() = default;
   ~PathIntegral() = default;
 
@@ -228,7 +230,7 @@ class PathIntegral{
 
   cost_ptr cost_;
   config_t config_;
-  filter_ptr filter_;
+  SavGolFilter filter_;
   sampler_ptr sampler_;
 
   dynamics_ptr dynamics_;
@@ -268,6 +270,8 @@ class PathIntegral{
   std::atomic_bool reference_set_;          // flag to check that reference has ever been set
   std::shared_mutex reference_mutex_;       // protects access to the reference trajectory
   reference_trajectory_t rr_tt_ref_;        // reference used during optimization
+
+  renderer_ptr renderer_;                   // adds optional visualization of rollouts
 };
 
 }

@@ -47,6 +47,11 @@ target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 #add_dependencies(mppi_visualizer_double_integrator ${PROJECT_NAME})
 
 
+if (CATKIN_ENABLE_TESTING)
+    catkin_add_gtest(filter_test unittest/filter_test.cpp)
+    target_link_libraries(filter_test ${PROJECT_NAME} ${catkin_LIBRARIES})
+endif()
+
 ## Testing
 #if (CATKIN_ENABLE_TESTING)
 #    catkin_add_gtest(mppi_methods_test unittest/mppi_methods.cpp)

@@ -11,8 +11,6 @@
 using namespace mppi_ros;
 
 ControllerRos::ControllerRos(ros::NodeHandle& nh): nh_(nh){
-  init_default_params();
-  init_default_ros();
 }
 
 ControllerRos::~ControllerRos(){
@@ -33,47 +31,80 @@ void ControllerRos::init_default_ros() {
   max_rollout_cost_publisher_ = nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
 }
 
-bool ControllerRos::start() {
-  init_ros();
+bool ControllerRos::init() {
+  init_default_params();
+  init_default_ros();
 
+  init_ros();
   bool ok = set_controller(controller_);
-  if (controller_ == nullptr || !ok)
+  if (controller_ == nullptr || !ok) return false;
+
+  initialized_ = true;
+  return initialized_;
+}
+
+bool ControllerRos::start() {
+
+  if (!initialized_){
+    ROS_ERROR_STREAM("The controller is not initialized. Have you called the init() method?");
     return false;
+  }
 
   any_worker::WorkerOptions update_policy_opt;
   update_policy_opt.name_ = "update_policy_thread";
   update_policy_opt.timeStep_ = (policy_update_rate_==0) ? 0 : 1.0/policy_update_rate_;
-  update_policy_opt.callback_ = std::bind(&ControllerRos::update_policy, this, std::placeholders::_1);
+  update_policy_opt.callback_ = std::bind(&ControllerRos::update_policy_thread, this, std::placeholders::_1);
   worker_manager_.addWorker(update_policy_opt, true);
 
   any_worker::WorkerOptions update_reference_opt;
   update_reference_opt.name_ = "update_reference_thread";
   update_reference_opt.timeStep_ = 1.0/reference_update_rate_;
-  update_reference_opt.callback_ = std::bind(&ControllerRos::update_reference_l, this, std::placeholders::_1);
+  update_reference_opt.callback_ = std::bind(&ControllerRos::update_reference_thread, this, std::placeholders::_1);
   worker_manager_.addWorker(update_reference_opt, true);
 
   if (publish_ros_){
     any_worker::WorkerOptions publish_ros_opt;
     publish_ros_opt.name_ = "publish_ros_thread";
     publish_ros_opt.timeStep_ = 1.0/ros_publish_rate_;
-    publish_ros_opt.callback_ = std::bind(&ControllerRos::publish_ros_l, this, std::placeholders::_1);
+    publish_ros_opt.callback_ = std::bind(&ControllerRos::publish_ros_thread, this, std::placeholders::_1);
     worker_manager_.addWorker(publish_ros_opt, true);
   }
 
   return true;
 }
 
-bool ControllerRos::update_policy(const any_worker::WorkerEvent &event) {
+
+bool ControllerRos::update_policy() {
+  controller_->update_policy();
+}
+
+bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
   controller_->update_policy();
   return true;
 }
 
-bool ControllerRos::update_reference_l(const any_worker::WorkerEvent &event) {
+bool ControllerRos::update_reference() { return true; }
+
+bool ControllerRos::update_reference_thread(const any_worker::WorkerEvent &event) {
   return update_reference();
 }
 
+bool ControllerRos::publish_ros_default(){
+    publish_input();
+    publish_stage_cost();
+    publish_rollout_cost();
+    return true;
+};
+
+bool ControllerRos::publish_ros_thread(const any_worker::WorkerEvent &event) {
+  publish_ros_default();
+  publish_ros();
+  return true;
+}
+
+
 void ControllerRos::publish_stage_cost(){
-  stage_cost_.data = 0.0;  // TODO see how to do this
+  stage_cost_.data = 0.0;  // TODO(giuseppe) see how to do this
   cost_publisher_.publish(stage_cost_);
 }
 
@@ -97,16 +128,6 @@ void ControllerRos::publish_input(){
     input_ros_.data[i] = input_copy_(i);
   }
   input_publisher_.publish(input_ros_);
-}
-
-bool ControllerRos::publish_ros_l(const any_worker::WorkerEvent &event) {
-  publish_input();
-  publish_stage_cost();
-  publish_rollout_cost();
-
-  // custom publish
-  publish_ros();
-  return true;
 }
 
 void ControllerRos::set_observation(const mppi::observation_t &x, const mppi::time_t &t) {

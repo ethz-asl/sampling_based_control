@@ -7,6 +7,7 @@
  */
 
 #include "mppi_panda/controller_interface.h"
+#include "mppi_panda/renderer.h"
 #include <ros/package.h>
 
 using namespace panda;
@@ -74,6 +75,12 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
   auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight, obstacle_radius_);
 
+  // rendering
+  bool rendering = param_io::param(nh_, "rendering", false);
+  std::shared_ptr<mppi::Renderer> renderer = nullptr;
+  if (rendering)
+    renderer = std::make_shared<RendererPanda>(nh_, robot_description);
+
   // -------------------------------
   // config
   // -------------------------------
@@ -87,7 +94,7 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_, nullptr, renderer);
 
   // -------------------------------
   // initialize reference

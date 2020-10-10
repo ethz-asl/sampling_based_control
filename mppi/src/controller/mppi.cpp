@@ -27,11 +27,14 @@
 
 namespace mppi {
 
-PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost, const SolverConfig &config, sampler_ptr sampler)
-    : cost_(std::move(cost)),
-      dynamics_(std::move(dynamics)),
-      config_(config),
-      sampler_(std::move(sampler)) {
+PathIntegral::PathIntegral(
+    dynamics_ptr dynamics,
+    cost_ptr cost,
+    const SolverConfig &config,
+    sampler_ptr sampler,
+    renderer_ptr renderer)
+    : cost_(std::move(cost)), dynamics_(std::move(dynamics)), config_(config), sampler_(std::move(sampler)),
+      renderer_(std::move(renderer)){
 
   init_data();
   init_filter();
@@ -67,11 +70,10 @@ void PathIntegral::init_data() {
 void PathIntegral::init_filter() {
   switch (config_.filter_type){
     case InputFilterType::NONE: {
-      filter_ = nullptr;
       break;
     }
     case InputFilterType::SAVITZKY_GOLEY: {
-      filter_ = std::make_unique<SavGolFilter>(nu_, config_.filter_window, config_.filter_order);
+      filter_ = SavGolFilter(steps_, nu_, config_.filter_window, config_.filter_order);
       break;
     }
     default: {
@@ -106,6 +108,8 @@ void PathIntegral::update_policy() {
       filter_input();
     }
     swap_policies();
+
+    if(renderer_) renderer_->render(rollouts_);
   }
 }
 
@@ -115,6 +119,14 @@ void PathIntegral::set_observation(const observation_t& x, const double t){
     x0_ = x;
     reset_time_ = t;
   }
+
+  // initialization of rollouts data
+  if (first_step_){
+    copy_observation();
+    initialize_rollouts();
+    first_step_ = false;
+  }
+
   observation_set_ = true;
 }
 
@@ -127,35 +139,27 @@ void PathIntegral::copy_observation() {
 void PathIntegral::initialize_rollouts() {
   std::shared_lock<std::shared_mutex> lock_state(state_mutex_);
   opt_roll_.clear();
-  opt_roll_.uu.resize(steps_, dynamics_->get_zero_input(x0_internal_));
+  std::fill(opt_roll_.uu.begin(), opt_roll_.uu.end(), dynamics_->get_zero_input(x0_internal_));
 
   std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-  opt_roll_cache_.clear();
-  opt_roll_cache_.uu.resize(steps_, x0_internal_);
-  opt_roll_cache_.uu.resize(steps_, dynamics_->get_zero_input(x0_internal_));
+  std::fill(opt_roll_cache_.xx.begin(), opt_roll_cache_.xx.end(), x0_internal_);
+  std::fill(opt_roll_cache_.uu.begin(), opt_roll_cache_.uu.end(), dynamics_->get_zero_input(x0_internal_));
   for(size_t i=0; i<steps_; i++) {
     opt_roll_cache_.tt[i] = t0_internal_ + config_.step_size * i;
   }
 }
 
 void PathIntegral::prepare_rollouts() {
-  // initialization
-  if (first_step_){
-    initialize_rollouts();
-    first_step_ = false;
-    return;
-  }
-
   // find trim index
   size_t offset;
   {
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
     auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t0_internal_);
     if (lower == opt_roll_cache_.tt.end()) {
-      std::stringstream error;
-      error << "Resetting to time " << t0_internal_
-            << ", greater than the last available time: " << opt_roll_cache_.tt.back();
-      throw std::runtime_error(error.str());
+      std::stringstream warning;
+      warning << "Resetting to time " << t0_internal_
+              << ", greater than the last available time: " << opt_roll_cache_.tt.back();
+      log_warning(warning.str());
     }
     offset = std::distance(opt_roll_cache_.tt.begin(), lower);
   }
@@ -278,17 +282,23 @@ void PathIntegral::optimize() {
 
   // optimal rollout
   dynamics_->reset(x0_internal_);
-  for (size_t t = 0; t < steps_-1; t++) {
-    opt_roll_.xx[t+1] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+  for (size_t t = 0; t < steps_; t++) {
+    opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
   }
 }
 
 void PathIntegral::filter_input() {
-  if (config_.filter_type)
-    for (auto& u : opt_roll_.uu){
-      filter_->filter(u);
+  if (config_.filter_type){
+    filter_.reset(t0_internal_);
+
+    for (size_t i=0; i<opt_roll_.uu.size(); i++){
+      filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
-    //shift_back(opt_roll_.uu, opt_roll_.uu.back(), filter_->window());
+
+    for (size_t i=0; i<opt_roll_.uu.size(); i++){
+      filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
+    }
+  }
 }
 
 void PathIntegral::get_input(const observation_t & x, input_t &u, const double t) {
@@ -338,6 +348,7 @@ void PathIntegral::get_input_state(const observation_t & x, observation_t& x_nom
       log_warning_throttle(1.0, warning.str());
       x_nom = opt_roll_cache_.xx.front();
       u_nom = dynamics_->get_zero_input(x);
+      return;
     }
 
     auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t);
