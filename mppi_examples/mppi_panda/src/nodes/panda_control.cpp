@@ -70,17 +70,17 @@ int main(int argc, char** argv){
   controller.set_observation(x, sim_time);
 
   // start controller
-//  controller.start();
+  controller.start();
 
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
 
-    controller.update_reference();
+//    controller.update_reference();
     controller.set_observation(x, sim_time);
-    controller.update_policy();
+//    controller.update_policy();
     controller.get_input(x, u, sim_time);
-    controller.publish_ros_default();
-    controller.publish_ros();
+//    controller.publish_ros_default();
+//    controller.publish_ros();
 
 
     if (!static_optimization){

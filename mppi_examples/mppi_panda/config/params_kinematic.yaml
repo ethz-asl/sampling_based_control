@@ -1,4 +1,4 @@
-rendering: false
+rendering: true
 dynamics:
   substeps: 1
   kinematic_simulation: true
@@ -8,7 +8,7 @@ solver:
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
-  horizon: 2.0
+  horizon: 1.0
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -17,10 +17,10 @@ solver:
 
   filter_type: 1
   filter_order: 2
-  filter_window: 10
+  filter_window: 50
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
 
   discount_factor: 1.0
   verbose: false

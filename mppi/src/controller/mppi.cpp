@@ -104,6 +104,14 @@ void PathIntegral::update_policy() {
       sample_trajectories();
       optimize();
       filter_input();
+
+
+      // TODO move this away. This goes year since there might be filtering happening before
+      // optimal rollout
+      dynamics_->reset(x0_internal_);
+      for (size_t t = 0; t < steps_; t++) {
+        opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+      }
     }
     swap_policies();
 
@@ -277,12 +285,6 @@ void PathIntegral::optimize() {
     std::cout << "New covariance: \n" << new_covariance << std::endl;
     sampler_->set_covariance(new_covariance);
     std::cout << "New covariance inverse is \n" << sampler_->sigma_inv() << std::endl;
-  }
-
-  // optimal rollout
-  dynamics_->reset(x0_internal_);
-  for (size_t t = 0; t < steps_; t++) {
-    opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
   }
 }
 

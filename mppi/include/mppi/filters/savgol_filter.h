@@ -29,8 +29,9 @@ struct MovingExtendedWindow{
 
   void trim(const double t){
     auto lower = std::lower_bound(tt.begin(), tt.end(), t);
-    size_t offset = std::distance(tt.begin(), lower);
-    offset = offset - window < 0 ? 0 : offset - window;
+    size_t offset = std::distance(tt.begin(), lower)-1;  // the next index points to a larger time
+    offset = offset - window;
+    assert(offset >=0);
 
     std::rotate(tt.begin(), tt.begin() + offset , tt.end());
     std::rotate(uu.begin(), uu.begin() + offset, uu.end());
@@ -42,6 +43,7 @@ struct MovingExtendedWindow{
   }
 
   void add_point(const double u, const double t){
+    //std::cout << "Adding point " << u << " at t=" << t << std::endl;
     if (t < tt[start_idx]){
       std::stringstream ss;
       ss << std::setprecision(4) << "Adding measurement older then new time: " << t << " < " << tt[start_idx] << std::endl;

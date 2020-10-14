@@ -2,7 +2,7 @@
 <launch>
 
     <arg name="kinematic"           default="true"/>
-    <arg name="plot_cost"           default="true"/>
+    <arg name="plot_cost"           default="false"/>
     <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
