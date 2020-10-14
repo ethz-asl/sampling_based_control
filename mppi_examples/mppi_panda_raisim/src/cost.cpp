@@ -6,7 +6,7 @@
  * @brief    description
  */
 
-#include "mppi_panda/cost.h"
+#include "mppi_panda_raisim/cost.h"
 
 #include <ros/package.h>
 

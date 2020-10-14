@@ -5,7 +5,7 @@
  * @version  1.0
  * @brief    description
  */
-#include "mppi_panda/controller_interface.h"
+#include "mppi_panda_raisim/controller_interface.h"
 
 #include <chrono>
 #include <ros/ros.h>
@@ -14,29 +14,26 @@
 using namespace panda;
 
 int main(int argc, char** argv){
+  raisim::World::setActivationKey("/home/giuseppe/git/raisimlib/rsc/activation.raisim");
+
   // ros interface
-  ros::init(argc, argv, "panda_control_node");
+  ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
   auto controller = PandaControllerInterface(nh);
 
-  bool kinematic_simulation = nh.param<bool>("dynamics/kinematic_simulation", true);
-  bool raisim_backend = nh.param<bool>("raisim_backend", false);
-
-  std::string robot_description = nh.param<std::string>("/robot_description", "");
-  std::string robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
-
-  mppi::DynamicsBase::dynamics_ptr simulation;
-  if (raisim_backend)
-    simulation = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, 0.01);
-  else
-    simulation = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  auto robot_description = nh.param<std::string>("/robot_description", "");
+  auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
+  auto simulation = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, 0.01);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
 
   // set initial state
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
-  for(size_t i=0; i<x0.size(); i++) x(i) = x0[i];
+  for(size_t i=0; i<x0.size(); i++) {
+    x(i) = x0[i];
+    x(i+14) = x0[i];
+  }
   simulation->reset(x);
 
   // init control input
@@ -76,14 +73,17 @@ int main(int argc, char** argv){
   controller.set_observation(x, sim_time);
 
   // start controller
-  controller.start();
+  // controller.start();
 
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
 
+    controller.update_reference();
     controller.set_observation(x, sim_time);
+    controller.update_policy();
     controller.get_input(x, u, sim_time);
-//    controller.get_input_state(x, x_nom, u, sim_time+sim_dt);
+    controller.publish_ros_default();
+    controller.publish_ros();
 
     if (!static_optimization){
       x = simulation->step(u, sim_dt);
@@ -101,9 +101,11 @@ int main(int argc, char** argv){
     ee_desired_publisher.publish(ee_pose_desired);
 
     auto end = std::chrono::steady_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;
+    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
     if (sim_dt - elapsed >0)
       ros::Duration(sim_dt - elapsed).sleep();
+    else
+      ROS_INFO_STREAM_THROTTLE(3.0, "Slower than real-time: " << elapsed/sim_dt << "slower.");
 
     ros::spinOnce();
   }

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(mppi_panda_raisim)
 
+set(CMAKE_BUILD_TYPE  RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
@@ -16,12 +17,7 @@ set(PACKAGE_DEPENDENCIES
     robot_control
     robot_control_ros
     robot_control_assets
-    controller_interface
-    franka_hw
-    hardware_interface
-    pluginlib
     roscpp
-    realtime_tools
 )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -49,6 +45,3 @@ add_dependencies(panda_raisim ${PROJECT_NAME})
 install(DIRECTORY launch resources
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-install(FILES plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

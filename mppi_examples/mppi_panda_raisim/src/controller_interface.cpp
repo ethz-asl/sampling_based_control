@@ -6,7 +6,7 @@
  * @brief    description
  */
 
-#include "mppi_panda/controller_interface.h"
+#include "mppi_panda_raisim/controller_interface.h"
 #include <ros/package.h>
 
 using namespace panda;
@@ -64,9 +64,7 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // config
   // -------------------------------
-  bool kinematic_simulation = param_io::param(nh_, "dynamics/kinematic_simulation", true);
-  std::string config_dir = ros::package::getPath("mppi_panda") + "/config/";
-  std::string config_file = config_dir + (kinematic_simulation ? "params_kinematic.yaml" : "params_dynamic.yaml");
+  std::string config_file = ros::package::getPath("mppi_panda_raisim") + "/config/params.yaml";
   if (!config_.init_from_file(config_file)){
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
@@ -75,17 +73,12 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // dynamics
   // -------------------------------
-  bool raisim_backend = param_io::param(nh_, "raisim_backend", true);
   mppi::DynamicsBase::dynamics_ptr dynamics;
-  if (raisim_backend){
-    std::string robot_description_raisim;
-    if(!nh_.param<std::string>("/robot_description_raisim", robot_description_raisim, "")){
-      throw std::runtime_error("Could not parse robot_description_raisim. Is the parameter set?");
-    }
-    dynamics = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, config_.step_size);
+  std::string robot_description_raisim;
+  if(!nh_.param<std::string>("/robot_description_raisim", robot_description_raisim, "")){
+    throw std::runtime_error("Could not parse robot_description_raisim. Is the parameter set?");
   }
-  else
-    dynamics = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  dynamics = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, config_.step_size);
 
   // -------------------------------
   // cost

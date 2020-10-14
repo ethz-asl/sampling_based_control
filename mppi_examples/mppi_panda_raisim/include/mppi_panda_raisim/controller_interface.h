@@ -6,9 +6,8 @@
  * @brief    description
  */
 #pragma once
-#include "mppi_panda/cost.h"
-#include "mppi_panda/dynamics.h"
-#include "mppi_panda/dynamics_raisim.h"
+#include "mppi_panda_raisim/cost.h"
+#include "mppi_panda_raisim/dynamics.h"
 #include <mppi_ros/controller_interface.h>
 
 #include <nav_msgs/Path.h>

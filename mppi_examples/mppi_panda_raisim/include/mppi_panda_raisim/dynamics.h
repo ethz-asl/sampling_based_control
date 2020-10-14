@@ -17,23 +17,23 @@
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
 #include <numeric>
-#include "mppi_panda/dimensions.h"
+#include "mppi_panda_raisim/dimensions.h"
 
 namespace panda{
 
 class PandaRaisimDynamics : public mppi::DynamicsBase {
  public:
   PandaRaisimDynamics(const std::string& robot_description, const double dt){
-    joint_p.setZero(7);
-    joint_v.setZero(7);
-    joint_p_gain.setZero(7);
+    joint_p.setZero(PandaDim::JOINT_DIMENSION);
+    joint_v.setZero(PandaDim::JOINT_DIMENSION);
+    joint_p_gain.setZero(PandaDim::JOINT_DIMENSION);
+    joint_d_gain.setZero(PandaDim::JOINT_DIMENSION);
+    joint_p_desired.setZero(PandaDim::JOINT_DIMENSION);
+    joint_v_desired.setZero(PandaDim::JOINT_DIMENSION);
     joint_p_gain.setConstant(200);
-    joint_d_gain.setZero(7);
     joint_d_gain.setConstant(10.0);
-    joint_p_desired.setZero(7);
-    joint_v_desired.setZero(7);
+
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
-    x_cmd_ = x_;
 
     sim_.setTimeStep(dt);
     sim_.setERP(0.,0.);

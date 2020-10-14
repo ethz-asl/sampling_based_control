@@ -29,7 +29,8 @@ struct MovingExtendedWindow{
 
   void trim(const double t){
     auto lower = std::lower_bound(tt.begin(), tt.end(), t);
-    size_t offset = std::distance(tt.begin(), lower)-1;  // the next index points to a larger time
+    // TODO check before there was a -1 that I now removed
+    int offset = std::distance(tt.begin(), lower);  // the next index points to a larger time
     offset = offset - window;
     assert(offset >=0);
 

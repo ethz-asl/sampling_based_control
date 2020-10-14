@@ -7,8 +7,18 @@
  */
 #pragma once
 
-enum PandaDim{
-  STATE_DIMENSION = 14, // joint positions and velocities
-  INPUT_DIMENSION = 7,  // joint velocities
-  REFERENCE_DIMENSION = 10  // end effector pose (x, y, z + quaterionion) + obstacle position
+/**
+ * JOINT_DIMENSION: equal to the number of joints
+ * INPUT_DIMENSION: the velocity command for each joint
+ * INPUT_INTEGRAL_DIMENSION: integral control requires an additional state
+ * STATE_DIMENSION: the combination of the dynamical system state
+ * given by joint velocities and positions and the integral of the velocity input
+ * REFERENCE_DIMENSION: composed of end effector pose (translation + quaternion) and obstacle cartesian position
+ */
+enum PandaDim: char {
+  JOINT_DIMENSION = 7,
+  INPUT_DIMENSION = 7,
+  INPUT_INTEGRAL_DIMENSION = 7,
+  STATE_DIMENSION = 21,
+  REFERENCE_DIMENSION = 10
 };

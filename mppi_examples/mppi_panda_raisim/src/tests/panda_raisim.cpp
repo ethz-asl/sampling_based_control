@@ -3,10 +3,10 @@
  * @author   Giuseppe Rizzi
  * @date     05.10.2020
  * @version  1.0
- * @brief    description
+ * @brief    Simulation of the panda dynamics class with raisim backend
  */
 
-#include "mppi_panda/dynamics_raisim.h"
+#include "mppi_panda_raisim/dynamics.h"
 #include <chrono>
 #include <thread>
 #include <numeric>
@@ -14,7 +14,7 @@
 #include <sensor_msgs/JointState.h>
 
 #define TIMESTEP 0.01
-
+#define DEFAULT_CONFIGURATION 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69;
 using namespace panda;
 using namespace std::chrono;
 
@@ -25,39 +25,55 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "panda_raisim");
   ros::NodeHandle nh("~");
 
+  // Instantiate the simulation world
   auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
-  //auto simulation = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, TIMESTEP);
   PandaRaisimDynamics simulation(robot_description_raisim, TIMESTEP);
 
-  Eigen::VectorXd x, x_snapshot;
+  // Reset the state to a default configuration
+  Eigen::VectorXd x;
+  Eigen::VectorXd x_snapshot;
   x.setZero(PandaDim::STATE_DIMENSION);
   x_snapshot.setZero(PandaDim::STATE_DIMENSION);
-  x << 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  x.head<7>() << DEFAULT_CONFIGURATION;
+  x.tail<7>() << DEFAULT_CONFIGURATION;
+
   std::cout << "Resetting to state x=" << x.transpose() << std::endl;
   simulation.reset(x);
 
-  Eigen::VectorXd u, u_snapshot;
+  // Instantiate the input vector with a small velocity in the first joint
+  Eigen::VectorXd u;
+  Eigen::VectorXd u_snapshot;
   u = simulation.get_zero_input(x);
   u_snapshot = simulation.get_zero_input(x);
+  u(0) = 0.1;
   std::cout << "Initializing input to: " << u.transpose() << std::endl;
 
+  // Ros publishing for visualization
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5",
-                      "panda_joint6", "panda_joint7"};
+  joint_state.name = {"panda_joint1",
+                      "panda_joint2",
+                      "panda_joint3",
+                      "panda_joint4",
+                      "panda_joint5",
+                      "panda_joint6",
+                      "panda_joint7"};
   joint_state.position.resize(7);
   joint_state.header.frame_id = "world";
 
-  std::vector<double> times;
-  std::cout << "Starting simulation!" << std::endl;
   long int loopN = 2000;
-  for (size_t i = 0; i < loopN; i++) {
-    //u(1) += TIMESTEP*0.1;
-    auto start = steady_clock::now();
-    x = simulation.step(u, TIMESTEP);
-    auto end = steady_clock::now();
-    times.push_back(duration_cast<nanoseconds>(end-start).count()/1e6);
+  double elapsed=0;
+  double total_time=0;
+  std::chrono::time_point<steady_clock> start, end;
 
+  std::cout << "Starting simulation!" << std::endl;
+  for (size_t i = 0; i < loopN; i++) {
+    start = steady_clock::now();
+    x = simulation.step(u, TIMESTEP);
+    end = steady_clock::now();
+    elapsed = duration_cast<nanoseconds>(end-start).count()/1e6;
+    total_time+=elapsed;
+    std::cout << elapsed << std::endl;
 
     if (i == 500) {
       std::cout << "Taking snapshot" << std::endl;
@@ -77,11 +93,10 @@ int main(int argc, char** argv) {
     }
     state_publisher.publish(joint_state);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    //ros::Duration(TIMESTEP).sleep();
-    ROS_INFO_STREAM_THROTTLE(1.0, "Sim time: " << i*TIMESTEP << " s.");
+    raisim::MSLEEP(10);
+    ROS_INFO_STREAM_THROTTLE(1.0, "Sim time: " << i*TIMESTEP << " s, elapsed sim dt: " << elapsed << " ms.");
   }
 
-  std::cout << "Average sim time: " << std::accumulate(times.begin(), times.end(), 0.0)/times.size();
+  std::cout << "Average sim time: " << total_time/loopN << std::endl;
   return 0;
 }
