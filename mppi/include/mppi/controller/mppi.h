@@ -101,6 +101,15 @@ class PathIntegral{
   void sample_noise(input_t& noise);
 
   /**
+   * @brief Sample a batch of trajectories
+   * @param dynamics the dynamics function to use
+   * @param cost the cost function to use
+   * @param start_idx first index in the rollouts vector
+   * @param end_idx last index in the rollouts vector
+   */
+  void sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost, const size_t start_idx, const size_t end_idx);
+
+  /**
    * @brief Sample multiple trajectories starting from current observation and applying noise input
    * with mean the previous shifted optimal input. A ratio of best previous rollouts is reused to warm start
    * new sample generation and one rollout is a noise free one.
@@ -241,11 +250,6 @@ class PathIntegral{
 
   bool first_step_ = true;
 
-  // threading -- not used at the moment
-  std::unique_ptr<ThreadPool> pool;
-  std::vector<std::future<void>> futures;
-  int rollouts_per_thread;
-
  protected:
   double reset_time_;                       // time from which the current optimization has started
   observation_t x0_;                        // first state for simulation
@@ -270,6 +274,11 @@ class PathIntegral{
   std::atomic_bool reference_set_;          // flag to check that reference has ever been set
   std::shared_mutex reference_mutex_;       // protects access to the reference trajectory
   reference_trajectory_t rr_tt_ref_;        // reference used during optimization
+
+  std::unique_ptr<ThreadPool> pool_;        // thread pool
+  std::vector<std::future<void>> futures_;  // futures results from the thread pool
+  std::vector<dynamics_ptr> dynamics_v_;    // vector of dynamics functions used per each thread
+  std::vector<cost_ptr> cost_v_;            // vector of cost functions used per each thread
 
   renderer_ptr renderer_;                   // adds optional visualization of rollouts
 };

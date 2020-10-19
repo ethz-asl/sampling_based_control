@@ -84,9 +84,14 @@ void PathIntegral::init_filter() {
 
 void PathIntegral::init_threading() {
   if (config_.threads > 1){
-    rollouts_per_thread = std::floor(config_.rollouts / config_.threads);
-    pool = std::make_unique<ThreadPool>(config_.threads);
-    futures.resize(config_.threads);
+    std::cout << "Using multithreading. Number of threads: " << config_.threads << std::endl;
+    pool_ = std::make_unique<ThreadPool>(config_.threads);
+    futures_.resize(config_.threads);
+
+    for (size_t i=0; i < config_.threads; i++){
+      dynamics_v_.push_back(dynamics_->create());
+      cost_v_.push_back(cost_->create());
+    }
   }
 }
 
@@ -196,15 +201,20 @@ void PathIntegral::set_reference_trajectory(mppi::reference_trajectory_t &ref) {
 void PathIntegral::update_reference() {
   std::shared_lock<std::shared_mutex> lock(reference_mutex_);
   cost_->set_reference_trajectory(rr_tt_ref_);
+
+  if(config_.threads > 1){
+    for (auto& cost : cost_v_)
+      cost->set_reference_trajectory(rr_tt_ref_);
+  }
 }
 
 void PathIntegral::sample_noise(input_t &noise) {
   sampler_->get_sample(noise);
 }
 
-void PathIntegral::sample_trajectories() {
-  for (size_t k = 0; k < config_.rollouts; k++) {
-    dynamics_->reset(x0_internal_);
+void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost, const size_t start_idx, const size_t end_idx){
+  for (size_t k = start_idx; k < end_idx; k++) {
+    dynamics->reset(x0_internal_);
     for (size_t t = 0; t < steps_; t++) {
 
       // cached rollout (recompute noise)
@@ -216,14 +226,14 @@ void PathIntegral::sample_trajectories() {
         rollouts_[k].nn[t].setZero();
         rollouts_[k].uu[t] = opt_roll_.uu[t];
       }
-      // perturbed trajectory
+        // perturbed trajectory
       else {
         sample_noise(rollouts_[k].nn[t]);
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
       }
 
-      x_ = dynamics_->step(rollouts_[k].uu[t], config_.step_size);
-      double cost_temp = std::pow(config_.discount_factor, t) * cost_->get_stage_cost(x_, t0_internal_ + t * config_.step_size);
+      x_ = dynamics->step(rollouts_[k].uu[t], config_.step_size);
+      double cost_temp = std::pow(config_.discount_factor, t) * cost->get_stage_cost(x_, t0_internal_ + t * config_.step_size);
       if (std::isnan(cost_temp)) {
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
       }
@@ -236,6 +246,21 @@ void PathIntegral::sample_trajectories() {
           config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() * opt_roll_.uu[t];
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
+  }
+}
+
+void PathIntegral::sample_trajectories() {
+  if (config_.threads == 1){
+    sample_trajectories_batch(dynamics_, cost_, 0, config_.rollouts);
+  }
+  else{
+    for(size_t i=0; i < config_.threads; i++){
+      futures_[i] = pool_->enqueue(std::bind(&PathIntegral::sample_trajectories_batch,
+          this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+              dynamics_v_[i], cost_v_[i], (size_t)i*config_.rollouts/config_.threads, (size_t)(i+1)*config_.rollouts/config_.threads);
+    }
+
+    for(size_t i=0; i < config_.threads; i++) futures_[i].get();
   }
 }
 
