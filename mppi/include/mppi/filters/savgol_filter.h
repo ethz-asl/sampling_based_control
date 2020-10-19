@@ -13,6 +13,10 @@
 #include <gram_savitzky_golay/gram_savitzky_golay.h>
 #include <boost/circular_buffer.hpp>
 
+namespace mppi { struct MovingExtendedWindow; }
+
+std::ostream& operator<<(std::ostream& os, const mppi::MovingExtendedWindow& w);
+
 namespace mppi{
 
 struct MovingExtendedWindow{
@@ -22,30 +26,36 @@ struct MovingExtendedWindow{
     tt.resize(size+2*window, -1);
   }
 
+  double last_trim_t;
   int start_idx;
   int window;
   std::vector<double> uu;
   std::vector<double> tt;
 
   void trim(const double t){
-    auto lower = std::lower_bound(tt.begin(), tt.end(), t);
-    int offset = std::distance(tt.begin(), lower-1);  // -1 since lower points to a larger time
+    last_trim_t = t;
+    auto lower = std::upper_bound(tt.begin(), tt.end(), t); // index to time larger than this time
+    int offset = std::distance(tt.begin(), lower-1);
     offset = offset - window;
     assert(offset >=0);
 
     std::rotate(tt.begin(), tt.begin() + offset , tt.end());
     std::rotate(uu.begin(), uu.begin() + offset, uu.end());
 
-    std::fill(tt.end() - offset, tt.end(), *(tt.end()-offset-1));
-    std::fill(uu.end() - offset, uu.end(), *(uu.end()-offset-1));
+    if (offset>0) std::fill(tt.end() - offset, tt.end(), *(tt.end()-offset-1));
+    if (offset>0) std::fill(uu.end() - offset, uu.end(), *(uu.end()-offset-1));
 
     start_idx = window;
+    tt[start_idx] = t;
   }
 
   void add_point(const double u, const double t){
     if (t < tt[start_idx]){
       std::stringstream ss;
       ss << std::setprecision(4) << "Adding measurement older then new time: " << t << " < " << tt[start_idx] << std::endl;
+      ss << "start_idx: " << start_idx << std::endl;
+      ss << "last trim time: " << last_trim_t << std::endl;
+      ss << "window: " << *this << std::endl;
       throw std::runtime_error(ss.str());
     }
     assert(start_idx < uu.size());
@@ -68,6 +78,7 @@ struct MovingExtendedWindow{
     std::fill(uu.begin() + start_idx + 1, uu.end(), uu[start_idx]);
     std::fill(tt.begin() + start_idx + 1, tt.end(), tt[start_idx]);
   }
+
 };
 
 class SavGolFilter{
@@ -109,4 +120,3 @@ class SavGolFilter{
 
 }
 
-std::ostream& operator<<(std::ostream& os, mppi::MovingExtendedWindow& w);

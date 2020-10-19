@@ -111,6 +111,13 @@ void PathIntegral::update_policy() {
       sample_trajectories();
       optimize();
       filter_input();
+
+      // TODO move this away. This goes year since there might be filtering happening before
+      // optimal rollout
+      dynamics_->reset(x0_internal_);
+      for (size_t t = 0; t < steps_; t++) {
+        opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+      }
     }
     swap_policies();
 
@@ -152,6 +159,7 @@ void PathIntegral::initialize_rollouts() {
   for(size_t i=0; i<steps_; i++) {
     opt_roll_cache_.tt[i] = t0_internal_ + config_.step_size * i;
   }
+  std::cout << "Done initializing rollouts" << std::endl;
 }
 
 void PathIntegral::prepare_rollouts() {
@@ -213,6 +221,7 @@ void PathIntegral::sample_noise(input_t &noise) {
 }
 
 void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost, const size_t start_idx, const size_t end_idx){
+  observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     for (size_t t = 0; t < steps_; t++) {
@@ -232,14 +241,14 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& c
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
       }
 
-      x_ = dynamics->step(rollouts_[k].uu[t], config_.step_size);
-      double cost_temp = std::pow(config_.discount_factor, t) * cost->get_stage_cost(x_, t0_internal_ + t * config_.step_size);
+      x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
+      double cost_temp = std::pow(config_.discount_factor, t) * cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
       if (std::isnan(cost_temp)) {
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
       }
 
       // store data
-      rollouts_[k].xx[t] = x_;
+      rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
       rollouts_[k].total_cost += cost_temp -
           config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() * rollouts_[k].nn[t] +
@@ -303,12 +312,6 @@ void PathIntegral::optimize() {
     std::cout << "New covariance: \n" << new_covariance << std::endl;
     sampler_->set_covariance(new_covariance);
     std::cout << "New covariance inverse is \n" << sampler_->sigma_inv() << std::endl;
-  }
-
-  // optimal rollout
-  dynamics_->reset(x0_internal_);
-  for (size_t t = 0; t < steps_; t++) {
-    opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
   }
 }
 
