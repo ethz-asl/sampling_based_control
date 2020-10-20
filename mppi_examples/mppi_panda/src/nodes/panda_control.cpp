@@ -17,13 +17,14 @@ int main(int argc, char** argv){
   // ros interface
   ros::init(argc, argv, "panda_control_node");
   ros::NodeHandle nh("~");
+
+  auto sequential = nh.param<bool>("sequential_execution", false);
   auto controller = PandaControllerInterface(nh);
 
-  bool kinematic_simulation = nh.param<bool>("dynamics/kinematic_simulation", true);
-  std::string robot_description = nh.param<std::string>("/robot_description", "");
 
   mppi::DynamicsBase::dynamics_ptr simulation;
-  simulation = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  std::string robot_description = nh.param<std::string>("/robot_description", "");
+  simulation = std::make_shared<PandaDynamics>(robot_description);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
@@ -69,18 +70,21 @@ int main(int argc, char** argv){
   // set the very first observation
   controller.set_observation(x, sim_time);
 
-  // start controller
-//  controller.start();
+  if (!sequential)
+    controller.start();
 
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
 
-    controller.update_reference();
+    if (sequential){
+      controller.update_reference();
+      controller.publish_ros_default();
+      controller.publish_ros();
+      controller.update_policy();
+    }
+
     controller.set_observation(x, sim_time);
-    controller.update_policy();
     controller.get_input(x, u, sim_time);
-    controller.publish_ros_default();
-    controller.publish_ros();
 
 
     if (!static_optimization){

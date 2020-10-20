@@ -65,8 +65,7 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // dynamics
   // -------------------------------
-  bool kinematic_simulation = param_io::param(nh_, "dynamics/kinematic_simulation", true);
-  auto dynamics = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  auto dynamics = std::make_shared<PandaDynamics>(robot_description);
 
   // -------------------------------
   // cost
@@ -84,8 +83,7 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // config
   // -------------------------------
-  std::string config_dir = ros::package::getPath("mppi_panda") + "/config/";
-  std::string config_file = config_dir + (kinematic_simulation ? "params_kinematic.yaml" : "params_dynamic.yaml");
+  std::string config_file = ros::package::getPath("mppi_panda") + "/config/params.yaml";
   if (!config_.init_from_file(config_file)){
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
