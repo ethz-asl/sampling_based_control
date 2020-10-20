@@ -48,8 +48,18 @@ int main(int argc, char** argv){
   bool static_optimization = nh.param<bool>("static_optimization", false);
   double sim_dt = nh.param<double>("sim_dt", 0.01);
 
-  // sim loop
   double sim_time = 0.0;
+
+  // init the controller
+  bool ok = controller.init();
+  if (!ok){
+    throw std::runtime_error("Failed to initialzied controller!");
+  }
+
+  // set the very first observation
+  controller.set_observation(x, sim_time);
+
+  // sim loop
   controller.start();
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
