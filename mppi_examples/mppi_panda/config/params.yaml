@@ -42,4 +42,5 @@ publish_ros: true                 # optional ros publishing
 ros_publish_rate: 10.0            # ros publishing rate, used if sequential=false
 
 static_optimization: false        # in this setup, no control is sent to the simulation and optimize from same x0
+                                  # set filter type to 0 if true since this is broken with filtering active
 sim_dt: 0.01                      # simulation step time (can be different from internal solver simulation step)
