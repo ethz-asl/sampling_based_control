@@ -35,8 +35,7 @@ struct PandaDynamicsConfig{
 
 class PandaDynamics : public mppi::DynamicsBase {
  public:
-  PandaDynamics(const std::string& robot_description="", bool kinematic_simulation=true):
-  kinematic_simulation_(kinematic_simulation){
+  PandaDynamics(const std::string& robot_description=""){
 
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
     previous_u_ = input_t::Zero(PandaDim::INPUT_DIMENSION);
@@ -72,7 +71,6 @@ class PandaDynamics : public mppi::DynamicsBase {
   input_t previous_u_;
   PandaDynamicsConfig config_;
 
-  bool kinematic_simulation_ = true;
   pinocchio::Model model_;
   pinocchio::Data data_;
 

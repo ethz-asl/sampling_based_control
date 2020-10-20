@@ -7,6 +7,7 @@
  */
 
 #include "mppi_panda/controller_interface.h"
+#include "mppi_panda/renderer.h"
 #include <ros/package.h>
 
 using namespace panda;
@@ -64,8 +65,7 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // dynamics
   // -------------------------------
-  bool kinematic_simulation = param_io::param(nh_, "dynamics/kinematic_simulation", true);
-  auto dynamics = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  auto dynamics = std::make_shared<PandaDynamics>(robot_description);
 
   // -------------------------------
   // cost
@@ -74,11 +74,16 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
   auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight, obstacle_radius_);
 
+  // rendering
+  bool rendering = param_io::param(nh_, "rendering", false);
+  std::shared_ptr<mppi::Renderer> renderer = nullptr;
+  if (rendering)
+    renderer = std::make_shared<RendererPanda>(nh_, robot_description);
+
   // -------------------------------
   // config
   // -------------------------------
-  std::string config_dir = ros::package::getPath("mppi_panda") + "/config/";
-  std::string config_file = config_dir + (kinematic_simulation ? "params_kinematic.yaml" : "params_dynamic.yaml");
+  std::string config_file = ros::package::getPath("mppi_panda") + "/config/params.yaml";
   if (!config_.init_from_file(config_file)){
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
@@ -87,7 +92,7 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_, nullptr, renderer);
 
   // -------------------------------
   // initialize reference

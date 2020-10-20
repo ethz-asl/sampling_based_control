@@ -20,18 +20,11 @@
         <remap from="joint_states"      to="/joint_states"/>
     </node>
 
-    <!--  Run the test node-->
-    <group if="$(arg kinematic)">
-        <rosparam command="load" file="$(find mppi_panda)/config/params_kinematic.yaml" ns="panda_control"/>
-        <param name="panda_control/config_file" value="$(find mppi_panda)/config/params_kinematic.yaml"/>
-    </group>
-    <group unless="$(arg kinematic)">
-        <rosparam command="load" file="$(find mppi_panda)/config/params_dynamic.yaml" ns="panda_control"/>
-        <param name="panda_control/config_file" value="$(find mppi_panda)/config/params_dynamic.yaml"/>
-    </group>
-
     <node name="panda_control" type="panda_control" pkg="mppi_panda" output="screen"
-          launch-prefix="gdb -ex run --args"/>
+          launch-prefix="gdb -ex run --args">
+        <rosparam command="load" file="$(find mppi_panda)/config/params.yaml"/>
+        <param name="config_file" value="$(find mppi_panda)/config/params.yaml"/>
+    </node>
 
     <include file="$(find mppi_panda)/launch/common.launch">
         <arg name="plot_cost"       value="$(arg plot_cost)"/>
