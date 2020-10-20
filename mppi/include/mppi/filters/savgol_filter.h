@@ -29,8 +29,9 @@ struct MovingExtendedWindow{
 
   void trim(const double t){
     auto lower = std::lower_bound(tt.begin(), tt.end(), t);
-    size_t offset = std::distance(tt.begin(), lower);
-    offset = offset - window < 0 ? 0 : offset - window;
+    int offset = std::distance(tt.begin(), lower-1);  // -1 since lower points to a larger time
+    offset = offset - window;
+    assert(offset >=0);
 
     std::rotate(tt.begin(), tt.begin() + offset , tt.end());
     std::rotate(uu.begin(), uu.begin() + offset, uu.end());
@@ -58,9 +59,9 @@ struct MovingExtendedWindow{
   std::vector<double> extract(const double t){
     auto lower = std::lower_bound(tt.begin(), tt.end(), t);
     assert(lower != tt.end());
-    size_t idx = std::distance(tt.begin(), lower);
+    size_t idx = std::distance(tt.begin(), lower-1);
 
-    return std::vector<double>(uu.begin()+idx-window, uu.begin()+idx+window+1);
+    return std::vector<double>(uu.begin()+idx-window, uu.begin()+idx+window);
   }
 
   void extend(){
