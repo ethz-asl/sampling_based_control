@@ -1,0 +1,46 @@
+sequential: true            # true to run an asynchronous thread where controller optimize given the latest observation
+rendering: false            # use a custom renderer to visualize the trajectory
+
+# dynamics parameters
+dynamics:
+  substeps: 1
+
+# solver parameters. Check mppi/src/solver_config.cpp
+solver:
+  rollouts: 100
+  lambda: 0.0001 #0.001
+  h: 10.0
+  step_size: 0.01
+  horizon: 1.0
+
+  cost_ratio: 0.2
+  caching_factor: 0.3
+  filtering: true
+  substeps: 1
+
+  filter_type: 1
+  filter_order: 2
+  filter_window: 30
+
+  adaptive_sampling: false
+  input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
+
+  discount_factor: 1.0
+  verbose: false
+  threads: 1
+  debug_print: false
+
+# custom params
+initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
+linear_weight: 100.0
+angular_weight: 10.0
+obstacle_radius: 0.15
+
+policy_update_rate: 0.0           # execute as fast as possible, used if sequential=false
+reference_update_rate: 10.0       # update reference at this rate, used if sequential=false
+publish_ros: true                 # optional ros publishing
+ros_publish_rate: 10.0            # ros publishing rate, used if sequential=false
+
+static_optimization: false        # in this setup, no control is sent to the simulation and optimize from same x0
+                                  # set filter type to 0 if true since this is broken with filtering active
+sim_dt: 0.01                      # simulation step time (can be different from internal solver simulation step)
