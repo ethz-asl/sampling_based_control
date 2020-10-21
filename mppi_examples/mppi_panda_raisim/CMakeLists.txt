@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 project(mppi_panda_raisim)
 
+set(RAISIM_LIB_PATH "/home/giuseppe/raisim_ws/build")
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${RAISIM_LIB_PATH})
+
 set(CMAKE_BUILD_TYPE  RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
+
 find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
 find_package(raisim CONFIG REQUIRED)
+find_package(raisimOgre CONFIG REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
     sensor_msgs
@@ -41,6 +46,11 @@ add_dependencies(panda_raisim_control ${PROJECT_NAME})
 add_executable(panda_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(panda_raisim ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_raisim ${PROJECT_NAME})
+
+add_executable(sim_ogre src/tests/sim.cpp)
+target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
+add_dependencies(sim_ogre ${PROJECT_NAME})
+
 
 install(DIRECTORY launch resources
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
