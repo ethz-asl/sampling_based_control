@@ -28,6 +28,11 @@ class PandaCost: public mppi::CostBase{
    ~PandaCost() = default;
 
  private:
+   std::string robot_description_;
+   double linear_weight_;
+   double angular_weight_;
+   double obstacle_radius_;
+
    pinocchio::Model model_;
    pinocchio::Data data_;
 
@@ -40,13 +45,12 @@ class PandaCost: public mppi::CostBase{
 
    double Q_obst_ = 100000;
    pinocchio::SE3 pose_obstacle_;
-   double obstacle_radius_;
 
    Eigen::Matrix<double, 7, 1> joint_limits_lower_;
    Eigen::Matrix<double, 7, 1> joint_limits_upper_;
 
  public:
-   cost_ptr create() override { return std::make_shared<PandaCost>(); }
+   cost_ptr create() override { return std::make_shared<PandaCost>(robot_description_, linear_weight_, angular_weight_, obstacle_radius_); }
    cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
 
    void set_linear_weight(const double k){ Q_linear_ *= k; }

@@ -52,32 +52,20 @@ void PandaControllerInterface::init_model(const std::string& robot_description){
 }
 
 bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral> &controller) {
-  // -------------------------------
-  // internal model
-  // -------------------------------
   std::string robot_description;
   if(!nh_.param<std::string>("/robot_description", robot_description, "")){
     throw std::runtime_error("Could not parse robot description. Is the parameter set?");
   };
 
+  // -------------------------------
+  // internal model
+  // -------------------------------
   init_model(robot_description);
-
-  // -------------------------------
-  // config
-  // -------------------------------
-  bool kinematic_simulation = param_io::param(nh_, "dynamics/kinematic_simulation", true);
-  std::string config_dir = ros::package::getPath("mppi_panda") + "/config/";
-  std::string config_file = config_dir + (kinematic_simulation ? "params_kinematic.yaml" : "params_dynamic.yaml");
-  if (!config_.init_from_file(config_file)){
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return false;
-  }
 
   // -------------------------------
   // dynamics
   // -------------------------------
-  mppi::DynamicsBase::dynamics_ptr dynamics;
-  dynamics = std::make_shared<PandaDynamics>(robot_description, kinematic_simulation);
+  auto dynamics = std::make_shared<PandaDynamics>(robot_description);
 
   // -------------------------------
   // cost
@@ -91,6 +79,15 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   std::shared_ptr<mppi::Renderer> renderer = nullptr;
   if (rendering)
     renderer = std::make_shared<RendererPanda>(nh_, robot_description);
+
+  // -------------------------------
+  // config
+  // -------------------------------
+  std::string config_file = ros::package::getPath("mppi_panda") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)){
+    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
+    return false;
+  }
 
   // -------------------------------
   // controller

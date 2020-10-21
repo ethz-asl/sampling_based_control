@@ -15,8 +15,6 @@ set(COMMON_LIBRARIES  ${catkin_LIBRARIES} yaml-cpp gram_savitzky_golay::gram_sav
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS}
         ${yaml_cpp_INCLUDE_DIRS})
 
-
-
 find_package(catkin REQUIRED COMPONENTS sensor_msgs std_msgs roscpp)
 catkin_package(
         LIBRARIES ${PROJECT_NAME}

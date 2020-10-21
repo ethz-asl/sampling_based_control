@@ -29,7 +29,7 @@ class PandaMobileControllerInterface : public mppi_ros::ControllerRos {
   geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
 
  private:
-  void init_model();
+  void init_model(const std::string& robot_description);
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);

@@ -19,7 +19,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 8
   debug_print: false
 
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]

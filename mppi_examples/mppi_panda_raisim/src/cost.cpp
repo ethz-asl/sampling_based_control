@@ -14,12 +14,16 @@ using namespace panda;
 
 PandaCost::PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius){
 
+  robot_description_ = robot_description;
+  linear_weight_ = linear_weight;
+  angular_weight_ = angular_weight;
+  obstacle_radius_ = obstacle_radius;
+
   pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
   frame_id_ = model_.getFrameId(tracked_frame_);
   Q_linear_ = Eigen::Matrix3d::Identity() * linear_weight;
   Q_angular_ = Eigen::Matrix3d::Identity() * angular_weight;
-  obstacle_radius_ = obstacle_radius;
 
   // TODO remove hard coded joint limits
   joint_limits_lower_ << -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973;

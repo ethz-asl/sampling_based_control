@@ -13,9 +13,9 @@
   <xacro:property name="collision"            value="$(arg collision)" />
   <xacro:property name="add_finger"           value="$(arg add_finger)" />
 
-  <link name="world"/>
-  <joint name="panda_joint_world" type="fixed">
-    <parent link="world"/>
+  <xacro:macro name="panda_robot" params="parent_link:='world'">
+  <joint name="panda_joint_${parent_link}" type="fixed">
+    <parent link="${parent_link}"/>
     <child link="panda_link0"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
   </joint>
@@ -388,7 +388,6 @@
       </collision>
     </xacro:if>
   </link>
-
   <xacro:if value="${add_finger}">
     <gazebo reference="panda_hand"/>
     <gazebo reference="panda_leftfinger"/>
@@ -426,12 +425,14 @@
           <color rgba="1 1 1 1"/>
         </material>
       </visual>
-      <collision>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-        <geometry>
-          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>
-        </geometry>
-      </collision>
+      <xacro:if value="${collision}">
+        <collision>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <geometry>
+            <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>
+          </geometry>
+        </collision>
+      </xacro:if>
     </link>
     <link name="panda_rightfinger">
       <inertial>
@@ -448,12 +449,14 @@
           <color rgba="1 1 1 1"/>
         </material>
       </visual>
-      <collision>
-        <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
-        <geometry>
-          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>
-        </geometry>
-      </collision>
+      <xacro:if value="${collision}">
+        <collision>
+          <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+          <geometry>
+            <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>
+          </geometry>
+        </collision>
+      </xacro:if>
     </link>
     <joint name="panda_finger_joint1" type="prismatic">
       <parent link="panda_hand"/>
@@ -470,7 +473,7 @@
       <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>
     </joint>
   </xacro:if>
-
+  </xacro:macro>
 </robot>
 
 
