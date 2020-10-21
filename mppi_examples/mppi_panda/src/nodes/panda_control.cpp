@@ -18,7 +18,7 @@ int main(int argc, char** argv){
   ros::init(argc, argv, "panda_control_node");
   ros::NodeHandle nh("~");
 
-  auto sequential = nh.param<bool>("sequential_execution", false);
+  auto sequential = nh.param<bool>("sequential", false);
   auto controller = PandaControllerInterface(nh);
 
 
