@@ -3,7 +3,7 @@
 
     <arg name="kinematic"           default="true"/>
     <arg name="plot_cost"           default="false"/>
-    <arg name="plot_input"          default="false"/>
+    <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
     <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>

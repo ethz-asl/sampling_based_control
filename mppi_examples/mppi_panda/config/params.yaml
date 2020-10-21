@@ -19,7 +19,7 @@ solver:
   substeps: 1                   # number of optimization substeps (never investigated)
 
   filter_type: 1                # currently only savitzky-golay (1) or none (0)
-  filter_order: 2               # polynomial used to approximate the input sequence
+  filter_order: 5               # polynomial used to approximate the input sequence
   filter_window: 30             # window length
 
   adaptive_sampling: false      # untested -- leave
