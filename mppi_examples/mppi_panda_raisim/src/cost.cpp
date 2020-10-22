@@ -7,8 +7,11 @@
  */
 
 #include "mppi_panda_raisim/cost.h"
-
+#include "mppi_panda_raisim/dimensions.h"
 #include <ros/package.h>
+
+#define LOWER_LIMITS -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
+#define UPPER_LIMITS 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
 
 using namespace panda;
 
@@ -25,11 +28,11 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
   Q_linear_ = Eigen::Matrix3d::Identity() * linear_weight;
   Q_angular_ = Eigen::Matrix3d::Identity() * angular_weight;
 
-  // TODO remove hard coded joint limits
-  joint_limits_lower_ << -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973;
-  joint_limits_upper_ << 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973;
-  std::cout << "Lower joints limits: " << joint_limits_lower_.transpose();
-  std::cout << "Upper joints limits: " << joint_limits_upper_.transpose();
+  // TODO(giuseppe) remove hard coded joint limits
+  joint_limits_lower_ << LOWER_LIMITS;
+  joint_limits_upper_ << UPPER_LIMITS;
+  std::cout << "Lower joints limits: " << joint_limits_lower_.transpose() << std::endl;
+  std::cout << "Upper joints limits: " << joint_limits_upper_.transpose() << std::endl;
 
 }
 
@@ -41,7 +44,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   double obstacle_cost = 0;
   double joint_limit_cost = 0;
 
-  pose_current_ = get_pose_end_effector(x.head<7>());
+  pose_current_ = get_pose_end_effector(x);
   Eigen::Vector3d ref_t = ref.head<3>();
   Eigen::Quaterniond ref_q(ref.segment<4>(3));
   pose_reference_ = pinocchio::SE3(ref_q, ref_t);
@@ -69,7 +72,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
 
 pinocchio::SE3 PandaCost::get_pose_end_effector(const Eigen::VectorXd& x){
-  pinocchio::forwardKinematics(model_, data_, x.head<7>());
+  pinocchio::forwardKinematics(model_, data_, x.head<PandaDim::JOINT_DIMENSION>());
   pinocchio::updateFramePlacements(model_, data_);
   return data_.oMf[frame_id_];
 }

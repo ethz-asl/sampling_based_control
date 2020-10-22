@@ -28,11 +28,11 @@ int main(int argc, char** argv){
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
 
-  // set initial state
+  // set initial state (which is also equal to the one to be tracked)
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for(size_t i=0; i<x0.size(); i++) {
-    x(i) = x0[i];
-    x(i+14) = x0[i];
+    x.head<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
+    x.tail<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
   }
   simulation->reset(x);
 
@@ -51,8 +51,10 @@ int main(int argc, char** argv){
                       "panda_joint4",
                       "panda_joint5",
                       "panda_joint6",
-                      "panda_joint7"};
-  joint_state.position.resize(7);
+                      "panda_joint7",
+                      "panda_finger_joint1",
+                      "panda_finger_joint2"};
+  joint_state.position.resize(joint_state.name.size());
   joint_state.header.frame_id = "world";
 
   geometry_msgs::PoseStamped ee_pose;
@@ -90,7 +92,8 @@ int main(int argc, char** argv){
       sim_time += sim_dt;
     }
 
-    for(size_t i=0; i<7; i++) joint_state.position[i] = x(i);
+    for(size_t i=0; i<PandaDim::JOINT_DIMENSION; i++)
+      joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 

@@ -7,8 +7,8 @@
 
     <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
 
-    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
-    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision_format:='obj' collision:=false"/>
+    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true"/>
+    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision_format:='obj' collision:=false add_finger:=true"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>

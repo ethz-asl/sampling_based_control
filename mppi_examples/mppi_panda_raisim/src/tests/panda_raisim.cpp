@@ -14,7 +14,7 @@
 #include <sensor_msgs/JointState.h>
 
 #define TIMESTEP 0.01
-#define DEFAULT_CONFIGURATION 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69;
+#define DEFAULT_CONFIGURATION 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04;
 using namespace panda;
 using namespace std::chrono;
 
@@ -34,18 +34,19 @@ int main(int argc, char** argv) {
   Eigen::VectorXd x_snapshot;
   x.setZero(PandaDim::STATE_DIMENSION);
   x_snapshot.setZero(PandaDim::STATE_DIMENSION);
-  x.head<7>() << DEFAULT_CONFIGURATION;
-  x.tail<7>() << DEFAULT_CONFIGURATION;
+  x.head<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
+  x.tail<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
 
   std::cout << "Resetting to state x=" << x.transpose() << std::endl;
   simulation.reset(x);
 
-  // Instantiate the input vector with a small velocity in the first joint
+  // Instantiate the input vector with a small velocity in the first joint and slowly close gripper
   Eigen::VectorXd u;
   Eigen::VectorXd u_snapshot;
   u = simulation.get_zero_input(x);
   u_snapshot = simulation.get_zero_input(x);
-  u(0) = 0.1;
+  u(0) = 0.05;
+  u.tail<1>()(0) = -0.005;
   std::cout << "Initializing input to: " << u.transpose() << std::endl;
 
   // Ros publishing for visualization
@@ -57,8 +58,10 @@ int main(int argc, char** argv) {
                       "panda_joint4",
                       "panda_joint5",
                       "panda_joint6",
-                      "panda_joint7"};
-  joint_state.position.resize(7);
+                      "panda_joint7",
+                      "panda_finger_joint1",
+                      "panda_finger_joint2"};
+  joint_state.position.resize(joint_state.name.size());
   joint_state.header.frame_id = "world";
 
   long int loopN = 2000;
@@ -72,13 +75,14 @@ int main(int argc, char** argv) {
     x = simulation.step(u, TIMESTEP);
     end = steady_clock::now();
     elapsed = duration_cast<nanoseconds>(end-start).count()/1e6;
-    total_time+=elapsed;
-    std::cout << elapsed << std::endl;
+    total_time += elapsed;
 
     if (i == 500) {
       std::cout << "Taking snapshot" << std::endl;
       x_snapshot = x;
       u_snapshot = u;
+      std::cout << "x_snapshot: " << x_snapshot.transpose() << std::endl;
+      std::cout << "u_snapshot: " << u_snapshot.transpose() << std::endl;
     }
 
     if (i == 1000) {
@@ -88,7 +92,7 @@ int main(int argc, char** argv) {
     }
 
     joint_state.header.stamp = ros::Time::now();
-    for (size_t j = 0; j < 7; j++) {
+    for (size_t j = 0; j < PandaDim::JOINT_DIMENSION; j++) {
       joint_state.position[j] = x(j);
     }
     state_publisher.publish(joint_state);

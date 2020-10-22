@@ -6,6 +6,7 @@
  * @brief    description
  */
 
+#include <iostream>
 #include <chrono>
 #include <numeric>
 
@@ -96,6 +97,12 @@ int main(int argc, char **argv) {
   door->setPdGains(doorPgain, doorDgain);
   door->setPdTarget(doorNominalConfig, doorVelocityTarget);
   door->setName("door"); // this is the name assigned for raisim. Not used in this example
+
+  /// handle
+  std::cout << "Printing handle state" << std::endl;
+  auto handle = door->getFrameByName("handle_link");
+  std::cout << handle.position << std::endl;
+  std::cout << handle.orientation << std::endl;
 
   /// create visualizer objects
   vis->createGraphicalObject(ground, 20, "floor", "checkerboard_green");

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda.urdf.xacro"/>
+    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
     <arg name="tf_prefix" default=""/>
 
-    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
-    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision:=false collision_format:='obj'"/>
+    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true"/>
+    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision:=false collision_format:='obj' add_finger:=true"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>

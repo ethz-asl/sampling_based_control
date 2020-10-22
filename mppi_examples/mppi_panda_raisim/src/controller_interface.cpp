@@ -104,14 +104,13 @@ void PandaControllerInterface::ee_pose_desired_callback(const geometry_msgs::Pos
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ee_desired_pose_ = *msg;
   Eigen::VectorXd pr = Eigen::VectorXd::Zero(7);
-  pr(0) = msg->pose.position.x;
-  pr(1) = msg->pose.position.y;
-  pr(2) = msg->pose.position.z;
-  pr(3) = msg->pose.orientation.x;
-  pr(4) = msg->pose.orientation.y;
-  pr(5) = msg->pose.orientation.z;
-  pr(6) = msg->pose.orientation.w;
-  ref_.rr[0].head<7>() = pr;
+  ref_.rr[0].head<7>()(0) = msg->pose.position.x;
+  ref_.rr[0].head<7>()(1) = msg->pose.position.y;
+  ref_.rr[0].head<7>()(2) = msg->pose.position.z;
+  ref_.rr[0].head<7>()(3) = msg->pose.orientation.x;
+  ref_.rr[0].head<7>()(4) = msg->pose.orientation.y;
+  ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
+  ref_.rr[0].head<7>()(6) = msg->pose.orientation.w;
 }
 
 void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg){
@@ -134,7 +133,7 @@ bool PandaControllerInterface::update_reference() {
 }
 
 pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x){
-  pinocchio::forwardKinematics(model_, data_, x.head<7>());
+  pinocchio::forwardKinematics(model_, data_, x.head<PandaDim::JOINT_DIMENSION>());
   pinocchio::updateFramePlacements(model_, data_);
   return data_.oMf[model_.getFrameId("panda_hand")];
 }
@@ -169,7 +168,7 @@ void PandaControllerInterface::publish_ros() {
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_){
-    pose_temp = get_pose_end_effector(x.head<7>());
+    pose_temp = get_pose_end_effector(x);
     pose_temp_ros.pose.position.x = pose_temp.translation()(0);
     pose_temp_ros.pose.position.y = pose_temp.translation()(1);
     pose_temp_ros.pose.position.z = pose_temp.translation()(2);
