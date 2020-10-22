@@ -7,6 +7,7 @@
  */
 
 #include "mppi_panda_raisim/dynamics.h"
+#include <ros/package.h>
 
 using namespace std::chrono;
 using namespace mppi;
@@ -26,9 +27,19 @@ void PandaRaisimDynamics::initialize_world(const std::string robot_description, 
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+
+  /// create raisim objects
+  std::string dir = ros::package::getPath("mppi_panda_raisim");;
+  std::string door_urdf_path = dir + "/data/door.urdf";
+  door = sim_.addArticulatedSystem(door_urdf_path);
+  door->setGeneralizedForce(Eigen::VectorXd::Zero(door->getDOF()));
+  door->setGeneralizedCoordinate(Eigen::VectorXd::Zero(1));
+  door->setBaseOrientation(Eigen::Matrix3d(Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ())));
+
 }
 
 void PandaRaisimDynamics::initialize_pd() {
+  ///panda
   joint_p.setZero(PandaDim::JOINT_DIMENSION);
   joint_v.setZero(PandaDim::JOINT_DIMENSION);
   joint_p_gain.setZero(PandaDim::JOINT_DIMENSION);
@@ -41,6 +52,13 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_d_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(10.0);
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
+
+  /// door
+  door->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+  door->setPdGains(Eigen::VectorXd::Ones(1)*20, Eigen::VectorXd::Ones(1)*1.0);
+  door->setPdTarget(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
+  door->setName("door");
+
 }
 
 void PandaRaisimDynamics::set_collision() {
@@ -60,21 +78,35 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
 
   // set pd target
   panda->setPdTarget(x_.tail<PandaDim::JOINT_DIMENSION>(), Eigen::VectorXd::Zero(PandaDim::JOINT_DIMENSION));
+
+  // fetch the state
   panda->getState(joint_p, joint_v);
+  door->getState(door_p, door_v);
 
   // step simulation
   sim_.integrate();
 
   x_.head<PandaDim::JOINT_DIMENSION>() = joint_p;
   x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION) = joint_v;
+  x_.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION)(0) = door_p(0);
+  x_.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION)(1) = door_v(0);
+
   return x_;
 }
 
 void PandaRaisimDynamics::reset(const DynamicsBase::observation_t &x) {
+  // internal eigen state
   x_ = x;
+
+  // reset arm
   panda->setState(x_.head<PandaDim::JOINT_DIMENSION>(),
                   x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION));
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+
+  // reset door
+  door->setState(x_.segment<PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION),
+                 x_.segment<PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION+1));
+  door->setGeneralizedForce(Eigen::VectorXd::Zero(door->getDOF()));
 }
 
 DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {

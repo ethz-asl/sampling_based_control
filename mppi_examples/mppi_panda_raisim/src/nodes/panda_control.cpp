@@ -29,22 +29,25 @@ int main(int argc, char** argv){
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
 
   // set initial state (which is also equal to the one to be tracked)
+  // the door position and velocity is already set to 0
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for(size_t i=0; i<x0.size(); i++) {
     x.head<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
     x.tail<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
   }
+
   simulation->reset(x);
 
   // init control input
   mppi::DynamicsBase::input_t u;
   u = simulation->get_zero_input(x);
 
-  ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   ros::Publisher ee_publisher = nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   ros::Publisher ee_desired_publisher = nh.advertise<geometry_msgs::PoseStamped>("/ee_desired_nominal", 10);
 
-  sensor_msgs::JointState joint_state;
+  ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  ros::Publisher door_state_publisher = nh.advertise<sensor_msgs::JointState>("/door/joint_state", 10);
+  sensor_msgs::JointState joint_state, door_state;
   joint_state.name = {"panda_joint1",
                       "panda_joint2",
                       "panda_joint3",
@@ -56,6 +59,9 @@ int main(int argc, char** argv){
                       "panda_finger_joint2"};
   joint_state.position.resize(joint_state.name.size());
   joint_state.header.frame_id = "world";
+  door_state.header.frame_id = "world";
+  door_state.name = {"door_joint"};
+  door_state.position.resize(1);
 
   geometry_msgs::PoseStamped ee_pose;
   geometry_msgs::PoseStamped ee_pose_desired;
@@ -96,6 +102,10 @@ int main(int argc, char** argv){
       joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
+
+    door_state.header.stamp = ros::Time::now();
+    door_state.position[0] = x(PandaDim::JOINT_DIMENSION*2);
+    door_state_publisher.publish(door_state);
 
     ee_pose = controller.get_pose_end_effector_ros(x);
     ee_publisher.publish(ee_pose);

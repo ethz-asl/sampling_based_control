@@ -15,6 +15,8 @@
 
 #define TIMESTEP 0.01
 #define DEFAULT_CONFIGURATION 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04;
+#define DOOR_CONFIGURATION 0.0, 0.0
+
 using namespace panda;
 using namespace std::chrono;
 
@@ -36,22 +38,25 @@ int main(int argc, char** argv) {
   x_snapshot.setZero(PandaDim::STATE_DIMENSION);
   x.head<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
   x.tail<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
+  x.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION) << DOOR_CONFIGURATION;
 
   std::cout << "Resetting to state x=" << x.transpose() << std::endl;
   simulation.reset(x);
 
-  // Instantiate the input vector with a small velocity in the first joint and slowly close gripper
+  // Instantiate the input vector to hit the door and slowly close gripper
   Eigen::VectorXd u;
   Eigen::VectorXd u_snapshot;
   u = simulation.get_zero_input(x);
   u_snapshot = simulation.get_zero_input(x);
-  u(0) = 0.05;
+  u(1) = 0.1;
+  u(3) = 0.1;
   u.tail<1>()(0) = -0.005;
   std::cout << "Initializing input to: " << u.transpose() << std::endl;
 
   // Ros publishing for visualization
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  sensor_msgs::JointState joint_state;
+  ros::Publisher door_state_publisher = nh.advertise<sensor_msgs::JointState>("/door/joint_state", 10);
+  sensor_msgs::JointState joint_state, door_state;
   joint_state.name = {"panda_joint1",
                       "panda_joint2",
                       "panda_joint3",
@@ -63,6 +68,8 @@ int main(int argc, char** argv) {
                       "panda_finger_joint2"};
   joint_state.position.resize(joint_state.name.size());
   joint_state.header.frame_id = "world";
+  door_state.name = {"door_joint"};
+  door_state.position.resize(1);
 
   long int loopN = 2000;
   double elapsed=0;
@@ -96,6 +103,10 @@ int main(int argc, char** argv) {
       joint_state.position[j] = x(j);
     }
     state_publisher.publish(joint_state);
+
+    door_state.header.stamp = ros::Time::now();
+    door_state.position[0] = x(PandaDim::JOINT_DIMENSION*2);
+    door_state_publisher.publish(door_state);
 
     raisim::MSLEEP(10);
     ROS_INFO_STREAM_THROTTLE(1.0, "Sim time: " << i*TIMESTEP << " s, elapsed sim dt: " << elapsed << " ms.");

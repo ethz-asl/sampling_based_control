@@ -8,7 +8,7 @@
     <arg name="tf_prefix"           default=""/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_raisim)/config/config.rviz" output="screen"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot_cost)">

@@ -25,7 +25,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
  public:
   PandaRaisimDynamics(const std::string& robot_description, const double dt);
 
-  ~PandaRaisimDynamics() {};
+  ~PandaRaisimDynamics() = default;
 
  private:
   void initialize_world(const std::string robot_description, const double dt);
@@ -54,9 +54,11 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   double dt_;
   std::string robot_description_;
   raisim::ArticulatedSystem* panda;
+  raisim::ArticulatedSystem* door;
 
   raisim::World sim_;
 
+  Eigen::VectorXd door_p, door_v;
   Eigen::VectorXd cmd;
   Eigen::VectorXd joint_p, joint_v;
   Eigen::VectorXd joint_p_gain, joint_d_gain;

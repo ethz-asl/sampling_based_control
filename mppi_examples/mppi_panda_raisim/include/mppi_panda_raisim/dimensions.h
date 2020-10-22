@@ -15,17 +15,19 @@
  */
 
 //  state x
-//  [ q_arm, q_gripper, q_dot_arm, q_dot_gripper, q_des_arm, q_des_gripper]
-//  [   7  ,     2    ,     7    ,       2      ,     7    ,    2]
+//  [ q_arm, q_gripper, q_dot_arm, q_dot_gripper, door_p, door_v, q_des_arm, q_des_gripper]
+//  [   7  ,     2    ,     7    ,       2      ,    1  ,    1  ,    7    ,       2       ]
+
 
 enum PandaDim : char {
   GRIPPER_DIMENSION = 2,                                                          // position of the gripper fingers (2)
+  DOOR_DIMENSION = 1,
   ARM_DIMENSION = 7,                                                              // arm only joints
   JOINT_DIMENSION = ARM_DIMENSION + GRIPPER_DIMENSION,                            // overall joints
   REFERENCE_POSE_DIMENSION = 7,
   REFERENCE_DOOR_DIMENSION = 1,
 
-  STATE_DIMENSION = 3 * JOINT_DIMENSION,                                          // q, q_dot + q_arm_des
+  STATE_DIMENSION = 3 * JOINT_DIMENSION + 2 * DOOR_DIMENSION,                     // q, q_dot + door, door_dot + q_arm_des
   INPUT_DIMENSION = ARM_DIMENSION + 1,                                            // arm joints velocity and gripper cmd
   REFERENCE_DIMENSION = REFERENCE_POSE_DIMENSION + REFERENCE_DOOR_DIMENSION
 };

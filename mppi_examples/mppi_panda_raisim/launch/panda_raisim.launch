@@ -5,7 +5,14 @@
     <arg name="tf_prefix" default=""/>
 
     <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true"/>
-    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision:=false collision_format:='obj' add_finger:=true"/>
+    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file)
+      collision_links:=false
+      collision_hand:=true
+      collision_finger:=true
+      collision_format:='obj'
+      add_finger:=true"/>
+
+    <param name="door_description"         command="$(find xacro)/xacro $(find mppi_panda_raisim)/data/door.urdf"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
@@ -15,8 +22,16 @@
         <remap from="joint_states"      to="/joint_states"/>
     </node>
 
-    <node name="panda_raisim" type="panda_raisim" pkg="mppi_panda_raisim" output="screen"/>
+    <node name="door_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="use_tf_static"     value="true"/>
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="door_description"/>
+        <remap from="joint_states"      to="/door/joint_state"/>
+    </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>
+    <node name="panda_raisim" type="panda_raisim" pkg="mppi_panda_raisim" output="screen"
+          launch-prefix="gdb -ex run --args"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_raisim)/config/config.rviz" output="screen"/>
 
 </launch>

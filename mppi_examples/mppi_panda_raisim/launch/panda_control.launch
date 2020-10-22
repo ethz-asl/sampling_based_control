@@ -7,8 +7,18 @@
 
     <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
 
-    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true"/>
-    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file) collision_format:='obj' collision:=false add_finger:=true"/>
+    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
+      add_finger:=true"/>
+
+    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file)
+      collision_links:=false
+      collision_hand:=true
+      collision_finger:=true
+      collision_format:='obj'
+      add_finger:=true"/>
+
+    <param name="door_description"         command="$(find xacro)/xacro $(find mppi_panda_raisim)/data/door.urdf"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
@@ -16,6 +26,12 @@
         <param name="tf_prefix"         value=""/>
         <remap from="robot_description" to="robot_description"/>
         <remap from="joint_states"      to="/joint_states"/>
+    </node>
+
+    <node name="door_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="door_description"/>
+        <remap from="joint_states"      to="/door/joint_state"/>
     </node>
 
     <node name="panda_raisim_control" type="panda_raisim_control" pkg="mppi_panda_raisim" output="screen"

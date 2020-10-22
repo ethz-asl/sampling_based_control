@@ -90,19 +90,17 @@ int main(int argc, char **argv) {
   doorPgain.setConstant(20.0);
   doorDgain.setConstant(1.0);
 
-  door->setBasePos(Eigen::Vector3d(0.85, 0.0, 0.01));
   door->setGeneralizedCoordinate(doorNominalConfig);
-  door->setBaseOrientation(Eigen::Matrix3d(Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ())));
   door->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   door->setPdGains(doorPgain, doorDgain);
   door->setPdTarget(doorNominalConfig, doorVelocityTarget);
   door->setName("door"); // this is the name assigned for raisim. Not used in this example
 
   /// handle
-  std::cout << "Printing handle state" << std::endl;
-  auto handle = door->getFrameByName("handle_link");
-  std::cout << handle.position << std::endl;
-  std::cout << handle.orientation << std::endl;
+  //std::cout << "Printing handle state" << std::endl;
+  //auto handle = door->getFrameByName("handle_link");
+  //std::cout << handle.position << std::endl;
+  //std::cout << handle.orientation << std::endl;
 
   /// create visualizer objects
   vis->createGraphicalObject(ground, 20, "floor", "checkerboard_green");
