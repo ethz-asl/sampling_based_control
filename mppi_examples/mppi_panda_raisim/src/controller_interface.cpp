@@ -16,6 +16,7 @@ bool PandaControllerInterface::init_ros() {
   optimal_trajectory_publisher_ = nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
   obstacle_marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
 
+  mode_subscriber_ = nh_.subscribe("/mode", 10, &PandaControllerInterface::mode_callback, this);
   obstacle_subscriber_ = nh_.subscribe("/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
   ee_pose_desired_subscriber_ = nh_.subscribe("/end_effector_pose_desired", 10,
                                               &PandaControllerInterface::ee_pose_desired_callback, this);
@@ -48,6 +49,12 @@ bool PandaControllerInterface::init_ros() {
 void PandaControllerInterface::init_model(const std::string& robot_description){
   pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
+
+  std::string data_dir = ros::package::getPath("mppi_panda_raisim") + "/data/";
+  std::string door_urdf = data_dir + "door.urdf";
+  pinocchio::urdf::buildModel(door_urdf, door_model_);
+  door_data_ = pinocchio::Data(door_model_);
+  handle_idx_ = door_model_.getFrameId("handle_link");
 }
 
 bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral> &controller) {
@@ -121,6 +128,12 @@ void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampe
   ref_.rr[0](9) = obstacle_pose_.pose.position.z;
 }
 
+void PandaControllerInterface::mode_callback(const std_msgs::Int64ConstPtr& msg){
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](11) = msg->data;
+  ROS_INFO_STREAM("Switching to mode: " << msg->data);
+}
+
 bool PandaControllerInterface::update_reference() {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   if (last_ee_ref_id_ != ee_desired_pose_.header.seq ||
@@ -138,8 +151,7 @@ pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(const Eigen::Vect
   return data_.oMf[model_.getFrameId("panda_grasp")];
 }
 
-geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(const Eigen::VectorXd& x){
-  pinocchio::SE3 pose = get_pose_end_effector(x);
+geometry_msgs::PoseStamped PandaControllerInterface::pose_pinocchio_to_ros(const pinocchio::SE3& pose){
   geometry_msgs::PoseStamped pose_ros;
   pose_ros.header.stamp = ros::Time::now();
   pose_ros.header.frame_id = "world";
@@ -154,6 +166,22 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(c
   return pose_ros;
 }
 
+geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(const Eigen::VectorXd& x){
+  pinocchio::SE3 pose = get_pose_end_effector(x);
+  return pose_pinocchio_to_ros(pose);
+}
+
+pinocchio::SE3 PandaControllerInterface::get_pose_handle(const Eigen::VectorXd& x){
+  pinocchio::forwardKinematics(door_model_, door_data_, x.segment<1>(2*PandaDim::JOINT_DIMENSION));
+  pinocchio::updateFramePlacements(door_model_, door_data_);
+  return door_data_.oMf[handle_idx_];
+}
+
+geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(const Eigen::VectorXd& x){
+  pinocchio::SE3 pose = get_pose_handle(x);
+  return pose_pinocchio_to_ros(pose);
+}
+
 void PandaControllerInterface::publish_ros() {
 
   if (obstacle_pose_.header.seq != 0){ // obstacle set at least once
@@ -164,20 +192,10 @@ void PandaControllerInterface::publish_ros() {
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
   pinocchio::SE3 pose_temp;
-  geometry_msgs::PoseStamped pose_temp_ros;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_){
-    pose_temp = get_pose_end_effector(x);
-    pose_temp_ros.pose.position.x = pose_temp.translation()(0);
-    pose_temp_ros.pose.position.y = pose_temp.translation()(1);
-    pose_temp_ros.pose.position.z = pose_temp.translation()(2);
-    Eigen::Quaterniond q(pose_temp.rotation());
-    pose_temp_ros.pose.orientation.x = q.x();
-    pose_temp_ros.pose.orientation.y = q.y();
-    pose_temp_ros.pose.orientation.z = q.z();
-    pose_temp_ros.pose.orientation.w = q.w();
-    optimal_path_.poses.push_back(pose_temp_ros);
+    optimal_path_.poses.push_back(pose_pinocchio_to_ros(get_pose_end_effector(x)));
   }
   optimal_trajectory_publisher_.publish(optimal_path_);
 }

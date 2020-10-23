@@ -34,6 +34,17 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
   std::cout << "Lower joints limits: " << joint_limits_lower_.transpose() << std::endl;
   std::cout << "Upper joints limits: " << joint_limits_upper_.transpose() << std::endl;
 
+  // door model
+  std::string data_dir = ros::package::getPath("mppi_panda_raisim") + "/data/";
+  std::string door_urdf = data_dir + "door.urdf";
+  pinocchio::urdf::buildModel(door_urdf, door_model_);
+  door_data_ = pinocchio::Data(door_model_);
+  handle_idx_ = door_model_.getFrameId("handle_link");
+
+  Eigen::Quaterniond q(Eigen::AngleAxisd(-M_PI/2.0, Eigen::Vector3d::UnitY()));
+  Eigen::Vector3d t;
+  t.setZero();
+  grasp_offset_ = pinocchio::SE3(q, t);
 }
 
 mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
@@ -41,19 +52,29 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   static double linear_cost = 0;
   static double angular_cost = 0;
+  static double door_opening_cost = 0;
   double obstacle_cost = 0;
   double joint_limit_cost = 0;
 
   pose_current_ = get_pose_end_effector(x);
-  Eigen::Vector3d ref_t = ref.head<3>();
-  Eigen::Quaterniond ref_q(ref.segment<4>(3));
-  pose_reference_ = pinocchio::SE3(ref_q, ref_t);
-  pinocchio::Motion err = pinocchio::log6(pose_current_.actInv(pose_reference_));
 
-  linear_cost = err.linear().transpose() * Q_linear_ * err.linear();
-  angular_cost = err.angular().transpose() * Q_angular_ * err.angular();
+  // end effector reaching
+  if (ref(PandaDim::REFERENCE_DIMENSION-1) == 0){
+    Eigen::Vector3d ref_t = ref.head<3>();
+    Eigen::Quaterniond ref_q(ref.segment<4>(3));
+    pose_reference_ = pinocchio::SE3(ref_q, ref_t);
+    pinocchio::Motion err = pinocchio::log6(pose_current_.actInv(pose_reference_));
+    linear_cost = err.linear().transpose() * Q_linear_ * err.linear();
+    angular_cost = err.angular().transpose() * Q_angular_ * err.angular();
+  }
+  else{
+    pose_handle_ = get_pose_handle(x);
+    pinocchio::Motion err = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
+    linear_cost = err.linear().transpose() * Q_linear_ * err.linear();
+    angular_cost = err.angular().transpose() * Q_angular_ * err.angular();
+  }
 
-  double obstacle_dist = (pose_current_.translation() - ref.tail<3>()).norm();
+  double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();
   if (obstacle_dist < obstacle_radius_)
     obstacle_cost =  Q_obst_;
 
@@ -77,4 +98,10 @@ pinocchio::SE3 PandaCost::get_pose_end_effector(const Eigen::VectorXd& x){
   pinocchio::forwardKinematics(model_, data_, x.head<PandaDim::JOINT_DIMENSION>());
   pinocchio::updateFramePlacements(model_, data_);
   return data_.oMf[frame_id_];
+}
+
+pinocchio::SE3 PandaCost::get_pose_handle(const Eigen::VectorXd& x){
+  pinocchio::forwardKinematics(door_model_, door_data_, x.segment<1>(2*PandaDim::JOINT_DIMENSION));
+  pinocchio::updateFramePlacements(door_model_, door_data_);
+  return door_data_.oMf[handle_idx_];
 }

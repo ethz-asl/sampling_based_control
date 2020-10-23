@@ -43,6 +43,7 @@ int main(int argc, char** argv){
   u = simulation->get_zero_input(x);
 
   ros::Publisher ee_publisher = nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
+  ros::Publisher handle_publisher = nh.advertise<geometry_msgs::PoseStamped>("/handle", 10);
   ros::Publisher ee_desired_publisher = nh.advertise<geometry_msgs::PoseStamped>("/ee_desired_nominal", 10);
 
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
@@ -64,6 +65,7 @@ int main(int argc, char** argv){
   door_state.position.resize(1);
 
   geometry_msgs::PoseStamped ee_pose;
+  geometry_msgs::PoseStamped handle_pose;
   geometry_msgs::PoseStamped ee_pose_desired;
 
   bool static_optimization = nh.param<bool>("static_optimization", false);
@@ -113,12 +115,15 @@ int main(int argc, char** argv){
     ee_pose_desired = controller.get_pose_end_effector_ros(x_nom);
     ee_desired_publisher.publish(ee_pose_desired);
 
+    handle_pose = controller.get_pose_handle_ros(x);
+    handle_publisher.publish(handle_pose);
+
     auto end = std::chrono::steady_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
     if (sim_dt - elapsed >0)
       ros::Duration(sim_dt - elapsed).sleep();
     else
-      ROS_INFO_STREAM_THROTTLE(3.0, "Slower than real-time: " << elapsed/sim_dt << "slower.");
+      ROS_INFO_STREAM_THROTTLE(3.0, "Slower than real-time: " << elapsed/sim_dt << "x slower.");
 
     ros::spinOnce();
   }

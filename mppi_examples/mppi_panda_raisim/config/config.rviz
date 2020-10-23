@@ -4,8 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
         - /Optimal Path1
         - /World1
       Splitter Ratio: 0.5
@@ -198,10 +196,11 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            door_base_link:
+            door_frame:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             door_link:
               Alpha: 1
               Show Axes: false
@@ -232,6 +231,10 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            panda_grasp:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             panda_hand:
               Alpha: 1
               Show Axes: false
@@ -303,6 +306,21 @@ Visualization Manager:
           Visual Enabled: true
       Enabled: true
       Name: World
+    - Alpha: 1
+      Axes Length: 0.10000000149011612
+      Axes Radius: 0.009999999776482582
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Handle Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Axes
+      Topic: /grasp
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 211; 215; 207
@@ -331,7 +349,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.035651683807373
+      Distance: 3.125208616256714
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -346,10 +364,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5003983974456787
+      Pitch: 0.3653985261917114
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.2172141075134277
+      Yaw: 1.3722139596939087
     Saved: ~
 Window Geometry:
   Displays:

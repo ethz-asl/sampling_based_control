@@ -36,10 +36,18 @@ class PandaCost: public mppi::CostBase{
    pinocchio::Model model_;
    pinocchio::Data data_;
 
+   // door
+   pinocchio::Model door_model_;
+   pinocchio::Data door_data_;
+   int handle_idx_;
+
+   std::string handle_frame_ = "handle_link";
    std::string tracked_frame_ = "panda_grasp";
    int frame_id_;
    pinocchio::SE3 pose_current_;
+   pinocchio::SE3 pose_handle_;
    pinocchio::SE3 pose_reference_;
+   pinocchio::SE3 grasp_offset_;
    Eigen::Matrix<double, 3, 3> Q_linear_;
    Eigen::Matrix<double, 3, 3> Q_angular_;
 
@@ -60,6 +68,7 @@ class PandaCost: public mppi::CostBase{
    cost_t compute_cost(const mppi::observation_t& x, const mppi::reference_t& ref, const double t) override;
 
    pinocchio::SE3 get_pose_end_effector(const Eigen::VectorXd& x);
+   pinocchio::SE3  get_pose_handle(const Eigen::VectorXd& x);
 
  };
 }
