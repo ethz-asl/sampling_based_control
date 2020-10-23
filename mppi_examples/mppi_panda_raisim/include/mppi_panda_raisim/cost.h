@@ -44,6 +44,7 @@ class PandaCost: public mppi::CostBase{
    std::string handle_frame_ = "handle_link";
    std::string tracked_frame_ = "panda_grasp";
    int frame_id_;
+   pinocchio::Motion err_;
    pinocchio::SE3 pose_current_;
    pinocchio::SE3 pose_handle_;
    pinocchio::SE3 pose_reference_;
