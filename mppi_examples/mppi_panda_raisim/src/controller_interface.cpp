@@ -135,7 +135,7 @@ bool PandaControllerInterface::update_reference() {
 pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x){
   pinocchio::forwardKinematics(model_, data_, x.head<PandaDim::JOINT_DIMENSION>());
   pinocchio::updateFramePlacements(model_, data_);
-  return data_.oMf[model_.getFrameId("panda_hand")];
+  return data_.oMf[model_.getFrameId("panda_grasp")];
 }
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(const Eigen::VectorXd& x){

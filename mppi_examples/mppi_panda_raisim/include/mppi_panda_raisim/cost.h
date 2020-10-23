@@ -36,7 +36,7 @@ class PandaCost: public mppi::CostBase{
    pinocchio::Model model_;
    pinocchio::Data data_;
 
-   std::string tracked_frame_ = "panda_hand";
+   std::string tracked_frame_ = "panda_grasp";
    int frame_id_;
    pinocchio::SE3 pose_current_;
    pinocchio::SE3 pose_reference_;

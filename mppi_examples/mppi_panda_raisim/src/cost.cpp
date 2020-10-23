@@ -58,6 +58,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     obstacle_cost =  Q_obst_;
 
   // joint limits
+  /**
   for(size_t i=0; i<7; i++){
 
     if (x(i) < joint_limits_lower_(i))
@@ -66,6 +67,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     if (x(i) > joint_limits_upper_(i))
       joint_limit_cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i), 2);
   }
+   **/
   return linear_cost + angular_cost + obstacle_cost + joint_limit_cost;
 
 }

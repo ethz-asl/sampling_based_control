@@ -5,7 +5,7 @@
     <arg name="plot_input"          default="false"/>
     <arg name="enable_obstacle"     default="true"/>
 
-    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
+    <arg name="description_file" default="$(find mppi_panda_raisim)/data/panda_grasp.urdf.xacro"/>
 
     <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file)
       resources_prefix:='file://'
@@ -16,7 +16,8 @@
       collision_hand:=true
       collision_finger:=true
       collision_format:='obj'
-      add_finger:=true"/>
+      add_finger:=true
+      no_position_limits:=true"/>
 
     <param name="door_description"         command="$(find xacro)/xacro $(find mppi_panda_raisim)/data/door.urdf"/>
 
