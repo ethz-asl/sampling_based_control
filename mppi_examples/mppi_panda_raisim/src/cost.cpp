@@ -52,7 +52,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   static double linear_cost = 0;
   static double angular_cost = 0;
-  static double door_opening_cost = 0;
+  double door_opening_cost = 0;
   double obstacle_cost = 0;
   double joint_limit_cost = 0;
 
@@ -63,15 +63,18 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     pose_reference_ = pinocchio::SE3(ref_q, ref_t);
-    pinocchio::Motion err = pinocchio::log6(pose_current_.actInv(pose_reference_));
-    linear_cost = err.linear().transpose() * Q_linear_ * err.linear();
-    angular_cost = err.angular().transpose() * Q_angular_ * err.angular();
+    err_ = pinocchio::log6(pose_current_.actInv(pose_reference_));
+    linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
+    angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
   }
   else{
     pose_handle_ = get_pose_handle(x);
-    pinocchio::Motion err = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
-    linear_cost = err.linear().transpose() * Q_linear_ * err.linear();
-    angular_cost = err.angular().transpose() * Q_angular_ * err.angular();
+    err_ = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
+    linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
+    angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
+
+    // TODO(giuseppe) read the reference value from ref_
+    door_opening_cost = std::pow(x(2*PandaDim::JOINT_DIMENSION)-M_PI/2, 2) * 10;
   }
 
   double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();
@@ -89,7 +92,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
       joint_limit_cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i), 2);
   }
    **/
-  return linear_cost + angular_cost + obstacle_cost + joint_limit_cost;
+  return linear_cost + angular_cost + obstacle_cost + joint_limit_cost + door_opening_cost;
 
 }
 

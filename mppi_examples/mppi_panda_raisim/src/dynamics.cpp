@@ -50,8 +50,8 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_v_desired.setZero(PandaDim::JOINT_DIMENSION);
   joint_p_gain.head(PandaDim::ARM_DIMENSION).setConstant(0);
   joint_d_gain.head(PandaDim::ARM_DIMENSION).setConstant(10.0);
-  joint_p_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(0);
-  joint_d_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(10.0);
+  joint_p_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(200);
+  joint_d_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(1.0);
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
 
@@ -74,8 +74,11 @@ void PandaRaisimDynamics::set_collision() {
 
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t &u, const double dt) {
   // no mimic support --> 1 input for gripper but 2 joints to control
-  cmdv.head<PandaDim::INPUT_DIMENSION>() = u;
-  cmdv(PandaDim::JOINT_DIMENSION-1) = u(PandaDim::INPUT_DIMENSION-1);
+  cmd.tail<PandaDim::GRIPPER_DIMENSION>()(0) += u(PandaDim::INPUT_DIMENSION-1)*dt;
+  cmd.tail<PandaDim::GRIPPER_DIMENSION>()(1) = cmd.tail<PandaDim::GRIPPER_DIMENSION>()(0);
+
+  cmdv.head<PandaDim::ARM_DIMENSION>() = u.head<PandaDim::ARM_DIMENSION>();
+  cmdv.tail<PandaDim::GRIPPER_DIMENSION>() = Eigen::Vector2d::Zero();
   panda->setPdTarget(cmd, cmdv);
   panda->setGeneralizedForce(panda->getNonlinearities());
   panda->getState(joint_p, joint_v);
@@ -102,12 +105,10 @@ void PandaRaisimDynamics::reset(const DynamicsBase::observation_t &x) {
   // reset arm
   panda->setState(x_.head<PandaDim::JOINT_DIMENSION>(),
                   x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION));
-  panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
 
   // reset door
   door->setState(x_.segment<PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION),
                  x_.segment<PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION+1));
-  door->setGeneralizedForce(Eigen::VectorXd::Zero(door->getDOF()));
 }
 
 DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {

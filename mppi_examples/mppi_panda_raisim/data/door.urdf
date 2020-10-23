@@ -53,7 +53,7 @@
         <parent link="door_frame"/>
         <child link="door_link"/>
         <dynamics damping="1.0" friction="4.0"/>
-        <origin xyz="0.036 0 0"/>
+        <origin xyz="0.046 0 0"/>
         <axis xyz="0 1 0"/>
         <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
     </joint>
