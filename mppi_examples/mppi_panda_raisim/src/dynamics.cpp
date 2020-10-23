@@ -40,24 +40,26 @@ void PandaRaisimDynamics::initialize_world(const std::string robot_description, 
 
 void PandaRaisimDynamics::initialize_pd() {
   ///panda
+  cmd.setZero(PandaDim::JOINT_DIMENSION);
+  cmdv.setZero(PandaDim::JOINT_DIMENSION);
   joint_p.setZero(PandaDim::JOINT_DIMENSION);
   joint_v.setZero(PandaDim::JOINT_DIMENSION);
   joint_p_gain.setZero(PandaDim::JOINT_DIMENSION);
   joint_d_gain.setZero(PandaDim::JOINT_DIMENSION);
   joint_p_desired.setZero(PandaDim::JOINT_DIMENSION);
   joint_v_desired.setZero(PandaDim::JOINT_DIMENSION);
-  joint_p_gain.head(PandaDim::ARM_DIMENSION).setConstant(200);
+  joint_p_gain.head(PandaDim::ARM_DIMENSION).setConstant(0);
   joint_d_gain.head(PandaDim::ARM_DIMENSION).setConstant(10.0);
-  joint_p_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(200);
+  joint_p_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(0);
   joint_d_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(10.0);
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
 
   /// door
-  door->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
-  door->setPdGains(Eigen::VectorXd::Ones(1)*20, Eigen::VectorXd::Ones(1)*1.0);
-  door->setPdTarget(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
-  door->setName("door");
+  //door->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+  //door->setPdGains(Eigen::VectorXd::Ones(1)*20, Eigen::VectorXd::Ones(1)*1.0);
+  //door->setPdTarget(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
+  //door->setName("door");
 
 }
 
@@ -71,17 +73,16 @@ void PandaRaisimDynamics::set_collision() {
 }
 
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t &u, const double dt) {
-  // integrate desired velocity
   // no mimic support --> 1 input for gripper but 2 joints to control
-  x_.tail<PandaDim::JOINT_DIMENSION>().head<PandaDim::INPUT_DIMENSION>() += u*dt;
-  x_.tail<1>() += u.tail<1>() * dt;
-
-  // set pd target
-  panda->setPdTarget(x_.tail<PandaDim::JOINT_DIMENSION>(), Eigen::VectorXd::Zero(PandaDim::JOINT_DIMENSION));
-
-  // fetch the state
+  cmdv.head<PandaDim::INPUT_DIMENSION>() = u;
+  cmdv(PandaDim::JOINT_DIMENSION-1) = u(PandaDim::INPUT_DIMENSION-1);
+  panda->setPdTarget(cmd, cmdv);
+  panda->setGeneralizedForce(panda->getNonlinearities());
   panda->getState(joint_p, joint_v);
+
+  // gravity compensated door
   door->getState(door_p, door_v);
+  door->setGeneralizedForce(door->getNonlinearities());
 
   // step simulation
   sim_.integrate();

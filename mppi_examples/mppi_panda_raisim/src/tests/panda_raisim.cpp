@@ -67,6 +67,7 @@ int main(int argc, char** argv) {
                       "panda_finger_joint1",
                       "panda_finger_joint2"};
   joint_state.position.resize(joint_state.name.size());
+  joint_state.velocity.resize(joint_state.name.size());
   joint_state.header.frame_id = "world";
   door_state.name = {"door_joint"};
   door_state.position.resize(1);
@@ -101,6 +102,7 @@ int main(int argc, char** argv) {
     joint_state.header.stamp = ros::Time::now();
     for (size_t j = 0; j < PandaDim::JOINT_DIMENSION; j++) {
       joint_state.position[j] = x(j);
+      joint_state.velocity[j] = x(j+PandaDim::JOINT_DIMENSION);
     }
     state_publisher.publish(joint_state);
 

@@ -34,4 +34,8 @@
 
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_raisim)/config/config.rviz" output="screen"/>
 
+    <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot"
+          args="--multiplot-config $(find mppi_panda_raisim)/config/joint_velocity_tracking.xml"
+          output="screen"/>
+
 </launch>
