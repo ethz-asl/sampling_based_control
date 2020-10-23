@@ -8,18 +8,13 @@
     </joint>
 
     <link name="door_frame">
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0.25"/>
-            <mass value="1.0"/>
-            <inertia ixx="0.048966669" ixy="0" ixz="0" iyy="0.046466667" iyz="0" izz="0.0041666669"/>
-        </inertial>
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0.25"/>
             <geometry>
                 <box size="0.05 0.6 0.5"/>
             </geometry>
-            <material name="door_material">
-                <color rgba="0.8 0.8 0.3 1" />
+            <material name="frame_material">
+                <color rgba="0.5 0.0 0.0 1" />
             </material>
         </visual>
         <collision>
@@ -52,8 +47,8 @@
                 <box size="0.02 0.6 0.5"/>
             </geometry>
         </collision>
-
     </link>
+
     <joint name="door_joint" type="continuous">
         <parent link="door_frame"/>
         <child link="door_link"/>
