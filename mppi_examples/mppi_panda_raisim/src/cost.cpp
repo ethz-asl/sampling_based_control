@@ -13,6 +13,7 @@
 #define LOWER_LIMITS -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
 #define UPPER_LIMITS 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
 
+//TODO(giuseppe) remove the gripper cost and hand code the gripper positions (video first with emerging behaviour)
 using namespace panda;
 
 PandaCost::PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius){
@@ -55,11 +56,14 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   double door_opening_cost = 0;
   double obstacle_cost = 0;
   double joint_limit_cost = 0;
-
+  double gripper_cost = 0;
   pose_current_ = get_pose_end_effector(x);
 
   // end effector reaching
-  if (ref(PandaDim::REFERENCE_DIMENSION-1) == 0){
+  int mode = ref(PandaDim::REFERENCE_DIMENSION-1);
+
+  // end effector reaching task
+  if (mode == 0){
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     pose_reference_ = pinocchio::SE3(ref_q, ref_t);
@@ -67,12 +71,27 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
     angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
   }
-  else{
+  // reach the handle with open gripper
+  else if(mode == 1){
     pose_handle_ = get_pose_handle(x);
     err_ = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
     linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
     angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
-
+  }
+  // keep only position control in proximity of the handle and no gripper cost
+  // open the door
+  else if(mode == 2){
+    pose_handle_ = get_pose_handle(x);
+    err_ = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
+    linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
+    linear_cost /= 100.0;
+    //if (err_.linear().norm() > 0.01){
+    //  angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
+   // }
+   // else{
+      //linear_cost = 0;
+      angular_cost = 0;
+    //}
     // TODO(giuseppe) read the reference value from ref_
     door_opening_cost = std::pow(x(2*PandaDim::JOINT_DIMENSION)-M_PI/2, 2) * 10;
   }

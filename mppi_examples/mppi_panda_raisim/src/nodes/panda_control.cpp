@@ -85,6 +85,7 @@ int main(int argc, char** argv){
   // start controller
   // controller.start();
 
+  bool freeze_robot = false; // hack to freeze the robot once task is done
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
 
@@ -95,6 +96,8 @@ int main(int argc, char** argv){
     controller.publish_ros_default();
     controller.publish_ros();
 
+    if (freeze_robot) u.setZero();
+    
     if (!static_optimization){
       x = simulation->step(u, sim_dt);
       sim_time += sim_dt;
@@ -108,6 +111,9 @@ int main(int argc, char** argv){
     door_state.header.stamp = ros::Time::now();
     door_state.position[0] = x(PandaDim::JOINT_DIMENSION*2);
     door_state_publisher.publish(door_state);
+
+    if (std::abs(door_state.position[0] - M_PI/2.0) < 1.0*M_PI/180.0)
+      freeze_robot = true;
 
     ee_pose = controller.get_pose_end_effector_ros(x);
     ee_publisher.publish(ee_pose);

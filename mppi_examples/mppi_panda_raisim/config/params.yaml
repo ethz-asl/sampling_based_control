@@ -15,7 +15,7 @@ solver:
   filter_window: 30
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.1]
+  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   discount_factor: 1.0
   verbose: false
