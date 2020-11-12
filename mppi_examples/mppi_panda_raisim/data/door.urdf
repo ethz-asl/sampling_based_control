@@ -25,6 +25,31 @@
         </collision>
     </link>
 
+    <link name="door_frame_step">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.081 0.6 0.10"/>
+            </geometry>
+            <material name="frame_material">
+                <color rgba="0.5 0.0 0.0 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.081 0.6 0.5"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="step_joint" type="fixed">
+        <parent link="door_frame"/>
+        <child link="door_frame_step"/>
+        <origin xyz="0.0155 0 0.31" rpy="0 0 0"/>
+        <dynamics damping="1.0" friction="2.0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
 
     <link name="door_link">
         <inertial>
