@@ -46,8 +46,11 @@ target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 
 
 if (CATKIN_ENABLE_TESTING)
+    find_package(PythonLibs 2.7 REQUIRED)
     catkin_add_gtest(filter_test unittest/filter_test.cpp)
-    target_link_libraries(filter_test ${PROJECT_NAME} ${catkin_LIBRARIES})
+    target_include_directories(filter_test PRIVATE ${PYTHON_INCLUDE_DIRS})
+    target_link_libraries(filter_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${PYTHON_LIBRARIES})
+
 endif()
 
 ## Testing

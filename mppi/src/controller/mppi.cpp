@@ -27,13 +27,11 @@
 
 namespace mppi {
 
-PathIntegral::PathIntegral(
-    dynamics_ptr dynamics,
-    cost_ptr cost,
-    const SolverConfig &config,
-    sampler_ptr sampler,
-    renderer_ptr renderer)
-    : cost_(std::move(cost)), dynamics_(std::move(dynamics)), config_(config), sampler_(std::move(sampler)),
+PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost, const SolverConfig &config, sampler_ptr sampler, renderer_ptr renderer)
+    : cost_(std::move(cost)),
+      dynamics_(std::move(dynamics)),
+      config_(config),
+      sampler_(std::move(sampler)),
       renderer_(std::move(renderer)){
 
   init_data();
@@ -159,7 +157,6 @@ void PathIntegral::initialize_rollouts() {
   for(size_t i=0; i<steps_; i++) {
     opt_roll_cache_.tt[i] = t0_internal_ + config_.step_size * i;
   }
-  std::cout << "Done initializing rollouts" << std::endl;
 }
 
 void PathIntegral::prepare_rollouts() {

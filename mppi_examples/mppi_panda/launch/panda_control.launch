@@ -2,7 +2,7 @@
 <launch>
 
     <arg name="kinematic"           default="true"/>
-    <arg name="plot_cost"           default="false"/>
+    <arg name="plot_cost"           default="true"/>
     <arg name="plot_input"          default="true"/>
     <arg name="enable_obstacle"     default="true"/>
 
@@ -10,7 +10,8 @@
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>    
+
+    <param name="robot_description"  command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>

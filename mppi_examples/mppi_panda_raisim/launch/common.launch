@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="plot_cost"           default="true"/>
+    <arg name="plot_input"          default="true"/>
+    <arg name="enable_obstacle"     default="true"/>
+    <arg name="joint_state_topic"   default="/joint_states"/>
+    <arg name="tf_prefix"           default=""/>
+
+    <!-- Open Rviz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_raisim)/config/config.rviz" output="screen"/>
+
+    <!--    Plot cost and other info-->
+    <group if="$(arg plot_cost)">
+        <arg name="mp_config" default="$(find mppi_panda)/resources/rqt_multiplot.xml"/>
+        <node name="rqt_multiplot_cost" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config)"
+              output="screen"/>
+    </group>
+
+    <!--    Plot input-->
+    <group if="$(arg plot_input)">
+        <arg name="mp_config_input" default="$(find mppi_panda)/resources/rqt_multiplot_input.xml"/>
+        <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config_input)"
+              output="screen"/>
+    </group>
+
+    <!--        Interactive marker to command the end effector-->
+    <node name="interactive_reference" pkg="robot_control_ros" type="interactive_marker.py" output="screen">
+        <param name="marker_server_name"      value="reference_marker_server"/>
+        <param name="subscribe_initial_pose"  value="true"/>
+        <param name="initial_pose_topic"      value="/end_effector"/>
+        <param name="frame_id"                value="world"/>
+        <param name="target_pose_topic"       value="/end_effector_pose_desired"/>
+    </node>
+
+    <!--    Interactive marker for the end effector obstacle -->
+    <group if="$(arg enable_obstacle)">
+        <node name="interactive_obstacle" pkg="robot_control_ros" type="interactive_marker.py" output="screen">
+            <param name="marker_server_name"      value="obstacle_marker_server"/>
+            <param name="subscribe_initial_pose"  value="false"/>
+            <param name="frame_id"                value="world"/>
+            <param name="target_pose_topic"       value="/obstacle"/>
+        </node>
+    </group>
+</launch>

@@ -21,13 +21,9 @@
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
 
-namespace panda{
+#include "mppi_panda/dimensions.h"
 
-enum PandaDim{
-  STATE_DIMENSION = 14,
-  INPUT_DIMENSION = 7,
-  REFERENCE_DIMENSION = 10  // ee pose + obstacle position
-};
+namespace panda{
 
 struct PandaDynamicsConfig{
   double substeps = 1;

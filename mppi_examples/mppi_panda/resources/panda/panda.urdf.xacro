@@ -4,10 +4,21 @@
   <xacro:arg name="resources_prefix"      default="" />
   <xacro:arg name="resources_directory"   default="$(find mppi_panda)" />
   <xacro:arg name="collision_format"      default="stl"/>
+  <xacro:arg name="collision_links"       default="true"/>
+  <xacro:arg name="collision_hand"        default="true"/>
+  <xacro:arg name="collision_finger"      default="true"/>
+  <xacro:arg name="no_position_limits"      default="true"/>
+
+  <xacro:arg name="add_finger"            default="false"/>
 
   <xacro:property name="resources_prefix"     value="$(arg resources_prefix)" />
   <xacro:property name="resources_directory"  value="$(arg resources_directory)" />
   <xacro:property name="collision_format"     value="$(arg collision_format)" />
+  <xacro:property name="collision_links"      value="$(arg collision_links)"/>
+  <xacro:property name="collision_hand"       value="$(arg collision_hand)"/>
+  <xacro:property name="collision_finger"     value="$(arg collision_finger)"/>
+  <xacro:property name="no_position_limits"   value="$(arg no_position_limits)"/>
+  <xacro:property name="add_finger"           value="$(arg add_finger)" />
 
   <xacro:macro name="panda_robot" params="parent_link:='world'">
   <joint name="panda_joint_${parent_link}" type="fixed">
@@ -107,12 +118,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link0.${collision_format}"/>
-      </geometry>
+    <xacro:if value="${collision_links}">
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link0.${collision_format}"/>
+        </geometry>
     </collision>
+    </xacro:if>
   </link>
   <link name="panda_link1">
     <inertial>
@@ -129,12 +142,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link1.${collision_format}"/>
-      </geometry>
-    </collision>
+    <xacro:if value="${collision_links}">
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link1.${collision_format}"/>
+        </geometry>
+      </collision>
+    </xacro:if>
   </link>
   <joint name="panda_joint1" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -142,7 +157,12 @@
     <parent link="panda_link0"/>
     <child link="panda_link1"/>
     <axis xyz="0 0 1"/>
-    <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
+    <xacro:if value="${no_position_limits}">
+      <limit effort="87" lower="-20" upper="20" velocity="2.1750"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
+    </xacro:unless>
   </joint>
   <link name="panda_link2">
     <inertial>
@@ -159,12 +179,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link2.${collision_format}"/>
-      </geometry>
-    </collision>
+      <xacro:if value="${collision_links}">
+        <collision>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <geometry>
+            <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link2.${collision_format}"/>
+          </geometry>
+        </collision>
+      </xacro:if>
   </link>
   <joint name="panda_joint2" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-1.7628" soft_upper_limit="1.7628"/>
@@ -172,7 +194,12 @@
     <parent link="panda_link1"/>
     <child link="panda_link2"/>
     <axis xyz="0 0 1"/>
-    <limit effort="87" lower="-1.7628" upper="1.7628" velocity="2.1750"/>
+    <xacro:if value="${no_position_limits}">
+      <limit effort="87" lower="-20" upper="20" velocity="2.1750"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="87" lower="-1.7628" upper="1.7628" velocity="2.1750"/>
+    </xacro:unless>
   </joint>
   <link name="panda_link3">
     <inertial>
@@ -189,12 +216,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link3.${collision_format}"/>
-      </geometry>
-    </collision>
+    <xacro:if value="${collision_links}">
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link3.${collision_format}"/>
+        </geometry>
+      </collision>
+    </xacro:if>
   </link>
   <joint name="panda_joint3" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -202,7 +231,12 @@
     <parent link="panda_link2"/>
     <child link="panda_link3"/>
     <axis xyz="0 0 1"/>
-    <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
+    <xacro:if value="${no_position_limits}">
+      <limit effort="87" lower="-20" upper="20" velocity="2.1750"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
+    </xacro:unless>
   </joint>
   <link name="panda_link4">
     <inertial>
@@ -219,12 +253,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link4.${collision_format}"/>
-      </geometry>
-    </collision>
+      <xacro:if value="${collision_links}">
+        <collision>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <geometry>
+            <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link4.${collision_format}"/>
+          </geometry>
+        </collision>
+      </xacro:if>
   </link>
   <joint name="panda_joint4" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-3.0718" soft_upper_limit="0.0698"/>
@@ -233,8 +269,13 @@
     <parent link="panda_link3"/>
     <child link="panda_link4"/>
     <axis xyz="0 0 1"/>
-    <limit effort="87" lower="-3.0718" upper="0.0698" velocity="2.1750"/>
-    <!-- upper should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
+    <xacro:if value="${no_position_limits}">
+      <limit effort="87" lower="-20" upper="20" velocity="2.1750"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="87" lower="-3.0718" upper="0.0698" velocity="2.1750"/>
+      <!-- upper should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
+    </xacro:unless>
   </joint>
   <link name="panda_link5">
     <inertial>
@@ -251,12 +292,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link5.${collision_format}"/>
-      </geometry>
-    </collision>
+    <xacro:if value="${collision_links}">
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link5.${collision_format}"/>
+        </geometry>
+      </collision>
+    </xacro:if>
   </link>
   <joint name="panda_joint5" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -264,7 +307,12 @@
     <parent link="panda_link4"/>
     <child link="panda_link5"/>
     <axis xyz="0 0 1"/>
-    <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
+    <xacro:if value="${no_position_limits}">
+      <limit effort="12" lower="-20" upper="20" velocity="2.6100"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
+    </xacro:unless>
   </joint>
   <link name="panda_link6">
     <inertial>
@@ -281,12 +329,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link6.${collision_format}"/>
-      </geometry>
-    </collision>
+    <xacro:if value="${collision_links}">
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link6.${collision_format}"/>
+        </geometry>
+      </collision>
+    </xacro:if>
   </link>
   <joint name="panda_joint6" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-0.0175" soft_upper_limit="3.7525"/>
@@ -294,7 +344,12 @@
     <parent link="panda_link5"/>
     <child link="panda_link6"/>
     <axis xyz="0 0 1"/>
-    <limit effort="12" lower="-0.0175" upper="3.7525" velocity="2.6100"/>
+    <xacro:if value="${no_position_limits}">
+      <limit effort="12" lower="-20" upper="20" velocity="2.6100"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="12" lower="-0.0175" upper="3.7525" velocity="2.6100"/>
+    </xacro:unless>
   </joint>
   <link name="panda_link7">
     <inertial>
@@ -311,12 +366,14 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link7.${collision_format}"/>
-      </geometry>
-    </collision>
+    <xacro:if value="${collision_links}">
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/link7.${collision_format}"/>
+        </geometry>
+      </collision>
+    </xacro:if>
   </link>
   <joint name="panda_joint7" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
@@ -324,7 +381,12 @@
     <parent link="panda_link6"/>
     <child link="panda_link7"/>
     <axis xyz="0 0 1"/>
-    <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
+    <xacro:if value="${no_position_limits}">
+      <limit effort="12" lower="-20" upper="20" velocity="2.6100"/>
+    </xacro:if>
+    <xacro:unless value="${no_position_limits}">
+      <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
+    </xacro:unless>
   </joint>
   <link name="panda_link8">
     <inertial>
@@ -344,27 +406,6 @@
     <child link="panda_hand"/>
     <origin rpy="0 0 -0.785398163397" xyz="0 0 0"/>
   </joint>
-<!--  <gazebo reference="panda_hand"/>-->
-<!--  <gazebo reference="panda_leftfinger"/>-->
-<!--  <gazebo reference="panda_rightfinger"/>-->
-<!--  <transmission name="panda_finger_joint1_trans">-->
-<!--    <type>transmission_interface/SimpleTransmission</type>-->
-<!--    <joint name="panda_finger_joint1">-->
-<!--      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>-->
-<!--    </joint>-->
-<!--    <actuator name="panda_finger_joint1_motor">-->
-<!--      <mechanicalReduction>1</mechanicalReduction>-->
-<!--    </actuator>-->
-<!--  </transmission>-->
-<!--  <transmission name="panda_finger_joint2_trans">-->
-<!--    <type>transmission_interface/SimpleTransmission</type>-->
-<!--    <joint name="panda_finger_joint2">-->
-<!--      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>-->
-<!--    </joint>-->
-<!--    <actuator name="panda_finger_joint2_motor">-->
-<!--      <mechanicalReduction>1</mechanicalReduction>-->
-<!--    </actuator>-->
-<!--  </transmission>-->
   <link name="panda_hand">
     <inertial>
       <mass value="0.73"/>
@@ -380,71 +421,107 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/>
-      </geometry>
-    </collision>
+    <xacro:if value="${collision_hand}">
+      <collision>
+        <!--origin rpy="0 0 0" xyz="0 0 0"/-->
+        <origin rpy="0 0 0" xyz="0 0 0.0333"/>
+        <geometry>
+          <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/!-->
+          <box size="0.035 0.19 0.065"/>
+        </geometry>
+      </collision>
+    </xacro:if>
   </link>
-<!--  <link name="panda_leftfinger">-->
-<!--    <inertial>-->
-<!--      <mass value="0.1"/>-->
-<!--      <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>-->
-<!--      <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0" izz="6.95125211657e-06"/>-->
-<!--    </inertial>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>-->
-<!--      </geometry>-->
-<!--      <material name="">-->
-<!--        <color rgba="1 1 1 1"/>-->
-<!--      </material>-->
-<!--    </visual>-->
-<!--    <collision>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>-->
-<!--      </geometry>-->
-<!--    </collision>-->
-<!--  </link>-->
-<!--  <link name="panda_rightfinger">-->
-<!--    <inertial>-->
-<!--      <mass value="0.1"/>-->
-<!--      <origin rpy="0 0 3.14159265359" xyz="0 0.0145644 0.0227941"/>-->
-<!--      <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0" izz="6.95125211657e-06"/>-->
-<!--    </inertial>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>-->
-<!--      </geometry>-->
-<!--      <material name="">-->
-<!--        <color rgba="1 1 1 1"/>-->
-<!--      </material>-->
-<!--    </visual>-->
-<!--    <collision>-->
-<!--      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>-->
-<!--      <geometry>-->
-<!--        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/>-->
-<!--      </geometry>-->
-<!--    </collision>-->
-<!--  </link>-->
-<!--  <joint name="panda_finger_joint1" type="prismatic">-->
-<!--    <parent link="panda_hand"/>-->
-<!--    <child link="panda_leftfinger"/>-->
-<!--    <origin rpy="0 0 0" xyz="0 0 0.0584"/>-->
-<!--    <axis xyz="0 1 0"/>-->
-<!--    <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>-->
-<!--  </joint>-->
-<!--  <joint name="panda_finger_joint2" type="prismatic">-->
-<!--    <parent link="panda_hand"/>-->
-<!--    <child link="panda_rightfinger"/>-->
-<!--    <origin rpy="0 0 0" xyz="0 0 0.0584"/>-->
-<!--    <axis xyz="0 -1 0"/>-->
-<!--    <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>-->
-<!--  </joint>-->
+  <xacro:if value="${add_finger}">
+    <gazebo reference="panda_hand"/>
+    <gazebo reference="panda_leftfinger"/>
+    <gazebo reference="panda_rightfinger"/>
+    <transmission name="panda_finger_joint1_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="panda_finger_joint1">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="panda_finger_joint1_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="panda_finger_joint2_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="panda_finger_joint2">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="panda_finger_joint2_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <link name="panda_leftfinger">
+      <inertial>
+        <mass value="0.1"/>
+        <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>
+        <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0" izz="6.95125211657e-06"/>
+      </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
+        </geometry>
+        <material name="">
+          <color rgba="1 1 1 1"/>
+        </material>
+      </visual>
+      <xacro:if value="${collision_finger}">
+        <collision>
+          <!--origin rpy="0 0 0" xyz="0 0 0"/-->
+          <origin rpy="0 0 3.14159265359" xyz="0 0.01 0.028"/>
+          <geometry>
+            <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/-->
+            <box size="0.02 0.02 0.05"/>
+          </geometry>
+        </collision>
+      </xacro:if>
+    </link>
+    <link name="panda_rightfinger">
+      <inertial>
+        <mass value="0.1"/>
+        <origin rpy="0 0 3.14159265359" xyz="0 0.0145644 0.0227941"/>
+        <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0" izz="6.95125211657e-06"/>
+      </inertial>
+      <visual>
+        <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
+        </geometry>
+        <material name="">
+          <color rgba="1 1 1 1"/>
+        </material>
+      </visual>
+      <xacro:if value="${collision_finger}">
+        <collision>
+          <!-- origin rpy="0 0 3.14159265359" xyz="0 0 0"/ -->
+          <origin rpy="0 0 3.14159265359" xyz="0 -0.01 0.028"/>
+          <geometry>
+            <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/-->
+            <box size="0.02 0.02 0.05"/>
+          </geometry>
+        </collision>
+      </xacro:if>
+    </link>
+    <joint name="panda_finger_joint1" type="prismatic">
+      <parent link="panda_hand"/>
+      <child link="panda_leftfinger"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0584"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>
+    </joint>
+    <joint name="panda_finger_joint2" type="prismatic">
+      <parent link="panda_hand"/>
+      <child link="panda_rightfinger"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0584"/>
+      <axis xyz="0 -1 0"/>
+      <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>
+    </joint>
+  </xacro:if>
   </xacro:macro>
 </robot>
+
 

@@ -34,7 +34,7 @@ class ControllerRos{
    * @brief Must implement to set the reference for the controller
    * @return
    */
-  virtual bool update_reference() = 0;
+  virtual bool update_reference();
   virtual bool init_ros(){};
   virtual void publish_ros(){};
 
