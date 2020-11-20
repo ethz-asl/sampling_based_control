@@ -57,6 +57,8 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   double obstacle_cost = 0;
   double joint_limit_cost = 0;
   double gripper_cost = 0;
+  double contact_cost = 0;
+
   pose_current_ = get_pose_end_effector(x);
 
   // end effector reaching
@@ -77,6 +79,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     err_ = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
     linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
     angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
+    if (x(2*PandaDim::JOINT_DIMENSION + 2*PandaDim::STATE_DIMENSION)>0) contact_cost = 10.0;
   }
   // keep only position control in proximity of the handle and no gripper cost
   // open the door
@@ -111,7 +114,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
       joint_limit_cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i), 2);
   }
    **/
-  return linear_cost + angular_cost + obstacle_cost + joint_limit_cost + door_opening_cost;
+  return linear_cost + angular_cost + obstacle_cost + joint_limit_cost + door_opening_cost + contact_cost;
 
 }
 

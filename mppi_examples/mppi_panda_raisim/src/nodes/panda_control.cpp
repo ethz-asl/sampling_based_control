@@ -33,9 +33,9 @@ int main(int argc, char** argv){
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for(size_t i=0; i<x0.size(); i++) {
     x.head<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
-    x.tail<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
   }
 
+  ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);
 
   // init control input
@@ -124,6 +124,7 @@ int main(int argc, char** argv){
     handle_pose = controller.get_pose_handle_ros(x);
     handle_publisher.publish(handle_pose);
 
+    ROS_INFO_STREAM_THROTTLE(1.0, "In contact? " << x.tail<1>()(0));
     auto end = std::chrono::steady_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
     if (sim_dt - elapsed >0)

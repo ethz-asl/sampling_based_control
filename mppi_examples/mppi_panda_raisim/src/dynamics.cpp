@@ -74,8 +74,8 @@ void PandaRaisimDynamics::set_collision() {
 
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t &u, const double dt) {
   // no mimic support --> 1 input for gripper but 2 joints to control
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>()(0) += u(PandaDim::INPUT_DIMENSION-1)*dt;
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>()(1) = cmd.tail<PandaDim::GRIPPER_DIMENSION>()(0);
+  cmd(PandaDim::ARM_DIMENSION) = 0.04; //x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
+  cmd(PandaDim::ARM_DIMENSION+1) = cmd(PandaDim::ARM_DIMENSION);
 
   cmdv.head<PandaDim::ARM_DIMENSION>() = u.head<PandaDim::ARM_DIMENSION>();
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>() = Eigen::Vector2d::Zero();
@@ -87,6 +87,9 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
   door->getState(door_p, door_v);
   door->setGeneralizedForce(door->getNonlinearities());
 
+  // get contact state
+  bool contact = !door->getContacts().empty();
+
   // step simulation
   sim_.integrate();
 
@@ -94,7 +97,7 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
   x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION) = joint_v;
   x_.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION)(0) = door_p(0);
   x_.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION)(1) = door_v(0);
-
+  x_(2*PandaDim::DOOR_DIMENSION + 2*PandaDim::JOINT_DIMENSION) = contact;
   return x_;
 }
 
