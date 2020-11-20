@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mppi_panda_mobile</name>
-  <version>0.1.0</version>
-  <description>mppi package</description>
-  <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
-  <license>BSD</license>
+    <name>mppi_panda_mobile</name>
+    <version>0.1.0</version>
+    <description>mppi package</description>
+    <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
+    <license>BSD</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>roscpp</depend>
-  <depend>mppi</depend>
-  <depend>mppi_ros</depend>
-  <depend>mppi_panda</depend>
-  <depend>robot_control_ros</depend>
-  <depend>eigen</depend>
-  <depend>roslib</depend>
-  <depend>tf2</depend>
-  <depend>tf2_ros</depend>
+    <buildtool_depend>catkin</buildtool_depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>roscpp</depend>
+    <depend>mppi</depend>
+    <depend>mppi_ros</depend>
+    <depend>mppi_panda</depend>
+    <depend>robot_control_ros</depend>
+    <depend>eigen</depend>
+    <depend>roslib</depend>
+    <depend>tf2</depend>
+    <depend>tf2_ros</depend>
 </package>
 
 

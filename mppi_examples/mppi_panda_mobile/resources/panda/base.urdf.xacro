@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="panda_mobile" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:macro name="panda_base" params="base_link:='base'">
-    <link name="${base_link}">
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.5 0.5 0.25"/>
-      </geometry>
-    </collision>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.5 0.5 0.25"/>
-      </geometry>
-      <material name="green"/>
-    </visual>
-    </link>
-  </xacro:macro>
+    <xacro:macro name="panda_base" params="base_link:='base'">
+        <link name="${base_link}">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.5 0.5 0.25"/>
+                </geometry>
+            </collision>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.5 0.5 0.25"/>
+                </geometry>
+                <material name="green"/>
+            </visual>
+        </link>
+    </xacro:macro>
 
 </robot>

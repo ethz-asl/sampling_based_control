@@ -51,9 +51,9 @@ for field in df.columns:
         ax[i][j].set_ylabel(field)
         ax[i][j].legend()
 
-        i+=1
-        if i==3:
-            i=0
-            j+=1
+        i += 1
+        if i == 3:
+            i = 0
+            j += 1
 
 plt.show()

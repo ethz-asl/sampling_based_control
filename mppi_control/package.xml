@@ -14,7 +14,7 @@
     <exec_depend>mppi_panda_mobile</exec_depend>
 
     <export>
-        <metapackage />
+        <metapackage/>
     </export>
 </package>
 

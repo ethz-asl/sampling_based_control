@@ -8,17 +8,17 @@
 #pragma once
 #include <mppi/controller/mppi.h>
 
+#include <ros/node_handle.h>
 #include <any_worker/WorkerManager.hpp>
 #include <param_io/get_param.hpp>
-#include <ros/node_handle.h>
 
-#include <std_msgs/Float64.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Float64.h>
 
 using namespace mppi;
-namespace mppi_ros{
+namespace mppi_ros {
 
-class ControllerRos{
+class ControllerRos {
  public:
   ControllerRos() = delete;
   ControllerRos(ros::NodeHandle& nh);
@@ -50,10 +50,13 @@ class ControllerRos{
    */
   bool start();
 
-  inline std::shared_ptr<PathIntegral>& get_controller() { return controller_; };
-  const ros::NodeHandle& get_node_handle() {return nh_; }
+  inline std::shared_ptr<PathIntegral>& get_controller() {
+    return controller_;
+  };
+  const ros::NodeHandle& get_node_handle() { return nh_; }
 
-  // TODO(giuseppe) this is dangerous since one might not use correctly this class
+  // TODO(giuseppe) this is dangerous since one might not use correctly this
+  // class
   // TODO(giuseppe) split a sync vs an async class
   /**
    * Methods to use in a synchronous setup. In this case the call should follow
@@ -69,7 +72,8 @@ class ControllerRos{
   void set_observation(const observation_t& x, const mppi::time_t& t);
   bool update_policy();
   void get_input(const observation_t& x, input_t& u, const mppi::time_t& t);
-  void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u, const mppi::time_t& t);
+  void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u,
+                       const mppi::time_t& t);
   bool publish_ros_default();
 
  private:
@@ -118,4 +122,4 @@ class ControllerRos{
   std_msgs::Float32MultiArray input_ros_;
 };
 
-}
+}  // namespace mppi_ros
