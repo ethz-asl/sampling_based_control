@@ -23,8 +23,8 @@ namespace panda{
 
 class PandaCost: public mppi::CostBase{
  public:
-   PandaCost(): PandaCost("", 1.0, 1.0, 0.0){};
-   PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius);
+   PandaCost(): PandaCost("", 1.0, 1.0, 0.0, 0.0){};
+   PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius, double contact_weight);
    ~PandaCost() = default;
 
  private:
@@ -32,6 +32,7 @@ class PandaCost: public mppi::CostBase{
    double linear_weight_;
    double angular_weight_;
    double obstacle_radius_;
+   double contact_weight_;
 
    pinocchio::Model model_;
    pinocchio::Data data_;
@@ -59,7 +60,7 @@ class PandaCost: public mppi::CostBase{
    Eigen::Matrix<double, 7, 1> joint_limits_upper_;
 
  public:
-   cost_ptr create() override { return std::make_shared<PandaCost>(robot_description_, linear_weight_, angular_weight_, obstacle_radius_); }
+   cost_ptr create() override { return std::make_shared<PandaCost>(robot_description_, linear_weight_, angular_weight_, obstacle_radius_, contact_weight_); }
    cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
 
    void set_linear_weight(const double k){ Q_linear_ *= k; }

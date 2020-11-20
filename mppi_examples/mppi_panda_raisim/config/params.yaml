@@ -3,7 +3,7 @@ solver:
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
-  horizon: 0.5
+  horizon: 1.0
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -26,6 +26,7 @@ initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]
 linear_weight: 100.0
 angular_weight: 10.0
 obstacle_radius: 0.15
+contact_weight: 0.0
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
