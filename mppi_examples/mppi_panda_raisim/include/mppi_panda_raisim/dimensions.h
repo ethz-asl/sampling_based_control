@@ -27,9 +27,10 @@ enum PandaDim : char {
   REFERENCE_POSE_DIMENSION = 7,
   REFERENCE_OBSTACLE = 3,
   REFERENCE_DOOR_DIMENSION = 1,
-  REFERENCE_FLAG = 1,                                                             // trigger some costs components
+  REFERENCE_FLAG = 1,// trigger some costs components
+  CONTACT_STATE = 1,
 
-  STATE_DIMENSION = 3 * JOINT_DIMENSION + 2 * DOOR_DIMENSION,                     // q, q_dot + door, door_dot + q_arm_des
+  STATE_DIMENSION = 2 * JOINT_DIMENSION + 2 * DOOR_DIMENSION + CONTACT_STATE,  // q, q_dot + door, door_dot, contact
   INPUT_DIMENSION = ARM_DIMENSION + 1,                                            // arm joints velocity and gripper cmd
   REFERENCE_DIMENSION = REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE + REFERENCE_DOOR_DIMENSION + REFERENCE_FLAG
 };

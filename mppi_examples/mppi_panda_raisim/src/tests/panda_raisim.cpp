@@ -37,7 +37,6 @@ int main(int argc, char** argv) {
   x.setZero(PandaDim::STATE_DIMENSION);
   x_snapshot.setZero(PandaDim::STATE_DIMENSION);
   x.head<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
-  x.tail<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
   x.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION) << DOOR_CONFIGURATION;
 
   std::cout << "Resetting to state x=" << x.transpose() << std::endl;

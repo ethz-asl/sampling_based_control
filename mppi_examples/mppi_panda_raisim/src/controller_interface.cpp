@@ -92,7 +92,8 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
-  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight, obstacle_radius_);
+  double contact_weight = param_io::param(nh_, "contact_weight", 0.0);
+  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight, obstacle_radius_, contact_weight);
 
   // -------------------------------
   // controller

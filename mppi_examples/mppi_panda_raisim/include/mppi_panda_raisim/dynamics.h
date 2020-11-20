@@ -21,6 +21,11 @@
 
 namespace panda{
 
+struct force_t{
+  Eigen::Vector3d force;
+  Eigen::Vector3d position;
+};
+
 class PandaRaisimDynamics : public mppi::DynamicsBase {
  public:
   PandaRaisimDynamics(const std::string& robot_description, const double dt);
@@ -47,6 +52,8 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
 
   observation_t step(const input_t &u, const double dt) override;
   input_t get_zero_input(const observation_t& x) override;
+
+  std::vector<force_t> get_contact_forces();
 
  private:
   observation_t x_;

@@ -74,8 +74,8 @@ void PandaRaisimDynamics::set_collision() {
 
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t &u, const double dt) {
   // no mimic support --> 1 input for gripper but 2 joints to control
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>()(0) += u(PandaDim::INPUT_DIMENSION-1)*dt;
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>()(1) = cmd.tail<PandaDim::GRIPPER_DIMENSION>()(0);
+  cmd(PandaDim::ARM_DIMENSION) = 0.04; //x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
+  cmd(PandaDim::ARM_DIMENSION+1) = cmd(PandaDim::ARM_DIMENSION);
 
   cmdv.head<PandaDim::ARM_DIMENSION>() = u.head<PandaDim::ARM_DIMENSION>();
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>() = Eigen::Vector2d::Zero();
@@ -87,6 +87,15 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
   door->getState(door_p, door_v);
   door->setGeneralizedForce(door->getNonlinearities());
 
+  // get contact state
+  double in_contact = -1;
+  for (const auto& contact : door->getContacts()){
+    if (!contact.skip() && !contact.isSelfCollision()){
+      in_contact = 1;
+      break;
+    }
+  }
+
   // step simulation
   sim_.integrate();
 
@@ -94,7 +103,7 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
   x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION) = joint_v;
   x_.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION)(0) = door_p(0);
   x_.segment<2*PandaDim::DOOR_DIMENSION>(2*PandaDim::JOINT_DIMENSION)(1) = door_v(0);
-
+  x_(2*PandaDim::DOOR_DIMENSION + 2*PandaDim::JOINT_DIMENSION) = in_contact;
   return x_;
 }
 
@@ -113,6 +122,19 @@ void PandaRaisimDynamics::reset(const DynamicsBase::observation_t &x) {
 
 DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
+}
+
+std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
+  std::vector<force_t> forces;
+  for(const auto contact : door->getContacts()) {
+    if (contact.skip()) continue; /// if the contact is internal, one contact point is set to 'skip'
+    if (contact.isSelfCollision()) continue;
+    force_t force;
+    force.force = contact.getContactFrame().e() * contact.getImpulse()->e() / sim_.getTimeStep();
+    force.position = contact.getPosition().e();
+    forces.push_back(force);
+  }
+  return forces;
 }
 
 }

@@ -11,6 +11,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 
+#include <visualization_msgs/MarkerArray.h>
+
 using namespace panda;
 
 int main(int argc, char** argv){
@@ -25,6 +27,18 @@ int main(int argc, char** argv){
   auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
   auto simulation = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, 0.01);
 
+  visualization_msgs::Marker force_marker;
+  force_marker.type = visualization_msgs::Marker::ARROW;
+  force_marker.header.frame_id = "world";
+  force_marker.action = visualization_msgs::Marker::ADD;
+  force_marker.pose.orientation.w = 1.0;
+  force_marker.scale.x = 0.005;
+  force_marker.scale.y = 0.01;
+  force_marker.scale.z = 0.02;
+  force_marker.color.r = 1.0;
+  force_marker.color.b = 0.0;
+  force_marker.color.g = 0.0;
+  force_marker.color.a = 1.0;
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
 
@@ -33,9 +47,9 @@ int main(int argc, char** argv){
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for(size_t i=0; i<x0.size(); i++) {
     x.head<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
-    x.tail<PandaDim::JOINT_DIMENSION>()(i) = x0[i];
   }
 
+  ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);
 
   // init control input
@@ -48,6 +62,8 @@ int main(int argc, char** argv){
 
   ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   ros::Publisher door_state_publisher = nh.advertise<sensor_msgs::JointState>("/door/joint_state", 10);
+  ros::Publisher contact_forces_publisher = nh.advertise<visualization_msgs::MarkerArray>("/contact_forces", 10);
+
   sensor_msgs::JointState joint_state, door_state;
   joint_state.name = {"panda_joint1",
                       "panda_joint2",
@@ -123,6 +139,22 @@ int main(int argc, char** argv){
 
     handle_pose = controller.get_pose_handle_ros(x);
     handle_publisher.publish(handle_pose);
+
+    ROS_INFO_STREAM_THROTTLE(1.0, "In contact? " << x.tail<1>()(0));
+
+    std::vector<force_t> forces = simulation->get_contact_forces();
+    visualization_msgs::MarkerArray force_markers;
+    for (const auto& force : forces){
+      force_marker.points.resize(2);
+      force_marker.points[0].x = force.position(0);
+      force_marker.points[0].y = force.position(1);
+      force_marker.points[0].z = force.position(2);
+      force_marker.points[1].x = force.position(0) + force.force(0)/10.0;
+      force_marker.points[1].y = force.position(1) + force.force(1)/10.0;
+      force_marker.points[1].z = force.position(2) + force.force(2)/10.0;
+      force_markers.markers.push_back(force_marker);
+    }
+    contact_forces_publisher.publish(force_markers);
 
     auto end = std::chrono::steady_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;

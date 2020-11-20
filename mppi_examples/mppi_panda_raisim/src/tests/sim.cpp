@@ -14,8 +14,10 @@
 #include <raisim/World.hpp>
 
 #define DEFAULT_CONFIGURATION 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04
+#define VELOCITY_TARGET 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
 using namespace raisim;
+using namespace std::chrono;
 
 void setupCallback() {
   auto vis = raisim::OgreVis::get();
@@ -118,7 +120,8 @@ int main(int argc, char **argv) {
   jointDgain.setZero();
   jointVelocityTarget.setZero();
   jointPgain.setConstant(200.0);
-  jointDgain.setConstant(1.0);
+  jointPgain(1) = 0.0;
+  jointDgain.setConstant(20.0);
 
   /// set panda properties
   panda->setGeneralizedCoordinate({DEFAULT_CONFIGURATION});
@@ -130,6 +133,7 @@ int main(int argc, char **argv) {
   /// panda PD controller
   jointVelocityTarget.setZero();
   jointNominalConfig << DEFAULT_CONFIGURATION;
+  jointVelocityTarget << VELOCITY_TARGET;
   panda->setPdTarget(jointNominalConfig, jointVelocityTarget);
 
   /// contacts
@@ -140,6 +144,7 @@ int main(int argc, char **argv) {
   //footIndices.push_back(anymal->getBodyIdx("LH_SHANK"));
   //footIndices.push_back(anymal->getBodyIdx("RH_SHANK"));
 
+
   /// just to get random motions of anymal
   //std::default_random_engine generator;
   //std::normal_distribution<double> distribution(0.0, 0.3);
@@ -147,6 +152,50 @@ int main(int argc, char **argv) {
   //double time=0.;
 
   /// lambda function for the controller
+  auto controller = [&world, panda, door](){
+    static double sleep_s = 1.0;
+    static double time = 0;
+    static int last_step = 0;
+    static time_point<steady_clock> start, end;
+
+    /// we cannot query door_frame_step since all fixed bodies are combined into one
+    static size_t doorStepIndex = door->getBodyIdx("door_frame");
+
+    time += world.getTimeStep();
+    int curr_step = (int) (time/sleep_s);
+    if (curr_step > last_step){
+      std::cout << "Quering contacts for frame: " << doorStepIndex << std::endl;
+
+      start = steady_clock::now();
+      std::vector<contact::Contact> contacts = door->getContacts();
+      end = steady_clock::now();
+
+      std::cout << "There are: " << contacts.size() << " contacts." << std::endl;
+      double query_time = duration_cast<nanoseconds>(end-start).count()/1e6;
+
+      for(auto& contact: door->getContacts()) {
+        std::cout << "----------------------------------------" << std::endl;
+        std::cout << "Query time is: " << query_time << " ms." << std::endl;
+        if (contact.skip()) continue; /// if the contact is internal, one contact point is set to 'skip'
+        if (contact.isSelfCollision()) continue;
+        if (contact.getlocalBodyIndex() != doorStepIndex) continue;
+
+        /// the impulse is acting from objectB to objectA. You can check if this object is objectA or B by
+        std::cout<<"Door step in collision!"<<std::endl;
+        std::cout<<"Contact impulse in the contact frame: "<<contact.getImpulse()->e()<<std::endl;
+        std::cout<<"is ObjectA: "<<contact.isObjectA()<<std::endl;
+        std::cout<<"Contact frame: \n"<<contact.getContactFrame().e()<<std::endl;
+        std::cout<<"Contact impulse in the world frame: "<<contact.getContactFrame().e() * contact.getImpulse()->e()<<std::endl;
+        std::cout<<"Contact Normal in the world frame: "<<contact.getNormal().e().transpose()<<std::endl;
+        std::cout<<"Contact position in the world frame: "<<contact.getPosition().e().transpose()<<std::endl;
+        std::cout<<"It collides with: "<<world.getObject(contact.getPairObjectIndex())->getName() <<std::endl;
+        std::cout<<"please check Contact.hpp for the full list of the methods"<<std::endl;
+      }
+
+      last_step = curr_step;  
+    }
+  };
+
   //auto controller = [anymal,
   //    &generator,
   //    &distribution,
@@ -205,10 +254,12 @@ int main(int argc, char **argv) {
     anymal_gui::reward::log("commandTracking", distribution(generator));
   };
 
-  vis->setControlCallback(controller);
 */
+  /// sim callback
+  vis->setControlCallback(controller);
+
   /// set camera
-  vis->select(panda_graphics->at(0), false);
+  vis->select(door_graphics->at(0), false);
   vis->getCameraMan()->setYawPitchDist(Ogre::Radian(0), -Ogre::Radian(M_PI_4), 2);
 
   /// run the app

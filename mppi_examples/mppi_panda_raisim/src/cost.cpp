@@ -16,12 +16,17 @@
 //TODO(giuseppe) remove the gripper cost and hand code the gripper positions (video first with emerging behaviour)
 using namespace panda;
 
-PandaCost::PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius){
+PandaCost::PandaCost(const std::string& robot_description,
+    double linear_weight,
+    double angular_weight,
+    double obstacle_radius,
+    double contact_weight){
 
   robot_description_ = robot_description;
   linear_weight_ = linear_weight;
   angular_weight_ = angular_weight;
   obstacle_radius_ = obstacle_radius;
+  contact_weight_ = contact_weight;
 
   pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
@@ -57,6 +62,8 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   double obstacle_cost = 0;
   double joint_limit_cost = 0;
   double gripper_cost = 0;
+  double contact_cost = 0;
+
   pose_current_ = get_pose_end_effector(x);
 
   // end effector reaching
@@ -70,6 +77,10 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     err_ = pinocchio::log6(pose_current_.actInv(pose_reference_));
     linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
     angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
+
+    if (x(2*PandaDim::JOINT_DIMENSION + 2*PandaDim::DOOR_DIMENSION) > 0){
+      contact_cost = contact_weight_;
+    }
   }
   // reach the handle with open gripper
   else if(mode == 1){
@@ -77,6 +88,10 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     err_ = pinocchio::log6(pose_current_.actInv(pose_handle_.act(grasp_offset_)));
     linear_cost = err_.linear().transpose() * Q_linear_ * err_.linear();
     angular_cost = err_.angular().transpose() * Q_angular_ * err_.angular();
+
+    if (x(2*PandaDim::JOINT_DIMENSION + 2*PandaDim::DOOR_DIMENSION) > 0)
+      contact_cost = contact_weight_;
+
   }
   // keep only position control in proximity of the handle and no gripper cost
   // open the door
@@ -111,7 +126,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
       joint_limit_cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i), 2);
   }
    **/
-  return linear_cost + angular_cost + obstacle_cost + joint_limit_cost + door_opening_cost;
+  return linear_cost + angular_cost + obstacle_cost + joint_limit_cost + door_opening_cost + contact_cost;
 
 }
 
