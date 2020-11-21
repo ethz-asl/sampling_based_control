@@ -6,19 +6,17 @@
  * @brief    description
  */
 
-
-#include "mppi/controller/mppi.h"
-#include "mppi/utils/logging.h"
-#include "mppi/sampler/gaussian_sampler.h"
-#include "double_integrator.cpp"
-#include <Eigen/Dense>
 #include <gtest/gtest.h>
+#include <Eigen/Dense>
 #include <array>
 #include <chrono>
+#include "double_integrator.cpp"
+#include "mppi/controller/mppi.h"
+#include "mppi/sampler/gaussian_sampler.h"
+#include "mppi/utils/logging.h"
 
 using namespace Eigen;
 using namespace mppi;
-
 
 class PathIntegralTest : public ::testing::Test {
  protected:
@@ -39,14 +37,14 @@ class PathIntegralTest : public ::testing::Test {
   std::shared_ptr<DoubleIntegratorCost> cost;
   mppi::GaussianSampler::sampler_ptr sampler;
 
-  void print_rollouts(){
-    for(size_t k=0; k< solver_->config_.rollouts; k++){
+  void print_rollouts() {
+    for (size_t k = 0; k < solver_->config_.rollouts; k++) {
       std::cout << "Rollout " << k << ": " << std::endl;
       std::cout << solver_->rollouts_[k] << std::endl;
     }
   }
 
-  void verbose_run(Eigen::VectorXd x0, const double t0){
+  void verbose_run(Eigen::VectorXd x0, const double t0) {
     log_info("Resetting observation.");
     solver_->set_observation(x0, t0);
 
@@ -88,7 +86,7 @@ class PathIntegralTest : public ::testing::Test {
   }
 };
 
-TEST_F(PathIntegralTest, VerboseRun){
+TEST_F(PathIntegralTest, VerboseRun) {
   Eigen::Vector2d x0{0.0, 0.0};
   double t0 = 0.0;
 
@@ -104,7 +102,7 @@ TEST_F(PathIntegralTest, VerboseRun){
   verbose_run(x0, t0);
 
   double query_t = 0.3;
-  PathIntegral::input_t  u;
+  PathIntegral::input_t u;
   log_info("Querying control input at t=" + std::to_string(query_t));
   solver_->get_input(x0, u, query_t);
   std::cout << u.transpose() << std::endl;
@@ -120,7 +118,8 @@ TEST_F(PathIntegralTest, InputQueries) {
 
   solver_->set_observation(x0, t0);
   solver_->update_policy();
-  std::cout << "Optimal trajectory: " << std::endl << solver_->get_optimal_rollout_cache() << std::endl;
+  std::cout << "Optimal trajectory: " << std::endl
+            << solver_->get_optimal_rollout_cache() << std::endl;
 
   double t;
   std::cout << "Aligned time." << std::endl;
@@ -138,7 +137,7 @@ TEST_F(PathIntegralTest, InputQueries) {
   }
 }
 
-TEST_F(PathIntegralTest, AsyncRun){
+TEST_F(PathIntegralTest, AsyncRun) {
   Eigen::Vector2d x0{0.0, 0.0};
   Eigen::VectorXd u = Eigen::VectorXd::Zero(1);
 
@@ -152,26 +151,27 @@ TEST_F(PathIntegralTest, AsyncRun){
   solver_->set_observation(x0, t0);
 
   // optimization thread
-  std::thread t1([&, this]{
+  std::thread t1([&, this] {
     size_t counter = 0;
-    while(counter < 5){
+    while (counter < 5) {
       std::cout << "Update #" << counter << std::endl;
       solver_->update_policy();
       counter++;
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
-      std::cout << "Optimal rollout: " << std::endl << solver_->get_optimal_rollout_cache() << std::endl;
+      std::cout << "Optimal rollout: " << std::endl
+                << solver_->get_optimal_rollout_cache() << std::endl;
       run_once = true;
     }
   });
 
   // set observation and get control thread
-  std::thread t2([&, this]{
+  std::thread t2([&, this] {
     size_t counter = 0;
     double t;
-    while(counter < 5){
-      if (run_once){
+    while (counter < 5) {
+      if (run_once) {
         std::cout << "Reset #" << counter << std::endl;
-        t = t0 + counter*config.step_size;
+        t = t0 + counter * config.step_size;
         solver_->set_observation(x0, t);
         solver_->get_input(x0, u, t);
         counter++;
@@ -183,11 +183,9 @@ TEST_F(PathIntegralTest, AsyncRun){
 
   t1.join();
   t2.join();
-
 }
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-

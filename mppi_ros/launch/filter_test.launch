@@ -3,9 +3,9 @@
 
     <!--  Run the test node-->
     <node name="filter_test" type="filter_test" pkg="mppi_ros" output="screen">
-        <param name="window_size"   value="10"/>
-        <param name="filter_order"  value="3"/>
-        <param name="bag_name"      value="/home/giuseppe/u_mppi.bag"/>
+        <param name="window_size" value="10"/>
+        <param name="filter_order" value="3"/>
+        <param name="bag_name" value="/home/giuseppe/u_mppi.bag"/>
     </node>
 
     <arg name="mp_config_input" default="$(find mppi_ros)/config/rqt_multiplot.xml"/>

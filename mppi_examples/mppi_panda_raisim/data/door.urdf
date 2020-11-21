@@ -14,7 +14,7 @@
                 <box size="0.05 0.6 0.5"/>
             </geometry>
             <material name="frame_material">
-                <color rgba="0.5 0.0 0.0 1" />
+                <color rgba="0.5 0.0 0.0 1"/>
             </material>
         </visual>
         <collision>
@@ -63,7 +63,7 @@
                 <box size="0.02 0.6 0.5"/>
             </geometry>
             <material name="door_material">
-                <color rgba="0.8 0.8 0.3 1" />
+                <color rgba="0.8 0.8 0.3 1"/>
             </material>
         </visual>
         <collision>
@@ -95,7 +95,7 @@
                 <cylinder radius="0.005" length="0.10"/>
             </geometry>
             <material name="handle_matreial">
-                <color rgba="0.8 0.8 0.3 1" />
+                <color rgba="0.8 0.8 0.3 1"/>
             </material>
         </visual>
         <collision>

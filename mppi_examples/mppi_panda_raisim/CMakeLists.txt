@@ -4,7 +4,7 @@ project(mppi_panda_raisim)
 set(RAISIM_LIB_PATH "/home/giuseppe/raisim_ws/build")
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${RAISIM_LIB_PATH})
 
-set(CMAKE_BUILD_TYPE  RelWithDebInfo)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Eigen3 REQUIRED 3.3)
@@ -13,24 +13,24 @@ find_package(raisim CONFIG REQUIRED)
 find_package(raisimOgre CONFIG REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
-    sensor_msgs
-    std_msgs
-    roscpp
-    mppi
-    mppi_ros
-    roslib
-    robot_control
-    robot_control_ros
-    robot_control_assets
-    roscpp
-)
+        sensor_msgs
+        std_msgs
+        roscpp
+        mppi
+        mppi_ros
+        roslib
+        robot_control
+        robot_control_ros
+        robot_control_assets
+        roscpp
+        )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 catkin_package(
-  LIBRARIES ${PROJECT_NAME}
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-  DEPENDS pinocchio)
+        LIBRARIES ${PROJECT_NAME}
+        INCLUDE_DIRS include
+        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
+        DEPENDS pinocchio)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${PINOCCHIO_LIBRARIES})
 add_library(${PROJECT_NAME}
@@ -53,5 +53,5 @@ add_dependencies(sim_ogre ${PROJECT_NAME})
 
 
 install(DIRECTORY launch resources
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        )

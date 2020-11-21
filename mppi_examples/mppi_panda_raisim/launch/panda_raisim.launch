@@ -4,8 +4,9 @@
     <arg name="description_file" default="$(find mppi_panda_raisim)/data/panda_grasp.urdf.xacro"/>
     <arg name="tf_prefix" default=""/>
 
-    <param name="robot_description"         command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true"/>
-    <param name="robot_description_raisim"  command="$(find xacro)/xacro $(arg description_file)
+    <param name="robot_description"
+           command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true"/>
+    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
       collision_links:=false
       collision_hand:=true
       collision_finger:=true
@@ -13,21 +14,21 @@
       add_finger:=true
       no_position_limits:=true"/>
 
-    <param name="door_description"         command="$(find xacro)/xacro $(find mppi_panda_raisim)/data/door.urdf"/>
+    <param name="door_description" command="$(find xacro)/xacro $(find mppi_panda_raisim)/data/door.urdf"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
-        <param name="use_tf_static"     value="true"/>
-        <param name="tf_prefix"         value="$(arg tf_prefix)"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value="$(arg tf_prefix)"/>
         <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states"      to="/joint_states"/>
+        <remap from="joint_states" to="/joint_states"/>
     </node>
 
     <node name="door_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="use_tf_static"     value="true"/>
+        <param name="use_tf_static" value="true"/>
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="door_description"/>
-        <remap from="joint_states"      to="/door/joint_state"/>
+        <remap from="joint_states" to="/door/joint_state"/>
     </node>
 
     <node name="panda_raisim" type="panda_raisim" pkg="mppi_panda_raisim" output="screen"

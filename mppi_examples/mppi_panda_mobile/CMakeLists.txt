@@ -6,24 +6,24 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
-  sensor_msgs
-  std_msgs
-  roscpp
-  mppi
-  mppi_ros
-  robot_control_ros
-  roslib
-  tf2
-  tf2_ros
-)
+        sensor_msgs
+        std_msgs
+        roscpp
+        mppi
+        mppi_ros
+        robot_control_ros
+        roslib
+        tf2
+        tf2_ros
+        )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME}
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-  DEPENDS pinocchio)
+        LIBRARIES ${PROJECT_NAME}
+        INCLUDE_DIRS include
+        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
+        DEPENDS pinocchio)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${PINOCCHIO_LIBRARIES})
 add_library(${PROJECT_NAME}
@@ -37,5 +37,5 @@ target_link_libraries(panda_mobile_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_mobile_control ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        )

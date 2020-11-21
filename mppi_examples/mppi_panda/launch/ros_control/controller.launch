@@ -2,8 +2,8 @@
 <launch>
 
     <!-- Gazebo simulation -->
-    <arg name="simulation"  default="true" />
-    <arg name="paused"      default="false" />
+    <arg name="simulation" default="true"/>
+    <arg name="paused" default="false"/>
 
     <!--  Controllers -->
     <rosparam file="$(find mppi_panda)/config/controllers.yaml" command="load"/>
@@ -11,55 +11,56 @@
 
     <group if="$(arg simulation)">
         <include file="$(find robot_control_ros)/launch/gazebo.launch">
-            <arg name="run_gui"   value="false" />
-            <arg name="paused"    value="$(arg paused)" />
+            <arg name="run_gui" value="false"/>
+            <arg name="paused" value="$(arg paused)"/>
         </include>
 
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/"
-              args="joint_state_controller mppi_panda_sim" />
+              args="joint_state_controller mppi_panda_sim"/>
 
         <node name="unpause_gazebo_node" pkg="robot_control_ros" type="unpause_gazebo.py" output="screen"
-              args="--delay 5.0" />
+              args="--delay 5.0"/>
 
         <!-- Controller manager gui -->
         <node name="rqt_controller_manager" type="rqt_controller_manager" pkg="rqt_controller_manager"/>
 
         <include file="$(find mppi_panda)/launch/common.launch">
-            <arg name="plot_cost"           value="true"/>
-            <arg name="plot_input"          value="true"/>
-            <arg name="enable_obstacle"     value="true"/>
+            <arg name="plot_cost" value="true"/>
+            <arg name="plot_input" value="true"/>
+            <arg name="enable_obstacle" value="true"/>
         </include>
 
         <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
             <param name="publish_frequency" value="100"/>
-            <param name="use_tf_static"     value="true"/>
-            <param name="tf_prefix"         value=""/>
+            <param name="use_tf_static" value="true"/>
+            <param name="tf_prefix" value=""/>
             <remap from="robot_description" to="robot_description"/>
-            <remap from="joint_states"      to="/joint_states"/>
+            <remap from="joint_states" to="/joint_states"/>
         </node>
 
     </group>
 
     <!--  Real robot-->
     <group unless="$(arg simulation)">
-        <arg name="description_file"    default="$(find robot_control_assets)/assets/arms/panda/panda.urdf.xacro"/>
-        <param name="robot_description" command="$(find xacro)/xacro.py $(arg description_file) mesh_prefix:=package://robot_control_assets/"/>
+        <arg name="description_file" default="$(find robot_control_assets)/assets/arms/panda/panda.urdf.xacro"/>
+        <param name="robot_description"
+               command="$(find xacro)/xacro.py $(arg description_file) mesh_prefix:=package://robot_control_assets/"/>
 
         <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
-            <rosparam command="load"    file="$(find franka_control)/config/franka_control_node.yaml" />
-            <param name="robot_ip"      value="$(env FRANKA_IP)"/>
+            <rosparam command="load" file="$(find franka_control)/config/franka_control_node.yaml"/>
+            <param name="robot_ip" value="$(env FRANKA_IP)"/>
         </node>
 
         <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
               args="franka_state_controller mppi_panda"/>
-        <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
+        <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml"/>
 
         <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
             <param name="publish_frequency" value="100"/>
-            <param name="use_tf_static"     value="true"/>
-            <param name="tf_prefix"         value=""/>
+            <param name="use_tf_static" value="true"/>
+            <param name="tf_prefix" value=""/>
             <remap from="robot_description" to="/robot_description"/>
-            <remap from="joint_states"      to="/franka_state_controller/joint_states"/>
+            <remap from="joint_states" to="/franka_state_controller/joint_states"/>
         </node>
 
     </group>

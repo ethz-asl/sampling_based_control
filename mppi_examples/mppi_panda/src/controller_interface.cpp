@@ -7,19 +7,22 @@
  */
 
 #include "mppi_panda/controller_interface.h"
-#include "mppi_panda/renderer.h"
 #include <ros/package.h>
+#include "mppi_panda/renderer.h"
 
 using namespace panda;
 
 bool PandaControllerInterface::init_ros() {
+  optimal_trajectory_publisher_ =
+      nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
+  obstacle_marker_publisher_ =
+      nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
 
-  optimal_trajectory_publisher_ = nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
-  obstacle_marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
-
-  obstacle_subscriber_ = nh_.subscribe("/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
-  ee_pose_desired_subscriber_ = nh_.subscribe("/end_effector_pose_desired", 10,
-                                              &PandaControllerInterface::ee_pose_desired_callback, this);
+  obstacle_subscriber_ = nh_.subscribe(
+      "/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
+  ee_pose_desired_subscriber_ =
+      nh_.subscribe("/end_effector_pose_desired", 10,
+                    &PandaControllerInterface::ee_pose_desired_callback, this);
 
   obstacle_radius_ = param_io::param(nh_, "obstacle_radius", 0.2);
   obstacle_marker_.header.frame_id = "world";
@@ -28,9 +31,9 @@ bool PandaControllerInterface::init_ros() {
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.color.a = 0.4;
-  obstacle_marker_.scale.x = 2.0*obstacle_radius_;
-  obstacle_marker_.scale.y = 2.0*obstacle_radius_;
-  obstacle_marker_.scale.z = 2.0*obstacle_radius_;
+  obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.z = 2.0 * obstacle_radius_;
   obstacle_marker_.pose.orientation.x = 0.0;
   obstacle_marker_.pose.orientation.y = 0.0;
   obstacle_marker_.pose.orientation.z = 0.0;
@@ -46,15 +49,18 @@ bool PandaControllerInterface::init_ros() {
   return true;
 }
 
-void PandaControllerInterface::init_model(const std::string& robot_description){
+void PandaControllerInterface::init_model(
+    const std::string& robot_description) {
   pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
 }
 
-bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral> &controller) {
+bool PandaControllerInterface::set_controller(
+    std::shared_ptr<mppi::PathIntegral>& controller) {
   std::string robot_description;
-  if(!nh_.param<std::string>("/robot_description", robot_description, "")){
-    throw std::runtime_error("Could not parse robot description. Is the parameter set?");
+  if (!nh_.param<std::string>("/robot_description", robot_description, "")) {
+    throw std::runtime_error(
+        "Could not parse robot description. Is the parameter set?");
   };
 
   // -------------------------------
@@ -72,7 +78,8 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
-  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight, obstacle_radius_);
+  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight,
+                                          angular_weight, obstacle_radius_);
 
   // rendering
   bool rendering = param_io::param(nh_, "rendering", false);
@@ -83,8 +90,9 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // config
   // -------------------------------
-  std::string config_file = ros::package::getPath("mppi_panda") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)){
+  std::string config_file =
+      ros::package::getPath("mppi_panda") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
   }
@@ -92,7 +100,8 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_, nullptr, renderer);
+  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_,
+                                                    nullptr, renderer);
 
   // -------------------------------
   // initialize reference
@@ -102,7 +111,8 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   return true;
 }
 
-void PandaControllerInterface::ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg){
+void PandaControllerInterface::ee_pose_desired_callback(
+    const geometry_msgs::PoseStampedConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ee_desired_pose_ = *msg;
   Eigen::VectorXd pr = Eigen::VectorXd::Zero(7);
@@ -116,7 +126,8 @@ void PandaControllerInterface::ee_pose_desired_callback(const geometry_msgs::Pos
   ref_.rr[0].head<7>() = pr;
 }
 
-void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg){
+void PandaControllerInterface::obstacle_callback(
+    const geometry_msgs::PoseStampedConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   obstacle_pose_ = *msg;
   ref_.rr[0](7) = obstacle_pose_.pose.position.x;
@@ -127,7 +138,8 @@ void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampe
 bool PandaControllerInterface::update_reference() {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   if (last_ee_ref_id_ != ee_desired_pose_.header.seq ||
-      (last_ob_ref_id_ != obstacle_pose_.header.seq && ee_desired_pose_.header.seq != 0)){
+      (last_ob_ref_id_ != obstacle_pose_.header.seq &&
+       ee_desired_pose_.header.seq != 0)) {
     get_controller()->set_reference_trajectory(ref_);
   }
   last_ee_ref_id_ = ee_desired_pose_.header.seq;
@@ -135,13 +147,15 @@ bool PandaControllerInterface::update_reference() {
   return true;
 }
 
-pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x){
+pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(
+    const Eigen::VectorXd& x) {
   pinocchio::forwardKinematics(model_, data_, x.head<7>());
   pinocchio::updateFramePlacements(model_, data_);
   return data_.oMf[model_.getFrameId("panda_hand")];
 }
 
-geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(const Eigen::VectorXd& x){
+geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
+    const Eigen::VectorXd& x) {
   pinocchio::SE3 pose = get_pose_end_effector(x);
   geometry_msgs::PoseStamped pose_ros;
   pose_ros.header.stamp = ros::Time::now();
@@ -158,8 +172,7 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(c
 }
 
 void PandaControllerInterface::publish_ros() {
-
-  if (obstacle_pose_.header.seq != 0){ // obstacle set at least once
+  if (obstacle_pose_.header.seq != 0) {  // obstacle set at least once
     obstacle_marker_.pose.position = obstacle_pose_.pose.position;
     obstacle_marker_publisher_.publish(obstacle_marker_);
   }
@@ -170,7 +183,7 @@ void PandaControllerInterface::publish_ros() {
   geometry_msgs::PoseStamped pose_temp_ros;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
-  for (const auto& x : x_opt_){
+  for (const auto& x : x_opt_) {
     pose_temp = get_pose_end_effector(x.head<7>());
     pose_temp_ros.pose.position.x = pose_temp.translation()(0);
     pose_temp_ros.pose.position.y = pose_temp.translation()(1);

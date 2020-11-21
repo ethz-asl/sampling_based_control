@@ -7,7 +7,7 @@
  */
 #pragma once
 
-enum PandaDim{
+enum PandaDim {
   STATE_DIMENSION = 14,
   INPUT_DIMENSION = 7,
   REFERENCE_DIMENSION = 10  // ee pose + obstacle position
