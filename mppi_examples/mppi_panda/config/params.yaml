@@ -22,7 +22,7 @@ solver:
   filter_order: 5               # polynomial used to approximate the input sequence
   filter_window: 30             # window length
 
-  adaptive_sampling: false      # untested -- leave
+  adaptive_sampling: true      # untested -- leave
   input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]  # additive noise variance per input channel
 
   bound_input: true
