@@ -25,6 +25,10 @@ solver:
   adaptive_sampling: false      # untested -- leave
   input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]  # additive noise variance per input channel
 
+  bound_input: true
+  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
   discount_factor: 1.0          # apply a discount factor on the cost over the horizon
   verbose: false                # more prints
   threads: 4                    # number of threads, set to 1 to not use multithreaded sampling
