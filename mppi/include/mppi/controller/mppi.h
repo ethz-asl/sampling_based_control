@@ -196,10 +196,11 @@ class PathIntegral {
    */
   bool get_optimal_rollout(observation_array_t& x, input_array_t& u);
 
-  // TODO (giuseppe) limit according to actuation limits
-  // this requires to recompute noise wrt to previous action and recompute the
-  // noise statistics too.
-  void bound_action();
+  /**
+   * @brief Bounds the input (if specified in the params) 
+   * @param u[in/out]: the input to bound
+   */
+  void bound_input(input_t& u);
 
   /**
    * @brief Reset the initial observation (state) and time for next optimization

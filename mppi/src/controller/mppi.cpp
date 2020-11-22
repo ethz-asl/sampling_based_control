@@ -63,6 +63,21 @@ void PathIntegral::init_data() {
     sampler_ = std::make_shared<mppi::GaussianSampler>(nu_);
     sampler_->set_covariance(config_.input_variance);
   }
+
+  if (config_.bound_input){
+    if (config_.u_min.size() != nu_)
+    {
+      std::stringstream error;
+      error << "Bounding input and min constraint size " << config_.u_min.size() << " != " << nu_; 
+      throw std::runtime_error(error.str());
+    }
+    if (config_.u_max.size() != nu_)
+    {
+      std::stringstream error;
+      error << "Bounding input and max constraint size " << config_.u_max.size() << " != " << nu_; 
+      throw std::runtime_error(error.str());
+    } 
+  }
   observation_set_ = false;
   reference_set_ = false;
 }
@@ -242,6 +257,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
       }
 
+      bound_input(rollouts_[k].uu[t]);
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
       double cost_temp =
           std::pow(config_.discount_factor, t) *
@@ -490,9 +506,9 @@ void PathIntegral::print_cost_histogram() const {
   std::cout << std::endl << std::endl;
 }
 
-//  TODO (giuseppe) limit according to actuation limits
-// this requires to recompute noise wrt to previous action and recompute the
-// noise statistics too.
-void PathIntegral::bound_action() {}
+void PathIntegral::bound_input(input_t& u) {
+  if (config_.bound_input) 
+    u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
+}
 
 }
