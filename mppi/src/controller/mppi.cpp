@@ -327,20 +327,20 @@ void PathIntegral::optimize() {
     }
   }
 
-  // exploration covariance update: done only for the first step
+  // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
   if (config_.adaptive_sampling) {
     input_t delta = input_t::Zero(nu_);
-    Eigen::MatrixXd new_covariance = Eigen::MatrixXd::Zero(nu_, nu_);
+    // TODO(giuseppe) remove the hardcoded baseline variance
+    Eigen::MatrixXd new_covariance = Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
     for (size_t k = 0; k < config_.rollouts; k++) {
-      delta = rollouts_[k].uu[0] - opt_roll_.uu[0];
-      std::cout << "weight, delta " << k << ": " << omega[k] << ", "
-                << delta.transpose() << std::endl;
-      new_covariance += omega[k] * (delta * delta.transpose());
+      for (size_t i = 0; i < steps_; i++){
+        delta = rollouts_[k].uu[i] - opt_roll_.uu[i];
+        new_covariance += omega[k] * (delta * delta.transpose())/steps_;
+      }
     }
-    std::cout << "New covariance: \n" << new_covariance << std::endl;
+    // I could filter the covariance update using a first order
+    // new_covariance = alpha * new_covariance + (1-alpha) old_covariance
     sampler_->set_covariance(new_covariance);
-    std::cout << "New covariance inverse is \n"
-              << sampler_->sigma_inv() << std::endl;
   }
 }
 

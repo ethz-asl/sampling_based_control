@@ -61,8 +61,8 @@ class GaussianSampler {
     Eigen::VectorXd sigma = solver_.eigenvalues().cwiseSqrt();
     Eigen::VectorXd sigma_inverse = sigma;
     double sigma_min = sigma(0);
-    std::cout << "sigma" << sigma.transpose() << std::endl;
-    std::cout << "sigma min" << sigma_min << std::endl;
+    //std::cout << "sigma" << sigma.transpose() << std::endl;
+    //std::cout << "sigma min" << sigma_min << std::endl;
 
     // TODO this fails to stabilize the inverse
     for (int k = 0; k < A.rows(); ++k) {
