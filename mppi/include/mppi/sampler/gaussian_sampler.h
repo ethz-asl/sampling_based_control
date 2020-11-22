@@ -34,6 +34,7 @@ class GaussianSampler {
     assert(v.rows() != v.cols() || v.rows() != n_);
     sigma_ = v;
     sigma_inv_ = stable_inverse(v);
+    dist_->set_covariance(sigma_);
   }
 
   template <typename T>
@@ -42,7 +43,6 @@ class GaussianSampler {
     for (size_t i = 0; i < n_; i++) {
       sigma_(i, i) = s[i];
       sigma_inv_(i, i) = 1. / s[i];
-      dist_ = std::make_unique<multivariate_normal>(sigma_);
     }
     dist_->set_covariance(sigma_);
   }
