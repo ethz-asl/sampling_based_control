@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+    <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
+      <rosparam command="load" file="$(find franka_control)/config/franka_control_node.yaml" />
+      <param name="robot_ip" value="172.16.0.2" />
+    </node>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+      <param name="publish_frequency" value="100"/>
+      <param name="use_tf_static"     value="true"/>
+      <remap from="robot_description" to="/robot_description"/>
+      <remap from="joint_states"      to="/franka_state_controller/joint_states"/>
+    </node>
+    <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+          args="franka_state_controller"/>
+    <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
+</launch>

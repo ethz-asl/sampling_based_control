@@ -16,7 +16,7 @@
         </include>
 
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/"
-              args="joint_state_controller mppi_panda_sim"/>
+              args="--stopped mppi_panda_sim"/>
 
         <!--node name="unpause_gazebo_node" pkg="robot_control_ros" type="unpause_gazebo.py" output="screen"
               args="/-/-delay 5.0"/-->
