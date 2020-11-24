@@ -180,7 +180,7 @@ void PandaControllerRos::update(const ros::Time& time,
   for (size_t i = 0; i < 7; i++) {
     joint_handles_[i].setCommand(u_(i));
   }
-  robot_->updateState(q, v);
+  robot_->updateState(x_.head<7>(), x_.tail<7>());
   publish_ros();
 }
 
