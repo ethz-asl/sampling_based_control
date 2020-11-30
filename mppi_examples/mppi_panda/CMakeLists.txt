@@ -6,48 +6,48 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
-    sensor_msgs
-    std_msgs
-    roscpp
-    mppi
-    mppi_ros
-    roslib
-    robot_control
-    robot_control_ros
-    robot_control_assets
-    controller_interface
-    franka_hw
-    hardware_interface
-    pluginlib
-    roscpp
-    realtime_tools
-)
+        sensor_msgs
+        std_msgs
+        roscpp
+        mppi
+        mppi_ros
+        roslib
+        robot_control
+        robot_control_ros
+        robot_control_assets
+        controller_interface
+        franka_hw
+        hardware_interface
+        pluginlib
+        roscpp
+        realtime_tools
+        )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 catkin_package(
-  LIBRARIES mppi_panda
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-  DEPENDS pinocchio)
+        LIBRARIES mppi_panda
+        INCLUDE_DIRS include
+        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
+        DEPENDS pinocchio)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${PINOCCHIO_LIBRARIES})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
 
 add_executable(panda_control src/nodes/panda_control.cpp)
 target_link_libraries(panda_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_control ${PROJECT_NAME})
 
-add_library(panda_stocopt_control src/controller_ros.cpp )
+add_library(panda_stocopt_control src/controller_ros.cpp)
 target_link_libraries(panda_stocopt_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_control ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        )
 
 install(FILES plugins.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

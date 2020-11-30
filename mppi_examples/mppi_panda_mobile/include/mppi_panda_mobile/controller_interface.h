@@ -7,18 +7,19 @@
  */
 #pragma once
 #include "mppi_panda_mobile/cost.h"
-#include "mppi_panda_mobile/dynamics.h"
 #include <mppi_ros/controller_interface.h>
+#include "mppi_panda_mobile/dynamics.h"
 
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
 #include <visualization_msgs/Marker.h>
 
-namespace panda_mobile{
+namespace panda_mobile {
 
 class PandaMobileControllerInterface : public mppi_ros::ControllerRos {
  public:
-  explicit PandaMobileControllerInterface(ros::NodeHandle& nh): ControllerRos(nh){};
+  explicit PandaMobileControllerInterface(ros::NodeHandle& nh)
+      : ControllerRos(nh){};
   ~PandaMobileControllerInterface() = default;
 
   bool init_ros() override;
@@ -26,11 +27,12 @@ class PandaMobileControllerInterface : public mppi_ros::ControllerRos {
   bool update_reference() override;
 
   pinocchio::SE3 get_pose_end_effector(const mppi::observation_t& x);
-  geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_pose_end_effector_ros(
+      const mppi::observation_t& x);
 
  private:
   void init_model(const std::string& robot_description);
-  bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
+  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg);

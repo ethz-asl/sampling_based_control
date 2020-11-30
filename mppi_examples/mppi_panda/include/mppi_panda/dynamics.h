@@ -21,13 +21,9 @@
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
 
-namespace panda{
+#include "mppi_panda/dimensions.h"
 
-enum PandaDim{
-  STATE_DIMENSION = 14,
-  INPUT_DIMENSION = 7,
-  REFERENCE_DIMENSION = 10  // ee pose + obstacle position
-};
+namespace panda{
 
 struct PandaDynamicsConfig{
   double substeps = 1;
@@ -35,7 +31,7 @@ struct PandaDynamicsConfig{
 
 class PandaDynamics : public mppi::DynamicsBase {
  public:
-  PandaDynamics(const std::string& robot_description=""){
+  PandaDynamics(const std::string& robot_description=""): robot_description_(robot_description){
 
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
     previous_u_ = input_t::Zero(PandaDim::INPUT_DIMENSION);
@@ -53,7 +49,7 @@ class PandaDynamics : public mppi::DynamicsBase {
   size_t get_state_dimension() override { return PandaDim::STATE_DIMENSION; }
 
   dynamics_ptr create() override {
-    return std::make_shared<PandaDynamics>();
+    return std::make_shared<PandaDynamics>(robot_description_);
   }
 
   dynamics_ptr clone() const override {
@@ -71,6 +67,7 @@ class PandaDynamics : public mppi::DynamicsBase {
   input_t previous_u_;
   PandaDynamicsConfig config_;
 
+  std::string robot_description_;
   pinocchio::Model model_;
   pinocchio::Data data_;
 

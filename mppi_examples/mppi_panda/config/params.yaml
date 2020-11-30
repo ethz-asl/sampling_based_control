@@ -1,4 +1,4 @@
-sequential: true            # true to run an asynchronous thread where controller optimize given the latest observation
+sequential: false           # true to run an asynchronous thread where controller optimize given the latest observation
 rendering: false            # use a custom renderer to visualize the trajectory
 
 # dynamics parameters
@@ -7,28 +7,28 @@ dynamics:
 
 # solver parameters. Check mppi/src/solver_config.cpp
 solver:
-  rollouts: 100
-  lambda: 0.0001 #0.001
-  h: 10.0
-  step_size: 0.01
-  horizon: 1.0
+  rollouts: 100                 # number of rollouts
+  lambda: 0.0001 #0.001         # scaling on input/noise cost
+  h: 10.0                       # scaling on exponential cost for computing rollouts' weights
+  step_size: 0.01               # simulation step size
+  horizon: 1.0                  # time horizon (secs)
 
-  cost_ratio: 0.2
-  caching_factor: 0.3
-  filtering: true
-  substeps: 1
+  cost_ratio: 0.2               # the (1-0.2)% of higher costs trajectories are neglecte (if filtering=true)
+  caching_factor: 0.3           # the caching_factor pecentage of previous rollouts is kept as warm start
+  filtering: true               # if to use cost ratio to cuf off some rollouts
+  substeps: 1                   # number of optimization substeps (never investigated)
 
-  filter_type: 1
-  filter_order: 2
-  filter_window: 30
+  filter_type: 1                # currently only savitzky-golay (1) or none (0)
+  filter_order: 5               # polynomial used to approximate the input sequence
+  filter_window: 30             # window length
 
-  adaptive_sampling: false
-  input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
+  adaptive_sampling: false      # untested -- leave
+  input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]  # additive noise variance per input channel
 
-  discount_factor: 1.0
-  verbose: false
-  threads: 1
-  debug_print: false
+  discount_factor: 1.0          # apply a discount factor on the cost over the horizon
+  verbose: false                # more prints
+  threads: 4                    # number of threads, set to 1 to not use multithreaded sampling
+  debug_print: false            # debug print
 
 # custom params
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
@@ -42,5 +42,5 @@ publish_ros: true                 # optional ros publishing
 ros_publish_rate: 10.0            # ros publishing rate, used if sequential=false
 
 static_optimization: false        # in this setup, no control is sent to the simulation and optimize from same x0
-                                  # set filter type to 0 if true since this is broken with filtering active
+# set filter type to 0 if true since this is broken with filtering active
 sim_dt: 0.01                      # simulation step time (can be different from internal solver simulation step)

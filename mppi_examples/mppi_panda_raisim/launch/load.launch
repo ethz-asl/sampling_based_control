@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="description_file" default="$(find mppi_panda_raisim)/data/panda_with_finger_ros.urdf"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen">
+        <rosparam param="zeros">
+            "panda_joint1": 0.0
+            "panda_joint2": -0.52
+            "panda_joint3": 0.0
+            "panda_joint4": -1.785
+            "panda_joint5": 0.0
+            "panda_joint6": 1.10
+            "panda_joint7": 0.69
+            "panda_finger_joint1": 0.04
+            "panda_finger_joint2": 0.04
+        </rosparam>
+        <remap from="joint_states" to="/joint_states"/>
+    </node>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value=""/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/joint_states"/>
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_raisim)/config/urdf.rviz" output="screen"/>
+</launch>

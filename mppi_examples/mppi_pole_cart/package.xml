@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mppi_pole_cart</name>
-  <version>0.1.0</version>
-  <description>mppi package</description>
-  <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
-  <license>BSD</license>
+    <name>mppi_pole_cart</name>
+    <version>0.1.0</version>
+    <description>mppi package</description>
+    <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
+    <license>BSD</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>roscpp</depend>
-  <depend>mppi</depend>
-  <depend>mppi_ros</depend>
-  <depend>eigen</depend>
+    <buildtool_depend>catkin</buildtool_depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>roscpp</depend>
+    <depend>mppi</depend>
+    <depend>mppi_ros</depend>
+    <depend>eigen</depend>
 </package>
 
 

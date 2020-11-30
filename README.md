@@ -13,7 +13,7 @@ Create a ROS workspace and install the following dependencies.
     
 ## Build
 
-- Configure the workspace to compile in Release mode: `catkin config -DCMAKE_BUILD_TYPE=Release`
+- Configure the workspace to compile in Release mode: `catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo`
 
 - Build the stack **and** the examples: `catkin build mppi_control`. This will build three examples: 
     - `mppi_panda`: controller for the 7-DOF arm _panda_ with a fixed base

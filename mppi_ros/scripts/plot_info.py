@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from mppi_ros.msg import RolloutsInfo
+
 plt.ion()
 
 
@@ -15,14 +16,14 @@ class RolloutsInfoPlotter():
         rospy.init_node("plotter")
         self.rollouts_info_subscriber = rospy.Subscriber("/rollouts_info", RolloutsInfo, self.draw)
 
-        #Set up plot
+        # Set up plot
         self.figure, axes = plt.subplots(2, 1)
         self.rollouts_cost_ax = axes[0]
         self.weights_ax = axes[1]
-        self.rollouts_data, = self.rollouts_cost_ax.plot([],[], 'o')
-        self.weights_data, = self.weights_ax.plot([],[], 'o')
+        self.rollouts_data, = self.rollouts_cost_ax.plot([], [], 'o')
+        self.weights_data, = self.weights_ax.plot([], [], 'o')
 
-        #self.ax.set_autoscaley_on(True)
+        # self.ax.set_autoscaley_on(True)
         self.weights_ax.set_title = "Weights"
         self.weights_ax.set_xlabel = "rollouts"
         self.weights_ax.set_ylabel = "weights"
@@ -46,7 +47,7 @@ class RolloutsInfoPlotter():
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
-    #Example
+    # Example
     def draw(self, msg):
         xdata = range(len(msg.weights))
         self.rollouts_data.set_xdata(xdata)
@@ -59,4 +60,3 @@ plotter = RolloutsInfoPlotter()
 plotter.update_plot()
 while not rospy.is_shutdown():
     plotter.update_plot()
-

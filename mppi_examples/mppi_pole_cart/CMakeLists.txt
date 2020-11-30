@@ -5,18 +5,18 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED 3.3)
 
 set(PACKAGE_DEPENDENCIES
-  sensor_msgs
-  std_msgs
-  roscpp
-  mppi
-  mppi_ros)
+        sensor_msgs
+        std_msgs
+        roscpp
+        mppi
+        mppi_ros)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 catkin_package(
-  LIBRARIES mppi_pole_cart
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES})
+        LIBRARIES mppi_pole_cart
+        INCLUDE_DIRS include
+        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES})
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
@@ -30,5 +30,5 @@ target_link_libraries(pole_cart_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(pole_cart_control ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        )

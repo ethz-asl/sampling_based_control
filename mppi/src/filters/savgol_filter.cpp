@@ -8,7 +8,7 @@
 
 #include "mppi/filters/savgol_filter.h"
 
-std::ostream& operator<<(std::ostream& os, mppi::MovingExtendedWindow& w){
+std::ostream& operator<<(std::ostream& os, const mppi::MovingExtendedWindow& w){
   os << "\nuu: [";
   for (size_t i=0; i<w.uu.size(); i++){
     os << w.uu[i] << " ";

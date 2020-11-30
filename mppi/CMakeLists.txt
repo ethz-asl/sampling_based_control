@@ -11,11 +11,9 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(gram_savitzky_golay REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-set(COMMON_LIBRARIES  ${catkin_LIBRARIES} yaml-cpp gram_savitzky_golay::gram_savitzky_golay)
+set(COMMON_LIBRARIES ${catkin_LIBRARIES} yaml-cpp gram_savitzky_golay::gram_savitzky_golay)
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS}
         ${yaml_cpp_INCLUDE_DIRS})
-
-
 
 find_package(catkin REQUIRED COMPONENTS sensor_msgs std_msgs roscpp)
 catkin_package(
@@ -34,7 +32,7 @@ add_library(${PROJECT_NAME}
         src/cost/cost_base.cpp
         src/solver_config.cpp
         src/filters/savgol_filter.cpp
-)
+        )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
@@ -48,9 +46,12 @@ target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 
 
 if (CATKIN_ENABLE_TESTING)
+    find_package(PythonLibs 2.7 REQUIRED)
     catkin_add_gtest(filter_test unittest/filter_test.cpp)
-    target_link_libraries(filter_test ${PROJECT_NAME} ${catkin_LIBRARIES})
-endif()
+    target_include_directories(filter_test PRIVATE ${PYTHON_INCLUDE_DIRS})
+    target_link_libraries(filter_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${PYTHON_LIBRARIES})
+
+endif ()
 
 ## Testing
 #if (CATKIN_ENABLE_TESTING)

@@ -14,9 +14,9 @@
 
     <link name="cart_link">
         <inertial>
-            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
-            <mass value="1.0" />
-            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167" />
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
         </inertial>
         <visual>
             <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -36,9 +36,9 @@
 
     <link name="pendulum_link">
         <inertial>
-            <origin xyz="0.5 0.0 0.0" rpy="0 0 0" />
-            <mass value="1.0" />
-            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167" />
+            <origin xyz="0.5 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
         </inertial>
         <visual>
             <origin xyz="0.5 0.0 0.0" rpy="0 0 0"/>

@@ -14,6 +14,11 @@ using namespace panda;
 
 PandaCost::PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius){
 
+  robot_description_ = robot_description;
+  linear_weight_ = linear_weight;
+  angular_weight_ = angular_weight;
+  obstacle_radius_ = obstacle_radius;
+
   pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
   frame_id_ = model_.getFrameId(tracked_frame_);
