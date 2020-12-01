@@ -197,6 +197,12 @@ class PathIntegral {
   bool get_optimal_rollout(observation_array_t& x, input_array_t& u);
 
   /**
+   * @brief Get only the diagonal of the sampler's covariance matrix
+   * @param var[in/out]: the diagonal variance
+   */
+  void get_diagonal_variance(Eigen::VectorXd& var) const;
+
+  /**
    * @brief Bounds the input (if specified in the params) 
    * @param u[in/out]: the input to bound
    */

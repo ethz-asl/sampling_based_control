@@ -401,6 +401,10 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
   }
 }
 
+void PathIntegral::get_diagonal_variance(Eigen::VectorXd& var) const{
+  var = sampler_->sigma().diagonal();
+}
+
 void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
                                    input_t& u_nom, const double t) {
   {
