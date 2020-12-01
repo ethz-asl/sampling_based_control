@@ -131,11 +131,9 @@ void ControllerRos::publish_input() {
   }
   input_publisher_.publish(input_ros_);
 
-  std::cout << input_copy_.size() << std::endl;
   Eigen::VectorXd var(input_copy_.size());
   controller_->get_diagonal_variance(var);
   var_ros_.data.resize(var.size());
-  std::cout << var.transpose() << std::endl;
   for (size_t i = 0; i < var.size(); i++) {
     var_ros_.data[i] = var(i);
   }
