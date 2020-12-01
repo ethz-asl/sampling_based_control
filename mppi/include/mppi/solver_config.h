@@ -9,6 +9,7 @@
 #include <optional>
 #include <iostream>
 #include <yaml-cpp/yaml.h>
+#include <Eigen/Core>
 
 namespace mppi {
 
@@ -19,16 +20,16 @@ enum InputFilterType : char {
 
 struct SolverConfig {
 
-  int rollouts = 1;
+  size_t rollouts = 1;
   double lambda = 1.0;
   double h = 1.0;
   double step_size = 0.1;
   double horizon = 1.0;
   double caching_factor = 0.0;
-  int substeps = 1.0;
+  size_t substeps = 1;
 
   bool adaptive_sampling = false;
-  std::vector<double> input_variance;
+  Eigen::VectorXd input_variance;
 
   bool filtering = false;
   double cost_ratio = 0.2;
@@ -36,6 +37,10 @@ struct SolverConfig {
 
   bool verbose = true;
   bool debug_print = false;
+
+  bool bound_input;
+  Eigen::VectorXd u_min;
+  Eigen::VectorXd u_max;
 
   InputFilterType filter_type = InputFilterType::NONE;
   uint filter_window = 10;
@@ -50,23 +55,39 @@ struct SolverConfig {
   std::optional<T> parse_key(const YAML::Node& node, const std::string& key, bool quiet=false);
 
   template<typename T>
-  std::optional<T> parse_key_quiet(const YAML::Node& node, const std::string& key);
+  std::optional<T> parse_key_quiet(const YAML::Node& node, const std::string &key);
 };
 
 template<typename T>
 std::optional<T> SolverConfig::parse_key(const YAML::Node& node, const std::string &key, bool quiet) {
   if (!node[key]){
     std::cout << "Could not find entry: " << key << std::endl;
-    if (quiet) parsing_error = true;
+    if (!quiet) parsing_error = true;
     return {};
   }
   return node[key].as<T>();
-}
+};
+
+template<> inline
+std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(const YAML::Node& node,
+                                                                        const std::string &key, bool quiet) {
+  if (!node[key]){
+    std::cout << "Could not find entry: " << key << std::endl;
+    if (!quiet) parsing_error = true;
+    return {};
+  }
+  auto v = node[key].as<std::vector<double>>();
+  Eigen::VectorXd v_eigen(v.size());
+  for (size_t i=0; i<v.size(); i++)
+    v_eigen(i) = v[i];
+
+  return v_eigen;
+};
 
 template<typename T>
 std::optional<T> SolverConfig::parse_key_quiet(const YAML::Node& node, const std::string &key) {
   return parse_key<T>(node, key, true);
-}
+};
 
 }
 

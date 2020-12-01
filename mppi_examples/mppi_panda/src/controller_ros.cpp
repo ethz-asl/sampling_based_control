@@ -62,6 +62,11 @@ bool PandaControllerRosBase<StateInterface, StateHandle>::init(
   x_ = mppi::observation_t::Zero(PandaDim::STATE_DIMENSION);
   u_ = mppi::observation_t::Zero(PandaDim::INPUT_DIMENSION);
   controller_ = std::make_unique<PandaControllerInterface>(ctrl_handle);
+  if (!controller_->init()){
+    ROS_ERROR("Failed to initialized MPPI controller");
+    return false;
+  }
+  started_ = false;
 
   ee_pose_publisher_ = std::make_unique<
       realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped>>(
@@ -130,11 +135,23 @@ bool PandaControllerRosSim::addStateHandles(
 
 template <class SI, class SH>
 void PandaControllerRosBase<SI, SH>::starting(const ros::Time& time) {
+  if (started_) return;
+
+  Eigen::VectorXd q = getJointPositions();
+  Eigen::VectorXd v = getJointVelocities();
+  x_.head<7>() = q;
+  x_.tail<7>() = v;
+  controller_->set_observation(x_, time.toSec());
   controller_->start();
+  started_ = true;
 }
 
 void PandaControllerRosSim::update(const ros::Time& time,
                                    const ros::Duration& period) {
+  if (period.toSec() > 0.001){
+    ROS_ERROR_STREAM_THROTTLE(1.0,"Last controller call lasted: " << period.toSec());
+  }
+
   Eigen::VectorXd q = getJointPositions();
   Eigen::VectorXd v = getJointVelocities();
   x_.head<7>() = q;
@@ -163,6 +180,7 @@ void PandaControllerRos::update(const ros::Time& time,
   for (size_t i = 0; i < 7; i++) {
     joint_handles_[i].setCommand(u_(i));
   }
+  robot_->updateState(x_.head<7>(), x_.tail<7>());
   publish_ros();
 }
 
@@ -186,6 +204,7 @@ Eigen::VectorXd PandaControllerRosBase<SI, SH>::getJointPositions() const {
 
 template <class SI, class SH>
 void PandaControllerRosBase<SI, SH>::publish_ros() {
+  // for debugging
   static std::string ee_frame = "panda_hand";
   if (ee_pose_publisher_->trylock()) {
     auto current_pose_ = robot_->getFramePlacement(ee_frame);

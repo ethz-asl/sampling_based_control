@@ -26,7 +26,7 @@
     <!-- Debug mode -->
     <arg name="debug" default="true"/>
     <!-- Verbose mode -->
-    <arg name="verbose" default="true"/>
+    <arg name="verbose" default="false"/>
     <!-- Load and draw meshes -->
     <arg name="mesh" default="true"/>
 
@@ -34,12 +34,11 @@
     <!-- Enable/disable Gazebo GUI -->
     <arg name="run_gui" default="true"/>
 
-    <!-- Path of robot description -->
-    <arg name="description_file" default="$(find robot_control_assets)/assets/arms/panda/panda.urdf.xacro"/>
-
     <!-- Load robot description for gazebo -->
-    <param name="robot_description"
-           command="$(find xacro)/xacro.py $(arg description_file) mesh_prefix:=package://robot_control_assets/"/>
+    <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
+
+    <!-- Load PD gains for the low level controllers -->
     <param name="gazebo_ros_control" type="yaml" textfile="$(find robot_control_ros)/config/gazebo_ros_control.yml"/>
 
     <!-- Load Gazebo world -->

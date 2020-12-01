@@ -10,6 +10,9 @@
 
 #include <ros/package.h>
 
+#define PANDA_UPPER_LIMITS 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
+#define PANDA_LOWER_LIMITS -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 
+
 using namespace panda;
 
 PandaCost::PandaCost(const std::string& robot_description, double linear_weight, double angular_weight, double obstacle_radius){
@@ -27,10 +30,10 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
   obstacle_radius_ = obstacle_radius;
 
   // TODO remove hard coded joint limits
-  joint_limits_lower_ << -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973;
-  joint_limits_upper_ << 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973;
-  std::cout << "Lower joints limits: " << joint_limits_lower_.transpose();
-  std::cout << "Upper joints limits: " << joint_limits_upper_.transpose();
+  joint_limits_lower_ << PANDA_LOWER_LIMITS;
+  joint_limits_upper_ << PANDA_UPPER_LIMITS;
+  std::cout << "Lower joints limits: " << joint_limits_lower_.transpose() << std::endl;
+  std::cout << "Upper joints limits: " << joint_limits_upper_.transpose() << std::endl;
 
 }
 

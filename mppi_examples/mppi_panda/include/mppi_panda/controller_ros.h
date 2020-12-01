@@ -47,6 +47,7 @@ class PandaControllerRosBase : public controller_interface::MultiInterfaceContro
   mppi::observation_t x_;
   mppi::input_t u_;
   std::unique_ptr<panda::PandaControllerInterface> controller_;
+  bool started_;
 
   std::vector<hardware_interface::JointStateHandle> state_handles_;
   std::vector<hardware_interface::JointHandle> joint_handles_;

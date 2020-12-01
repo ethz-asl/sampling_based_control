@@ -112,6 +112,7 @@ class ControllerRos {
   ros::Publisher min_rollout_cost_publisher_;
   ros::Publisher max_rollout_cost_publisher_;
   ros::Publisher input_publisher_;
+  ros::Publisher variance_publisher_;
 
   std_msgs::Float64 stage_cost_;
   std_msgs::Float64 min_rollout_cost_;
@@ -120,6 +121,8 @@ class ControllerRos {
   std::shared_mutex input_mutex_;
   mppi::input_t input_ = mppi::input_t::Zero(1);
   std_msgs::Float32MultiArray input_ros_;
+  std_msgs::Float32MultiArray var_ros_;
+  
 };
 
 }  // namespace mppi_ros

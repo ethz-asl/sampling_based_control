@@ -1,5 +1,5 @@
-sequential: false           # true to run an asynchronous thread where controller optimize given the latest observation
-rendering: false            # use a custom renderer to visualize the trajectory
+sequential: true           # true to run an asynchronous thread where controller optimize given the latest observation
+rendering: true            # use a custom renderer to visualize the trajectory
 
 # dynamics parameters
 dynamics:
@@ -13,7 +13,7 @@ solver:
   step_size: 0.01               # simulation step size
   horizon: 1.0                  # time horizon (secs)
 
-  cost_ratio: 0.2               # the (1-0.2)% of higher costs trajectories are neglecte (if filtering=true)
+  cost_ratio: 0.2               # the (1-0.2)% of higher costs trajectories are neglected (if filtering=true)
   caching_factor: 0.3           # the caching_factor pecentage of previous rollouts is kept as warm start
   filtering: true               # if to use cost ratio to cuf off some rollouts
   substeps: 1                   # number of optimization substeps (never investigated)
@@ -25,9 +25,13 @@ solver:
   adaptive_sampling: false      # untested -- leave
   input_variance: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]  # additive noise variance per input channel
 
+  bound_input: true
+  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
   discount_factor: 1.0          # apply a discount factor on the cost over the horizon
   verbose: false                # more prints
-  threads: 4                    # number of threads, set to 1 to not use multithreaded sampling
+  threads: 8                    # number of threads, set to 1 to not use multithreaded sampling
   debug_print: false            # debug print
 
 # custom params

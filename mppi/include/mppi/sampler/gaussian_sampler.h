@@ -34,6 +34,7 @@ class GaussianSampler {
     assert(v.rows() != v.cols() || v.rows() != n_);
     sigma_ = v;
     sigma_inv_ = stable_inverse(v);
+    dist_->set_covariance(sigma_);
   }
 
   template <typename T>
@@ -42,7 +43,6 @@ class GaussianSampler {
     for (size_t i = 0; i < n_; i++) {
       sigma_(i, i) = s[i];
       sigma_inv_(i, i) = 1. / s[i];
-      dist_ = std::make_unique<multivariate_normal>(sigma_);
     }
     dist_->set_covariance(sigma_);
   }
@@ -61,8 +61,8 @@ class GaussianSampler {
     Eigen::VectorXd sigma = solver_.eigenvalues().cwiseSqrt();
     Eigen::VectorXd sigma_inverse = sigma;
     double sigma_min = sigma(0);
-    std::cout << "sigma" << sigma.transpose() << std::endl;
-    std::cout << "sigma min" << sigma_min << std::endl;
+    //std::cout << "sigma" << sigma.transpose() << std::endl;
+    //std::cout << "sigma min" << sigma_min << std::endl;
 
     // TODO this fails to stabilize the inverse
     for (int k = 0; k < A.rows(); ++k) {

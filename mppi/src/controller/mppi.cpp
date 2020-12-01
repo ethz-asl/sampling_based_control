@@ -63,6 +63,21 @@ void PathIntegral::init_data() {
     sampler_ = std::make_shared<mppi::GaussianSampler>(nu_);
     sampler_->set_covariance(config_.input_variance);
   }
+
+  if (config_.bound_input){
+    if (config_.u_min.size() != nu_)
+    {
+      std::stringstream error;
+      error << "Bounding input and min constraint size " << config_.u_min.size() << " != " << nu_; 
+      throw std::runtime_error(error.str());
+    }
+    if (config_.u_max.size() != nu_)
+    {
+      std::stringstream error;
+      error << "Bounding input and max constraint size " << config_.u_max.size() << " != " << nu_; 
+      throw std::runtime_error(error.str());
+    } 
+  }
   observation_set_ = false;
   reference_set_ = false;
 }
@@ -242,6 +257,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
       }
 
+      bound_input(rollouts_[k].uu[t]);
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
       double cost_temp =
           std::pow(config_.discount_factor, t) *
@@ -311,20 +327,20 @@ void PathIntegral::optimize() {
     }
   }
 
-  // exploration covariance update: done only for the first step
+  // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
   if (config_.adaptive_sampling) {
     input_t delta = input_t::Zero(nu_);
-    Eigen::MatrixXd new_covariance = Eigen::MatrixXd::Zero(nu_, nu_);
+    // TODO(giuseppe) remove the hardcoded baseline variance
+    Eigen::MatrixXd new_covariance = Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
     for (size_t k = 0; k < config_.rollouts; k++) {
-      delta = rollouts_[k].uu[0] - opt_roll_.uu[0];
-      std::cout << "weight, delta " << k << ": " << omega[k] << ", "
-                << delta.transpose() << std::endl;
-      new_covariance += omega[k] * (delta * delta.transpose());
+      for (size_t i = 0; i < steps_; i++){
+        delta = rollouts_[k].uu[i] - opt_roll_.uu[i];
+        new_covariance += omega[k] * (delta * delta.transpose())/steps_;
+      }
     }
-    std::cout << "New covariance: \n" << new_covariance << std::endl;
+    // I could filter the covariance update using a first order
+    // new_covariance = alpha * new_covariance + (1-alpha) old_covariance
     sampler_->set_covariance(new_covariance);
-    std::cout << "New covariance inverse is \n"
-              << sampler_->sigma_inv() << std::endl;
   }
 }
 
@@ -383,6 +399,10 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
           coeff * opt_roll_cache_.uu[idx];
     }
   }
+}
+
+void PathIntegral::get_diagonal_variance(Eigen::VectorXd& var) const{
+  var = sampler_->sigma().diagonal();
 }
 
 void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
@@ -490,9 +510,9 @@ void PathIntegral::print_cost_histogram() const {
   std::cout << std::endl << std::endl;
 }
 
-//  TODO (giuseppe) limit according to actuation limits
-// this requires to recompute noise wrt to previous action and recompute the
-// noise statistics too.
-void PathIntegral::bound_action() {}
+void PathIntegral::bound_input(input_t& u) {
+  if (config_.bound_input) 
+    u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
+}
 
 }

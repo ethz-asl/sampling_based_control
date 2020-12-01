@@ -10,16 +10,16 @@
 
 
     <group if="$(arg simulation)">
-        <include file="$(find robot_control_ros)/launch/gazebo.launch">
+        <include file="$(find mppi_panda)/launch/ros_control/gazebo.launch">
             <arg name="run_gui" value="false"/>
             <arg name="paused" value="$(arg paused)"/>
         </include>
 
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/"
-              args="joint_state_controller mppi_panda_sim"/>
+              args="--stopped mppi_panda_sim"/>
 
-        <node name="unpause_gazebo_node" pkg="robot_control_ros" type="unpause_gazebo.py" output="screen"
-              args="--delay 5.0"/>
+        <!--node name="unpause_gazebo_node" pkg="robot_control_ros" type="unpause_gazebo.py" output="screen"
+              args="/-/-delay 5.0"/-->
 
         <!-- Controller manager gui -->
         <node name="rqt_controller_manager" type="rqt_controller_manager" pkg="rqt_controller_manager"/>
