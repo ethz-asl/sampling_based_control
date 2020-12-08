@@ -48,6 +48,8 @@ struct SolverConfig {
 
   size_t threads = 1;
 
+  bool use_tree_search = false;
+
   bool init_from_file(const std::string& file);
  private:
   bool parsing_error = false;
