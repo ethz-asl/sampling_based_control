@@ -72,6 +72,11 @@ class PathIntegral {
    */
   void init_threading();
 
+  /**
+   * @brief Initializes the tree structure if use_tree_search == true
+   */
+  void init_tree();
+
  public:
   /**
    * @brief Filter the input according to chosen filter

@@ -24,6 +24,7 @@
 #include "mppi/filters/savgol_filter.h"
 #include "mppi/solver_config.h"
 #include "mppi/utils/logging.h"
+#include "mppi/tree/tree_manager.h"
 
 namespace mppi {
 
@@ -38,6 +39,9 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
   init_data();
   init_filter();
   init_threading();
+  if (config_.use_tree_search) {
+    init_tree();
+  }
 }
 
 void PathIntegral::init_data() {
@@ -110,6 +114,10 @@ void PathIntegral::init_threading() {
       cost_v_.push_back(cost_->create());
     }
   }
+}
+
+void PathIntegral::init_tree(){
+  TreeManager tree_manager(cost_);
 }
 
 void PathIntegral::update_policy() {
