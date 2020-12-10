@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>mppi_panda_raisim</name>
+    <name>mppi_manipulation</name>
     <version>0.1.0</version>
     <description>mppi package</description>
     <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>

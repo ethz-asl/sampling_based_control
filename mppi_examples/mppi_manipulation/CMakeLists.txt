@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
-project(mppi_panda_raisim)
+project(mppi_manipulation)
 
 set(RAISIM_LIB_PATH "/home/giuseppe/raisim_ws/build")
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${RAISIM_LIB_PATH})
+#list(APPEND CMAKE_PREFIX_PATH ${RAISIM_LIB_PATH})
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
@@ -39,13 +39,13 @@ add_library(${PROJECT_NAME}
         src/controller_interface.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
 
-add_executable(panda_raisim_control src/nodes/panda_control.cpp)
-target_link_libraries(panda_raisim_control ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_raisim_control ${PROJECT_NAME})
+add_executable(manipulation_control src/nodes/panda_control.cpp)
+target_link_libraries(manipulation_control ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(manipulation_control ${PROJECT_NAME})
 
-add_executable(panda_raisim src/tests/panda_raisim.cpp)
-target_link_libraries(panda_raisim ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_raisim ${PROJECT_NAME})
+add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
+target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(manipulation_raisim ${PROJECT_NAME})
 
 add_executable(sim_ogre src/tests/sim.cpp)
 target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)

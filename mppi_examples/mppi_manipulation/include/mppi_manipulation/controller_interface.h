@@ -6,20 +6,20 @@
  * @brief    description
  */
 #pragma once
-#include "mppi_panda_raisim/cost.h"
-#include "mppi_panda_raisim/dynamics.h"
+#include "mppi_manipulation/cost.h"
+#include "mppi_manipulation/dynamics.h"
 #include <mppi_ros/controller_interface.h>
 
-#include <std_msgs/Int64.h>
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
+#include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
 
-namespace panda{
+namespace manipulation {
 
 class PandaControllerInterface : public mppi_ros::ControllerRos {
  public:
-  explicit PandaControllerInterface(ros::NodeHandle& nh): ControllerRos(nh){};
+  explicit PandaControllerInterface(ros::NodeHandle& nh) : ControllerRos(nh){};
   ~PandaControllerInterface() = default;
 
   bool init_ros() override;
@@ -33,10 +33,9 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
 
-
  private:
-  void init_model(const std::string& robot_description);
-  bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
+  void init_model(const std::string& robot_description, const std::string& object_description);
+  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg);
@@ -60,8 +59,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   pinocchio::Model model_;
 
   // door
-  pinocchio::Model door_model_;
-  pinocchio::Data door_data_;
+  pinocchio::Model object_model_;
+  pinocchio::Data object_data_;
   int handle_idx_;
 
   // ros

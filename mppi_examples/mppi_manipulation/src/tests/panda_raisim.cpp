@@ -11,27 +11,25 @@
 #include <chrono>
 #include <numeric>
 #include <thread>
-#include "mppi_panda_raisim/dynamics.h"
+#include "mppi_manipulation/dynamics.h"
 
 #define TIMESTEP 0.01
-#define DEFAULT_CONFIGURATION \
-  0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04;
-#define DOOR_CONFIGURATION 0.0, 0.0
+#define DEFAULT_CONFIGURATION 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04;
+#define OBJECT_CONFIGURATION 0.0, 0.0
 
-using namespace panda;
+using namespace manipulation;
 using namespace std::chrono;
 
 int main(int argc, char** argv) {
-  raisim::World::setActivationKey(
-      "/home/giuseppe/git/raisimlib/rsc/activation.raisim");
+  raisim::World::setActivationKey("/home/giuseppe/git/raisimlib/rsc/activation.raisim");
 
   ros::init(argc, argv, "panda_raisim");
   ros::NodeHandle nh("~");
 
   // Instantiate the simulation world
-  auto robot_description_raisim =
-      nh.param<std::string>("/robot_description_raisim", "");
-  PandaRaisimDynamics simulation(robot_description_raisim, TIMESTEP);
+  auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
+  auto object_description_raisim = nh.param<std::string>("/object_description_raisim", "");
+  PandaRaisimDynamics simulation(robot_description_raisim, object_description_raisim, TIMESTEP);
 
   // Reset the state to a default configuration
   Eigen::VectorXd x;
@@ -39,13 +37,12 @@ int main(int argc, char** argv) {
   x.setZero(PandaDim::STATE_DIMENSION);
   x_snapshot.setZero(PandaDim::STATE_DIMENSION);
   x.head<PandaDim::JOINT_DIMENSION>() << DEFAULT_CONFIGURATION;
-  x.segment<2 * PandaDim::DOOR_DIMENSION>(2 * PandaDim::JOINT_DIMENSION)
-      << DOOR_CONFIGURATION;
+  x.segment<2 * PandaDim::OBJECT_DIMENSION>(2 * PandaDim::JOINT_DIMENSION) << OBJECT_CONFIGURATION;
 
   std::cout << "Resetting to state x=" << x.transpose() << std::endl;
   simulation.reset(x);
 
-  // Instantiate the input vector to hit the door and slowly close gripper
+  // Instantiate the input vector to hit the object and slowly close gripper
   Eigen::VectorXd u;
   Eigen::VectorXd u_snapshot;
   u = simulation.get_zero_input(x);
@@ -56,20 +53,18 @@ int main(int argc, char** argv) {
   std::cout << "Initializing input to: " << u.transpose() << std::endl;
 
   // Ros publishing for visualization
-  ros::Publisher state_publisher =
-      nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  ros::Publisher door_state_publisher =
-      nh.advertise<sensor_msgs::JointState>("/door/joint_state", 10);
-  sensor_msgs::JointState joint_state, door_state;
-  joint_state.name = {
-      "panda_joint1", "panda_joint2",        "panda_joint3",
-      "panda_joint4", "panda_joint5",        "panda_joint6",
-      "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
+  ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  ros::Publisher object_state_publisher =
+      nh.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+  sensor_msgs::JointState joint_state, object_state;
+  joint_state.name = {"panda_joint1", "panda_joint2",        "panda_joint3",
+                      "panda_joint4", "panda_joint5",        "panda_joint6",
+                      "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
   joint_state.position.resize(joint_state.name.size());
   joint_state.velocity.resize(joint_state.name.size());
   joint_state.header.frame_id = "world";
-  door_state.name = {"door_joint"};
-  door_state.position.resize(1);
+  object_state.name = {"articulation_joint"};
+  object_state.position.resize(1);
 
   long int loopN = 2000;
   double elapsed = 0;
@@ -105,14 +100,13 @@ int main(int argc, char** argv) {
     }
     state_publisher.publish(joint_state);
 
-    door_state.header.stamp = ros::Time::now();
-    door_state.position[0] = x(PandaDim::JOINT_DIMENSION * 2);
-    door_state_publisher.publish(door_state);
+    object_state.header.stamp = ros::Time::now();
+    object_state.position[0] = x(PandaDim::JOINT_DIMENSION * 2);
+    object_state_publisher.publish(object_state);
 
     raisim::MSLEEP(10);
     ROS_INFO_STREAM_THROTTLE(
-        1.0, "Sim time: " << i * TIMESTEP << " s, elapsed sim dt: " << elapsed
-                          << " ms.");
+        1.0, "Sim time: " << i * TIMESTEP << " s, elapsed sim dt: " << elapsed << " ms.");
   }
 
   std::cout << "Average sim time: " << total_time / loopN << std::endl;

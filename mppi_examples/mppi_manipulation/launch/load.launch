@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="description_file" default="$(find mppi_panda_raisim)/data/panda_with_finger_ros.urdf"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_with_finger_ros.urdf"/>
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
 
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen">
@@ -27,5 +27,5 @@
         <remap from="joint_states" to="/joint_states"/>
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_raisim)/config/urdf.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/urdf.rviz" output="screen"/>
 </launch>
