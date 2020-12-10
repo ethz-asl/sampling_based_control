@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(mppi_manipulation)
 
 set(RAISIM_LIB_PATH "/home/giuseppe/raisim_ws/build")
-#list(APPEND CMAKE_PREFIX_PATH ${RAISIM_LIB_PATH})
+list(APPEND ${CMAKE_PREFIX_PATH} ${RAISIM_LIB_PATH})
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)

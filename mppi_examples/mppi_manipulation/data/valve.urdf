@@ -26,7 +26,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="file:///home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda_raisim/data/meshes/valve_collision.dae"/>
+        <mesh filename="file:///home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda_raisim/data/meshes/valve_simple_collision.dae"/>
       </geometry>
     </collision>
   </link>

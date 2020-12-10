@@ -1,12 +1,12 @@
 <?xml version="1.0" ?>
 <robot name="valve">
-    <arg name="resource_prefix" default="file://"/>
-    <arg name="resource_directory" default="$(find mppi_panda_raisim)/data/meshes"/>
+    <arg name="resource_prefix" default=""/>
+    <arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
     <link name="world"/>
     <joint name="fixed" type="fixed">
         <parent link="world"/>
         <child link="valve_base"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0.7 0.0 0.4" rpy="1.57 0 0"/>
     </joint>
 
     <link name="valve_base"/>
@@ -20,18 +20,18 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.dae"/>
+                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	    <geometry>
-                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.dae"/>
+                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_simple_collision.obj"/>
             </geometry>
         </collision>
     </link>
 
-    <joint name="handle_joint" type="revolute">
+    <joint name="articulation_joint" type="revolute">
         <parent link="valve_base"/>
         <child link="handle_link"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>

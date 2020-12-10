@@ -15,9 +15,9 @@
       add_finger:=true
       no_position_limits:=true"/>
 
-    <param name="object_description" command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro"/>
+    <param name="object_description" command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro  resource_prefix:='file://'"/>
     <param name="object_description_raisim"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro resources_prefix:=''"/>
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro"/>
 
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">

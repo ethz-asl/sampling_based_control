@@ -4,5 +4,5 @@ angular_weight: 10.0
 obstacle_radius: 0.15
 contact_weight: 10.0
 
-grasp_translation_offset: [0.0, 0.0, 0.1]
-grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x
+grasp_translation_offset: [0.0, 0.0, 0.0]
+grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y

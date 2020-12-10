@@ -35,7 +35,6 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
   object = sim_.addArticulatedSystem(object_description_, "/");
   object->setGeneralizedForce(Eigen::VectorXd::Zero(object->getDOF()));
   object->setGeneralizedCoordinate(Eigen::VectorXd::Zero(1));
-  object->setBaseOrientation(Eigen::Matrix3d(Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ())));
 }
 
 void PandaRaisimDynamics::initialize_pd() {
