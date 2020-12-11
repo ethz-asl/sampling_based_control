@@ -26,7 +26,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	    <geometry>
-                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_simple_collision.obj"/>
+                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/>
             </geometry>
         </collision>
     </link>
@@ -36,7 +36,7 @@
         <child link="handle_link"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <dynamics damping="1.0" friction="2.0"/>
-        <axis xyz="0 0 1"/>
+        <axis xyz="0 1 0"/>
         <limit upper="3.14" lower="3.14" effort="100" velocity="1.0"/>
     </joint>
 </robot>
