@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /World1/Object1
       Splitter Ratio: 0.5
     Tree Height: 875
   - Class: rviz/Selection
@@ -102,7 +103,7 @@ Visualization Manager:
       Marker Topic: /obstacle_marker
       Name: Obstacle Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -163,7 +164,7 @@ Visualization Manager:
       Displays:
         - Alpha: 1
           Class: rviz/RobotModel
-          Collision Enabled: false
+          Collision Enabled: true
           Enabled: true
           Links:
             All Links Enabled: true
@@ -189,7 +190,7 @@ Visualization Manager:
           TF Prefix: ""
           Update Interval: 0
           Value: true
-          Visual Enabled: true
+          Visual Enabled: false
         - Alpha: 0.6000000238418579
           Class: rviz/RobotModel
           Collision Enabled: false
@@ -326,7 +327,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.1581592559814453
+      Distance: 2.445819139480591
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -341,10 +342,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.40539848804473877
+      Pitch: 0.4153984785079956
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.282213807106018
+      Yaw: 1.1722139120101929
     Saved: ~
 Window Geometry:
   Displays:

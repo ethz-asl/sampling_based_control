@@ -1,5 +1,5 @@
 sequential: true           # true to run an asynchronous thread where controller optimize given the latest observation
-rendering: true            # use a custom renderer to visualize the trajectory
+rendering: false           # use a custom renderer to visualize the trajectory
 
 # dynamics parameters
 dynamics:
@@ -31,7 +31,7 @@ solver:
 
   discount_factor: 1.0          # apply a discount factor on the cost over the horizon
   verbose: false                # more prints
-  threads: 8                    # number of threads, set to 1 to not use multithreaded sampling
+  threads: 4                    # number of threads, set to 1 to not use multithreaded sampling
   debug_print: false            # debug print
 
 # custom params

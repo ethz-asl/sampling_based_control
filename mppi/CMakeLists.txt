@@ -10,6 +10,10 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 find_package(Eigen3 REQUIRED 3.3)
 find_package(gram_savitzky_golay REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(OpenMP REQUIRED)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 set(COMMON_LIBRARIES ${catkin_LIBRARIES} yaml-cpp gram_savitzky_golay::gram_savitzky_golay)
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS}

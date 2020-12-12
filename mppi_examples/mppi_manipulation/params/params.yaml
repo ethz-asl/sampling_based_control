@@ -1,9 +1,9 @@
 solver:
-  rollouts: 50
+  rollouts: 20
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
-  horizon: 1.0
+  horizon: 0.5
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -17,9 +17,14 @@ solver:
   adaptive_sampling: false
   input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
+  bound_input: true
+  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
   discount_factor: 1.0
   verbose: false
   threads: 8
+  envs: 8
   debug_print: false
 
 policy_update_rate: 0.0  # execute as fast as possible

@@ -47,6 +47,7 @@ struct SolverConfig {
   uint filter_order = 3;
 
   size_t threads = 1;
+  int envs = 4;
 
   bool init_from_file(const std::string& file);
  private:

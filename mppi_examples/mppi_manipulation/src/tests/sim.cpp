@@ -75,39 +75,39 @@ int main(int argc, char **argv) {
 
   /// create raisim objects
   auto panda = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_based_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/panda.urdf", "/");
-  auto door = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_based_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/door.urdf");
+  auto object = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_based_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/valve.urdf", "/");
   auto ground = world.addGround(-1);
   //ground->setName("checkerboard"); /// not necessary here but once you set name, you can later retrieve it using raisim::World::getObject()
 
-  /// set door placement and control
+  /// set object placement and control
   /// panda joint PD controller
-  Eigen::VectorXd doorNominalConfig(1), doorVelocityTarget(1);
-  Eigen::VectorXd doorState(1), doorForce(1), doorPgain(1), doorDgain(1);
-  Eigen::VectorXd doorTorque(1), doorSpeed(1);
+  Eigen::VectorXd objectNominalConfig(1), objectVelocityTarget(1);
+  Eigen::VectorXd objectState(1), objectForce(1), objectPgain(1), objectDgain(1);
+  Eigen::VectorXd objectTorque(1), objectSpeed(1);
 
-  doorPgain.setZero();
-  doorDgain.setZero();
-  doorVelocityTarget.setZero();
-  doorNominalConfig.setZero();
-  doorPgain.setConstant(20.0);
-  doorDgain.setConstant(1.0);
+  objectPgain.setZero();
+  objectDgain.setZero();
+  objectVelocityTarget.setZero();
+  objectNominalConfig.setZero();
+  objectPgain.setConstant(20.0);
+  objectDgain.setConstant(1.0);
 
-  door->setGeneralizedCoordinate(doorNominalConfig);
-  door->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
-  door->setPdGains(doorPgain, doorDgain);
-  door->setPdTarget(doorNominalConfig, doorVelocityTarget);
-  door->setName("door"); // this is the name assigned for raisim. Not used in this example
+  object->setGeneralizedCoordinate(objectNominalConfig);
+  object->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+  object->setPdGains(objectPgain, objectDgain);
+  object->setPdTarget(objectNominalConfig, objectVelocityTarget);
+  object->setName("object"); // this is the name assigned for raisim. Not used in this example
 
   /// handle
   //std::cout << "Printing handle state" << std::endl;
-  //auto handle = door->getFrameByName("handle_link");
+  //auto handle = object->getFrameByName("handle_link");
   //std::cout << handle.position << std::endl;
   //std::cout << handle.orientation << std::endl;
 
   /// create visualizer objects
   vis->createGraphicalObject(ground, 20, "floor", "checkerboard_green");
   auto panda_graphics = vis->createGraphicalObject(panda, "panda");
-  auto door_graphics = vis->createGraphicalObject(door, "door");
+  auto object_graphics = vis->createGraphicalObject(object, "object");
 
   //anymal_gui::frame::setArticulatedSystem(anymal, 0.3); // to visualize frames
 
@@ -152,36 +152,31 @@ int main(int argc, char **argv) {
   //double time=0.;
 
   /// lambda function for the controller
-  auto controller = [&world, panda, door](){
+  auto controller = [&world, panda, object](){
     static double sleep_s = 1.0;
     static double time = 0;
     static int last_step = 0;
     static time_point<steady_clock> start, end;
 
-    /// we cannot query door_frame_step since all fixed bodies are combined into one
-    static size_t doorStepIndex = door->getBodyIdx("door_frame");
-
     time += world.getTimeStep();
     int curr_step = (int) (time/sleep_s);
     if (curr_step > last_step){
-      std::cout << "Quering contacts for frame: " << doorStepIndex << std::endl;
 
       start = steady_clock::now();
-      std::vector<contact::Contact> contacts = door->getContacts();
+      std::vector<contact::Contact> contacts = object->getContacts();
       end = steady_clock::now();
 
       std::cout << "There are: " << contacts.size() << " contacts." << std::endl;
       double query_time = duration_cast<nanoseconds>(end-start).count()/1e6;
 
-      for(auto& contact: door->getContacts()) {
+      for(auto& contact: object->getContacts()) {
         std::cout << "----------------------------------------" << std::endl;
         std::cout << "Query time is: " << query_time << " ms." << std::endl;
         if (contact.skip()) continue; /// if the contact is internal, one contact point is set to 'skip'
         if (contact.isSelfCollision()) continue;
-        if (contact.getlocalBodyIndex() != doorStepIndex) continue;
 
         /// the impulse is acting from objectB to objectA. You can check if this object is objectA or B by
-        std::cout<<"Door step in collision!"<<std::endl;
+        std::cout<<"object step in collision!"<<std::endl;
         std::cout<<"Contact impulse in the contact frame: "<<contact.getImpulse()->e()<<std::endl;
         std::cout<<"is ObjectA: "<<contact.isObjectA()<<std::endl;
         std::cout<<"Contact frame: \n"<<contact.getContactFrame().e()<<std::endl;
@@ -259,7 +254,7 @@ int main(int argc, char **argv) {
   vis->setControlCallback(controller);
 
   /// set camera
-  vis->select(door_graphics->at(0), false);
+  vis->select(object_graphics->at(0), false);
   vis->getCameraMan()->setYawPitchDist(Ogre::Radian(0), -Ogre::Radian(M_PI_4), 2);
 
   /// run the app

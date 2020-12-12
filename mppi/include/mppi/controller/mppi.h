@@ -100,13 +100,11 @@ class PathIntegral {
 
   /**
    * @brief Sample a batch of trajectories
-   * @param dynamics the dynamics function to use
-   * @param cost the cost function to use
+   * @param env_idx the index of the environment
    * @param start_idx first index in the rollouts vector
    * @param end_idx last index in the rollouts vector
    */
-  void sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
-                                 const size_t start_idx, const size_t end_idx);
+  void sample_trajectories_batch(const size_t env_idx, const size_t start_idx, const size_t end_idx);
 
   /**
    * @brief Sample multiple trajectories starting from current observation and

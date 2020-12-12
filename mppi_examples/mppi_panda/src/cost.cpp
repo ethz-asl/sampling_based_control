@@ -32,9 +32,6 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
   // TODO remove hard coded joint limits
   joint_limits_lower_ << PANDA_LOWER_LIMITS;
   joint_limits_upper_ << PANDA_UPPER_LIMITS;
-  std::cout << "Lower joints limits: " << joint_limits_lower_.transpose() << std::endl;
-  std::cout << "Upper joints limits: " << joint_limits_upper_.transpose() << std::endl;
-
 }
 
 mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
