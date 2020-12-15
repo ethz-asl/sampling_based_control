@@ -50,6 +50,9 @@ struct SolverConfig {
 
   bool use_tree_search = false;
 
+  std::vector<size_t> expert_types = {0, 1};
+  std::vector<size_t> expert_weights = {1, 1};
+
   bool init_from_file(const std::string& file);
  private:
   bool parsing_error = false;

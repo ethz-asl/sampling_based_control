@@ -33,7 +33,7 @@ add_library(${PROJECT_NAME}
         src/solver_config.cpp
         src/filters/savgol_filter.cpp
         src/tree/tree_manager.cpp
-        src/tree/node.cpp)
+        src/experts/expert.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)

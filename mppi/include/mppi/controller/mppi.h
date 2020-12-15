@@ -25,6 +25,8 @@
 #include "mppi/solver_config.h"
 #include "mppi/utils/thread_pool.h"
 #include "mppi/visualization/rederer.h"
+#include "mppi/tree/tree_manager.h"
+#include "mppi/experts/expert.h"
 
 namespace mppi {
 
@@ -40,6 +42,7 @@ class PathIntegral {
   using observation_t = DynamicsBase::observation_t;
   using observation_array_t = std::vector<observation_t>;
   using renderer_ptr = std::shared_ptr<Renderer>;
+  using expert_ptr = Expert::expert_ptr;
 
   /**
    * @brief Path Integral Control class
@@ -72,10 +75,10 @@ class PathIntegral {
    */
   void init_threading();
 
-  /**
-   * @brief Initializes the tree structure if use_tree_search == true
+	/**
+   * @brief Initializes the variables for the tree manager
    */
-  void init_tree();
+	void init_tree_manager();
 
  public:
   /**
@@ -266,6 +269,7 @@ class PathIntegral {
   SavGolFilter filter_;
   sampler_ptr sampler_;
 
+
   dynamics_ptr dynamics_;
   size_t cached_rollouts_;
 
@@ -312,6 +316,14 @@ class PathIntegral {
       cost_v_;  // vector of cost functions used per each thread
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
+
+  TreeManager tree_manager_;
+  std::vector<dynamics_ptr>
+      tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts)
+
+  Expert expert_;
+
+
 };
 
 }  // namespace mppi

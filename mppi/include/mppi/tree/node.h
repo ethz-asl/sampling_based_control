@@ -27,15 +27,19 @@ class Node{
   using node_ptr = std::shared_ptr<Node>;
 
   Node() = default;
-  Node(double t, double c_parent, dynamics_ptr dynamics, const mppi::SolverConfig& config, cost_ptr cost);
+  Node(node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x);
   ~Node() = default;
 
   std::string public_name_;
   std::chrono::high_resolution_clock::time_point timestamp_;
 
+  node_ptr parent_node_;
+
+  double c_;
+
  private:
   double t_;
-  double c_;
+
   Eigen::VectorXd xx_;
   Eigen::VectorXd uu_;
   Eigen::VectorXd nn_;
@@ -44,8 +48,8 @@ class Node{
   size_t STATE_DIM = 10;
 
   config_t config_;
-  dynamics_ptr dynamics_;
   cost_ptr cost_;
+
 
 
 

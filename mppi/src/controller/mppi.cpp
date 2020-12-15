@@ -35,12 +35,16 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
       dynamics_(std::move(dynamics)),
       config_(config),
       sampler_(std::move(sampler)),
-      renderer_(std::move(renderer)) {
+      renderer_(std::move(renderer)),
+      expert_(config_, dynamics_),
+      tree_manager_(cost_, dynamics_, config_, sampler_, &expert_){
+
+
   init_data();
   init_filter();
   init_threading();
-  if (config_.use_tree_search) {
-    init_tree();
+  if (config_.use_tree_search){
+    init_tree_manager();
   }
 }
 
@@ -116,8 +120,10 @@ void PathIntegral::init_threading() {
   }
 }
 
-void PathIntegral::init_tree(){
-  TreeManager tree_manager(cost_);
+void PathIntegral::init_tree_manager() {
+  for (size_t i = 0; i < config_.rollouts; i++) {
+    tree_dynamics_v_.push_back(dynamics_->create());
+  }
 }
 
 void PathIntegral::update_policy() {
@@ -289,6 +295,12 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
 }
 
 void PathIntegral::sample_trajectories() {
+  if (config_.use_tree_search){
+    for (size_t k = 0; k < config_.rollouts; ++k){
+      tree_dynamics_v_[k]->reset(x0_internal_);
+    }
+    tree_manager_.build_new_tree(tree_dynamics_v_, x0_internal_);
+  }
   if (config_.threads == 1) {
     sample_trajectories_batch(dynamics_, cost_, 0, config_.rollouts);
   } else {

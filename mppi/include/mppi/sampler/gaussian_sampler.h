@@ -47,7 +47,18 @@ class GaussianSampler {
     dist_->set_covariance(sigma_);
   }
 
+	template<typename T>
+	void set_mean(const T &s) {
+		assert(s.size() == n_);
+		for (size_t i = 0; i < n_; i++) {
+			mean_(i) = s[i];
+		}
+		dist_->set_mean(mean_);
+	}
+
   void get_sample(DynamicsBase::input_t& sample) { sample = (*dist_)(); }
+
+  Eigen::VectorXd get_sample() { return (*dist_)(); }
 
   Eigen::MatrixXd stable_inverse(const Eigen::MatrixXd& A) {
     solver_.compute(A, Eigen::ComputeEigenvectors);
@@ -81,6 +92,7 @@ class GaussianSampler {
 
  private:
   size_t n_;
+	Eigen::MatrixXd mean_;
   Eigen::MatrixXd sigma_;
   Eigen::MatrixXd sigma_inv_;
   std::shared_ptr<multivariate_normal> dist_;
