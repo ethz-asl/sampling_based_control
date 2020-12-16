@@ -26,6 +26,9 @@
 #include "mppi/solver_config.h"
 #include "mppi/utils/logging.h"
 
+#define TRACY_ENABLE
+#include "tracy/Tracy.hpp"
+
 namespace mppi {
 
 PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost, const SolverConfig& config,
@@ -121,11 +124,7 @@ void PathIntegral::update_policy() {
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
       update_reference();
-
-      auto start = std::chrono::steady_clock::now();
       sample_trajectories();
-      auto end = std::chrono::steady_clock::now();
-      std::cout << "took: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1e6 << " ms." << std::endl;
       optimize();
       filter_input();
 
@@ -160,6 +159,7 @@ void PathIntegral::set_observation(const observation_t& x, const double t) {
 }
 
 void PathIntegral::copy_observation() {
+  ZoneNamed(copy_observation, true);
   std::shared_lock<std::shared_mutex> lock(state_mutex_);
   x0_internal_ = x0_;
   t0_internal_ = reset_time_;
@@ -180,6 +180,7 @@ void PathIntegral::initialize_rollouts() {
 }
 
 void PathIntegral::prepare_rollouts() {
+  ZoneNamed(prepare_rollouts, true);
   // find trim index
   size_t offset;
   {
@@ -226,10 +227,13 @@ void PathIntegral::update_reference() {
   for (auto& cost : cost_v_) cost->set_reference_trajectory(rr_tt_ref_);
 }
 
-void PathIntegral::sample_noise(input_t& noise) { sampler_->get_sample(noise); }
+void PathIntegral::sample_noise(input_t& noise) {
+  ZoneNamed(sample_noise, true);
+  sampler_->get_sample(noise); }
 
 void PathIntegral::sample_trajectories_batch(const size_t env_idx, const size_t start_idx,
                                              const size_t end_idx) {
+  ZoneNamed(sample_trajectories_batch, true);
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics_v_[env_idx]->reset(x0_internal_);
@@ -250,7 +254,10 @@ void PathIntegral::sample_trajectories_batch(const size_t env_idx, const size_t 
       }
 
       bound_input(rollouts_[k].uu[t]);
-      x = dynamics_v_[env_idx]->step(rollouts_[k].uu[t], config_.step_size);
+      {
+        ZoneNamed(step_dynamics, true);
+        x = dynamics_v_[env_idx]->step(rollouts_[k].uu[t], config_.step_size);
+      }
       double cost_temp = std::pow(config_.discount_factor, t) *
                          cost_v_[env_idx]->get_stage_cost(x, t0_internal_ + t * config_.step_size);
       if (std::isnan(cost_temp)) {
@@ -271,6 +278,7 @@ void PathIntegral::sample_trajectories_batch(const size_t env_idx, const size_t 
 }
 
 void PathIntegral::sample_trajectories() {
+  ZoneNamed(sample_trajectories, true);
 #pragma omp parallel for
   for (size_t env_idx = 0; env_idx < config_.envs; env_idx++) {
     sample_trajectories_batch(env_idx, (size_t)env_idx * config_.rollouts / config_.envs,
@@ -279,6 +287,7 @@ void PathIntegral::sample_trajectories() {
 }
 
 void PathIntegral::compute_exponential_cost() {
+  ZoneNamed(compute_exp_cost, true);
   min_cost_ = rollouts_cost_.minCoeff();
   max_cost_ = rollouts_cost_.maxCoeff();
 
@@ -295,6 +304,7 @@ void PathIntegral::compute_exponential_cost() {
 }
 
 void PathIntegral::optimize() {
+  ZoneNamed(optimize, true);
   compute_exponential_cost();
   omega = exponential_cost_ / exponential_cost_.sum();
 
@@ -324,6 +334,7 @@ void PathIntegral::optimize() {
 }
 
 void PathIntegral::filter_input() {
+  ZoneNamed(filter_input, true);
   if (config_.filter_type) {
     filter_.reset(t0_internal_);
 

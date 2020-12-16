@@ -4,7 +4,7 @@ project(mppi)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -DTRACY_ENABLE")
 
 
 find_package(Eigen3 REQUIRED 3.3)
@@ -16,7 +16,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 set(COMMON_LIBRARIES ${catkin_LIBRARIES} yaml-cpp gram_savitzky_golay::gram_savitzky_golay)
-set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS}
+set(SYSTEM_INCLUDE_DIRECTORIES include submodule ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS}
         ${yaml_cpp_INCLUDE_DIRS})
 
 find_package(catkin REQUIRED COMPONENTS sensor_msgs std_msgs roscpp)
@@ -36,6 +36,7 @@ add_library(${PROJECT_NAME}
         src/cost/cost_base.cpp
         src/solver_config.cpp
         src/filters/savgol_filter.cpp
+        submodule/tracy/TracyClient.cpp
         )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
