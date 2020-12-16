@@ -22,7 +22,8 @@ catkin_package(
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Libraries
-# add_library(${PROJECT_NAME})
-# target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
-# target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
+add_library(${PROJECT_NAME}
+        src/model_particle_filter.cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
+target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 
