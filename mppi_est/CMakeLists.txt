@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.10)
+project(mppi_est)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+
+find_package(Eigen3 REQUIRED 3.3)
+find_package(catkin REQUIRED COMPONENTS mppi)
+
+set(COMMON_LIBRARIES ${catkin_LIBRARIES})
+set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
+catkin_package(
+        LIBRARIES ${PROJECT_NAME}
+        INCLUDE_DIRS include
+        CATKIN_DEPENDS mppi
+        DEPENDS)
+
+include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
+
+# Libraries
+# add_library(${PROJECT_NAME})
+# target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
+# target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
+

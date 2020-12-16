@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mppi_est</name>
+  <version>0.0.0</version>
+  <description>The mppi_est package</description>
+
+  <maintainer email="Rizzi@todo.todo">Giuseppe Rizzi</maintainer>
+  <license>TODO</license>
+  
+  <author email="grizzi@mavt.ethz.com" >Giuseppe Rizzi</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>mppi</depend>
+</package>
+
