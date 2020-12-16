@@ -231,7 +231,6 @@ class PathIntegral {
    * while the public one can be potentially changed by a different thread.
    */
   void copy_observation();
-
   /**
    * @brief Set the reference of the cost function to the latest received for
    * the new optimization
@@ -317,11 +316,12 @@ class PathIntegral {
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 
+	Expert expert_;
   TreeManager tree_manager_;
   std::vector<dynamics_ptr>
       tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts)
 
-  Expert expert_;
+
 
 
 };

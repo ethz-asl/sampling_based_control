@@ -37,21 +37,13 @@ class Node{
 
   double c_;
 
+	double t_;
+
+	Eigen::VectorXd xx_;
+	Eigen::VectorXd uu_;
+	Eigen::VectorXd nn_;
+
  private:
-  double t_;
-
-  Eigen::VectorXd xx_;
-  Eigen::VectorXd uu_;
-  Eigen::VectorXd nn_;
-
-  size_t INPUT_DIM = 8;
-  size_t STATE_DIM = 10;
-
   config_t config_;
   cost_ptr cost_;
-
-
-
-
-//	Node * node_ptr_;
 };

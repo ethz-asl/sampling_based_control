@@ -14,8 +14,9 @@ class GaussianSampler {
  public:
   using sampler_ptr = std::shared_ptr<GaussianSampler>;
 
-  GaussianSampler() = delete;
+  GaussianSampler() = default;
   explicit GaussianSampler(size_t n) : n_(n), solver_(n) {
+		mean_ = Eigen::VectorXd::Zero(n_);
     sigma_ = Eigen::MatrixXd::Identity(n_, n_);
     sigma_inv_ = Eigen::MatrixXd::Identity(n_, n_);
     dist_ = std::make_unique<multivariate_normal>(sigma_);

@@ -26,18 +26,21 @@
 
 //TODO don't do anything in node except the necessary, which is calc the statecost + cost of parent node (evt. pointer to parent node //
 // (pass only observation value, and action value)
+
 Node::Node(node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x) {
   cost_ = cost;
   config_ = config;
   parent_node_ = parent_node;
 
+	xx_ = x;
+	uu_ = u;
+	nn_ = Eigen::VectorXd::Zero(1);
+
   timestamp_ = std::chrono::high_resolution_clock::now();
   public_name_ = std::to_string(timestamp_.time_since_epoch().count());
 
   t_ = t;
-  c_ = cost_->get_stage_cost(x);
+  c_ = cost_->get_stage_cost(xx_);
 
-  xx_ = Eigen::VectorXd::Zero(8);
-  uu_ = Eigen::VectorXd::Zero(8);
-  nn_ = Eigen::VectorXd::Zero(1);
+
 }

@@ -49,6 +49,7 @@ struct SolverConfig {
   size_t threads = 1;
 
   bool use_tree_search = false;
+  double pruning_threshold = 0.5;
 
   std::vector<size_t> expert_types = {0, 1};
   std::vector<size_t> expert_weights = {1, 1};

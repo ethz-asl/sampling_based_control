@@ -6,14 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-
 find_package(Eigen3 REQUIRED 3.3)
 find_package(gram_savitzky_golay REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 set(COMMON_LIBRARIES ${catkin_LIBRARIES} yaml-cpp gram_savitzky_golay::gram_savitzky_golay)
-set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS}
-        ${yaml_cpp_INCLUDE_DIRS})
+set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${gram_savitzky_golay_INCLUDE_DIRS} ${yaml_cpp_INCLUDE_DIRS})
 
 find_package(catkin REQUIRED COMPONENTS sensor_msgs std_msgs roscpp)
 catkin_package(
@@ -33,6 +31,7 @@ add_library(${PROJECT_NAME}
         src/solver_config.cpp
         src/filters/savgol_filter.cpp
         src/tree/tree_manager.cpp
+        src/tree/node.cpp
         src/experts/expert.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
@@ -44,7 +43,6 @@ target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 #        unittest/mppi_visualizer.cpp)
 #target_link_libraries(mppi_visualizer_double_integrator ${PROJECT_NAME} ${COMMON_LIBRARIES})
 #add_dependencies(mppi_visualizer_double_integrator ${PROJECT_NAME})
-
 
 if (CATKIN_ENABLE_TESTING)
     find_package(PythonLibs 2.7 REQUIRED)

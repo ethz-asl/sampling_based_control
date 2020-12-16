@@ -23,6 +23,7 @@
 #include "mppi/utils/thread_pool.h"
 #include "mppi/sampler/gaussian_sampler.h"
 #include "mppi/experts/expert.h"
+#include "mppi/controller/rollout.h"
 
 
 
@@ -36,7 +37,7 @@ class TreeManager {
   using sampler_ptr = mppi::GaussianSampler::sampler_ptr;
   using expert_ptr = mppi::Expert::expert_ptr;
 
-  TreeManager(cost_ptr cost, dynamics_ptr dynamics, config_t config, sampler_ptr sampler, expert_ptr expert);
+  TreeManager(cost_ptr cost, dynamics_ptr dynamics, config_t config, sampler_ptr sampler, mppi::Expert *expert);
 
   ~TreeManager() = default;
 
@@ -94,6 +95,8 @@ class TreeManager {
   std::map<size_t, size_t> rollout_expert_map_;
 
   void set_rollout_expert_mapping(size_t mapping_type_input);
+
+  std::vector<mppi::Rollout> rollouts_;
 };
 
 
