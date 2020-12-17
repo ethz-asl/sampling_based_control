@@ -8,7 +8,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 
 find_package(Eigen3 REQUIRED 3.3)
-find_package(catkin REQUIRED COMPONENTS mppi)
+find_package(catkin REQUIRED COMPONENTS )
 
 set(COMMON_LIBRARIES ${catkin_LIBRARIES})
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
@@ -16,14 +16,25 @@ set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
-        CATKIN_DEPENDS mppi
+        CATKIN_DEPENDS
         DEPENDS)
 
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Libraries
 add_library(${PROJECT_NAME}
-        src/model_particle_filter.cpp)
+        src/model.cpp
+        src/model_particle_filter.cpp unittest/point_mass_test.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
+
+if (CATKIN_ENABLE_TESTING)
+    add_library(point_mass unittest/point_mass.cpp)
+    target_link_libraries(point_mass PUBLIC ${PROJECT_NAME} ${COMMON_LIBRARIES})
+
+    catkin_add_gtest(point_mass_test unittest/point_mass_test.cpp)
+    target_include_directories(point_mass_test PRIVATE unittest include ${SYSTEM_INCLUDE_DIRS})
+    target_link_libraries(point_mass_test point_mass ${PROJECT_NAME} ${catkin_LIBRARIES})
+endif ()
+
 

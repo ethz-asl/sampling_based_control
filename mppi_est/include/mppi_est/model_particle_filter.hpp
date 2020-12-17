@@ -18,7 +18,7 @@ class ModelParticleFilter {
  public:
   using model_ptr_t = std::unique_ptr<Model>;
 
-  ModelParticleFilter(size_t buffer_length);
+  explicit ModelParticleFilter(size_t buffer_length);
   ModelParticleFilter() : ModelParticleFilter(1){};
   ~ModelParticleFilter() = default;
 
@@ -26,22 +26,26 @@ class ModelParticleFilter {
   void add_measurement_tuple(const transition_tuple_t& z);
   void update_likelihood();
   void update_posterior();
-  void get_posterior();
-  void sample();
+
+  inline const std::vector<model_ptr_t>& get_models() const { return models_; }
+  std::vector<double> get_posterior() const { return posterior_; }
 
  private:
-  double likelihood_fn(const transition_tuple_t& z1,
-                       const transition_tuple_t& z2);
+  void init_from_model(const model_ptr_t& model);
+  [[nodiscard]] bool check_model(const model_ptr_t& model) const;
 
  private:
+  bool initialized_;
   size_t samples_;
   size_t buffer_length_;
 
-  std::vector<double> prior_;
+  std::vector<double> posterior_;
   std::vector<double> likelihood_;
   matrix_t sigma_;
   matrix_t sigma_inv_;
 
+  size_t no_;
+  size_t nu_;
   std::vector<std::unique_ptr<Model>> models_;
   boost::circular_buffer<transition_tuple_t> z_buffer_;
 };

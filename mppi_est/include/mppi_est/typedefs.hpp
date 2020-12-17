@@ -4,6 +4,10 @@
 
 #pragma once
 #include <Eigen/Core>
+#include <iostream>
+
+#define PRINT_ERROR(msg) \
+  std::cout << "\033[1;31m[ERROR] : " << msg + "\033[0m" << std::endl
 
 namespace mppi_est{
 
@@ -15,6 +19,5 @@ struct transition_tuple_t {
   vector_t u;
   mutable vector_t x_next;
 };
-
 
 }

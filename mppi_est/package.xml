@@ -10,6 +10,5 @@
   <author email="grizzi@mavt.ethz.com" >Giuseppe Rizzi</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>mppi</depend>
 </package>
 
