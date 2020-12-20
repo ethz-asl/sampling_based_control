@@ -3,7 +3,7 @@ solver:
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
-  horizon: 0.05
+  horizon: 1
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -20,9 +20,9 @@ solver:
   discount_factor: 1.0
   verbose: false
   threads: 1
-  debug_print: false
+  debug_print: true
 
-  use_tree_search: true
+  use_tree_search: false
   pruning_threshold: 0.5
 
 

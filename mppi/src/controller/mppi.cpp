@@ -299,7 +299,7 @@ void PathIntegral::sample_trajectories() {
     for (size_t k = 0; k < config_.rollouts; ++k){
       tree_dynamics_v_[k]->reset(x0_internal_);
     }
-    tree_manager_.build_new_tree(tree_dynamics_v_, x0_internal_);
+    tree_manager_.build_new_tree(tree_dynamics_v_, x0_internal_, t0_internal_, opt_roll_);
   }
   if (config_.threads == 1) {
     sample_trajectories_batch(dynamics_, cost_, 0, config_.rollouts);

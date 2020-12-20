@@ -20,16 +20,17 @@ TreeManager::TreeManager(cost_ptr cost, dynamics_ptr dynamics, config_t config, 
   init_threading(config_.threads);
 }
 
-void TreeManager::init_tree(observation_t x0_internal){
+void TreeManager::init_tree(){
   start_time_ = std::chrono::high_resolution_clock::now();
   tree_width_ = config_.rollouts;
+
   // TODO: use steps_ from mppi
   tree_target_depth_ = std::floor(config_.horizon / config_.step_size);
 	rollouts_.resize(config_.rollouts, mppi::Rollout(tree_target_depth_, dynamics_->get_input_dimension(), dynamics_->get_state_dimension()));
 
   futures_.resize(tree_width_);
 
-  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(nullptr, 0, config_, cost_, x0_internal, dynamics_->get_zero_input(x0_internal)));
+  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(nullptr, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
 
   leaf_handles_.resize(tree_width_);
 	extendable_leaf_pos_.resize(tree_width_);
@@ -40,7 +41,7 @@ void TreeManager::init_tree(observation_t x0_internal){
   }
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(root->parent_node_, 0, config_, cost_, x0_internal, dynamics_->get_zero_input(x0_internal)));
+    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(root->parent_node_, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
   }
 }
 
@@ -74,13 +75,18 @@ void TreeManager::grow_tree() {
 }
 
 void TreeManager::add_depth_level(size_t horizon_step) {
-	t_ += config_.step_size;
+	t_ = t0_internal_ + horizon_step * config_.step_size;
+
 	for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node,this, std::placeholders::_1, std::placeholders::_2), horizon_step, leaf_pos);
+		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2), horizon_step, leaf_pos);
 	}
 
 	//wait untill all threads have finished processing the tree depth
-	for (size_t leaf_pos = 0; leaf_pos < tree_width_; leaf_pos++){
+	for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
+		futures_[leaf_pos].wait();
+	}
+	// as soon as all leafs are processed transfer new leafs
+	for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
 		leaf_handles_[leaf_pos] = futures_[leaf_pos].get();
 	}
 
@@ -168,15 +174,27 @@ void TreeManager::transform_to_rollouts(){
   for (size_t k = 0; k < tree_width_; ++k){
     auto path_to_leaf = sampling_tree_.path_from_iterator(leaf_handles_[k], sampling_tree_.begin());
 		std::cout << path_to_leaf.size() << ", " << tree_target_depth_ << std::endl;
-    for (size_t t = 0; t < path_to_leaf.size(); ++t ){
+
+    for (size_t t = 2; t < path_to_leaf.size(); ++t ){
       std::vector<int> path_to_leaf_cut(path_to_leaf.begin(), path_to_leaf.begin()+t);
       auto current_node = sampling_tree_.iterator_from_path(path_to_leaf_cut, sampling_tree_.begin());
 
-//			rollouts_[k].xx[t] = current_node->xx_;
-//			rollouts_[k].uu[t] = current_node->uu_;
-//			rollouts_[k].cc(t) = current_node->c_;
+      // recompute noise
+      auto nn = opt_roll_.uu[t] - current_node->uu_;
+      auto uu = opt_roll_.uu[t];
+      auto xx = current_node->xx_;
+      auto c = current_node->c_;
+
+			rollouts_[k].xx[t] = xx;
+			rollouts_[k].uu[t] = uu;
+			rollouts_[k].nn[t] = nn;
+			rollouts_[k].cc(t) = c;
 		}
   }
+}
+
+std::vector<mppi::Rollout> TreeManager::get_rollouts(){
+	return rollouts_;
 }
 
 void TreeManager::reset(){
@@ -184,11 +202,14 @@ void TreeManager::reset(){
   t_ = 0;
 }
 
-void TreeManager::build_new_tree(std::vector<dynamics_ptr> tree_dynamics_v, const observation_t x0_internal) {
+void TreeManager::build_new_tree(std::vector<dynamics_ptr> tree_dynamics_v, const observation_t x0_internal, double t0_internal, mppi::Rollout opt_roll) {
 	this->tree_dynamics_v = tree_dynamics_v;
+	x0_internal_ = x0_internal;
+	t0_internal_ = t0_internal;
+	opt_roll_ = opt_roll;
 
   reset();
-  init_tree(x0_internal );
+  init_tree();
   grow_tree();
   if (config_.debug_print){
 		print_tree();

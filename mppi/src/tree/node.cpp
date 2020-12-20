@@ -40,7 +40,13 @@ Node::Node(node_ptr parent_node, double t, const mppi::SolverConfig& config, cos
   public_name_ = std::to_string(timestamp_.time_since_epoch().count());
 
   t_ = t;
-  c_ = cost_->get_stage_cost(xx_);
+
+  auto c_parent = 0;
+  if (parent_node != nullptr){
+		c_parent = parent_node->c_;
+  }
+  // c_ = c_parent + cost_->get_stage_cost(xx_, t_);
+	c_ = cost_->get_stage_cost(xx_, t_);
 
 
 }
