@@ -48,7 +48,7 @@ class TreeManager {
   void build_new_tree(std::vector<dynamics_ptr> tree_dynamics_v, const observation_t x0_internal, double t0_internal, mppi::Rollout opt_roll);
 
 	std::vector<mppi::Rollout> get_rollouts();
-
+	Eigen::ArrayXd get_rollouts_cost();
 
  private:
   cost_ptr cost_;
@@ -104,6 +104,8 @@ class TreeManager {
   double t0_internal_;
   observation_t x0_internal_;
   mppi::Rollout opt_roll_;
+
+  Eigen::ArrayXd rollouts_cost_;
 
 
 };

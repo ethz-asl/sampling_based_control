@@ -1,9 +1,9 @@
 solver:
-  rollouts: 5
+  rollouts: 200
   lambda: 0.0001 #0.001
-  h: 10.0
+  h: 1.0
   step_size: 0.01
-  horizon: 1
+  horizon: 1.0
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -18,7 +18,7 @@ solver:
   input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05]
 
   discount_factor: 1.0
-  verbose: false
+  verbose: true
   threads: 1
   debug_print: true
 

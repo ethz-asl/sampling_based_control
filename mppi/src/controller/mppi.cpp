@@ -292,6 +292,10 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
+  if (false){
+		rollouts_ = tree_manager_.get_rollouts();
+		rollouts_cost_ = tree_manager_.get_rollouts_cost();
+  }
 }
 
 void PathIntegral::sample_trajectories() {

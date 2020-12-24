@@ -24,13 +24,16 @@ void TreeManager::init_tree(){
   start_time_ = std::chrono::high_resolution_clock::now();
   tree_width_ = config_.rollouts;
 
+  std::cout << dynamics_->get_input_dimension() << std::endl;
+
   // TODO: use steps_ from mppi
   tree_target_depth_ = std::floor(config_.horizon / config_.step_size);
 	rollouts_.resize(config_.rollouts, mppi::Rollout(tree_target_depth_, dynamics_->get_input_dimension(), dynamics_->get_state_dimension()));
+	rollouts_cost_ = Eigen::ArrayXd::Zero(config_.rollouts);
 
   futures_.resize(tree_width_);
 
-  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(nullptr, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
+  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(0, nullptr, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
 
   leaf_handles_.resize(tree_width_);
 	extendable_leaf_pos_.resize(tree_width_);
@@ -41,7 +44,7 @@ void TreeManager::init_tree(){
   }
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(root->parent_node_, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
+    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(0, root->parent_node_, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
   }
 }
 
@@ -136,7 +139,7 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 
 	tree_dynamics_next_v.push_back(extending_dynamics);
 
-	return sampling_tree_.append_child(extending_leaf, Node(extending_leaf->parent_node_, t_, config_, cost_, u, x));
+	return sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf->parent_node_, t_, config_, cost_, u, x));
 }
 
 void TreeManager::eval_depth_level(){
@@ -180,21 +183,32 @@ void TreeManager::transform_to_rollouts(){
       auto current_node = sampling_tree_.iterator_from_path(path_to_leaf_cut, sampling_tree_.begin());
 
       // recompute noise
-      auto nn = opt_roll_.uu[t] - current_node->uu_;
+      auto nn = current_node->uu_ - opt_roll_.uu[t];
       auto uu = opt_roll_.uu[t];
       auto xx = current_node->xx_;
-      auto c = current_node->c_;
+      auto c = current_node->c_discounted;
 
 			rollouts_[k].xx[t] = xx;
 			rollouts_[k].uu[t] = uu;
 			rollouts_[k].nn[t] = nn;
 			rollouts_[k].cc(t) = c;
+			rollouts_[k].total_cost += c -
+																 config_.lambda * opt_roll_.uu[t].transpose() *
+																 sampler_->sigma_inv() *
+																 rollouts_[k].nn[t] +
+																 config_.lambda * opt_roll_.uu[t].transpose() *
+																 sampler_->sigma_inv() * opt_roll_.uu[t];
 		}
+		rollouts_cost_[k] = rollouts_[k].total_cost;
   }
 }
 
 std::vector<mppi::Rollout> TreeManager::get_rollouts(){
 	return rollouts_;
+}
+
+Eigen::ArrayXd TreeManager::get_rollouts_cost(){
+	return rollouts_cost_;
 }
 
 void TreeManager::reset(){

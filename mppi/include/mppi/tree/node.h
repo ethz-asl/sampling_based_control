@@ -27,7 +27,7 @@ class Node{
   using node_ptr = std::shared_ptr<Node>;
 
   Node() = default;
-  Node(node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x);
+  Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x);
   ~Node() = default;
 
   std::string public_name_;
@@ -36,6 +36,9 @@ class Node{
   node_ptr parent_node_;
 
   double c_;
+  double c_discounted;
+  double c_cum_;
+  double c_cum_discounted_;
 
 	double t_;
 

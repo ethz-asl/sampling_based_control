@@ -27,7 +27,7 @@
 //TODO don't do anything in node except the necessary, which is calc the statecost + cost of parent node (evt. pointer to parent node //
 // (pass only observation value, and action value)
 
-Node::Node(node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x) {
+Node::Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x) {
   cost_ = cost;
   config_ = config;
   parent_node_ = parent_node;
@@ -41,12 +41,16 @@ Node::Node(node_ptr parent_node, double t, const mppi::SolverConfig& config, cos
 
   t_ = t;
 
-  auto c_parent = 0;
-  if (parent_node != nullptr){
-		c_parent = parent_node->c_;
-  }
-  // c_ = c_parent + cost_->get_stage_cost(xx_, t_);
+
+  auto c_cum_parent = 0;
+	auto c_cum_discounted_parent = 0;
 	c_ = cost_->get_stage_cost(xx_, t_);
+	c_discounted = std::pow(config_.discount_factor, t) * this->c_;
 
-
+  if (parent_node != nullptr){
+		c_cum_parent = parent_node->c_cum_;
+		c_cum_discounted_parent = parent_node->c_cum_discounted_;
+  }
+  c_cum_ = c_cum_parent + this->c_;
+	c_cum_discounted_ = c_cum_discounted_parent + this->c_discounted;
 }
