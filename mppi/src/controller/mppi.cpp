@@ -138,7 +138,13 @@ void PathIntegral::update_policy() {
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
       update_reference();
+      if (config_.use_tree_search){
+				sample_trajectories_via_tree();
+      }
       sample_trajectories();
+			if (config_.use_tree_search){
+				overwrite_rollouts();
+			}
       optimize();
       filter_input();
 
@@ -149,6 +155,7 @@ void PathIntegral::update_policy() {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
     }
+    update_experts();
     swap_policies();
 
     if (renderer_) renderer_->render(rollouts_);
@@ -292,19 +299,9 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
-  if (config_.use_tree_search){
-		rollouts_ = tree_manager_.get_rollouts();
-		rollouts_cost_ = tree_manager_.get_rollouts_cost();
-  }
 }
 
 void PathIntegral::sample_trajectories() {
-  if (config_.use_tree_search){
-    for (size_t k = 0; k < config_.rollouts; ++k){
-      tree_dynamics_v_[k]->reset(x0_internal_);
-    }
-    tree_manager_.build_new_tree(tree_dynamics_v_, x0_internal_, t0_internal_, opt_roll_);
-  }
   if (config_.threads == 1) {
     sample_trajectories_batch(dynamics_, cost_, 0, config_.rollouts);
   } else {
@@ -320,6 +317,19 @@ void PathIntegral::sample_trajectories() {
 
     for (size_t i = 0; i < config_.threads; i++) futures_[i].get();
   }
+}
+
+void PathIntegral::sample_trajectories_via_tree() {
+	for (size_t k = 0; k < config_.rollouts; ++k){
+		tree_dynamics_v_[k]->reset(x0_internal_);
+	}
+	tree_manager_.build_new_tree(tree_dynamics_v_, x0_internal_, t0_internal_, opt_roll_);
+}
+
+void PathIntegral::overwrite_rollouts(){
+	std::cout << "overwriting rollouts started" << std::endl;
+	rollouts_ = tree_manager_.get_rollouts();
+	rollouts_cost_ = tree_manager_.get_rollouts_cost();
 }
 
 void PathIntegral::compute_exponential_cost() {
@@ -492,6 +502,10 @@ bool PathIntegral::get_optimal_rollout(observation_array_t& xx,
                      opt_roll_cache_.uu.end());
   return true;
 }
+
+void PathIntegral::update_experts(){
+	expert_.update_expert(1,opt_roll_.uu);
+};
 
 void PathIntegral::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);

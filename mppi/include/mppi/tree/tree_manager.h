@@ -60,8 +60,8 @@ class TreeManager {
   tree<Node> sampling_tree_;
   std::unique_ptr<ThreadPool> pool_;
 
-  std::vector<dynamics_ptr> tree_dynamics_v;
-  std::vector<dynamics_ptr> tree_dynamics_next_v;
+  std::vector<dynamics_ptr> tree_dynamics_v_;
+  std::vector<dynamics_ptr> tree_dynamics_v_next_;
 
   void init_tree();
   void grow_tree();

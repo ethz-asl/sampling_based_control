@@ -55,12 +55,11 @@ class GaussianSampler {
 			mean_(i) = s[i];
 		}
 		dist_->set_mean(mean_);
-		std::cout << "mean set" << std::endl;
 	}
 
-  void get_sample(DynamicsBase::input_t& sample) { std::cout << "void"; sample = (*dist_)(); }
+  void get_sample(DynamicsBase::input_t& sample) {sample = (*dist_)(); }
 
-  Eigen::VectorXd get_sample() { std::cout << "VectorXd"; return (*dist_)(); }
+  Eigen::VectorXd get_sample() {return (*dist_)(); }
 
   Eigen::MatrixXd stable_inverse(const Eigen::MatrixXd& A) {
     solver_.compute(A, Eigen::ComputeEigenvectors);

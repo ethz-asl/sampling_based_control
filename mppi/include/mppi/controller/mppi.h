@@ -124,6 +124,11 @@ class PathIntegral {
    */
   void sample_trajectories();
 
+
+  void sample_trajectories_via_tree();
+  void overwrite_rollouts();
+
+
   /**
    * @brief Use the data collected from rollouts and return the optimal input
    */
@@ -170,6 +175,11 @@ class PathIntegral {
    * @brief Initializes rollouts for the first time
    */
   void initialize_rollouts();
+
+	/**
+	 * @brief Update the experts based on data from last iteration
+	 */
+		void update_experts();
 
   /**
    * @brief Fill the optimized policy cache with the latest policy and set flags

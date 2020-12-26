@@ -10,7 +10,6 @@ class ImpExp : public ExpertBase{
  public:
   ImpExp(char short_name, config_t config, dynamics_ptr dynamics): ExpertBase(short_name, config, dynamics), expert_sampler_one_(dynamics_->get_input_dimension()){
 
-		std::cout << "Imp Exp: input dimensions = " << dynamics_->get_state_dimension() <<std::endl;
     expert_sampler_one_.set_covariance(std::vector<double> {1,1,1,1,1,1,1,1,1,1});
     expert_sampler_one_.set_mean(std::vector<double> {0,0,0,0,0,0,0,0,0,0});
 
@@ -22,15 +21,13 @@ class ImpExp : public ExpertBase{
   ~ImpExp() = default;
 
   Eigen::VectorXd get_sample(size_t step) override {
-		std::cout << "Imp " << step << std::endl;
     return expert_sampler_map_[step].get_sample();
   };
 
-  void update_expert(Eigen::MatrixXd mean) override {
-    for (int step = 0; step < mean.cols(); ++step) {
-      expert_sampler_map_.at(step).set_mean(std::vector<double> {mean(0, step), mean(1, step)});
+  void update_expert(std::vector<Eigen::VectorXd> mean) override {
+    for (int step = 0; step < mean.size(); ++step) {
+      expert_sampler_map_[step].set_mean(mean[step]);
     }
-    // calc exp weights etc
   };
 
  protected:

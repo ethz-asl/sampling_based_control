@@ -25,7 +25,7 @@ class Expert {
 
   Eigen::VectorXd get_sample(size_t expert_type, size_t step);
 
-  void update_expert(size_t expert_type, Eigen::MatrixXd mean);
+  void update_expert(size_t expert_type, std::vector<Eigen::VectorXd> mean);
 
   void update_experts();
 

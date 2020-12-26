@@ -1,9 +1,9 @@
 solver:
-  rollouts: 50
+  rollouts: 10
   lambda: 0.0001 #0.001
   h: 1.0
-  step_size: 0.01
-  horizon: 1.0
+  step_size: 0.1
+  horizon: 0.4
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -20,7 +20,7 @@ solver:
   discount_factor: 1.0
   verbose: false
   threads: 1
-  debug_print: false
+  debug_print: true
 
   use_tree_search: true
   pruning_threshold: 0.5
