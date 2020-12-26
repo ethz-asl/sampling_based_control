@@ -47,7 +47,7 @@ struct multivariate_normal
 
     std::cout << "get sample" << std::endl;
 
-		return mean; //+ transform * Eigen::VectorXd{ mean.size() }.unaryExpr([&](auto x) { return dist(gen); });
+		return mean + transform * Eigen::VectorXd{ mean.size() }.unaryExpr([&](auto x) { return dist(gen); });
   }
 };
 

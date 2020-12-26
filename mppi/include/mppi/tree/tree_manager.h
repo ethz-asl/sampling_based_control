@@ -37,7 +37,7 @@ class TreeManager {
   using sampler_ptr = mppi::GaussianSampler::sampler_ptr;
   using expert_ptr = mppi::Expert::expert_ptr;
 
-  TreeManager(cost_ptr cost, dynamics_ptr dynamics, config_t config, sampler_ptr sampler, mppi::Expert *expert);
+  TreeManager(cost_ptr cost, const dynamics_ptr& dynamics, config_t config, sampler_ptr sampler, mppi::Expert *expert);
 
   ~TreeManager() = default;
 

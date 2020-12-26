@@ -17,7 +17,7 @@ Expert::Expert(config_t config, const dynamics_ptr& dynamics) {
 }
 
 Eigen::VectorXd Expert::get_sample(size_t expert_type, size_t step) {
-  return Eigen::VectorXd::Ones(dynamics_->get_input_dimension());experts_[expert_type]->get_sample(step);
+  return experts_[expert_type]->get_sample(step);
 }
 
 void Expert::update_expert(size_t expert_type, Eigen::MatrixXd mean) {

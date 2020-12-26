@@ -8,7 +8,7 @@
 
 #include "mppi/tree/tree_manager.h"
 
-TreeManager::TreeManager(cost_ptr cost, dynamics_ptr dynamics, config_t config, sampler_ptr sampler,  mppi::Expert *expert) : sampling_tree_(){
+TreeManager::TreeManager(cost_ptr cost, const dynamics_ptr& dynamics, config_t config, sampler_ptr sampler,  mppi::Expert *expert) : sampling_tree_(){
   cost_ = cost;
   dynamics_ = dynamics;
   config_ = config;
@@ -18,6 +18,9 @@ TreeManager::TreeManager(cost_ptr cost, dynamics_ptr dynamics, config_t config, 
   set_rollout_expert_mapping(0);
 
   init_threading(config_.threads);
+
+	tree_dynamics_v.resize(config_.rollouts);
+	tree_dynamics_next_v.resize(config_.rollouts);
 }
 
 void TreeManager::init_tree(){
@@ -33,10 +36,11 @@ void TreeManager::init_tree(){
 
   futures_.resize(tree_width_);
 
-  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(0, nullptr, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
+  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(0, nullptr, t0_internal_, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_));
 
   leaf_handles_.resize(tree_width_);
 	extendable_leaf_pos_.resize(tree_width_);
+
 	tree_dynamics_next_v.clear();
 
   for (size_t leaf_pos=0; leaf_pos < tree_width_; ++leaf_pos){
@@ -44,7 +48,7 @@ void TreeManager::init_tree(){
   }
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(0, root->parent_node_, t0_internal_, config_, cost_, x0_internal_, dynamics_->get_zero_input(x0_internal_)));
+    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(0, root->parent_node_, t0_internal_, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_));
   }
 }
 
@@ -134,10 +138,17 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 	}
 
 	extending_dynamics = tree_dynamics_v[extending_leaf_pos]->clone();
-	Eigen::VectorXd u = expert_->get_sample(expert_type, horizon_step);
+
+	Eigen::VectorXd u;
+	if (leaf_pos==0){
+		u = opt_roll_.uu[horizon_step];
+	}	else {
+		u = expert_->get_sample(expert_type, horizon_step);
+	}
+
 	Eigen::VectorXd x = extending_dynamics->step(u, config_.step_size);
 
-	tree_dynamics_next_v.push_back(extending_dynamics);
+	tree_dynamics_next_v[leaf_pos] = extending_dynamics;
 
 	return sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf->parent_node_, t_, config_, cost_, u, x));
 }
@@ -178,11 +189,13 @@ void TreeManager::transform_to_rollouts(){
     auto path_to_leaf = sampling_tree_.path_from_iterator(leaf_handles_[k], sampling_tree_.begin());
 		std::cout << path_to_leaf.size() << ", " << tree_target_depth_ << std::endl;
 
-    for (size_t t = 2; t < path_to_leaf.size(); ++t ){
-      std::vector<int> path_to_leaf_cut(path_to_leaf.begin(), path_to_leaf.begin()+t);
-      auto current_node = sampling_tree_.iterator_from_path(path_to_leaf_cut, sampling_tree_.begin());
+		size_t t = 0;
+    for (size_t node_depth = 2; node_depth < path_to_leaf.size(); ++node_depth ) {
+    	std::vector<int> path_to_leaf_cut(path_to_leaf.begin(), path_to_leaf.begin() + node_depth);
+			auto current_node = sampling_tree_.iterator_from_path(path_to_leaf_cut, sampling_tree_.begin());
 
-      // recompute noise
+			std::cout << current_node->uu_.size() << "-" << opt_roll_.uu[t].size() << " " << current_node->xx_.size() << std::endl;
+			// recompute noise
       auto nn = current_node->uu_ - opt_roll_.uu[t];
       auto uu = opt_roll_.uu[t];
       auto xx = current_node->xx_;
@@ -192,12 +205,8 @@ void TreeManager::transform_to_rollouts(){
 			rollouts_[k].uu[t] = uu;
 			rollouts_[k].nn[t] = nn;
 			rollouts_[k].cc(t) = c;
-			rollouts_[k].total_cost += c -
-																 config_.lambda * opt_roll_.uu[t].transpose() *
-																 sampler_->sigma_inv() *
-																 rollouts_[k].nn[t] +
-																 config_.lambda * opt_roll_.uu[t].transpose() *
-																 sampler_->sigma_inv() * opt_roll_.uu[t];
+			rollouts_[k].total_cost += c ;
+			t++;
 		}
 		rollouts_cost_[k] = rollouts_[k].total_cost;
   }
@@ -302,3 +311,4 @@ void TreeManager::set_rollout_expert_mapping(size_t mapping_type_input){
   }
 
 }
+//27149
