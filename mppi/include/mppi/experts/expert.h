@@ -24,6 +24,8 @@ class Expert {
   std::vector<int> expert_type_list_;
 
   Eigen::VectorXd get_sample(size_t expert_type, size_t step);
+  Eigen::MatrixXd get_sigma(size_t expert_type, size_t step);
+	Eigen::MatrixXd get_sigma_inv(size_t expert_type, size_t step);
 
   void update_expert(size_t expert_type, std::vector<Eigen::VectorXd> mean);
 

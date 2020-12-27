@@ -21,6 +21,14 @@ class NormExp : public ExpertBase{
     return expert_sampler_one_.get_sample();
   }
 
+	Eigen::MatrixXd get_sigma(size_t step) override{
+		return expert_sampler_one_.sigma();
+	}
+
+	Eigen::MatrixXd get_sigma_inv(size_t step) override{
+		return expert_sampler_one_.sigma_inv();
+	}
+
   void update_expert(std::vector<Eigen::VectorXd> mean) override{
     // do nothing
   }

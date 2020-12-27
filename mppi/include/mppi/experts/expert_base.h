@@ -21,6 +21,8 @@ class ExpertBase{
   ~ExpertBase() = default;
   virtual void update_expert(std::vector<Eigen::VectorXd> mean)=0;
   virtual Eigen::VectorXd get_sample(size_t step)=0;
+	virtual	Eigen::MatrixXd get_sigma(size_t step)=0;
+	virtual	Eigen::MatrixXd get_sigma_inv(size_t step)=0;
   char short_name_;
 
 protected:

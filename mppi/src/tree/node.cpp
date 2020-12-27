@@ -27,7 +27,7 @@
 //TODO don't do anything in node except the necessary, which is calc the statecost + cost of parent node (evt. pointer to parent node //
 // (pass only observation value, and action value)
 
-Node::Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x) {
+Node::Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x, Eigen::MatrixXd sigma, Eigen::MatrixXd sigma_inv) {
   cost_ = cost;
   config_ = config;
   parent_node_ = parent_node;
@@ -36,16 +36,17 @@ Node::Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig
 	uu_ = u;
 	nn_ = Eigen::VectorXd::Zero(1);
 
-  timestamp_ = std::chrono::high_resolution_clock::now();
-  public_name_ = std::to_string(timestamp_.time_since_epoch().count());
+	sigma_ = sigma;
+	sigma_inv_ = sigma_inv;
 
+  timestamp_ = std::chrono::high_resolution_clock::now();
   t_ = t;
 
 
   auto c_cum_parent = 0;
 	auto c_cum_discounted_parent = 0;
 	c_ = cost_->get_stage_cost(xx_, t_);
-	c_discounted = std::pow(config_.discount_factor, t) * this->c_;
+	c_discounted = std::pow(config_.discount_factor, step) * this->c_;
 
   if (parent_node != nullptr){
 		c_cum_parent = parent_node->c_cum_;
@@ -53,4 +54,6 @@ Node::Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig
   }
   c_cum_ = c_cum_parent + this->c_;
 	c_cum_discounted_ = c_cum_discounted_parent + this->c_discounted;
+
+	public_name_ = "Node_"+std::to_string(step)+"_"+std::to_string(t)+"__"+std::to_string(c_)+"__"+std::to_string(uu_[0]);//std::to_string(timestamp_.time_since_epoch().count());
 }

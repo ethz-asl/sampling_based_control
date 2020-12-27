@@ -10,11 +10,9 @@
 
 #include "mppi/utils/tree.h"
 
-#include <cstdio>
 #include <iostream>
 #include <future>
 #include <thread>
-#include <unistd.h>
 #include <chrono>
 #include <Eigen/Dense>
 

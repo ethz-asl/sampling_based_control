@@ -138,13 +138,14 @@ void PathIntegral::update_policy() {
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
       update_reference();
+
       if (config_.use_tree_search){
 				sample_trajectories_via_tree();
-      }
-      sample_trajectories();
-			if (config_.use_tree_search){
 				overwrite_rollouts();
-			}
+      } else {
+      	sample_trajectories();
+      }
+
       optimize();
       filter_input();
 
