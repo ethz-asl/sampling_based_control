@@ -51,8 +51,8 @@ struct SolverConfig {
   bool use_tree_search = false;
   double pruning_threshold = 0.5;
 
-  std::vector<size_t> expert_types = {0,1};
-  std::vector<size_t> expert_weights = {1,1};
+  std::vector<size_t> expert_types = {0};
+  std::vector<size_t> expert_weights = {1};
 
   bool init_from_file(const std::string& file);
  private:

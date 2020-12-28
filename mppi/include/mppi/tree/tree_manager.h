@@ -23,8 +23,6 @@
 #include "mppi/experts/expert.h"
 #include "mppi/controller/rollout.h"
 
-
-
 class TreeManager {
  public:
   using cost_ptr = mppi::CostBase::cost_ptr;
@@ -104,7 +102,6 @@ class TreeManager {
   mppi::Rollout opt_roll_;
 
   Eigen::ArrayXd rollouts_cost_;
-
 
 };
 

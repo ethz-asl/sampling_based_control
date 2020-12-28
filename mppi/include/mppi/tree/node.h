@@ -17,6 +17,7 @@
 #include "mppi/cost/cost_base.h"
 #include "mppi/dynamics/dynamics_base.h"
 #include "mppi/solver_config.h"
+#include "mppi/utils/tree.h"
 
 class Node{
  public:
@@ -24,16 +25,16 @@ class Node{
   using dynamics_ptr = mppi::DynamicsBase::dynamics_ptr;
   using config_t = mppi::SolverConfig;
 
-  using node_ptr = std::shared_ptr<Node>;
+  using node_handle = tree<Node>::iterator;
 
   Node() = default;
-  Node(size_t step, node_ptr parent_node, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u, Eigen::VectorXd x, Eigen::MatrixXd sigma, Eigen::MatrixXd sigma_inv);
+  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma, Eigen::MatrixXd sigma_inv);
   ~Node() = default;
 
   std::string public_name_;
   std::chrono::high_resolution_clock::time_point timestamp_;
 
-  node_ptr parent_node_;
+  node_handle parent_node_;
 
   double c_;
   double c_discounted;
@@ -43,8 +44,8 @@ class Node{
 	double t_;
 
 	Eigen::VectorXd xx_;
-	Eigen::VectorXd uu_;
-	Eigen::VectorXd nn_;
+	Eigen::VectorXd uu_applied_;
+	Eigen::VectorXd nn_applied_;
 
 	Eigen::MatrixXd sigma_;
 	Eigen::MatrixXd sigma_inv_;
