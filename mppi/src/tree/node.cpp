@@ -27,7 +27,7 @@
 //TODO don't do anything in node except the necessary, which is calc the statecost + cost of parent node (evt. pointer to parent node //
 // (pass only observation value, and action value)
 
-Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma, Eigen::MatrixXd sigma_inv) {
+Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma_inv) {
   cost_ = cost;
   config_ = config;
   parent_node_ = parent_node_handle;
@@ -36,7 +36,6 @@ Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::So
 	uu_applied_ = u_applied;
 	nn_applied_ = Eigen::VectorXd::Zero(1);
 
-	sigma_ = sigma;
 	sigma_inv_ = sigma_inv;
 
   timestamp_ = std::chrono::high_resolution_clock::now();

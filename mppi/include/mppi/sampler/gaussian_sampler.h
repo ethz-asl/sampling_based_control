@@ -16,7 +16,6 @@ class GaussianSampler {
 
   GaussianSampler() = default;
   explicit GaussianSampler(size_t n) : n_(n), solver_(n) {
-		mean_ = Eigen::VectorXd::Zero(n_);
     sigma_ = Eigen::MatrixXd::Identity(n_, n_);
     sigma_inv_ = Eigen::MatrixXd::Identity(n_, n_);
     dist_ = std::make_unique<multivariate_normal>(sigma_);
@@ -47,15 +46,6 @@ class GaussianSampler {
     }
     dist_->set_covariance(sigma_);
   }
-
-	template<typename T>
-	void set_mean(const T &s) {
-		assert(s.size() == n_);
-		for (size_t i = 0; i < n_; i++) {
-			mean_(i) = s[i];
-		}
-		dist_->set_mean(mean_);
-	}
 
   void get_sample(DynamicsBase::input_t& sample) {sample = (*dist_)(); }
 
@@ -93,7 +83,6 @@ class GaussianSampler {
 
  private:
   size_t n_;
-	Eigen::VectorXd mean_;
   Eigen::MatrixXd sigma_;
   Eigen::MatrixXd sigma_inv_;
   std::shared_ptr<multivariate_normal> dist_;

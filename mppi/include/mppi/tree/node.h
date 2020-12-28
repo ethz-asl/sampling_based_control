@@ -28,7 +28,7 @@ class Node{
   using node_handle = tree<Node>::iterator;
 
   Node() = default;
-  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma, Eigen::MatrixXd sigma_inv);
+  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma_inv);
   ~Node() = default;
 
   std::string public_name_;
@@ -47,7 +47,6 @@ class Node{
 	Eigen::VectorXd uu_applied_;
 	Eigen::VectorXd nn_applied_;
 
-	Eigen::MatrixXd sigma_;
 	Eigen::MatrixXd sigma_inv_;
 
  private:

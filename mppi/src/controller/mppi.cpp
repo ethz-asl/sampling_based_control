@@ -39,7 +39,6 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
       expert_(config_, dynamics_),
       tree_manager_(cost_, dynamics_, config_, sampler_, &expert_){
 
-
   init_data();
   init_filter();
   init_threading();
@@ -127,6 +126,8 @@ void PathIntegral::init_tree_manager() {
 }
 
 void PathIntegral::update_policy() {
+	start_time_ = std::chrono::high_resolution_clock::now();
+
   if (!observation_set_) {
     log_warning_throttle(1.0,
                          "Observation has never been set. Dropping update");
@@ -158,9 +159,16 @@ void PathIntegral::update_policy() {
     }
     update_experts();
     swap_policies();
+		time_it();
 
     if (renderer_) renderer_->render(rollouts_);
   }
+}
+
+void PathIntegral::time_it(){
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start_time_).count();
+	std::cout << "Time since optimization start: " << duration << "[μs], " << duration/1000000.0 << "[s], " << 1/(duration/1000000.0) << "[Hz]" << std::endl;
 }
 
 void PathIntegral::set_observation(const observation_t& x, const double t) {

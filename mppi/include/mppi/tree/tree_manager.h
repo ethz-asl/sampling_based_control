@@ -41,7 +41,7 @@ class TreeManager {
 
   void time_it();
 
-  void build_new_tree(std::vector<dynamics_ptr> tree_dynamics_v, const observation_t x0_internal, double t0_internal, mppi::Rollout opt_roll);
+  void build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_v, const observation_t& x0_internal, double t0_internal, mppi::Rollout opt_roll);
 
 	std::vector<mppi::Rollout> get_rollouts();
 	Eigen::ArrayXd get_rollouts_cost();
@@ -80,13 +80,11 @@ class TreeManager {
 
   void transform_to_rollouts();
 
-  void reset();
-
   double t_;
 
-  int random_uniform_int(int v_min, int v_max);
+  static int random_uniform_int(int v_min, int v_max);
 
-  double random_uniform_double(double v_min, double v_max);
+  static double random_uniform_double(double v_min, double v_max);
 
   std::vector<size_t> extendable_leaf_pos_;
 

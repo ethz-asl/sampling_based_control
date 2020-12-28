@@ -80,6 +80,8 @@ class PathIntegral {
    */
 	void init_tree_manager();
 
+	void time_it();
+
  public:
   /**
    * @brief Filter the input according to chosen filter
@@ -331,7 +333,7 @@ class PathIntegral {
   std::vector<dynamics_ptr>
       tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts)
 
-
+	std::chrono::high_resolution_clock::time_point start_time_;
 
 
 };

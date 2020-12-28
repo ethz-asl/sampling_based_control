@@ -1,9 +1,9 @@
 solver:
-  rollouts: 10
+  rollouts: 20
   lambda: 0.001 #0.001
   h: 1.0
   step_size: 0.01
-  horizon: 0.5
+  horizon: 1.0
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -23,7 +23,7 @@ solver:
   debug_print: true
 
   use_tree_search: true
-  pruning_threshold: 1
+  pruning_threshold: 0.5
 
 
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]

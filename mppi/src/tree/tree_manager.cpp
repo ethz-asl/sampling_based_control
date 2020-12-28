@@ -24,7 +24,7 @@ void TreeManager::init_threading(size_t num_threads) {
 	pool_ = std::make_unique<ThreadPool>(num_threads);
 }
 
-void TreeManager::build_new_tree(std::vector<dynamics_ptr> tree_dynamics_v, const observation_t x0_internal, double t0_internal, mppi::Rollout opt_roll) {
+void TreeManager::build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_v, const observation_t& x0_internal, double t0_internal, mppi::Rollout opt_roll) {
 	this->tree_dynamics_v_ = tree_dynamics_v;
 	this->tree_dynamics_v_next_ = tree_dynamics_v;
 
@@ -35,11 +35,12 @@ void TreeManager::build_new_tree(std::vector<dynamics_ptr> tree_dynamics_v, cons
 	init_tree();
 	grow_tree();
 
-	if (config_.debug_print){
-		print_tree();
-	}
+//	if (config_.debug_print){
+//		print_tree();
+//	}
 
 	transform_to_rollouts();
+	time_it();
 }
 
 void TreeManager::init_tree(){
@@ -60,14 +61,14 @@ void TreeManager::init_tree(){
 	rollouts_cost_ = Eigen::ArrayXd::Zero(config_.rollouts);
 
 	// add root
-  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(0, nullptr, 0, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_, Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension()),Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension())));
+  tree<Node>::iterator root = sampling_tree_.insert(sampling_tree_.begin(), Node(0, nullptr, 0, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_,Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension())));
 
   // add initial nodes
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(0, root, t_, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_,Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension()),Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension())));
+    leaf_handles_[leaf_pos] = sampling_tree_.append_child(root, Node(0, root, t_, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_,Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension())));
   }
 
-  // make sure all inital nodes are extended in first iteration
+  // make sure all initial nodes are extended in first iteration
 	for (size_t leaf_pos=0; leaf_pos < tree_width_; ++leaf_pos){
 		extendable_leaf_pos_.push_back(leaf_pos);
 	}
@@ -75,12 +76,12 @@ void TreeManager::init_tree(){
 
 void TreeManager::grow_tree() {
 	for (int i = 1; i < tree_target_depth_; ++i) {
-		std::cout << "adding depth level: " << std::to_string(i) <<std::endl;
+//		std::cout << "adding depth level: " << std::to_string(i) <<std::endl;
 		add_depth_level(i);
-		std::cout << "evaluating depth level: " << std::to_string(i) <<std::endl;
+//		std::cout << "evaluating depth level: " << std::to_string(i) <<std::endl;
 		eval_depth_level();
 	}
-	std::cout << "tree is fully grown!" << std::endl;
+//	std::cout << "tree is fully grown!" << std::endl;
 }
 
 void TreeManager::add_depth_level(size_t horizon_step) {
@@ -94,7 +95,7 @@ void TreeManager::add_depth_level(size_t horizon_step) {
 		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2), horizon_step, leaf_pos);
 	}
 
-	//wait untill all threads have finished processing the tree depth
+	//wait until all threads have finished processing the tree depth
 	for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
 		futures_[leaf_pos].wait();
 	}
@@ -116,15 +117,14 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 	tree<Node>::iterator extending_leaf;
 	dynamics_ptr extending_dynamics;
 
-	// printing stuff
-	auto myid = std::this_thread::get_id();
-	std::stringstream ss;
-	ss << myid;
-	std::string thread_id = ss.str();
-
-	auto string_output = "thread: "+ thread_id + "  horizon step: " +  std::to_string(horizon_step) + "  rollout: " + std::to_string(leaf_pos);
-	std::cout << string_output << std::endl;
-	// printing stuff end
+//	// printing stuff
+//	std::stringstream ss;
+//	ss << std::this_thread::get_id();
+//	std::string thread_id = ss.str();
+//
+//	auto string_output = "thread: "+ thread_id + "  horizon step: " +  std::to_string(horizon_step) + "  rollout: " + std::to_string(leaf_pos);
+//	std::cout << string_output << std::endl;
+//	// printing stuff end
 
 	// decide on experts
 	expert_type = rollout_expert_map_[leaf_pos];
@@ -143,15 +143,12 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 	extending_dynamics = tree_dynamics_v_[extending_leaf_pos]->clone();
 
 	Eigen::VectorXd u;
-	Eigen::MatrixXd sigma;
 	Eigen::MatrixXd sigma_inv;
 	if (leaf_pos==0){
 		u = opt_roll_.uu[horizon_step-1];
-		sigma = Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension());
 		sigma_inv = Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(), dynamics_->get_input_dimension());
 	}	else {
 		u = expert_->get_sample(expert_type, horizon_step-1);
-		sigma = expert_->get_sigma(expert_type, horizon_step-1);
 		sigma_inv = expert_->get_sigma_inv(expert_type, horizon_step-1);
 	}
 
@@ -163,7 +160,7 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 
 //	std::unique_lock<std::mutex> lock(tree_mutex_);
 
-	return sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x, sigma, sigma_inv));
+	return sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x, sigma_inv));
 }
 
 void TreeManager::eval_depth_level(){
@@ -220,37 +217,37 @@ void TreeManager::transform_to_rollouts(){
   for (size_t k = 0; k < tree_width_; ++k){
     auto path_to_leaf = sampling_tree_.path_from_iterator(leaf_handles_[k], sampling_tree_.begin());
 
-		std::cout << path_to_leaf.size() << std::endl;
-		for (int i = 0; i < path_to_leaf.size(); ++i) {
-			std::cout << path_to_leaf[i];
-			if (i!=path_to_leaf.size()-1){
-				std::cout <<  "-";
-			}
-		}
+//		std::cout << path_to_leaf.size() << std::endl;
+//		for (int i = 0; i < path_to_leaf.size(); ++i) {
+//			std::cout << path_to_leaf[i];
+//			if (i!=path_to_leaf.size()-1){
+//				std::cout <<  "-";
+//			}
+//		}
+//		std::cout << std::endl;
 
-		std::cout << std::endl;
     for (size_t horizon_step = 0; horizon_step < tree_target_depth_; ++horizon_step) {
 
     	std::vector<int> path_to_leaf_cut_current(path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 2);
 			std::vector<int> path_to_leaf_cut_next(path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 3);
 
-			std::cout << path_to_leaf_cut_current.size() << std::endl;
-			for (int i = 0; i < path_to_leaf_cut_current.size(); ++i) {
-				std::cout << path_to_leaf_cut_current[i];
-				if (i!=path_to_leaf_cut_current.size()-1){
-					std::cout <<  "-";
-				}
-			}
-			std::cout << std::endl;
-
-			std::cout << path_to_leaf_cut_next.size() << std::endl;
-			for (int i = 0; i < path_to_leaf_cut_next.size(); ++i) {
-				std::cout << path_to_leaf_cut_next[i];
-				if (i!=path_to_leaf_cut_next.size()-1){
-					std::cout <<  "-";
-				}
-			}
-			std::cout << std::endl;
+//			std::cout << path_to_leaf_cut_current.size() << std::endl;
+//			for (int i = 0; i < path_to_leaf_cut_current.size(); ++i) {
+//				std::cout << path_to_leaf_cut_current[i];
+//				if (i!=path_to_leaf_cut_current.size()-1){
+//					std::cout <<  "-";
+//				}
+//			}
+//			std::cout << std::endl;
+//
+//			std::cout << path_to_leaf_cut_next.size() << std::endl;
+//			for (int i = 0; i < path_to_leaf_cut_next.size(); ++i) {
+//				std::cout << path_to_leaf_cut_next[i];
+//				if (i!=path_to_leaf_cut_next.size()-1){
+//					std::cout <<  "-";
+//				}
+//			}
+//			std::cout << std::endl;
 
 
 			auto current_node = sampling_tree_.iterator_from_path(path_to_leaf_cut_current, sampling_tree_.begin());
@@ -269,14 +266,15 @@ void TreeManager::transform_to_rollouts(){
 			auto uu = opt_roll_.uu[horizon_step];
 
 			auto nn = dynamics_->get_zero_input(uu);
+			Eigen::MatrixXd sigma_inv = Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(),dynamics_->get_input_dimension());
       if (horizon_step!=tree_target_depth_-1) {
 				nn = next_node->uu_applied_ - opt_roll_.uu[horizon_step];
+				sigma_inv = next_node->sigma_inv_;
 			}
 
 //      auto sigma = next_node->sigma_;
-//      auto sigma_inv = next_node->sigma_inv_;
 
-      std::cout<< "rollout: "<< k <<" node: " << horizon_step << " processed!"<<std::endl;
+//      std::cout<< "rollout: "<< k <<" node: " << horizon_step << " processed!"<<std::endl;
 
 			if (std::isnan(c)) {
 				std::cout << "COST IS NAN!" << std::endl;
@@ -288,21 +286,19 @@ void TreeManager::transform_to_rollouts(){
 			rollouts_[k].uu[horizon_step] = uu; // opt_roll_.uu[0];
 			rollouts_[k].nn[horizon_step] = nn; // node_t0+1*timestep
 			rollouts_[k].cc(horizon_step) = c; 	//
-			rollouts_[k].total_cost += c ;
-
-/*					-
-																	config_.lambda * opt_roll_.uu[t].transpose() *
-																		sigma_inv *	rollouts_[k].nn[t] +
-																 	config_.lambda * opt_roll_.uu[t].transpose() *
-																		sigma_inv * opt_roll_.uu[t];*/
+			rollouts_[k].total_cost += c -
+																	config_.lambda * opt_roll_.uu[horizon_step].transpose() *
+																		sigma_inv *	rollouts_[k].nn[horizon_step] +
+																 	config_.lambda * opt_roll_.uu[horizon_step].transpose() *
+																		sigma_inv * opt_roll_.uu[horizon_step];
 		}
 
-    for (size_t horizon_step_print = 0; horizon_step_print < tree_target_depth_; ++horizon_step_print){
-    	std::cout << "r-> hs: "<< horizon_step_print << " t: "<< rollouts_[k].tt[horizon_step_print] << " xx_0: "<< rollouts_[k].xx[horizon_step_print][0] << " uu_0: "<< rollouts_[k].uu[horizon_step_print][0] << " nn_0: "<< rollouts_[k].nn[horizon_step_print][0] << " c: "<<rollouts_[k].cc[horizon_step_print]<< std::endl;
-    }
+//    for (size_t horizon_step_print = 0; horizon_step_print < tree_target_depth_; ++horizon_step_print){
+//    	std::cout << "r-> hs: "<< horizon_step_print << " t: "<< rollouts_[k].tt[horizon_step_print] << " xx_0: "<< rollouts_[k].xx[horizon_step_print][0] << " uu_0: "<< rollouts_[k].uu[horizon_step_print][0] << " nn_0: "<< rollouts_[k].nn[horizon_step_print][0] << " c: "<<rollouts_[k].cc[horizon_step_print]<< std::endl;
+//    }
 
 		rollouts_cost_[k] = rollouts_[k].total_cost;
-    std::cout << rollouts_cost_[k] << std::endl;
+//    std::cout << rollouts_cost_[k] << std::endl;
   }
 	std::cout << "Tranform to rollouts done" << std::endl;
 }
