@@ -12,8 +12,16 @@ Expert::Expert(config_t config, const dynamics_ptr& dynamics) {
   config_ = config;
   dynamics_ = dynamics;
 
-  experts_[0] = new NormExp('N', config_, dynamics_);
-  experts_[1] = new ImpExp('I',config_, dynamics_);
+  assert(config_.expert_types.size() == config_.expert_weights.size());
+
+	for (auto & expert_type : config_.expert_types) {
+		switch (expert_type) {
+			case 0:
+				experts_[expert_type] = new NormExp('N', config_, dynamics_);
+			case 1:
+				experts_[expert_type] = new ImpExp('I',config_, dynamics_);
+		}
+	}
 }
 
 Eigen::VectorXd Expert::get_sample(size_t expert_type, size_t step) {

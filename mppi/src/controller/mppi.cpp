@@ -136,6 +136,8 @@ void PathIntegral::update_policy() {
   } else {
     copy_observation();
 
+		update_experts();
+
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
       update_reference();
@@ -157,7 +159,6 @@ void PathIntegral::update_policy() {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
     }
-    update_experts();
     swap_policies();
 		time_it();
 

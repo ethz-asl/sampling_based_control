@@ -8,6 +8,8 @@
 
 #include "mppi/tree/node.h"
 
+#include <utility>
+
 //Node::Node(double t, double c_parent, dynamics_ptr dynamics, const mppi::SolverConfig& config, cost_ptr cost) {
 //  cost_ = cost;
 //  config_ = config;
@@ -27,20 +29,18 @@
 //TODO don't do anything in node except the necessary, which is calc the statecost + cost of parent node (evt. pointer to parent node //
 // (pass only observation value, and action value)
 
-Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma_inv) {
-  cost_ = cost;
+Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost,const Eigen::VectorXd& u_applied, const Eigen::VectorXd& x, const Eigen::MatrixXd& sigma_inv, size_t expert_type_applied) {
+  cost_ = std::move(cost);
   config_ = config;
   parent_node_ = parent_node_handle;
 
 	xx_ = x;
 	uu_applied_ = u_applied;
-	nn_applied_ = Eigen::VectorXd::Zero(1);
 
 	sigma_inv_ = sigma_inv;
+	expert_type_applied_ = expert_type_applied;
 
-  timestamp_ = std::chrono::high_resolution_clock::now();
   t_ = t;
-
 
   auto c_cum_parent = 0;
 	auto c_cum_discounted_parent = 0;
@@ -54,5 +54,6 @@ Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::So
   c_cum_ = c_cum_parent + this->c_;
 	c_cum_discounted_ = c_cum_discounted_parent + this->c_discounted;
 
-	public_name_ = "Node_"+std::to_string(step)+"_"+std::to_string(t_)+"__C-"+std::to_string(c_)+"__X0-"+std::to_string(xx_[0])+"__U0-"+std::to_string(uu_applied_[0]);
+	public_name_ = "Node_";
+	public_name_ = "Node_"+std::to_string(step)+" T: "+std::to_string(t_)+" C: "+std::to_string(c_)+" X0: "+std::to_string(xx_[0])+" U0: "+std::to_string(uu_applied_[0])+" E: "+std::to_string(expert_type_applied_);
 }

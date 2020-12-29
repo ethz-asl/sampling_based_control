@@ -18,6 +18,11 @@ enum InputFilterType : char {
   SAVITZKY_GOLEY = 1,
 };
 
+enum ExpertTypes : char {
+	NORM = 0,
+	IMP = 1,
+};
+
 struct SolverConfig {
 
   size_t rollouts = 1;
@@ -51,8 +56,8 @@ struct SolverConfig {
   bool use_tree_search = false;
   double pruning_threshold = 0.5;
 
-  std::vector<size_t> expert_types = {0};
-  std::vector<size_t> expert_weights = {1};
+  std::vector<ExpertTypes> expert_types = {ExpertTypes::NORM, ExpertTypes::IMP};
+	Eigen::VectorXd expert_weights;
 
   bool init_from_file(const std::string& file);
  private:
@@ -88,6 +93,17 @@ std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(const YA
     v_eigen(i) = v[i];
 
   return v_eigen;
+};
+
+template<> inline
+std::optional<std::vector<size_t>> SolverConfig::parse_key<std::vector<size_t>>(const YAML::Node& node,
+																																				const std::string &key, bool quiet) {
+	if (!node[key]){
+		std::cout << "Could not find entry: " << key << std::endl;
+		if (!quiet) parsing_error = true;
+		return {};
+	}
+	return node[key].as<std::vector<size_t>>();
 };
 
 template<typename T>

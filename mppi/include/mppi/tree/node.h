@@ -28,11 +28,10 @@ class Node{
   using node_handle = tree<Node>::iterator;
 
   Node() = default;
-  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, Eigen::VectorXd u_applied, Eigen::VectorXd x, Eigen::MatrixXd sigma_inv);
+  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, const Eigen::VectorXd& u_applied, const Eigen::VectorXd& x, const Eigen::MatrixXd& sigma_inv, size_t expert_type_applied);
   ~Node() = default;
 
   std::string public_name_;
-  std::chrono::high_resolution_clock::time_point timestamp_;
 
   node_handle parent_node_;
 
@@ -45,9 +44,10 @@ class Node{
 
 	Eigen::VectorXd xx_;
 	Eigen::VectorXd uu_applied_;
-	Eigen::VectorXd nn_applied_;
 
 	Eigen::MatrixXd sigma_inv_;
+
+	size_t expert_type_applied_;
 
  private:
   config_t config_;

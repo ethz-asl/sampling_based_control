@@ -25,13 +25,16 @@ solver:
   use_tree_search: true
   pruning_threshold: 0.5
 
+#  expert_types: {0, 1}
+  expert_weights: [0.5, 0.5]
+
 
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
 linear_weight: 10.0
 angular_weight: 1.0
 obstacle_radius: 0.15
 
-policy_update_rate: 0.0  # execute as fast as possible
+policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0

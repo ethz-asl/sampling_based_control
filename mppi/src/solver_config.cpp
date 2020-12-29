@@ -55,7 +55,10 @@ bool SolverConfig::init_from_file(const std::string &file) {
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
   use_tree_search = parse_key_quiet<bool>(solver_options, "use_tree_search").value_or(use_tree_search);
 	pruning_threshold= parse_key_quiet<double>(solver_options, "pruning_threshold").value_or(pruning_threshold);
-  //clang-format on
+//	expert_types		= (ExpertTypes)parse_key_quiet<std::vector<size_t>>(solver_options, "expert_types").value_or(expert_types);
+	expert_weights	= parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
+	expert_types 		= {NORM, IMP};
+	//clang-format on
 
   if (parsing_error) return false;
   std::cout << "Solver options correctly parsed from: " << file << std::endl;

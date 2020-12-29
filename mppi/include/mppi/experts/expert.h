@@ -35,6 +35,7 @@ class Expert {
 
   // create experts
   std::map<size_t, ExpertBase*> experts_;
+
 };
 
 }

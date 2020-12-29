@@ -19,6 +19,7 @@ class ExpertBase{
 
   ExpertBase(char short_name, config_t config, dynamics_ptr dynamics){ short_name_ = short_name; config_ = config; dynamics_ = dynamics;};
   ~ExpertBase() = default;
+
   virtual void update_expert(std::vector<Eigen::VectorXd> mean)=0;
   virtual Eigen::VectorXd get_sample(size_t step)=0;
 
