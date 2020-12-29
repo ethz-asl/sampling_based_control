@@ -175,9 +175,9 @@ void TreeManager::eval_depth_level(){
 	double depth_min_cost = std::numeric_limits<double>::max();
 
 	for (int rollout = 0; rollout < config_.rollouts; ++rollout) {
-		auto active_rollout = leaf_handles_[rollout];
-		if (active_rollout->c_cum_ < depth_min_cost) {
-			depth_min_cost = active_rollout->c_cum_;
+		auto active_leaf = leaf_handles_[rollout];
+		if (active_leaf->c_cum_ < depth_min_cost) {
+			depth_min_cost = active_leaf->c_cum_;
 		}
 	}
 
@@ -236,7 +236,6 @@ void TreeManager::transform_to_rollouts(){
     for (size_t horizon_step = 0; horizon_step < tree_target_depth_; ++horizon_step) {
 
     	std::vector<int> path_to_leaf_cut_current(path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 2);
-			std::vector<int> path_to_leaf_cut_next(path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 3);
 
 //			std::cout << path_to_leaf_cut_current.size() << std::endl;
 //			for (int i = 0; i < path_to_leaf_cut_current.size(); ++i) {
@@ -261,9 +260,6 @@ void TreeManager::transform_to_rollouts(){
 
 			// Dangerous HACK!
 			auto next_node = sampling_tree_.iterator_from_path(path_to_leaf_cut_current, sampling_tree_.begin());
-			if (horizon_step!=tree_target_depth_-1) {
-				next_node = sampling_tree_.iterator_from_path(path_to_leaf_cut_next, sampling_tree_.begin());
-			}
 
 			// recompute noise
 
@@ -274,13 +270,6 @@ void TreeManager::transform_to_rollouts(){
 
 			Eigen::MatrixXd nn = current_node->uu_applied_ - opt_roll_.uu[horizon_step];
 			Eigen::MatrixXd sigma_inv = current_node->sigma_inv_;
-
-      if (horizon_step!=tree_target_depth_-1) {
-				nn = next_node->uu_applied_ - opt_roll_.uu[horizon_step];
-				sigma_inv = next_node->sigma_inv_;
-			}
-
-//      auto sigma = next_node->sigma_;
 
 //      std::cout<< "rollout: "<< k <<" node: " << horizon_step << " processed!"<<std::endl;
 
