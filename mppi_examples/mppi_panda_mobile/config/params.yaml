@@ -1,5 +1,5 @@
 solver:
-  rollouts: 10
+  rollouts: 20
   lambda: 0.001 #0.001
   h: 1.0
   step_size: 0.01
@@ -19,7 +19,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 12
   debug_print: true
 
   use_tree_search: true

@@ -95,17 +95,6 @@ std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(const YA
   return v_eigen;
 };
 
-template<> inline
-std::optional<std::vector<size_t>> SolverConfig::parse_key<std::vector<size_t>>(const YAML::Node& node,
-																																				const std::string &key, bool quiet) {
-	if (!node[key]){
-		std::cout << "Could not find entry: " << key << std::endl;
-		if (!quiet) parsing_error = true;
-		return {};
-	}
-	return node[key].as<std::vector<size_t>>();
-};
-
 template<typename T>
 std::optional<T> SolverConfig::parse_key_quiet(const YAML::Node& node, const std::string &key) {
   return parse_key<T>(node, key, true);

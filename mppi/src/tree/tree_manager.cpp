@@ -165,8 +165,7 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 
 	tree_dynamics_v_next_[leaf_pos] = extending_dynamics;
 
-//	std::unique_lock<std::mutex> lock(tree_mutex_);
-
+	std::unique_lock<std::shared_mutex> lock(tree_mutex_);
 	return sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x, sigma_inv, expert_type));
 }
 
@@ -300,6 +299,8 @@ void TreeManager::transform_to_rollouts(){
 
 		rollouts_cost_[k] = rollouts_[k].total_cost;
 //    std::cout << rollouts_cost_[k] << std::endl;
+
+//		std::unique_lock<std::shared_mutex> lock(tree_mutex_);
   }
 	std::cout << "Tranform to rollouts done" << std::endl;
 }

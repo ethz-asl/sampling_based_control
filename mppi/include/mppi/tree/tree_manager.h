@@ -15,6 +15,7 @@
 #include <thread>
 #include <chrono>
 #include <Eigen/Dense>
+#include <shared_mutex>
 
 #include "mppi/utils/tree.h"
 #include "node.h"
@@ -101,6 +102,8 @@ class TreeManager {
 	mppi::Rollout opt_roll_internal_;
 
   Eigen::ArrayXd rollouts_cost_;
+
+  std::shared_mutex tree_mutex_;
 
 };
 
