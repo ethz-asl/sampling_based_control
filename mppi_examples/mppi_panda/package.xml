@@ -17,7 +17,6 @@
 
     <!--  Dependencies required for the ros control framework-->
     <depend>robot_control</depend>
-    <depend>robot_control_ros</depend>
     <depend>robot_control_assets</depend>
     <depend>controller_interface</depend>
     <depend>franka_hw</depend>

@@ -38,9 +38,6 @@
     <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
 
-    <!-- Load PD gains for the low level controllers -->
-    <param name="gazebo_ros_control" type="yaml" textfile="$(find robot_control_ros)/config/gazebo_ros_control.yml"/>
-
     <!-- Load Gazebo world -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <env name="GAZEBO_MODEL_PATH" value="$(arg model_path)"/>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="plot_cost" default="true"/>
-    <arg name="plot_input" default="true"/>
+    <arg name="plot_cost" default="false"/>
+    <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
     <arg name="joint_state_topic" default="/joint_states"/>
     <arg name="tf_prefix" default=""/>
@@ -26,8 +26,8 @@
               output="screen"/>
     </group>
 
-    <!--        Interactive marker to command the end effector-->
-    <node name="interactive_reference" pkg="robot_control_ros" type="interactive_marker.py" output="screen">
+    <!--        Interactive marker to command the end effector--> 
+    <node name="interactive_reference" pkg="mppi_panda" type="interactive_marker.py" output="screen">
         <param name="marker_server_name" value="reference_marker_server"/>
         <param name="subscribe_initial_pose" value="true"/>
         <param name="initial_pose_topic" value="/end_effector"/>
@@ -37,7 +37,7 @@
 
     <!--    Interactive marker for the end effector obstacle -->
     <group if="$(arg enable_obstacle)">
-        <node name="interactive_obstacle" pkg="robot_control_ros" type="interactive_marker.py" output="screen">
+        <node name="interactive_obstacle" pkg="mppi_panda" type="interactive_marker.py" output="screen">
             <param name="marker_server_name" value="obstacle_marker_server"/>
             <param name="subscribe_initial_pose" value="false"/>
             <param name="frame_id" value="world"/>
