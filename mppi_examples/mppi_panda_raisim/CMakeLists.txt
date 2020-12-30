@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(mppi_panda_raisim)
 
-set(RAISIM_LIB_PATH "/home/giuseppe/raisim_ws/build")
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${RAISIM_LIB_PATH})
-
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -19,9 +16,6 @@ set(PACKAGE_DEPENDENCIES
         mppi
         mppi_ros
         roslib
-        robot_control
-        robot_control_ros
-        robot_control_assets
         roscpp
         )
 
@@ -30,14 +24,14 @@ catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-        DEPENDS pinocchio)
+        DEPENDS pinocchio raisim) 
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${PINOCCHIO_LIBRARIES})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} ${PINOCCHIO_LIBRARIES})
 
 add_executable(panda_raisim_control src/nodes/panda_control.cpp)
 target_link_libraries(panda_raisim_control ${PROJECT_NAME} ${catkin_LIBRARIES})
