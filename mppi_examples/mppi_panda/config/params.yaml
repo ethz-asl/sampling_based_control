@@ -9,7 +9,7 @@ dynamics:
 solver:
   rollouts: 20                  # number of rollouts
   lambda: 0.001 #0.001         # scaling on input/noise cost
-  h: 1.0                       # scaling on exponential cost for computing rollouts' weights
+  h: 10.0                       # scaling on exponential cost for computing rollouts' weights
   step_size: 0.01               # simulation step size
   horizon: 1.0                  # time horizon (secs)
 
@@ -18,9 +18,9 @@ solver:
   filtering: true               # if to use cost ratio to cuf off some rollouts
   substeps: 1                   # number of optimization substeps (never investigated)
 
-  filter_type: 1                # currently only savitzky-golay (1) or none (0)
-  filter_order: 5               # polynomial used to approximate the input sequence
-  filter_window: 30             # window length
+  filter_type: 0                # currently only savitzky-golay (1) or none (0)
+  filter_order: 3               # polynomial used to approximate the input sequence #5
+  filter_window: 12             # window length #30
 
   adaptive_sampling: false      # untested -- leave
   input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]  # additive noise variance per input channel
@@ -35,7 +35,7 @@ solver:
   debug_print: false            # debug print
 
   use_tree_search: true
-  pruning_threshold: 0.001      # check with 9999999
+  pruning_threshold: 0.01      # check with 9999999
   #  expert_types: {NORM, IMP}
   expert_weights: [ 0.5, 0.5 ]
   log_data: true

@@ -80,7 +80,7 @@ void TreeManager::init_tree(){
 }
 
 void TreeManager::grow_tree() {
-	for (int i = 1; i < tree_target_depth_; ++i) {
+	for (int i = 1; i <= tree_target_depth_; ++i) {
 //		std::cout << "adding depth level: " << std::to_string(i) <<std::endl;
 		add_depth_level(i);
 //		std::cout << "evaluating depth level: " << std::to_string(i) <<std::endl;
@@ -236,7 +236,7 @@ void TreeManager::transform_to_rollouts(){
 
     for (size_t horizon_step = 0; horizon_step < tree_target_depth_; ++horizon_step) {
 
-    	std::vector<int> path_to_leaf_cut_current(path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 2);
+    	std::vector<int> path_to_leaf_cut_current(path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 3);
 
 //			std::cout << path_to_leaf_cut_current.size() << std::endl;
 //			for (int i = 0; i < path_to_leaf_cut_current.size(); ++i) {
@@ -258,10 +258,6 @@ void TreeManager::transform_to_rollouts(){
 
 
 			auto current_node = sampling_tree_.iterator_from_path(path_to_leaf_cut_current, sampling_tree_.begin());
-
-			// Dangerous HACK!
-			auto next_node = sampling_tree_.iterator_from_path(path_to_leaf_cut_current, sampling_tree_.begin());
-
 			// recompute noise
 
 			auto t = current_node->t_;

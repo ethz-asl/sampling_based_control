@@ -10,7 +10,7 @@ solver:
   filtering: false
   substeps: 1
 
-  filter_type: 1
+  filter_type: 0
   filter_order: 2
   filter_window: 30
 
@@ -22,7 +22,7 @@ solver:
   threads: 12
   debug_print: false
 
-  use_tree_search: false
+  use_tree_search: true
   pruning_threshold: 0.01
 
 #  expert_types: {NORM, IMP}

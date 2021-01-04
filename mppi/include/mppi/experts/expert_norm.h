@@ -9,7 +9,7 @@
 class NormExp : public ExpertBase{
  public:
   NormExp(char short_name, config_t config, dynamics_ptr dynamics): ExpertBase(short_name, config, dynamics), expert_sampler_one_(dynamics_->get_input_dimension()){
-		expert_sampler_one_.set_covariance(std::vector<double> {0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05});
+		expert_sampler_one_.set_covariance(Eigen::VectorXd::Ones(dynamics_->get_input_dimension())*0.05);
   }
 
   ~NormExp() = default;
