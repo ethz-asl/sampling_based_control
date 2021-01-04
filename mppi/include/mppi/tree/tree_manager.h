@@ -58,7 +58,7 @@ class TreeManager {
   std::unique_ptr<ThreadPool> pool_;
 
   std::vector<dynamics_ptr> tree_dynamics_v_;
-  std::vector<dynamics_ptr> tree_dynamics_v_next_;
+  std::vector<dynamics_ptr> tree_dynamics_v_shared_;
 
   void init_tree();
   void grow_tree();
@@ -67,7 +67,7 @@ class TreeManager {
 
   void eval_depth_level();
 
-  tree<Node>::iterator add_node(size_t horizon_step, size_t leaf_pos);
+  tree<Node>::iterator add_node(size_t horizon_step, size_t leaf_pos, dynamics_ptr node_dynamics);
 
   std::size_t tree_width_;
   std::size_t tree_target_depth_;

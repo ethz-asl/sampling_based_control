@@ -55,5 +55,5 @@ Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::So
 	c_cum_discounted_ = c_cum_discounted_parent + this->c_discounted;
 
 	public_name_ = "Node_";
-	public_name_ = "Node_"+std::to_string(step)+" T: "+std::to_string(t_)+" C: "+std::to_string(c_)+" X0: "+std::to_string(xx_[0])+" U0: "+std::to_string(uu_applied_[0])+" E: "+std::to_string(expert_type_applied_);
+//	public_name_ = "Node_"+std::to_string(step)+" T: "+std::to_string(t_)+" C: "+std::to_string(c_)+" X0: "+std::to_string(xx_[0])+" U0: "+std::to_string(uu_applied_[0])+" E: "+std::to_string(expert_type_applied_);
 }

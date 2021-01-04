@@ -44,5 +44,7 @@ DynamicsBase::observation_t PoleCartDynamics::step(
   return x_;
 }
 
+DynamicsBase::observation_t PoleCartDynamics::get_state() { return x_; }
+
 void PoleCartDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
 }  // namespace pole_cart

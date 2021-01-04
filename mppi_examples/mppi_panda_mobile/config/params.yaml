@@ -20,13 +20,14 @@ solver:
   discount_factor: 1.0
   verbose: false
   threads: 12
-  debug_print: true
+  debug_print: false
 
-  use_tree_search: true
+  use_tree_search: false
   pruning_threshold: 0.01
 
 #  expert_types: {NORM, IMP}
   expert_weights: [0.5, 0.5]
+  log_data: true
 
 
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]

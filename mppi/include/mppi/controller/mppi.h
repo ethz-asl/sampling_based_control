@@ -14,6 +14,7 @@
 #include <random>
 #include <shared_mutex>
 #include <vector>
+#include <boost/filesystem.hpp>
 
 #include <Eigen/Core>
 
@@ -27,6 +28,7 @@
 #include "mppi/visualization/rederer.h"
 #include "mppi/tree/tree_manager.h"
 #include "mppi/experts/expert.h"
+#include "mppi/utils/data_logger.h"
 
 namespace mppi {
 
@@ -181,7 +183,9 @@ class PathIntegral {
 	/**
 	 * @brief Update the experts based on data from last iteration
 	 */
-		void update_experts();
+	void update_experts();
+
+	void init_data_logger();
 
   /**
    * @brief Fill the optimized policy cache with the latest policy and set flags
@@ -328,12 +332,17 @@ class PathIntegral {
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 
+	DataLogger datalogger_opt_rollout_;
+	//DataLogger datalogger_rollouts_;
+
 	Expert expert_;
   TreeManager tree_manager_;
   std::vector<dynamics_ptr>
       tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts)
 
 	std::chrono::high_resolution_clock::time_point start_time_;
+
+
 
 
 };

@@ -27,7 +27,11 @@ void TreeManager::init_threading(size_t num_threads) {
 
 void TreeManager::build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_v, const observation_t& x0_internal, double t0_internal, const mppi::Rollout& opt_roll) {
 	this->tree_dynamics_v_ = tree_dynamics_v;
-	this->tree_dynamics_v_next_ = tree_dynamics_v;
+	this->tree_dynamics_v_shared_.resize(config_.rollouts);
+
+	for (int i = 0; i < config_.rollouts; ++i) {
+		this->tree_dynamics_v_shared_[i] = this->tree_dynamics_v_[i]->clone();
+	}
 
 	x0_internal_ = x0_internal;
 	t0_internal_ = t0_internal;
@@ -45,7 +49,6 @@ void TreeManager::build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_
 }
 
 void TreeManager::init_tree(){
-	std::cout << "Init tree started" << std::endl;
   start_time_ = std::chrono::high_resolution_clock::now();
   tree_width_ = config_.rollouts;
 	tree_target_depth_ = std::floor(config_.horizon / config_.step_size);
@@ -94,7 +97,7 @@ void TreeManager::add_depth_level(size_t horizon_step) {
 
 	// START parallel region
 	for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2), horizon_step, leaf_pos);
+		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos]);
 	}
 
 	//wait until all threads have finished processing the tree depth
@@ -106,19 +109,14 @@ void TreeManager::add_depth_level(size_t horizon_step) {
 	// as soon as all leafs are processed transfer new leafs
 	for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
 		leaf_handles_[leaf_pos] = futures_[leaf_pos].get();
+		tree_dynamics_v_[leaf_pos]->reset(tree_dynamics_v_shared_[leaf_pos]->get_state());
 	}
-
-	tree_dynamics_v_ = tree_dynamics_v_next_;
-//	for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-//		tree_dynamics_v_[leaf_pos] = tree_dynamics_v_next_[leaf_pos]->clone();
-//	}
 }
 
-tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos) {
+tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos, dynamics_ptr node_dynamics) {
 	size_t expert_type;
 	size_t extending_leaf_pos;
 	tree<Node>::iterator extending_leaf;
-	dynamics_ptr extending_dynamics;
 
 //	// printing stuff
 //	std::stringstream ss;
@@ -143,7 +141,8 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 		extending_leaf = leaf_handles_[extending_leaf_pos];
 	}
 
-	extending_dynamics = tree_dynamics_v_[extending_leaf_pos]->clone();
+	node_dynamics->reset(tree_dynamics_v_[extending_leaf_pos]->get_state());
+//	extending_dynamics->reset(tree_dynamics_v_[extending_leaf_pos]->get_state());
 
 	Eigen::VectorXd u;
 	Eigen::MatrixXd sigma_inv;
@@ -159,14 +158,18 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos)
 		sigma_inv = expert_->get_sigma_inv(expert_type, horizon_step-1);
 	}
 
-	Eigen::VectorXd x = extending_dynamics->step(u, config_.step_size);
+	node_dynamics->step(u, config_.step_size);
 
-	auto u_applied = u;
+	Eigen::VectorXd x = node_dynamics->get_state();
+	Eigen::VectorXd u_applied = u;
 
-	tree_dynamics_v_next_[leaf_pos] = extending_dynamics;
+	tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 
 	std::unique_lock<std::shared_mutex> lock(tree_mutex_);
-	return sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x, sigma_inv, expert_type));
+	tree<Node>::iterator child_handle = sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x, sigma_inv, expert_type));
+	lock.unlock();
+
+	return child_handle;
 }
 
 void TreeManager::eval_depth_level(){
@@ -218,7 +221,6 @@ void TreeManager::time_it(){
 }
 
 void TreeManager::transform_to_rollouts(){
-	std::cout << "Tranform to rollouts started" << std::endl;
 
   for (size_t k = 0; k < tree_width_; ++k){
     auto path_to_leaf = sampling_tree_.path_from_iterator(leaf_handles_[k], sampling_tree_.begin());
@@ -230,7 +232,7 @@ void TreeManager::transform_to_rollouts(){
 //				std::cout <<  "-";
 //			}
 //		}
-		std::cout << std::endl;
+//		std::cout << std::endl;
 
     for (size_t horizon_step = 0; horizon_step < tree_target_depth_; ++horizon_step) {
 
@@ -279,8 +281,8 @@ void TreeManager::transform_to_rollouts(){
 
 			rollouts_[k].tt[horizon_step] = t;  // t0
 			rollouts_[k].xx[horizon_step] = xx; // x0
-			rollouts_[k].uu[horizon_step] = uu; // opt_roll_.uu[0];
-			rollouts_[k].nn[horizon_step] = nn; // node_t0+1*timestep
+			rollouts_[k].uu[horizon_step] = uu; //
+			rollouts_[k].nn[horizon_step] = nn; //
 			rollouts_[k].cc(horizon_step) = c; 	//
 			rollouts_[k].total_cost += c -
 																	config_.lambda * opt_roll_.uu[horizon_step].transpose() *
@@ -288,21 +290,20 @@ void TreeManager::transform_to_rollouts(){
 																 	config_.lambda * opt_roll_.uu[horizon_step].transpose() *
 																		sigma_inv * opt_roll_.uu[horizon_step];
 
-			if (horizon_step==0 & k==0){
-				std::cout << "opt_roll tt_0: " << opt_roll_.tt[0] << " node_time t0: " << current_node->t_<< " t0_internal: " << t0_internal_<< std::endl;
-			}
+//			if (horizon_step==0 & k==0){
+//				std::cout << "opt_roll tt_0: " << opt_roll_.tt[0] << " node_time t0: " << current_node->t_<< " t0_internal: " << t0_internal_<< std::endl;
+//			}
 		}
 
-    for (size_t horizon_step_print = 0; horizon_step_print < tree_target_depth_; ++horizon_step_print){
-    	std::cout << "r-> hs: "<< horizon_step_print << " t: "<< rollouts_[k].tt[horizon_step_print] << " xx_0: "<< rollouts_[k].xx[horizon_step_print][0] << " uu_0: "<< rollouts_[k].uu[horizon_step_print][0] << " nn_0: "<< rollouts_[k].nn[horizon_step_print][0] << " c: "<<rollouts_[k].cc[horizon_step_print]<< std::endl;
-    }
+//    for (size_t horizon_step_print = 0; horizon_step_print < tree_target_depth_; ++horizon_step_print){
+//    	std::cout << "r-> hs: "<< horizon_step_print << " t: "<< rollouts_[k].tt[horizon_step_print] << " xx_0: "<< rollouts_[k].xx[horizon_step_print][0] << " uu_0: "<< rollouts_[k].uu[horizon_step_print][0] << " nn_0: "<< rollouts_[k].nn[horizon_step_print][0] << " c: "<<rollouts_[k].cc[horizon_step_print]<< std::endl;
+//    }
 
 		rollouts_cost_[k] = rollouts_[k].total_cost;
 //    std::cout << rollouts_cost_[k] << std::endl;
 
 //		std::unique_lock<std::shared_mutex> lock(tree_mutex_);
   }
-	std::cout << "Tranform to rollouts done" << std::endl;
 }
 
 std::vector<mppi::Rollout> TreeManager::get_rollouts(){

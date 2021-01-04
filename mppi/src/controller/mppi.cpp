@@ -25,6 +25,8 @@
 #include "mppi/solver_config.h"
 #include "mppi/utils/logging.h"
 #include "mppi/tree/tree_manager.h"
+#include "mppi/experts/expert.h"
+#include "mppi/utils/data_logger.h"
 
 namespace mppi {
 
@@ -36,14 +38,23 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
       config_(config),
       sampler_(std::move(sampler)),
       renderer_(std::move(renderer)),
+			datalogger_opt_rollout_("/home/etienne/Documents/logging_directory/1/opt_rollout_logger.txt"),
+			//datalogger_rollouts_("/home/etienne/Documents/logging_directory/1/rollouts_logger.txt"),
       expert_(config_, dynamics_),
-      tree_manager_(cost_, dynamics_, config_, sampler_, &expert_){
+      tree_manager_(cost_, dynamics_, config_, sampler_, &expert_)
+			{
 
   init_data();
   init_filter();
-  init_threading();
+	if (!config_.use_tree_search){
+		init_threading();
+	}
+
   if (config_.use_tree_search){
     init_tree_manager();
+  }
+  if (config_.log_data){
+		init_data_logger();
   }
 }
 
@@ -125,6 +136,14 @@ void PathIntegral::init_tree_manager() {
   }
 }
 
+void PathIntegral::init_data_logger(){
+
+	// header opt rollout log
+	datalogger_opt_rollout_.write("t0_internal",  "horizon_step", "t","c_cum", "c_total", "xx0");
+	datalogger_opt_rollout_.write_endl();
+
+}
+
 void PathIntegral::update_policy() {
 	start_time_ = std::chrono::high_resolution_clock::now();
 
@@ -136,13 +155,12 @@ void PathIntegral::update_policy() {
   } else {
     copy_observation();
 
-		update_experts();
-
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
       update_reference();
 
       if (config_.use_tree_search){
+				update_experts();
 				sample_trajectories_via_tree();
 				overwrite_rollouts();
       } else {
@@ -151,6 +169,28 @@ void PathIntegral::update_policy() {
 
       optimize();
       filter_input();
+
+      // log_data
+      if (config_.log_data){
+				dynamics_->reset(x0_internal_);
+				for (size_t t = 0; t < steps_; t++) {
+					opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+					opt_roll_.cc[t] = cost_->get_stage_cost(dynamics_->get_state());
+				}
+      	// log opt_roll
+      	for (size_t step = 0; step<steps_;++step){
+					datalogger_opt_rollout_.write(t0_internal_, step, opt_roll_.tt[step],opt_roll_.cc[step], opt_roll_.total_cost, opt_roll_.xx[step][0]);
+					datalogger_opt_rollout_.write_endl();
+      	}
+//				// log rollouts
+//				for (size_t rollout = 0; rollout < config_.rollouts; ++rollout) {
+//					for (size_t step = 0; step < steps_; ++step) {
+//						datalogger_opt_rollout_.write(t0_internal_, step, opt_roll_.cc[step], opt_roll_.total_cost,
+//																					opt_roll_.xx[step][0]);
+//						datalogger_opt_rollout_.write_endl();
+//					}
+//				}
+      }
 
       // TODO move this away. This goes year since there might be filtering
       // happening before optimal rollout
@@ -337,7 +377,6 @@ void PathIntegral::sample_trajectories_via_tree() {
 }
 
 void PathIntegral::overwrite_rollouts(){
-	std::cout << "overwriting rollouts started" << std::endl;
 	rollouts_ = tree_manager_.get_rollouts();
 	rollouts_cost_ = tree_manager_.get_rollouts_cost();
 }

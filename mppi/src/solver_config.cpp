@@ -58,6 +58,7 @@ bool SolverConfig::init_from_file(const std::string &file) {
 //	expert_types		= (std::vector<ExpertTypes>)parse_key_quiet<std::vector<size_t>>(solver_options, "expert_types").value_or(expert_types);
 	expert_weights	= parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
 	expert_types 		= {NORM, IMP};
+	log_data        = parse_key_quiet<bool>(solver_options, "log_data").value_or(log_data);
 	//clang-format on
 
   if (parsing_error) return false;

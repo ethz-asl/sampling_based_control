@@ -10,6 +10,7 @@
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 #include <Eigen/Core>
+#include <string>
 
 namespace mppi {
 
@@ -18,7 +19,7 @@ enum InputFilterType : char {
   SAVITZKY_GOLEY = 1,
 };
 
-enum ExpertTypes : char {
+enum ExpertTypes {
 	NORM = 0,
 	IMP = 1,
 };
@@ -59,6 +60,8 @@ struct SolverConfig {
   std::vector<ExpertTypes> expert_types = {ExpertTypes::NORM, ExpertTypes::IMP};
 	Eigen::VectorXd expert_weights;
 
+	bool log_data = false;
+
   bool init_from_file(const std::string& file);
  private:
   bool parsing_error = false;
@@ -94,6 +97,30 @@ std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(const YA
 
   return v_eigen;
 };
+//
+//template<> inline
+//std::optional<std::vector<std::string>> SolverConfig::parse_key<std::vector<std::string>>(const YAML::Node& node,
+//																																				const std::string &key, bool quiet) {
+//	if (!node[key]){
+//		std::cout << "Could not find entry: " << key << std::endl;
+//		if (!quiet) parsing_error = true;
+//		return {};
+//	}
+//	auto v = node[key].as<std::vector<std::string>>();
+//	std::vector<size_t> v_expert_types;
+//	v_expert_types.resize(v.size());
+//	for (int j = 0; j < v.size(); ++j) {
+//		ExpertTypes expert = (char)v[j];
+//		v_expert_types[j] = ExpertTypes::
+//
+//	}
+//
+//	Eigen::VectorXd v_eigen(v.size());
+//	for (size_t i=0; i<v.size(); i++)
+//		v_eigen(i) = v[i];
+//
+//	return v_eigen;
+//};
 
 template<typename T>
 std::optional<T> SolverConfig::parse_key_quiet(const YAML::Node& node, const std::string &key) {
