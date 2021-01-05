@@ -5,7 +5,7 @@
 #pragma once
 #include "mppi_est/model.hpp"
 
-namespace mppi_est::test {
+namespace mppi_est::point_mass {
 
 struct point_mass_params {
   double mu = 1.0;

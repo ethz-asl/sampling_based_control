@@ -4,7 +4,7 @@
 
 #include "point_mass.h"
 
-namespace mppi_est::test {
+namespace mppi_est::point_mass {
 
 PointMass::PointMass(const point_mass_params& params) : Model(2, 1), params_(params) {
   vector_t cov;

@@ -24,17 +24,18 @@ include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 # Libraries
 add_library(${PROJECT_NAME}
         src/model.cpp
-        src/model_particle_filter.cpp unittest/point_mass_test.cpp)
+        src/model_particle_filter.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 
 if (CATKIN_ENABLE_TESTING)
-    add_library(point_mass unittest/point_mass.cpp)
-    target_link_libraries(point_mass PUBLIC ${PROJECT_NAME} ${COMMON_LIBRARIES})
-
-    catkin_add_gtest(point_mass_test unittest/point_mass_test.cpp)
+    catkin_add_gtest(point_mass_test unittest/point_mass.cpp unittest/point_mass_test.cpp)
     target_include_directories(point_mass_test PRIVATE unittest include ${SYSTEM_INCLUDE_DIRS})
-    target_link_libraries(point_mass_test point_mass ${PROJECT_NAME} ${catkin_LIBRARIES})
+    target_link_libraries(point_mass_test ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+    catkin_add_gtest(pole_cart_test unittest/pole_cart.cpp unittest/pole_cart_test.cpp)
+    target_include_directories(pole_cart_test PRIVATE unittest include ${SYSTEM_INCLUDE_DIRS})
+    target_link_libraries(pole_cart_test ${PROJECT_NAME} ${catkin_LIBRARIES})
 endif ()
 
 

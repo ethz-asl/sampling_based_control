@@ -8,8 +8,8 @@
 
 namespace mppi_est {
 
-ModelParticleFilter::ModelParticleFilter(const size_t buffer_length)
-    : initialized_(false), buffer_length_(buffer_length) {
+ModelParticleFilter::ModelParticleFilter(const size_t buffer_length, bool debug)
+    : debug_(debug), initialized_(false), buffer_length_(buffer_length) {
   samples_ = 0;
   z_buffer_.rset_capacity(buffer_length_);
 }
@@ -39,6 +39,10 @@ bool ModelParticleFilter::check_model(const model_ptr_t& model) const {
 
 void ModelParticleFilter::add_model(const double prior, const model_ptr_t& model) {
   models_.push_back(model->create());
+
+  if (debug_)
+    models_.back()->display_model_params();
+
   posterior_.push_back(prior);
   likelihood_.push_back(0.0);
   bool success = true;
@@ -47,10 +51,14 @@ void ModelParticleFilter::add_model(const double prior, const model_ptr_t& model
   else
     success = check_model(model);
 
-  if (!success)
+  if (!success){
     PRINT_ERROR(std::string("Failed to add the model"));
-  else
+    return;
+  }
+  else{
     samples_++;
+    deviations_.resize(samples_);
+  }
 }
 
 void ModelParticleFilter::update_likelihood() {
@@ -59,8 +67,8 @@ void ModelParticleFilter::update_likelihood() {
   for (size_t i = 0; i < samples_; i++) {
     models_[i]->reset(zr.x);
     models_[i]->step(zs);
-    vector_t delta = zs.x_next - zr.x_next;
-    likelihood_[i] = std::exp(-delta.transpose() * models_[i]->get_covariance_inv() * delta);
+    deviations_[i] = zs.x_next - zr.x_next;
+    likelihood_[i] = std::exp(-deviations_[i].transpose() * models_[i]->get_covariance_inv() * deviations_[i]);
     posterior_[i] = posterior_[i] * likelihood_[i];
   }
 }

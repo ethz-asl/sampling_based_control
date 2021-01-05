@@ -9,12 +9,12 @@
 #include <fstream>
 #include <iostream>
 
-namespace mppi_est::test {
+namespace mppi_est::point_mass {
 class ModelEstimatorTest : public ::testing::Test {
  protected:
   ModelEstimatorTest() {
     log_dir_ = __FILE__;
-    log_dir_ = log_dir_.substr(0, log_dir_.rfind('/')) + "/logs/";
+    log_dir_ = log_dir_.substr(0, log_dir_.rfind('/')) + "/logs/point_mass/";
     std::cout << "Log directory is: " << log_dir_ << std::endl;
   }
 
@@ -61,14 +61,14 @@ class ModelEstimatorTest : public ::testing::Test {
     double dt = 0.01;
     double t = 0;
     for (size_t i = 0; i < steps; i++) {
-      z.u(0) = F * std::sin(i*dt * 2 * M_PI / T);
+      z.u(0) = F * std::sin(i * dt * 2 * M_PI / T);
       true_model_.first->step(z);
       filter_.add_measurement_tuple(z);
       filter_.update_likelihood();
       filter_.update_posterior();
 
-      sys_log_file << t << " " << z.x.transpose() << " " << z.u.transpose() << " " << z.x_next.transpose()
-                   << std::endl;
+      sys_log_file << t << " " << z.x.transpose() << " " << z.u.transpose() << " "
+                   << z.x_next.transpose() << std::endl;
       z.x = z.x_next;
       t += dt;
 
@@ -92,7 +92,7 @@ TEST_F(ModelEstimatorTest, FilterTest) {
   run(1000);
 }
 
-}  // namespace mppi_est::test
+}  // namespace mppi_est::point_mass
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

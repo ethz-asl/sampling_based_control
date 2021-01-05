@@ -28,6 +28,8 @@ class Model {
   [[nodiscard]] inline const matrix_t& get_covariance() const { return cov_; }
   [[nodiscard]] inline const matrix_t& get_covariance_inv() const { return cov_inv_; }
 
+  virtual void display_model_params() const {};
+
  private:
   size_t no_;
   size_t nu_;

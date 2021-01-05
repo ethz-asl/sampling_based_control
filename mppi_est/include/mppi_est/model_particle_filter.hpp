@@ -18,7 +18,7 @@ class ModelParticleFilter {
  public:
   using model_ptr_t = std::unique_ptr<Model>;
 
-  explicit ModelParticleFilter(size_t buffer_length);
+  explicit ModelParticleFilter(size_t buffer_length, bool debug = false);
   ModelParticleFilter() : ModelParticleFilter(1){};
   ~ModelParticleFilter() = default;
 
@@ -29,18 +29,21 @@ class ModelParticleFilter {
 
   inline const std::vector<model_ptr_t>& get_models() const { return models_; }
   std::vector<double> get_posterior() const { return posterior_; }
+  std::vector<vector_t> get_deviations() const { return deviations_; }
 
  private:
   void init_from_model(const model_ptr_t& model);
   [[nodiscard]] bool check_model(const model_ptr_t& model) const;
 
  private:
+  bool debug_;
   bool initialized_;
   size_t samples_;
   size_t buffer_length_;
 
   std::vector<double> posterior_;
   std::vector<double> likelihood_;
+  std::vector<vector_t> deviations_;
   matrix_t sigma_;
   matrix_t sigma_inv_;
 
