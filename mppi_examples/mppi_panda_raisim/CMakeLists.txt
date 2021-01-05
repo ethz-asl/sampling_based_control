@@ -26,7 +26,7 @@ catkin_package(
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
         DEPENDS pinocchio raisim) 
 
-include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${PINOCCHIO_LIBRARIES})
+include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mppi_manipulation_estimator</name>
+  <version>0.0.0</version>
+  <description>The mppi_manipulation_estimator package</description>
+
+  <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
+  <license>TODO</license>
+
+
+  <!-- Url tags are optional, but multiple are allowed, one per tag -->
+  <!-- Optional attribute type can be: website, bugtracker, or repository -->
+  <!-- Example: -->
+  <!-- <url type="website">http://wiki.ros.org/mppi_manipulation_estimator</url> -->
+  <author email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>mppi_est</depend>
+  <depend>mppi_panda_raisim</depend>
+</package>
