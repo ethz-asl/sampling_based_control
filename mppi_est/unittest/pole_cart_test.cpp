@@ -38,7 +38,7 @@ class ModelEstimatorTest : public ::testing::Test {
         pole_cart_params params;
         params.pole_length = pole_length;
         params.friction_cart = friction_cart;
-        hypothesis_.push_back(std::make_pair(std::make_unique<PoleCart>(params), params));
+        hypothesis_.emplace_back(std::make_unique<PoleCart>(params), params);
         params_file << params;
         params_file << std::endl;
         idx++;
