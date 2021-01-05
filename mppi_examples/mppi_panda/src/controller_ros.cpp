@@ -10,7 +10,6 @@
 
 #include <controller_interface/controller_base.h>
 #include <franka/robot_state.h>
-#include <franka_example_controllers/compliance_paramConfig.h>
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
 #include <Eigen/Dense>

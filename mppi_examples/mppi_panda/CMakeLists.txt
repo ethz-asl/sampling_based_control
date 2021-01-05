@@ -13,7 +13,6 @@ set(PACKAGE_DEPENDENCIES
         mppi_ros
         roslib
         robot_control
-        robot_control_ros
         robot_control_assets
         controller_interface
         franka_hw
@@ -51,3 +50,7 @@ install(DIRECTORY launch resources
 
 install(FILES plugins.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+catkin_install_python(PROGRAMS scripts/interactive_marker.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

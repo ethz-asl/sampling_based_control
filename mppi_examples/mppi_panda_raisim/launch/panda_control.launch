@@ -38,6 +38,7 @@
     <node name="panda_raisim_control" type="panda_raisim_control" pkg="mppi_panda_raisim" output="screen"
           launch-prefix="gdb -ex run --args">
         <param name="config_file" value="$(find mppi_panda_raisim)/config/params.yaml"/>
+        <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
         <rosparam command="load" file="$(find mppi_panda_raisim)/config/params.yaml"/>
     </node>
 

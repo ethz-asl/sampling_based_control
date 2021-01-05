@@ -1,5 +1,5 @@
-sequential: true           # true to run an asynchronous thread where controller optimize given the latest observation
-rendering: true            # use a custom renderer to visualize the trajectory
+sequential: false           # true to run an asynchronous thread where controller optimize given the latest observation
+rendering: false            # use a custom renderer to visualize the trajectory
 
 # dynamics parameters
 dynamics:

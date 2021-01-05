@@ -11,7 +11,6 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         mppi
         mppi_ros
-        robot_control_ros
         roslib
         tf2
         tf2_ros
