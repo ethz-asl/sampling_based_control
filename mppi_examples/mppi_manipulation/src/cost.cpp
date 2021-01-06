@@ -77,7 +77,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += (err_.linear().transpose() * err_.linear()).norm() * param_.Qt/100.0;
 
     // TODO(giuseppe) read the reference value from ref_
-    cost += std::pow(x(2 * PandaDim::JOINT_DIMENSION) - M_PI / 2, 2) * 10;
+    cost += std::pow(x(2 * PandaDim::JOINT_DIMENSION) - ref(PandaDim::REFERENCE_POSE_DIMENSION + PandaDim::REFERENCE_OBSTACLE), 2) * 10;
   }
 
   double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();

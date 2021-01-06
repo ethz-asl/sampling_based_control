@@ -16,11 +16,15 @@
 using namespace manipulation;
 
 int main(int argc, char** argv) {
-  raisim::World::setActivationKey("/home/giuseppe/git/raisimlib/rsc/activation.raisim");
-
-  // ros interface
   ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
+
+  // activate raisim
+  std::string activation_file;
+  nh.param<std::string>("activation_file", activation_file, "/home/giuseppe/git/raisimlib/rsc/activation.raisim");
+  raisim::World::setActivationKey(activation_file);
+
+  // ros interface
   auto controller = PandaControllerInterface(nh);
 
   auto robot_description = nh.param<std::string>("/robot_description", "");
@@ -126,6 +130,7 @@ int main(int argc, char** argv) {
     object_state.position[0] = x(PandaDim::JOINT_DIMENSION * 2);
     object_state_publisher.publish(object_state);
 
+    // TODO(giuseppe) read the actual reference position
     if (std::abs(object_state.position[0] - M_PI / 2.0) < 1.0 * M_PI / 180.0) freeze_robot = true;
 
     ee_pose = controller.get_pose_end_effector_ros(x);

@@ -4,7 +4,12 @@
     <arg name="plot_cost" default="true"/>
     <arg name="plot_input" default="true"/>
     <arg name="enable_obstacle" default="true"/>
-
+    
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
+    <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
+    <arg name="object_reference_position" default="0.20" if="$(eval arg('object') == 'drawer')"/>
+    
     <arg name="description_file" default="$(find mppi_manipulation)/data/panda_grasp.urdf.xacro"/>
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
@@ -42,7 +47,9 @@
 
     <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen"
           launch-prefix="gdb -ex run --args">
+        <param name="object_reference_position"  value="$(arg object_reference_position)"/>
         <param name="config_file" value="$(find mppi_manipulation)/params/params.yaml"/>
+        <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
         <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_manipulation)/params/$(arg object)_cost.yaml"/>
     </node>

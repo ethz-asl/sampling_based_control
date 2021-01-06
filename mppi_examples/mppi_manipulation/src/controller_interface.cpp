@@ -120,7 +120,10 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // initialize reference
   // -------------------------------
+  double object_reference_position;
+  nh_.param<double>("object_reference_position", object_reference_position, 0.0);
   ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
+  ref_.rr[0](PandaDim::REFERENCE_POSE_DIMENSION + PandaDim::REFERENCE_OBSTACLE) = object_reference_position;
   ref_.tt.resize(1, 0.0);
   return true;
 }
@@ -137,6 +140,7 @@ void PandaControllerInterface::ee_pose_desired_callback(
   ref_.rr[0].head<7>()(4) = msg->pose.orientation.y;
   ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
   ref_.rr[0].head<7>()(6) = msg->pose.orientation.w;
+  get_controller()->set_reference_trajectory(ref_);
 }
 
 void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg) {
@@ -145,22 +149,17 @@ void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampe
   ref_.rr[0](7) = obstacle_pose_.pose.position.x;
   ref_.rr[0](8) = obstacle_pose_.pose.position.y;
   ref_.rr[0](9) = obstacle_pose_.pose.position.z;
+  get_controller()->set_reference_trajectory(ref_);
 }
 
 void PandaControllerInterface::mode_callback(const std_msgs::Int64ConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](11) = msg->data;
+  get_controller()->set_reference_trajectory(ref_);
   ROS_INFO_STREAM("Switching to mode: " << msg->data);
 }
 
 bool PandaControllerInterface::update_reference() {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
-  if (last_ee_ref_id_ != ee_desired_pose_.header.seq ||
-      (last_ob_ref_id_ != obstacle_pose_.header.seq && ee_desired_pose_.header.seq != 0)) {
-    get_controller()->set_reference_trajectory(ref_);
-  }
-  last_ee_ref_id_ = ee_desired_pose_.header.seq;
-  last_ob_ref_id_ = obstacle_pose_.header.seq;
   return true;
 }
 

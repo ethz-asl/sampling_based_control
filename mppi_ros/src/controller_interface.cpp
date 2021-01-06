@@ -19,6 +19,7 @@ bool ControllerRos::init_default_params() {
   reference_update_rate_ = param_io::param(nh_, "reference_update_rate", 0.0);
   publish_ros_ = param_io::param(nh_, "publish_ros", false);
   ros_publish_rate_ = param_io::param(nh_, "ros_publish_rate", 0.0);
+  return true;
 }
 
 void ControllerRos::init_default_ros() {
@@ -34,8 +35,8 @@ void ControllerRos::init_default_ros() {
 bool ControllerRos::init() {
   init_default_params();
   init_default_ros();
-
   init_ros();
+  
   bool ok = set_controller(controller_);
   if (controller_ == nullptr || !ok) return false;
 
@@ -78,7 +79,10 @@ bool ControllerRos::start() {
   return true;
 }
 
-bool ControllerRos::update_policy() { controller_->update_policy(); }
+bool ControllerRos::update_policy() { 
+  controller_->update_policy(); 
+  return true;
+}
 
 bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
   controller_->update_policy();

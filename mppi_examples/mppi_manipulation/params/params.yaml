@@ -14,6 +14,10 @@ solver:
   filter_order: 2
   filter_window: 30
 
+  bound_input: true
+  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
   adaptive_sampling: false
   input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 

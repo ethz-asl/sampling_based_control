@@ -13,7 +13,6 @@ set(PACKAGE_DEPENDENCIES
         mppi_ros
         roslib
         robot_control
-        robot_control_ros
         robot_control_assets
         controller_interface
         franka_hw
@@ -34,7 +33,7 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${PINO
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
-        src/controller_interface.cpp)
+        src/controller_interface.cpp ../mppi_manipulation_estimator/include/mppi_manipulation_estimator/manipulation_model.hpp ../mppi_manipulation_estimator/src/manipulation_model.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
 
 add_executable(panda_control src/nodes/panda_control.cpp)
@@ -51,3 +50,7 @@ install(DIRECTORY launch resources
 
 install(FILES plugins.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+catkin_install_python(PROGRAMS scripts/interactive_marker.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
