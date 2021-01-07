@@ -38,8 +38,8 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
       config_(config),
       sampler_(std::move(sampler)),
       renderer_(std::move(renderer)),
-			datalogger_opt_rollout_("/home/etienne/Documents/logging_directory/1/opt_rollout_logger.txt"),
-			//datalogger_rollouts_("/home/etienne/Documents/logging_directory/1/rollouts_logger.txt"),
+			datalogger_opt_rollout_("/home/etienne/Documents/logging_directory/test/opt_rollout_logger.txt"),
+			//datalogger_rollouts_("/home/etienne/Documents/logging_directory/test/rollouts_logger.txt"),
       expert_(config_, dynamics_),
       tree_manager_(cost_, dynamics_, config_, sampler_, &expert_)
 			{
@@ -139,7 +139,7 @@ void PathIntegral::init_tree_manager() {
 void PathIntegral::init_data_logger(){
 
 	// header opt rollout log
-	datalogger_opt_rollout_.write("t0_internal",  "horizon_step", "t","c_cum", "c_total", "xx0");
+	datalogger_opt_rollout_.write("t0_internal",  "horizon_step", "t","c", "c_cum", "ee_position_x", "ee_position_y", "ee_position_z");
 	datalogger_opt_rollout_.write_endl();
 
 }
@@ -173,13 +173,15 @@ void PathIntegral::update_policy() {
       // log_data
       if (config_.log_data){
 				dynamics_->reset(x0_internal_);
+				opt_roll_.total_cost = 0;
 				for (size_t t = 0; t < steps_; t++) {
 					opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
-					opt_roll_.cc[t] = cost_->get_stage_cost(dynamics_->get_state());
+					opt_roll_.cc[t] = cost_->get_stage_cost(opt_roll_.xx[t]);
+					opt_roll_.total_cost += opt_roll_.cc[t];
 				}
       	// log opt_roll
       	for (size_t step = 0; step<steps_;++step){
-					datalogger_opt_rollout_.write(t0_internal_, step, opt_roll_.tt[step],opt_roll_.cc[step], opt_roll_.total_cost, opt_roll_.xx[step][0]);
+					datalogger_opt_rollout_.write(t0_internal_, step, opt_roll_.tt[step],opt_roll_.cc[step], opt_roll_.total_cost, opt_roll_.xx[step][0], opt_roll_.xx[step][1], opt_roll_.xx[step][2]);
 					datalogger_opt_rollout_.write_endl();
       	}
 //				// log rollouts
@@ -554,6 +556,11 @@ bool PathIntegral::get_optimal_rollout(observation_array_t& xx,
 
 void PathIntegral::update_experts(){
 	expert_.update_expert(1,opt_roll_.uu);
+//	for (int i = 0; i < 100; ++i) {
+//		std::cout << "h step: " << i << std::endl;
+//		std::cout << opt_roll_.uu[i] << std::endl;
+//		std::cout << std::endl;
+//	}
 };
 
 void PathIntegral::swap_policies() {
