@@ -9,7 +9,7 @@
 #include "mppi/tree/tree_manager.h"
 
 
-TreeManager::TreeManager(cost_ptr cost, const dynamics_ptr& dynamics, config_t config, sampler_ptr sampler,  mppi::Expert *expert) : sampling_tree_(){
+TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler, config_t config, mppi::Expert *expert) : sampling_tree_(){
   cost_ = std::move(cost);
   dynamics_ = dynamics;
   config_ = std::move(config);
@@ -18,11 +18,13 @@ TreeManager::TreeManager(cost_ptr cost, const dynamics_ptr& dynamics, config_t c
 
   set_rollout_expert_mapping(0);
 
-  init_threading(config_.threads);
+  init_threading();
 }
 
-void TreeManager::init_threading(size_t num_threads) {
-	pool_ = std::make_unique<ThreadPool>(num_threads);
+void TreeManager::init_threading() {
+		std::cout << "Using multithreading. Number of threads: " << config_.threads
+							<< std::endl;
+		pool_ = std::make_unique<ThreadPool>(config_.threads);
 }
 
 void TreeManager::build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_v, const observation_t& x0_internal, double t0_internal, const mppi::Rollout& opt_roll) {
@@ -313,12 +315,6 @@ Eigen::ArrayXd TreeManager::get_rollouts_cost(){
 int TreeManager::random_uniform_int(int v_min, int v_max){
 	static std::mt19937 gen{ std::random_device{}() };
 	std::uniform_int_distribution<int> u(v_min, v_max);
-	return u(gen);
-}
-
-double TreeManager::random_uniform_double(double v_min, double v_max){
-	static std::mt19937 gen{ std::random_device{}() };
-	std::uniform_real_distribution<double> u(v_min, v_max);
 	return u(gen);
 }
 

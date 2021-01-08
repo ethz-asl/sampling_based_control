@@ -41,7 +41,7 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
 			datalogger_opt_rollout_("/home/etienne/Documents/logging_directory/test/opt_rollout_logger.txt"),
 			//datalogger_rollouts_("/home/etienne/Documents/logging_directory/test/rollouts_logger.txt"),
       expert_(config_, dynamics_),
-      tree_manager_(cost_, dynamics_, config_, sampler_, &expert_)
+      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_)
 			{
 
   init_data();
