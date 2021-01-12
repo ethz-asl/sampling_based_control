@@ -200,6 +200,8 @@ void PathIntegral::update_policy() {
       for (size_t t = 0; t < steps_; t++) {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
+      stage_cost_ = cost_->get_stage_cost(opt_roll_.xx[0]);
+
     }
     swap_policies();
 		time_it();

@@ -27,6 +27,8 @@ class Expert {
 
   void update_expert(size_t expert_type, const std::vector<Eigen::VectorXd> &mean);
 
+  expert_ptr clone() const { return std::make_shared<Expert>(*this); }
+
  private:
   std::map<size_t, int> rollout_expert_map;
 

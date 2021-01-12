@@ -61,6 +61,7 @@ struct SolverConfig {
 	Eigen::VectorXd expert_weights;
 
 	bool log_data = false;
+	bool log_tree_timing = false;
 
   bool init_from_file(const std::string& file);
  private:

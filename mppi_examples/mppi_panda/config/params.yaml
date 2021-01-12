@@ -7,7 +7,7 @@ dynamics:
 
 # solver parameters. Check mppi/src/solver_config.cpp
 solver:
-  rollouts: 20                  # number of rollouts
+  rollouts: 24                  # number of rollouts
   lambda: 0.001 #0.001         # scaling on input/noise cost
   h: 10.0                       # scaling on exponential cost for computing rollouts' weights
   step_size: 0.01               # simulation step size
@@ -20,25 +20,26 @@ solver:
 
   filter_type: 1                # currently only savitzky-golay (1) or none (0)
   filter_order: 3               # polynomial used to approximate the input sequence #5
-  filter_window: 10             # window length #30
+  filter_window: 20             # window length #30
 
   adaptive_sampling: false      # untested -- leave
   input_variance: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]  # additive noise variance per input channel
 
   bound_input: true
-  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  u_min: [-2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0]
+  u_max: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
   discount_factor: 1.0          # apply a discount factor on the cost over the horizon
   verbose: false                # more prints
-  threads: 12                    # number of threads, set to 1 to not use multithreaded sampling
+  threads: 8                    # number of threads, set to 1 to not use multithreaded sampling
   debug_print: false            # debug print
 
   use_tree_search: true
-  pruning_threshold: 0.05      # check with 9999999 # opt 0.05
+  pruning_threshold: 0.04      # check with 9999999 # opt 0.05
   #  expert_types: {NORM, IMP}
   expert_weights: [ 0.5, 0.5 ]
-  log_data: true
+  log_data: false
+  log_tree_timing: false
 
 # custom params
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
@@ -46,7 +47,7 @@ linear_weight: 100.0
 angular_weight: 10.0
 obstacle_radius: 0.20
 
-policy_update_rate: 20.0           # execute as fast as possible, used if sequential=false
+policy_update_rate: 40.0           # execute as fast as possible, used if sequential=false
 reference_update_rate: 10.0       # update reference at this rate, used if sequential=false
 publish_ros: true                 # optional ros publishing
 ros_publish_rate: 10.0            # ros publishing rate, used if sequential=false

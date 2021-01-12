@@ -9,7 +9,9 @@
 #include "mppi/tree/tree_manager.h"
 
 
-TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler, config_t config, mppi::Expert *expert) : sampling_tree_(){
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++20-extensions"
+TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler, config_t config, mppi::Expert *expert) : sampling_tree_(), datalogger_timing_("/home/etienne/Documents/logging_directory/test/tree_timing_logger.txt"){
   cost_ = std::move(cost);
   dynamics_ = dynamics;
   config_ = std::move(config);
@@ -19,6 +21,9 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_pt
   set_rollout_expert_mapping(0);
 
   init_threading();
+
+  datalogger_timing_.write("high_precision_timestamp",  "t0_internal", "horizonstep","description", "category");
+  datalogger_timing_.write_endl();
 }
 
 void TreeManager::init_threading() {
@@ -28,25 +33,61 @@ void TreeManager::init_threading() {
 }
 
 void TreeManager::build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_v, const observation_t& x0_internal, double t0_internal, const mppi::Rollout& opt_roll) {
-	this->tree_dynamics_v_ = tree_dynamics_v;
+  x0_internal_ = x0_internal;
+  t0_internal_ = t0_internal;
+  opt_roll_ = opt_roll;
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, 0, "start of build new tree",
+                             "build_new_tree");
+    datalogger_timing_.write_endl();
+  }
+
+  this->tree_dynamics_v_ = tree_dynamics_v;
 	this->tree_dynamics_v_shared_.resize(config_.rollouts);
 
 	for (int i = 0; i < config_.rollouts; ++i) {
 		this->tree_dynamics_v_shared_[i] = this->tree_dynamics_v_[i]->clone();
 	}
 
-	x0_internal_ = x0_internal;
-	t0_internal_ = t0_internal;
-	opt_roll_ = opt_roll;
+  experts_v_.resize(config_.rollouts);
+	for (int i = 0; i < config_.rollouts; ++i){
+    experts_v_[i] = expert_->clone();
+	}
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, 0, "start of build new tree after reset dynamics",
+                             "build_new_tree");
+    datalogger_timing_.write_endl();
+  }
 
 	init_tree();
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, 0, "start of build new tree after init tree",
+                             "build_new_tree");
+    datalogger_timing_.write_endl();
+  }
+
 	grow_tree();
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, 0, "start of build new tree after grow tree",
+                             "build_new_tree");
+    datalogger_timing_.write_endl();
+  }
 
 	if (config_.debug_print){
 		print_tree();
 	}
 
 	transform_to_rollouts();
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, 0, "start of build new tree after convert to rollouts",
+                             "build_new_tree");
+    datalogger_timing_.write_endl();
+  }
 	time_it();
 }
 
@@ -84,9 +125,27 @@ void TreeManager::init_tree(){
 void TreeManager::grow_tree() {
 	for (int i = 1; i <= tree_target_depth_; ++i) {
 //		std::cout << "adding depth level: " << std::to_string(i) <<std::endl;
+    if (config_.log_tree_timing) {
+      datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, i, "before add_depth_level(i)",
+                               "grow_tree");
+      datalogger_timing_.write_endl();
+    }
+
 		add_depth_level(i);
+
+    if (config_.log_tree_timing) {
+      datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, i,
+                               "after add_depth_level(i) / before eval_depth_level()", "grow_tree");
+      datalogger_timing_.write_endl();
+    }
 //		std::cout << "evaluating depth level: " << std::to_string(i) <<std::endl;
 		eval_depth_level();
+
+    if (config_.log_tree_timing) {
+      datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, i, "after eval_depth_level()",
+                               "grow_tree");
+      datalogger_timing_.write_endl();
+    }
 	}
 //	std::cout << "tree is fully grown!" << std::endl;
 }
@@ -97,9 +156,15 @@ void TreeManager::add_depth_level(size_t horizon_step) {
 	futures_.clear();
 	futures_.resize(tree_width_);
 
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "before parallel processing of nodes",
+                             "add_depth_level");
+    datalogger_timing_.write_endl();
+  }
+
 	// START parallel region
 	for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos]);
+		futures_[leaf_pos] = pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
 	}
 
 	//wait until all threads have finished processing the tree depth
@@ -108,17 +173,35 @@ void TreeManager::add_depth_level(size_t horizon_step) {
 	}
 	// END parallel region
 
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "after parallel processing of nodes / before resetting dynamicws",
+                             "add_depth_level");
+    datalogger_timing_.write_endl();
+  }
+
 	// as soon as all leafs are processed transfer new leafs
 	for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
 		leaf_handles_[leaf_pos] = futures_[leaf_pos].get();
 		tree_dynamics_v_[leaf_pos]->reset(tree_dynamics_v_shared_[leaf_pos]->get_state());
 	}
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "after resetting dynamics",
+                             "add_depth_level");
+    datalogger_timing_.write_endl();
+  }
 }
 
-tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos, dynamics_ptr node_dynamics) {
+tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos, dynamics_ptr node_dynamics, expert_ptr node_expert) {
 	size_t expert_type;
 	size_t extending_leaf_pos;
 	tree<Node>::iterator extending_leaf;
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "beginning add_node",
+                             "add_node");
+    datalogger_timing_.write_endl();
+  }
 
 //	// printing stuff
 //	std::stringstream ss;
@@ -143,8 +226,17 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
 		extending_leaf = leaf_handles_[extending_leaf_pos];
 	}
 
+
+
 	node_dynamics->reset(tree_dynamics_v_[extending_leaf_pos]->get_state());
 //	extending_dynamics->reset(tree_dynamics_v_[extending_leaf_pos]->get_state());
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "after node_dynamics->reset.",
+                             "add_node");
+    datalogger_timing_.write_endl();
+  }
+
 
 	Eigen::VectorXd u;
 	Eigen::MatrixXd sigma_inv;
@@ -152,15 +244,29 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
 		u = opt_roll_.uu[horizon_step-1];
 
 		expert_type = 1; // use importance sampler expert for sigma_inv
-		sigma_inv = sigma_inv = expert_->get_sigma_inv(expert_type, horizon_step-1);
+		sigma_inv = sigma_inv = node_expert->get_sigma_inv(expert_type, horizon_step-1);
 	}
 	else {
-		u = expert_->get_sample(expert_type, horizon_step-1);
+		u = node_expert->get_sample(expert_type, horizon_step-1);
 
-		sigma_inv = expert_->get_sigma_inv(expert_type, horizon_step-1);
+		sigma_inv = node_expert->get_sigma_inv(expert_type, horizon_step-1);
 	}
 
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "after getting samples and sigma inv.",
+                             "add_node");
+    datalogger_timing_.write_endl();
+  }
+
+	u = bound_input(u);
+
 	node_dynamics->step(u, config_.step_size);
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "after stepping dynamics.",
+                             "add_node");
+    datalogger_timing_.write_endl();
+  }
 
 	Eigen::VectorXd x = node_dynamics->get_state();
 	Eigen::VectorXd u_applied = u;
@@ -170,6 +276,12 @@ tree<Node>::iterator TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
 	std::unique_lock<std::shared_mutex> lock(tree_mutex_);
 	tree<Node>::iterator child_handle = sampling_tree_.append_child(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x, sigma_inv, expert_type));
 	lock.unlock();
+
+  if (config_.log_tree_timing) {
+    datalogger_timing_.write(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(), t0_internal_, horizon_step, "after appending new node to tree.",
+                             "add_node");
+    datalogger_timing_.write_endl();
+  }
 
 	return child_handle;
 }
@@ -318,6 +430,13 @@ int TreeManager::random_uniform_int(int v_min, int v_max){
 	return u(gen);
 }
 
+Eigen::VectorXd TreeManager::bound_input(input_t& u) {
+  if (config_.bound_input){
+    u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
+  }
+  return u;
+}
+
 void TreeManager::set_rollout_expert_mapping(size_t mapping_type_input){
   size_t mapping_type = 0;
 
@@ -376,3 +495,4 @@ void TreeManager::set_rollout_expert_mapping(size_t mapping_type_input){
     rollout_expert_map_[rollout] = expert_type;
   }
 }
+#pragma clang diagnostic pop

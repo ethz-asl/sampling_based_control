@@ -255,6 +255,7 @@ class PathIntegral {
 
   // Generic getters
   inline const Eigen::ArrayXd& get_weights() const { return omega; }
+  inline double get_stage_cost() { return stage_cost_; }
   inline double get_rollout_cost() { return rollouts_cost_.minCoeff(); }
   inline double get_rollout_min_cost() { return rollouts_cost_.minCoeff(); }
   inline double get_rollout_max_cost() { return rollouts_cost_.maxCoeff(); }
@@ -343,6 +344,7 @@ class PathIntegral {
 	std::chrono::high_resolution_clock::time_point start_time_;
 
 
+	double stage_cost_ = 0;
 
 
 };

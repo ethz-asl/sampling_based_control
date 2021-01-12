@@ -23,6 +23,7 @@
 #include "mppi/sampler/gaussian_sampler.h"
 #include "mppi/experts/expert.h"
 #include "mppi/controller/rollout.h"
+#include "mppi/utils/data_logger.h"
 
 class TreeManager {
  public:
@@ -136,7 +137,7 @@ public:
    * @param node_dynamics: one dynamics instance from the dynamics vector used for multithreading is assigned to a node
    * @return Returns an iterator which points to the position in the tree
    */
-  tree<Node>::iterator add_node(size_t horizon_step, size_t leaf_pos, dynamics_ptr node_dynamics);
+  tree<Node>::iterator add_node(size_t horizon_step, size_t leaf_pos, dynamics_ptr node_dynamics, expert_ptr node_expert);
 
   /**
    * @brief Helper function to sample from the uniform distribution in the range [v_min, v_max]
@@ -145,6 +146,8 @@ public:
    * @return Returns a sample from the uniform distribution in the range [v_min, v_max]
    */
   static int random_uniform_int(int v_min, int v_max);
+
+  Eigen::VectorXd bound_input(input_t& u);
 
 private:
   double t0_internal_;
@@ -168,6 +171,10 @@ private:
   Eigen::ArrayXd rollouts_cost_;
 
   std::shared_mutex tree_mutex_; // Tree mutex to only allow access to the tree by one thread at the time
+
+  DataLogger datalogger_timing_;
+
+  std::vector<expert_ptr> experts_v_;
 
 };
 
