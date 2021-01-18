@@ -76,25 +76,23 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     // TODO(giuseppe) read the reference value from ref_
     cost += std::pow(x.tail(2 * OBJECT_DIMENSION + CONTACT_STATE).head<1>()(0) -
                          ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE),
-                     2) * 10;
+                     2) *
+            10;
   }
 
   double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();
   if (obstacle_dist < param_.ro) cost += param_.Qo;
 
   // joint limits
-  /**
-  for(size_t i=0; i<7; i++){
+  if (!fixed_base_) {
+    for (size_t i = 0; i < 7; i++) {
+      if (x(i + BASE_DIMENSION) < joint_limits_lower_(i))
+        cost += 1000 + 100 * std::pow(joint_limits_lower_(i) - x(i), 2);
 
-    if (x(i) < joint_limits_lower_(i))
-      joint_limit_cost += 1000 + 100 * std::pow(joint_limits_lower_(i) - x(i),
-  2);
-
-    if (x(i) > joint_limits_upper_(i))
-      joint_limit_cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i),
-  2);
+      if (x(i + BASE_DIMENSION) > joint_limits_upper_(i))
+        cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i), 2);
+    }
   }
-   **/
   return cost;
 }
 

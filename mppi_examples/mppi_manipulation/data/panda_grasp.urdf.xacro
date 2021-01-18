@@ -61,7 +61,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="1 0 0"/>
             <limit effort="1000.0" lower="-100" upper="100" velocity="1.0"/>
-            <dynamics damping="10.0" friction="0.3"/>
+            <dynamics damping="10.0" friction="10"/>
         </joint>
         <xacro:add_transmission joint_name="x_base_joint"/>
 
@@ -71,7 +71,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="0 1 0"/>
             <limit effort="1000.0" lower="-100" upper="100" velocity="1.0"/>
-            <dynamics damping="10.0" friction="0.3"/>
+            <dynamics damping="10.0" friction="10"/>
         </joint>
         <xacro:add_transmission joint_name="y_base_joint"/>
 
@@ -81,7 +81,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="0 0 1"/>
             <limit effort="1000.0" velocity="1.0" upper="10.0" lower="-10.0"/>
-            <dynamics damping="10.0" friction="0.3"/>
+            <dynamics damping="10.0" friction="10"/>
         </joint>
         <xacro:add_transmission joint_name="pivot_joint"/>
 
