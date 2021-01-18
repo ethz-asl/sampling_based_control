@@ -15,11 +15,11 @@ solver:
   filter_window: 30
 
   bound_input: true
-  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   discount_factor: 1.0
   verbose: false
@@ -34,4 +34,4 @@ ros_publish_rate: 10.0
 static_optimization: false
 sim_dt: 0.01
 
-initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]
+initial_configuration: [0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]

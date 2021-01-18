@@ -34,10 +34,11 @@ class PandaCost : public mppi::CostBase {
  public:
   PandaCost() : PandaCost("", "", PandaCostParam()){};
   PandaCost(const std::string& robot_description, const std::string& object_description,
-            const PandaCostParam& param);
+            const PandaCostParam& param, bool fixed_base=true);
   ~PandaCost() = default;
 
  private:
+  bool fixed_base_;
   std::string robot_description_;
   std::string object_description_;
   PandaCostParam param_;
@@ -64,7 +65,7 @@ class PandaCost : public mppi::CostBase {
 
  public:
   cost_ptr create() override {
-    return std::make_shared<PandaCost>(robot_description_, object_description_, param_);
+    return std::make_shared<PandaCost>(robot_description_, object_description_, param_, fixed_base_);
   }
   cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
 

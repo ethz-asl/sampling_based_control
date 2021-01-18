@@ -30,7 +30,8 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
-        src/controller_interface.cpp)
+        src/controller_interface.cpp
+        src/dynamics_ros.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} ${PINOCCHIO_LIBRARIES})
 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
@@ -44,7 +45,6 @@ add_dependencies(manipulation_raisim ${PROJECT_NAME})
 add_executable(sim_ogre src/tests/sim.cpp)
 target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
 add_dependencies(sim_ogre ${PROJECT_NAME})
-
 
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
