@@ -67,7 +67,9 @@ int main(int argc, char** argv) {
   controller.set_observation(x, sim_time);
 
   // start controller
-  // controller.start();
+  bool sequential;
+  nh.param<bool>("sequential", sequential, false);
+  if (!sequential) controller.start();
 
   bool freeze_robot = false;  // hack to freeze the robot once task is done
 
@@ -77,12 +79,17 @@ int main(int argc, char** argv) {
 
   while (ros::ok()) {
     start = steady_clock::now();
-    controller.update_reference();
-    controller.set_observation(x, sim_time);
-    controller.update_policy();
-    controller.get_input(x, u, sim_time);
-    controller.publish_ros_default();
-    controller.publish_ros();
+    if (sequential) {
+      controller.update_reference();
+      controller.set_observation(x, sim_time);
+      controller.update_policy();
+      controller.get_input(x, u, sim_time);
+      controller.publish_ros_default();
+      controller.publish_ros();
+    } else {
+      controller.set_observation(x, sim_time);
+      controller.get_input(x, u, sim_time);
+    }
 
     if (freeze_robot) u.setZero();
 
