@@ -241,6 +241,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
+    x = x0_internal_;
     for (size_t t = 0; t < steps_; t++) {
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
@@ -257,8 +258,10 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
       }
 
+      // impose input constraints
       bound_input(rollouts_[k].uu[t]);
-      x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
+
+      // compute input-state stage cost
       double cost_temp =
           std::pow(config_.discount_factor, t) *
           cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
@@ -271,10 +274,13 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       rollouts_[k].cc(t) = cost_temp;
       rollouts_[k].total_cost += cost_temp -
                                  config_.lambda * opt_roll_.uu[t].transpose() *
-                                     sampler_->sigma_inv() *
-                                     rollouts_[k].nn[t] +
+                                 sampler_->sigma_inv() *
+                                 rollouts_[k].nn[t] +
                                  config_.lambda * opt_roll_.uu[t].transpose() *
-                                     sampler_->sigma_inv() * opt_roll_.uu[t];
+                                 sampler_->sigma_inv() * opt_roll_.uu[t];
+
+      // integrate dynamics
+      x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
