@@ -29,21 +29,21 @@ struct force_t {
 class PandaRaisimDynamics : public mppi::DynamicsBase {
  public:
   PandaRaisimDynamics(const std::string& robot_description, const std::string& object_description,
-                      const double dt);
-
+                      const double dt, const bool fixed_base = true);
   ~PandaRaisimDynamics() = default;
 
  private:
-  void initialize_world(const std::string& robot_description, const std::string& object_description,
-                        const double dt);
+  void initialize_world(const std::string& robot_description,
+                        const std::string& object_description);
   void initialize_pd();
   void set_collision();
 
  public:
-  size_t get_input_dimension() override { return PandaDim::INPUT_DIMENSION; }
-  size_t get_state_dimension() override { return PandaDim::STATE_DIMENSION; }
+  size_t get_input_dimension() override { return input_dimension_; }
+  size_t get_state_dimension() override { return state_dimension_; }
   dynamics_ptr create() override {
-    return std::make_shared<PandaRaisimDynamics>(robot_description_, object_description_, dt_);
+    return std::make_shared<PandaRaisimDynamics>(robot_description_, object_description_, dt_,
+                                                 fixed_base_);
   }
 
   dynamics_ptr clone() const override {
@@ -58,13 +58,23 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   input_t get_zero_input(const observation_t& x) override;
 
   std::vector<force_t> get_contact_forces();
+  void get_end_effector_pose(Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
+  void get_handle_pose(Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
+  double get_object_displacement() const;
 
- private:
+ protected:
+  bool fixed_base_;
+  size_t robot_dof_;
+  size_t input_dimension_;
+  size_t state_dimension_;
+
   observation_t x_;
 
+ private:
   double dt_;
   std::string robot_description_;
   std::string object_description_;
+
   raisim::ArticulatedSystem* panda;
   raisim::ArticulatedSystem* object;
 

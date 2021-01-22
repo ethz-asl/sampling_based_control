@@ -45,6 +45,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi::SolverConfig config_;
 
  private:
+  bool fixed_base_;
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 

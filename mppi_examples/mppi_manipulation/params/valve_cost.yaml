@@ -1,4 +1,3 @@
-initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]
 linear_weight: 100.0
 angular_weight: 1.0
 obstacle_radius: 0.15

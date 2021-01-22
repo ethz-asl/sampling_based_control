@@ -14,43 +14,68 @@ using namespace mppi;
 namespace manipulation {
 
 PandaRaisimDynamics::PandaRaisimDynamics(const std::string& robot_description,
-                                         const std::string& object_description, const double dt) {
-  initialize_world(robot_description, object_description, dt);
+                                         const std::string& object_description, const double dt,
+                                         const bool fixed_base)
+    : fixed_base_(fixed_base), dt_(dt) {
+  initialize_world(robot_description, object_description);
   initialize_pd();
   set_collision();
 };
 
 void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
-                                           const std::string& object_description, const double dt) {
-  dt_ = dt;
-  x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
-  sim_.setTimeStep(dt);
+                                           const std::string& object_description) {
+  sim_.setTimeStep(dt_);
   sim_.setERP(0., 0.);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+  for (const auto& joint_name : panda->getMovableJointNames()) std::cout << joint_name << std::endl;
 
   /// create raisim objects
   object_description_ = object_description;
   object = sim_.addArticulatedSystem(object_description_, "/");
   object->setGeneralizedForce(Eigen::VectorXd::Zero(object->getDOF()));
   object->setGeneralizedCoordinate(Eigen::VectorXd::Zero(1));
+
+  // robot dof and base check
+  if (fixed_base_) {
+    robot_dof_ = ARM_GRIPPER_DIM;
+    state_dimension_ = 2 * (ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
+    input_dimension_ = ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
+  } else {
+    robot_dof_ = BASE_ARM_GRIPPER_DIM;
+    state_dimension_ = 2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
+    input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
+  }
+  x_ = observation_t::Zero(state_dimension_);
+  std::cout << "Fixed base? " << fixed_base_ << ", robot dof: " << robot_dof_
+            << ", from model: " << panda->getDOF() << std::endl;
 }
 
 void PandaRaisimDynamics::initialize_pd() {
   /// panda
-  cmd.setZero(PandaDim::JOINT_DIMENSION);
-  cmdv.setZero(PandaDim::JOINT_DIMENSION);
-  joint_p.setZero(PandaDim::JOINT_DIMENSION);
-  joint_v.setZero(PandaDim::JOINT_DIMENSION);
-  joint_p_gain.setZero(PandaDim::JOINT_DIMENSION);
-  joint_d_gain.setZero(PandaDim::JOINT_DIMENSION);
-  joint_p_desired.setZero(PandaDim::JOINT_DIMENSION);
-  joint_v_desired.setZero(PandaDim::JOINT_DIMENSION);
-  joint_p_gain.head(PandaDim::ARM_DIMENSION).setConstant(0);
-  joint_d_gain.head(PandaDim::ARM_DIMENSION).setConstant(10.0);
-  joint_p_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(200);
-  joint_d_gain.tail(PandaDim::GRIPPER_DIMENSION).setConstant(1.0);
+  cmd.setZero(robot_dof_);
+  cmdv.setZero(robot_dof_);
+  joint_p.setZero(robot_dof_);
+  joint_v.setZero(robot_dof_);
+  joint_p_gain.setZero(robot_dof_);
+  joint_d_gain.setZero(robot_dof_);
+  joint_p_desired.setZero(robot_dof_);
+  joint_v_desired.setZero(robot_dof_);
+
+  if (!fixed_base_) {
+    joint_p_gain.head(BASE_DIMENSION).setConstant(0);
+    joint_d_gain.head(BASE_DIMENSION).setConstant(10.0);
+    joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(0.0);
+    joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(10.0);
+  } else {
+    joint_p_gain.head(ARM_DIMENSION).setConstant(0);
+    joint_d_gain.head(ARM_DIMENSION).setConstant(10.0);
+  }
+
+  joint_p_gain.tail(GRIPPER_DIMENSION).setConstant(200);
+  joint_d_gain.tail(GRIPPER_DIMENSION).setConstant(1.0);
+
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
 }
@@ -66,12 +91,16 @@ void PandaRaisimDynamics::set_collision() {
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t& u,
                                                       const double dt) {
   // no mimic support --> 1 input for gripper but 2 joints to control
-  cmd(PandaDim::ARM_DIMENSION) =
-      0.04;  // x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
-  cmd(PandaDim::ARM_DIMENSION + 1) = cmd(PandaDim::ARM_DIMENSION);
+  // cmd(PandaDim::ARM_DIMENSION) = x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
+  cmd.tail<PandaDim::GRIPPER_DIMENSION>() << 0.04, 0.04;
 
-  cmdv.head<PandaDim::ARM_DIMENSION>() = u.head<PandaDim::ARM_DIMENSION>();
-  cmdv.tail<PandaDim::GRIPPER_DIMENSION>() = Eigen::Vector2d::Zero();
+  if (fixed_base_) {
+    cmdv.head<ARM_DIMENSION>() = u.head<ARM_DIMENSION>();
+  } else {
+    cmdv.head<ARM_DIMENSION + BASE_DIMENSION>() = u.head<BASE_DIMENSION + ARM_DIMENSION>();
+  }
+
+  cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
   panda->setPdTarget(cmd, cmdv);
   panda->setGeneralizedForce(panda->getNonlinearities());
   panda->getState(joint_p, joint_v);
@@ -92,11 +121,19 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
   // step simulation
   sim_.integrate();
 
-  x_.head<PandaDim::JOINT_DIMENSION>() = joint_p;
-  x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION) = joint_v;
-  x_.segment<2 * PandaDim::OBJECT_DIMENSION>(2 * PandaDim::JOINT_DIMENSION)(0) = object_p(0);
-  x_.segment<2 * PandaDim::OBJECT_DIMENSION>(2 * PandaDim::JOINT_DIMENSION)(1) = object_v(0);
-  x_(2 * PandaDim::OBJECT_DIMENSION + 2 * PandaDim::JOINT_DIMENSION) = in_contact;
+  if (fixed_base_) {
+    x_.head<ARM_GRIPPER_DIM>() = joint_p;
+    x_.segment<ARM_GRIPPER_DIM>(ARM_GRIPPER_DIM) = joint_v;
+    x_.segment<2 * OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM)(0) = object_p(0);
+    x_.segment<2 * OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM)(1) = object_v(0);
+    x_.tail<1>()(0) = in_contact;
+  } else {
+    x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p;
+    x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v;
+    x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0) = object_p(0);
+    x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v(0);
+    x_.tail<1>()(0) = in_contact;
+  }
   return x_;
 }
 
@@ -105,16 +142,42 @@ void PandaRaisimDynamics::reset(const DynamicsBase::observation_t& x) {
   x_ = x;
 
   // reset arm
-  panda->setState(x_.head<PandaDim::JOINT_DIMENSION>(),
-                  x_.segment<PandaDim::JOINT_DIMENSION>(PandaDim::JOINT_DIMENSION));
-
-  // reset object
-  object->setState(x_.segment<PandaDim::OBJECT_DIMENSION>(2 * PandaDim::JOINT_DIMENSION),
-                   x_.segment<PandaDim::OBJECT_DIMENSION>(2 * PandaDim::JOINT_DIMENSION + 1));
+  if (fixed_base_) {
+    panda->setState(x_.head<ARM_GRIPPER_DIM>(), x_.segment<ARM_GRIPPER_DIM>(ARM_GRIPPER_DIM));
+    object->setState(x_.segment<OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM),
+                     x_.segment<OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM + 1));
+  } else {
+    panda->setState(x_.head<BASE_ARM_GRIPPER_DIM>(),
+                    x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
+    object->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
+                     x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
+  }
 }
 
 DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
+}
+
+void PandaRaisimDynamics::get_end_effector_pose(Eigen::Vector3d& position,
+                                                Eigen::Quaterniond& orientation) {
+  size_t frame_id = panda->getFrameIdxByName("panda_grasp_joint");
+  raisim::Vec<3> pos;
+  raisim::Mat<3, 3> rot;
+  panda->getFramePosition(frame_id, pos);
+  panda->getFrameOrientation(frame_id, rot);
+  position = pos.e();
+  orientation = Eigen::Quaterniond(rot.e());
+}
+
+void PandaRaisimDynamics::get_handle_pose(Eigen::Vector3d& position,
+                                          Eigen::Quaterniond& orientation) {
+  size_t frame_id = object->getFrameIdxByName("handle_joint");
+  raisim::Vec<3> pos;
+  raisim::Mat<3, 3> rot;
+  object->getFramePosition(frame_id, pos);
+  object->getFrameOrientation(frame_id, rot);
+  position = pos.e();
+  orientation = Eigen::Quaterniond(rot.e());
 }
 
 std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
@@ -132,4 +195,9 @@ std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
   return forces;
 }
 
-}  // namespace panda
+double PandaRaisimDynamics::get_object_displacement() const {
+  if (fixed_base_) return x_.segment<OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM)(0);
+  return x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
+}
+
+}  // namespace manipulation

@@ -72,7 +72,10 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // -------------------------------
   // config
   // -------------------------------
-  std::string config_file = ros::package::getPath("mppi_manipulation") + "/params/params.yaml";
+  std::string config_file;
+  if (!nh_.param<std::string>("/config_file", config_file, "")) {
+    throw std::runtime_error("Could not parse config_file. Is the parameter set?");
+  }
   if (!config_.init_from_file(config_file)) {
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
@@ -89,8 +92,12 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   if (!nh_.param<std::string>("/object_description_raisim", object_description_raisim, "")) {
     throw std::runtime_error("Could not parse object_description_raisim. Is the parameter set?");
   }
-  dynamics = std::make_shared<PandaRaisimDynamics>(robot_description_raisim, object_description_raisim,
-                                                   config_.step_size);
+  if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
+    throw std::runtime_error("Could not parse fixed_base. Is the parameter set?");
+  }
+
+  dynamics = std::make_shared<PandaRaisimDynamics>(
+      robot_description_raisim, object_description_raisim, config_.step_size, fixed_base_);
 
   // -------------------------------
   // cost
@@ -110,7 +117,8 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   pinocchio::SE3 grasp_offset(q, t);
   cost_param.grasp_offset = grasp_offset;
 
-  auto cost = std::make_shared<PandaCost>(robot_description, object_description, cost_param);
+  auto cost =
+      std::make_shared<PandaCost>(robot_description, object_description, cost_param, fixed_base_);
 
   // -------------------------------
   // controller
@@ -123,7 +131,8 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   double object_reference_position;
   nh_.param<double>("object_reference_position", object_reference_position, 0.0);
   ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
-  ref_.rr[0](PandaDim::REFERENCE_POSE_DIMENSION + PandaDim::REFERENCE_OBSTACLE) = object_reference_position;
+  ref_.rr[0](PandaDim::REFERENCE_POSE_DIMENSION + PandaDim::REFERENCE_OBSTACLE) =
+      object_reference_position;
   ref_.tt.resize(1, 0.0);
   return true;
 }
@@ -159,14 +168,23 @@ void PandaControllerInterface::mode_callback(const std_msgs::Int64ConstPtr& msg)
   ROS_INFO_STREAM("Switching to mode: " << msg->data);
 }
 
-bool PandaControllerInterface::update_reference() {
-  return true;
-}
+bool PandaControllerInterface::update_reference() { return true; }
 
 pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x) {
-  pinocchio::forwardKinematics(model_, data_, x.head<PandaDim::JOINT_DIMENSION>());
+  if (fixed_base_) {
+    pinocchio::forwardKinematics(model_, data_, x.head<ARM_GRIPPER_DIM>());
+  } else {
+    pinocchio::forwardKinematics(model_, data_, x.head<BASE_ARM_GRIPPER_DIM>());
+  }
   pinocchio::updateFramePlacements(model_, data_);
   return data_.oMf[model_.getFrameId("panda_grasp")];
+}
+
+pinocchio::SE3 PandaControllerInterface::get_pose_handle(const Eigen::VectorXd& x) {
+  pinocchio::forwardKinematics(object_model_, object_data_,
+                               x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
+  pinocchio::updateFramePlacements(object_model_, object_data_);
+  return object_data_.oMf[handle_idx_];
 }
 
 geometry_msgs::PoseStamped PandaControllerInterface::pose_pinocchio_to_ros(
@@ -189,13 +207,6 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
     const Eigen::VectorXd& x) {
   pinocchio::SE3 pose = get_pose_end_effector(x);
   return pose_pinocchio_to_ros(pose);
-}
-
-pinocchio::SE3 PandaControllerInterface::get_pose_handle(const Eigen::VectorXd& x) {
-  pinocchio::forwardKinematics(object_model_, object_data_,
-                               x.segment<1>(2 * PandaDim::JOINT_DIMENSION));
-  pinocchio::updateFramePlacements(object_model_, object_data_);
-  return object_data_.oMf[handle_idx_];
 }
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(const Eigen::VectorXd& x) {
