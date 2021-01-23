@@ -1,0 +1,131 @@
+<?xml version="1.0" ?>
+<robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+    <xacro:property name="door_length" default="0.30"/>
+    <xacro:property name="door_height" default="0.90"/>
+    <xacro:property name="door_width" default="0.02"/>
+    <xacro:property name="handle_height" default="0.036"/>
+    <xacro:property name="handle_length" default="0.16"/>
+    <xacro:property name="handle_offset" default="0.25"/>
+
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="shelf"/>
+        <origin xyz="0.5 0 0" rpy="0 0 3.14159"/>
+    </joint>
+
+    <link name="shelf"/>
+    <link name="door">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 ${door_length/2} 0"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${door_height}"/>
+            </geometry>
+            <material name="door_material">
+                <color rgba="1.0 1.0 1.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 ${door_length/2} 0"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${door_height}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="articulation_joint" type="revolute">
+        <parent link="shelf"/>
+        <child link="door"/>
+        <dynamics damping="2.0" friction="4.0"/>
+        <origin xyz="0 -${door_length} ${door_height/2}"/>
+        <axis xyz="0 0 -1"/>
+        <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
+    </joint>
+
+    <link name="handle">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.01 ${handle_length+0.01}"/>
+            </geometry>
+            <material name="handle_material">
+                <color rgba="0.0 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.01 ${handle_length+0.01}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="handle_support_left">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+            <material name="handle_material">
+                <color rgba="0.0 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="handle_support_right">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+            <material name="handle_material">
+                <color rgba="0.0 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="handle_joint" type="fixed">
+        <parent link="door"/>
+        <child link="handle"/>
+        <origin xyz="${handle_height + door_width/2} ${handle_offset} 0" rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
+    </joint>
+
+    <joint name="handle_support_left_joint" type="fixed">
+        <parent link="handle"/>
+        <child link="handle_support_left"/>
+        <origin xyz="-${handle_height/2} 0 ${handle_length/2}" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="handle_support_right_joint" type="fixed">
+        <parent link="handle"/>
+        <child link="handle_support_right"/>
+        <origin xyz="-${handle_height/2} 0 -${handle_length/2}" rpy="0 0 0"/>
+    </joint>
+</robot>
