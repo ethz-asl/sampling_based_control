@@ -10,25 +10,6 @@
 
 #include <utility>
 
-//Node::Node(double t, double c_parent, dynamics_ptr dynamics, const mppi::SolverConfig& config, cost_ptr cost) {
-//  cost_ = cost;
-//  config_ = config;
-//  dynamics_ = dynamics;
-//  auto current_time = std::chrono::high_resolution_clock::now();
-//  timestamp_ = current_time;
-//
-//  public_name_ = std::to_string(current_time.time_since_epoch().count());
-//
-//  t_ = t;
-//  c_ = c_parent + 0;
-////  xx_ = dynamics_->step();
-//  uu_applied_ = Eigen::VectorXd::Zero();
-//  nn_applied_ = Eigen::VectorXd::Zero(1);
-//}
-
-//TODO don't do anything in node except the necessary, which is calc the statecost + cost of parent node (evt. pointer to parent node //
-// (pass only observation value, and action value)
-
 Node::Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost,const Eigen::VectorXd& u_applied, const Eigen::VectorXd& x, const Eigen::MatrixXd& sigma_inv, size_t expert_type_applied) {
   cost_ = std::move(cost);
   config_ = config;

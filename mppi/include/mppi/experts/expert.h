@@ -1,6 +1,10 @@
-//
-// Created by etienne on 15.12.20.
-//
+/*!
+ * @file     expert.h
+ * @author   Etienne Walther
+ * @date     08.12.2020
+ * @version  1.0
+ * @brief    description
+ */
 
 #pragma once
 
@@ -18,6 +22,7 @@ class Expert {
   using expert_ptr = std::shared_ptr<Expert>;
 	using config_t = mppi::SolverConfig;
 	using dynamics_ptr = mppi::DynamicsBase::dynamics_ptr;
+
   Expert(config_t config, const dynamics_ptr& dynamics);
   ~Expert() = default;
 
@@ -37,7 +42,6 @@ class Expert {
 
   // create experts
   std::map<size_t, ExpertBase*> experts_;
-
 };
 
 }

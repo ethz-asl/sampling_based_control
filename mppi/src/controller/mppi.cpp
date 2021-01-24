@@ -26,7 +26,6 @@
 #include "mppi/utils/logging.h"
 #include "mppi/tree/tree_manager.h"
 #include "mppi/experts/expert.h"
-#include "mppi/utils/data_logger.h"
 
 namespace mppi {
 
@@ -38,9 +37,7 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
       config_(config),
       sampler_(std::move(sampler)),
       renderer_(std::move(renderer)),
-			datalogger_opt_rollout_("/home/etienne/Documents/logging_directory/test/opt_rollout_logger.txt"),
-			//datalogger_rollouts_("/home/etienne/Documents/logging_directory/test/rollouts_logger.txt"),
-      expert_(config_, dynamics_),
+			expert_(config_, dynamics_),
       tree_manager_(dynamics_, cost_, sampler_, config_, &expert_)
 			{
 
@@ -51,10 +48,11 @@ PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
 	}
 
   if (config_.use_tree_search){
-    init_tree_manager();
+    init_tree_manager_dynamics();
   }
-  if (config_.log_data){
-		init_data_logger();
+
+  if (config_.display_update_freq){
+    start_time_ = std::chrono::high_resolution_clock::now();
   }
 }
 
@@ -130,22 +128,16 @@ void PathIntegral::init_threading() {
   }
 }
 
-void PathIntegral::init_tree_manager() {
+void PathIntegral::init_tree_manager_dynamics() {
   for (size_t i = 0; i < config_.rollouts; i++) {
     tree_dynamics_v_.push_back(dynamics_->create());
   }
 }
 
-void PathIntegral::init_data_logger(){
-
-	// header opt rollout log
-	datalogger_opt_rollout_.write("t0_internal",  "horizon_step", "t","c", "c_cum", "ee_position_x", "ee_position_y", "ee_position_z");
-	datalogger_opt_rollout_.write_endl();
-
-}
-
 void PathIntegral::update_policy() {
-	start_time_ = std::chrono::high_resolution_clock::now();
+  if (config_.display_update_freq){
+    time_it();
+  }
 
   if (!observation_set_) {
     log_warning_throttle(1.0,
@@ -170,41 +162,14 @@ void PathIntegral::update_policy() {
       optimize();
       filter_input();
 
-      // log_data
-      if (config_.log_data){
-				dynamics_->reset(x0_internal_);
-				opt_roll_.total_cost = 0;
-				for (size_t t = 0; t < steps_; t++) {
-					opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
-					opt_roll_.cc[t] = cost_->get_stage_cost(opt_roll_.xx[t]);
-					opt_roll_.total_cost += opt_roll_.cc[t];
-				}
-      	// log opt_roll
-      	for (size_t step = 0; step<steps_;++step){
-					datalogger_opt_rollout_.write(t0_internal_, step, opt_roll_.tt[step],opt_roll_.cc[step], opt_roll_.total_cost, opt_roll_.xx[step][0], opt_roll_.xx[step][1], opt_roll_.xx[step][2]);
-					datalogger_opt_rollout_.write_endl();
-      	}
-//				// log rollouts
-//				for (size_t rollout = 0; rollout < config_.rollouts; ++rollout) {
-//					for (size_t step = 0; step < steps_; ++step) {
-//						datalogger_opt_rollout_.write(t0_internal_, step, opt_roll_.cc[step], opt_roll_.total_cost,
-//																					opt_roll_.xx[step][0]);
-//						datalogger_opt_rollout_.write_endl();
-//					}
-//				}
-      }
-
       // TODO move this away. This goes year since there might be filtering
       // happening before optimal rollout
       dynamics_->reset(x0_internal_);
       for (size_t t = 0; t < steps_; t++) {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
-      stage_cost_ = cost_->get_stage_cost(opt_roll_.xx[0]);
-
     }
     swap_policies();
-		time_it();
 
     if (renderer_) renderer_->render(rollouts_);
   }
@@ -213,7 +178,9 @@ void PathIntegral::update_policy() {
 void PathIntegral::time_it(){
 	auto stop = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start_time_).count();
-	std::cout << "Time since optimization start: " << duration << "[μs], " << duration/1000000.0 << "[s], " << 1/(duration/1000000.0) << "[Hz]" << std::endl;
+	auto timing_string = "Time since optimization start: " + std::to_string(duration) + "[μs], " + std::to_string(duration/1000000.0) + "[s], " + std::to_string(1/(duration/1000000.0)) + "[Hz]";
+  log_info(timing_string);
+  start_time_ = std::chrono::high_resolution_clock::now();
 }
 
 void PathIntegral::set_observation(const observation_t& x, const double t) {

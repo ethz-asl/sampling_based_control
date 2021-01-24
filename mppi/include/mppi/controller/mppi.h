@@ -28,7 +28,6 @@
 #include "mppi/visualization/rederer.h"
 #include "mppi/tree/tree_manager.h"
 #include "mppi/experts/expert.h"
-#include "mppi/utils/data_logger.h"
 
 namespace mppi {
 
@@ -80,8 +79,11 @@ class PathIntegral {
 	/**
    * @brief Initializes the variables for the tree manager
    */
-	void init_tree_manager();
+	void init_tree_manager_dynamics();
 
+  /**
+   * @brief Calculates and displays the frequency of the control loop
+   */
 	void time_it();
 
  public:
@@ -128,8 +130,17 @@ class PathIntegral {
    */
   void sample_trajectories();
 
-
+  /**
+   * @brief Samples multiple control trajectories using a FD-MCTS. Based on a
+   * pruning threshold the structure of the tree can be controlled. The last
+   * optimal rollout is always fully propagated through the tree.
+   */
   void sample_trajectories_via_tree();
+
+  /**
+   * @brief Overwrites the rollouts, since the tree has no direct access to the
+   * PathIntegral class.
+   */
   void overwrite_rollouts();
 
 
@@ -184,8 +195,6 @@ class PathIntegral {
 	 * @brief Update the experts based on data from last iteration
 	 */
 	void update_experts();
-
-	void init_data_logger();
 
   /**
    * @brief Fill the optimized policy cache with the latest policy and set flags
@@ -333,20 +342,11 @@ class PathIntegral {
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 
-	DataLogger datalogger_opt_rollout_;
-	//DataLogger datalogger_rollouts_;
-
-	Expert expert_;
-  TreeManager tree_manager_;
-  std::vector<dynamics_ptr>
-      tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts)
-
-	std::chrono::high_resolution_clock::time_point start_time_;
-
-
-	double stage_cost_ = 0;
-
-
+  Expert expert_;  // expert class gives access to all experts implemented
+  TreeManager tree_manager_;  // tree_manager class controls the building of the tree
+  std::vector<dynamics_ptr> tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts) for multithreading
+  double stage_cost_ = 0;  // stage_cost used for logging
+  std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
 };
 
 }  // namespace mppi

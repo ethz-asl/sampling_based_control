@@ -1,6 +1,10 @@
-//
-// Created by etienne on 14.12.20.
-//
+/*!
+ * @file     expert_norm.h
+ * @author   Etienne Walther
+ * @date     08.12.2020
+ * @version  1.0
+ * @brief    description
+ */
 
 #pragma once
 
@@ -9,7 +13,7 @@
 class NormExp : public ExpertBase{
  public:
   NormExp(char short_name, config_t config, dynamics_ptr dynamics): ExpertBase(short_name, config, dynamics), expert_sampler_one_(dynamics_->get_input_dimension()){
-		expert_sampler_one_.set_covariance(Eigen::VectorXd::Ones(dynamics_->get_input_dimension())*0.01);
+		expert_sampler_one_.set_covariance(Eigen::VectorXd::Ones(dynamics_->get_input_dimension())*0.05);
   }
 
   ~NormExp() = default;

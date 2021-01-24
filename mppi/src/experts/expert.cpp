@@ -1,14 +1,16 @@
-//
-// Created by etienne on 15.12.20.
-//
+/*!
+ * @file     expert.cpp
+ * @author   Etienne Walther
+ * @date     08.12.2020
+ * @version  1.0
+ * @brief    description
+ */
 
 #include "mppi/experts/expert.h"
 
 namespace mppi {
 
-// Expert
 Expert::Expert(config_t config, const dynamics_ptr& dynamics) {
-  // Define all the experts used
   config_ = config;
   dynamics_ = dynamics;
 

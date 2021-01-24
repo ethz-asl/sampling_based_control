@@ -58,9 +58,8 @@ bool SolverConfig::init_from_file(const std::string &file) {
 //	expert_types		= (std::vector<ExpertTypes>)parse_key_quiet<std::vector<size_t>>(solver_options, "expert_types").value_or(expert_types);
 	expert_weights	= parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
 	expert_types 		= {NORM, IMP};
-	log_data        = parse_key_quiet<bool>(solver_options, "log_data").value_or(log_data);
-  log_tree_timing = parse_key_quiet<bool>(solver_options, "log_tree_timing").value_or(log_tree_timing);
-  //clang-format on
+  display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
+//clang-format on
 
   if (parsing_error) return false;
   std::cout << "Solver options correctly parsed from: " << file << std::endl;

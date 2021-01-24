@@ -60,8 +60,7 @@ struct SolverConfig {
   std::vector<ExpertTypes> expert_types = {ExpertTypes::NORM, ExpertTypes::IMP};
 	Eigen::VectorXd expert_weights;
 
-	bool log_data = false;
-	bool log_tree_timing = false;
+	bool display_update_freq = false;
 
   bool init_from_file(const std::string& file);
  private:
