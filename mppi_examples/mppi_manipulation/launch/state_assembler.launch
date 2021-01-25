@@ -11,7 +11,7 @@
 
     <!--    State assembler node-->
     <node pkg="mppi_manipulation" name="state_assembler_test"  type="state_assembler_test" output="screen">
-        <param name="fixed_base" value="false"/>
+        <param name="fixed_base" value="true"/>
         <param name="base_twist_topic" value="/ridgeback/twist"/>
     </node>
 

@@ -78,8 +78,10 @@ std::string StateAssembler::state_as_string(const Eigen::VectorXd& x) {
   ss << "=========================================================\n";
   ss << "                        State                            \n";
   ss << "=========================================================\n";
-  ss << "Base position:  " << base_state_.transpose() << std::endl;
-  ss << "Base twist:     " << base_twist_.transpose() << std::endl;
+  if (!fixed_base_){
+    ss << "Base position:  " << base_state_.transpose() << std::endl;
+    ss << "Base twist:     " << base_twist_.transpose() << std::endl;
+  }
   ss << "Joint position: " << q_.transpose() << std::endl;
   ss << "Joint velocity: " << dq_.transpose() << std::endl;
   ss << "Theta:          " << theta_ << std::endl;
@@ -105,7 +107,7 @@ bool StateAssembler::update_base_pose() {
                                        tf_base_.transform.rotation.y,
                                        tf_base_.transform.rotation.z));
 
-  Eigen::Vector3d world_ix = m.col(0);  // 2d projection of forward axis
+  Eigen::Vector3d world_ix = m.col(0);  // 2d projection of forward motion axis
   base_state_.z() = std::atan2(world_ix.y(), world_ix.x());
   return true;
 }
