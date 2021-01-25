@@ -10,7 +10,7 @@
 #include <raisim/World.hpp>
 #include <raisim/configure.hpp>
 
-#include <math.h>
+#include <cmath>
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
 #include <Eigen/Core>

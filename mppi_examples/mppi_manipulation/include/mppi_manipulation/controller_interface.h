@@ -42,10 +42,10 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
 
  public:
+  bool fixed_base_;
   mppi::SolverConfig config_;
 
  private:
-  bool fixed_base_;
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 

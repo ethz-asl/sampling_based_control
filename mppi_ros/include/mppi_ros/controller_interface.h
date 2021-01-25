@@ -50,6 +50,11 @@ class ControllerRos {
    */
   bool start();
 
+  /**
+   * @brief Stop the running controller and associated threads
+   */
+  void stop();
+
   inline std::shared_ptr<PathIntegral>& get_controller() {
     return controller_;
   };
@@ -62,7 +67,7 @@ class ControllerRos {
    * Methods to use in a synchronous setup. In this case the call should follow
    * the pattern:
    * 1. set_observation: set last estimated state
-   * 2. update_policy: optimize from just set observation)
+   * 2. update_policy: optimize from just set observation
    * 3.
    *  a. get_input : only feedforward term required
    *  b. get_input_state: feedforward + nominal state

@@ -12,7 +12,7 @@ using namespace mppi_ros;
 
 ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh) {}
 
-ControllerRos::~ControllerRos() { worker_manager_.stopWorkers(); }
+ControllerRos::~ControllerRos() { this->stop(); }
 
 bool ControllerRos::init_default_params() {
   policy_update_rate_ = param_io::param(nh_, "policy_update_rate", 0.0);
@@ -166,4 +166,8 @@ void ControllerRos::get_input_state(const observation_t &x,
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;
   }
+}
+
+void ControllerRos::stop() {
+  worker_manager_.stopWorkers();
 }

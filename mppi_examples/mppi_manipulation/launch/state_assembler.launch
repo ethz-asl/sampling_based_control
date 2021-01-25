@@ -1,0 +1,22 @@
+<launch>
+    <!--    Load and publish to tf info for the articulation model -->
+    <arg name="model" value="$(find mppi_manipulation)/data/shelf.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+    <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+    <node pkg="mppi_manipulation" type="base_odometry_dummy_node" name="base_odometry_dummy_node" output="screen">
+        <param name="twist_topic"   value="/ridgeback/twist"/>
+    </node>
+
+    <!--    State assembler node-->
+    <node pkg="mppi_manipulation" name="state_assembler_test"  type="state_assembler_test" output="screen">
+        <param name="fixed_base" value="false"/>
+        <param name="base_twist_topic" value="/ridgeback/twist"/>
+    </node>
+
+    <!--    Visualization-->
+    <node pkg="rviz" type="rviz"  name="rviz" args="-d $(find mppi_manipulation)/config/config.rviz"/>
+
+</launch>
+
