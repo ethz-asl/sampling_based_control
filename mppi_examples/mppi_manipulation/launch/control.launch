@@ -10,15 +10,19 @@
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
     <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
     <arg name="object_reference_position" default="0.20" if="$(eval arg('object') == 'drawer')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
 
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_grasp.urdf.xacro"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_standalone.urdf.xacro" if="$(arg fixed_base)"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro" unless="$(arg fixed_base)"/>
+
+    <arg name="object_height" default="0.0" if="$(arg fixed_base)"/>
+    <arg name="object_height" default="0.45" unless="$(arg fixed_base)"/>
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
       resources_prefix:='file://'
       collision_links:=false
       collision_hand:=true
-      add_finger:=true
-      fixed_base:=$(arg fixed_base)"/>
+      add_finger:=true"/>
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
       collision_links:=false
@@ -26,14 +30,15 @@
       collision_finger:=true
       collision_format:='obj'
       add_finger:=true
-      no_position_limits:=true
-      fixed_base:=$(arg fixed_base)"/>
+      no_position_limits:=true"/>
 
     <param name="object_description"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro resource_prefix:='file://'"/>
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           resource_prefix:='file://'
+           height:=$(arg object_height)"/>
     <param name="object_description_raisim"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro"/>
-
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           height:=$(arg object_height)"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>

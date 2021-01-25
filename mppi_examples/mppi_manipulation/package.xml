@@ -25,6 +25,7 @@
     <depend>realtime_tools</depend>
     <depend>franka</depend>
     <depend>franka_example_controllers</depend>
+    <depend>ridgeback_description</depend>
 
     <export>
         <controller_interface plugin="${prefix}/plugins.xml"/>

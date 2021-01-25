@@ -3,7 +3,7 @@
 
     <arg name="fixed_base" default="true"/>
     <arg name="object"  default="door"/>
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_grasp.urdf.xacro"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda.urdf.xacro"/>
     <arg name="tf_prefix" default=""/>
 
     <param name="robot_description"
@@ -17,9 +17,9 @@
       no_position_limits:=true
       fixed_base:=$(arg fixed_base)"/>
 
-    <param name="object_description" command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro  resource_prefix:='file://'"/>
+    <param name="object_description" command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro  resource_prefix:='file://'"/>
     <param name="object_description_raisim"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro"/>
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro"/>
 
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">

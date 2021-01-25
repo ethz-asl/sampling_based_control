@@ -3,10 +3,7 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /TF1
-        - /TF1/Frames1
-        - /Pose1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 866
   - Class: rviz/Selection
@@ -58,22 +55,72 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base:
-          Value: true
-        door:
+        base_link:
           Value: false
-        door_hinge:
-          Value: true
-        handle:
-          Value: true
-        handle_support_left:
+        chassis_link:
           Value: false
-        handle_support_right:
-          Value: false
-        shelf:
+        door_frame:
           Value: true
+        door_link:
+          Value: true
+        franka_mount_link:
+          Value: false
+        front_cover_link:
+          Value: false
+        front_lights_link:
+          Value: false
+        handle_link:
+          Value: true
+        left_side_cover_link:
+          Value: false
+        mid_mount:
+          Value: false
+        omni_base_root_link:
+          Value: false
+        panda_grasp:
+          Value: true
+        panda_hand:
+          Value: false
+        panda_leftfinger:
+          Value: false
+        panda_link0:
+          Value: false
+        panda_link1:
+          Value: false
+        panda_link2:
+          Value: false
+        panda_link3:
+          Value: false
+        panda_link4:
+          Value: false
+        panda_link5:
+          Value: false
+        panda_link6:
+          Value: false
+        panda_link7:
+          Value: false
+        panda_link8:
+          Value: false
+        panda_rightfinger:
+          Value: false
+        pivot:
+          Value: false
+        rear_cover_link:
+          Value: false
+        rear_lights_link:
+          Value: false
+        ridgeback_sensor_mount_link:
+          Value: false
+        right_side_cover_link:
+          Value: false
+        top_link:
+          Value: false
         world:
-          Value: true
+          Value: false
+        x_slider:
+          Value: false
+        y_slider:
+          Value: false
       Marker Alpha: 1
       Marker Scale: 0.699999988079071
       Name: TF
@@ -82,16 +129,50 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          base:
-            {}
-          shelf:
-            door_hinge:
-              door:
-                handle:
-                  handle_support_left:
-                    {}
-                  handle_support_right:
-                    {}
+          door_frame:
+            door_link:
+              handle_link:
+                {}
+          omni_base_root_link:
+            x_slider:
+              y_slider:
+                pivot:
+                  base_link:
+                    chassis_link:
+                      front_cover_link:
+                        {}
+                      front_lights_link:
+                        {}
+                      left_side_cover_link:
+                        {}
+                      rear_cover_link:
+                        {}
+                      rear_lights_link:
+                        {}
+                      right_side_cover_link:
+                        {}
+                      top_link:
+                        {}
+                    mid_mount:
+                      franka_mount_link:
+                        panda_link0:
+                          panda_link1:
+                            panda_link2:
+                              panda_link3:
+                                panda_link4:
+                                  panda_link5:
+                                    panda_link6:
+                                      panda_link7:
+                                        panda_link8:
+                                          panda_hand:
+                                            panda_grasp:
+                                              {}
+                                            panda_leftfinger:
+                                              {}
+                                            panda_rightfinger:
+                                              {}
+                      ridgeback_sensor_mount_link:
+                        {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -204,13 +285,32 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            door_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            door_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            handle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            world:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
           Name: Object
           Robot Description: object_description
           TF Prefix: ""
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Alpha: 0.6000000238418579
+        - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -220,35 +320,144 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            door:
+            base_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            door_hinge:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            handle:
+            chassis_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            handle_support_left:
+            franka_mount_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            front_cover_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            handle_support_right:
+            front_lights_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            shelf:
+            left_side_cover_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
+            mid_mount:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            omni_base_root_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            panda_grasp:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            panda_hand:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_leftfinger:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link0:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link1:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            panda_link8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            panda_rightfinger:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            pivot:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            rear_cover_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            rear_lights_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            ridgeback_sensor_mount_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            right_side_cover_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            top_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             world:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            x_slider:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            y_slider:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -328,7 +537,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.115666389465332
+      Distance: 6.200322151184082
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -344,9 +553,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.35039854049682617
+      Pitch: 0.3853984475135803
       Target Frame: <Fixed Frame>
-      Yaw: 2.2072176933288574
+      Yaw: 1.9172159433364868
     Saved: ~
 Window Geometry:
   Displays:

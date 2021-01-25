@@ -140,6 +140,11 @@ void RoyalPandaControllerRos::starting(const ros::Time& time) {
 }
 
 void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration& period) {
+  if (!assembler_->get_state(x_, arm_state_)){
+    ROS_WARN_THROTTLE(2.0, "[RoyalPandaControllerRos::update]: failed to assemble state.");
+    return;
+  }
+
   man_interface_->set_observation(x_, time.toSec());
   man_interface_->get_input(x_, u_, time.toSec());
 
