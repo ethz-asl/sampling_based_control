@@ -8,10 +8,15 @@
   <joint name="fixed" type="fixed">
     <parent link="world"/>
     <child link="shelf"/>
-    <origin rpy="0 0 3.14159" xyz="0.5 0 0"/>
+    <origin rpy="0 0 3.14159" xyz="0.6 0 0"/>
   </joint>
   <link name="shelf"/>
   <link name="door">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="5.8"/>
+      <inertia ixx="0.434826" ixy="0" ixz="0" iyy="0.391536656" iyz="0" izz="0.434826"/>
+    </inertial>
     <visual>
       <origin rpy="0 0 0" xyz="0 0.15 0"/>
       <geometry>
@@ -28,11 +33,18 @@
       </geometry>
     </collision>
   </link>
-  <joint name="articulation_joint" type="revolute">
+  <link name="door_hinge"/>
+  <joint name="door_hinge_joint" type="fixed">
     <parent link="shelf"/>
-    <child link="door"/>
+    <child link="door_hinge"/>
     <dynamics damping="2.0" friction="4.0"/>
     <origin xyz="0 -0.3 0.45"/>
+  </joint>
+  <joint name="articulation_joint" type="revolute">
+    <parent link="door_hinge"/>
+    <child link="door"/>
+    <dynamics damping="2.0" friction="4.0"/>
+    <origin xyz="0 0 0"/>
     <axis xyz="0 0 -1"/>
     <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
   </joint>

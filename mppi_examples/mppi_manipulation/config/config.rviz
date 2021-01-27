@@ -59,9 +59,9 @@ Visualization Manager:
           Value: false
         chassis_link:
           Value: false
-        door_frame:
+        door:
           Value: true
-        door_link:
+        door_hinge:
           Value: true
         franka_mount_link:
           Value: false
@@ -69,8 +69,12 @@ Visualization Manager:
           Value: false
         front_lights_link:
           Value: false
-        handle_link:
+        handle:
           Value: true
+        handle_support_left:
+          Value: false
+        handle_support_right:
+          Value: false
         left_side_cover_link:
           Value: false
         mid_mount:
@@ -113,6 +117,8 @@ Visualization Manager:
           Value: false
         right_side_cover_link:
           Value: false
+        shelf:
+          Value: true
         top_link:
           Value: false
         world:
@@ -129,10 +135,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          door_frame:
-            door_link:
-              handle_link:
-                {}
           omni_base_root_link:
             x_slider:
               y_slider:
@@ -173,6 +175,14 @@ Visualization Manager:
                                               {}
                       ridgeback_sensor_mount_link:
                         {}
+          shelf:
+            door_hinge:
+              door:
+                handle:
+                  handle_support_left:
+                    {}
+                  handle_support_right:
+                    {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -285,21 +295,34 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            door_frame:
+            door:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            door_link:
+            door_hinge:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            handle:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            handle_link:
+            handle_support_left:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
+            handle_support_right:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            shelf:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             world:
               Alpha: 1
               Show Axes: false
@@ -537,7 +560,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.200322151184082
+      Distance: 4.597075462341309
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -553,9 +576,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3853984475135803
+      Pitch: 0.45039838552474976
       Target Frame: <Fixed Frame>
-      Yaw: 1.9172159433364868
+      Yaw: 2.307216167449951
     Saved: ~
 Window Geometry:
   Displays:
