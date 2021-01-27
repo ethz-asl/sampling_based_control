@@ -72,6 +72,10 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
     ROS_INFO_STREAM("RoyalPandaControllerRos: coriolis_factor not found. Defaulting to "
                     << coriolis_factor_);
   }
+
+  node_handle.param<bool>("debug", debug_, true);
+  if (debug_) ROS_WARN_STREAM("In debug mode: running controller without sending commands.");
+
   return true;
 }
 
@@ -159,9 +163,13 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
 
   std::array<double, 7> tau_d_calculated;
   for (size_t i = 0; i < 7; ++i) {
-    tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
-                          k_gains_[i] * (robot_state.q_d[i] - robot_state.q[i]) +
-                          d_gains_[i] * (robot_state.dq_d[i] - dq_filtered_[i]);
+    tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
+    if (!debug_) {
+      tau_d_calculated[i] += d_gains_[i] * (u_[i] - dq_filtered_[i]);
+    }
+    // tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
+                          // k_gains_[i] * (robot_state.q_d[i] - robot_state.q[i]) +
+                          // d_gains_[i] * (robot_state.dq_d[i] - dq_filtered_[i]);
   }
 
   // Maximum torque difference with a sampling rate of 1 kHz. The maximum torque rate is

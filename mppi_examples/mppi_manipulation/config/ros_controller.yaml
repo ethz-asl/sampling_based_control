@@ -5,11 +5,12 @@ royal_panda_manipulation_controller:
   angular_weight: 1.0
   obstacle_radius: 0.1
 
-  # TODO(giuseppe) set to the right ones
-  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
-  grasp_orientation_offset: [ 0.0, 0.0, 0.0, 1.0 ]
+  debug: true
 
-  object_reference_position: 1.50   # a bit less than pi/2
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068]    # -90deg around y
+
+  object_reference_position: 1.50   #  85 deg, slightly less than the limit (90 deg)
 
   arm_id: panda
   joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
