@@ -53,7 +53,7 @@ add_dependencies(sim_ogre ${PROJECT_NAME})
 
 add_library(${PROJECT_NAME}_controller
         src/ros/royal_panda_controller_ros.cpp
-        src/ros/state_assembler.cpp)
+        src/ros/state_observer.cpp)
 target_include_directories(${PROJECT_NAME}_controller PUBLIC ${Franka_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_controller ${PROJECT_NAME} ${Franka_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_controller ${PROJECT_NAME})
@@ -61,8 +61,8 @@ add_dependencies(${PROJECT_NAME}_controller ${PROJECT_NAME})
 add_executable(base_odometry_dummy_node src/test/base_odometry_dummy_node.cpp)
 target_link_libraries(base_odometry_dummy_node ${catkin_LIBRARIES})
 
-add_executable(state_assembler_test src/ros/state_assembler src/test/state_assembler_node.cpp)
-target_link_libraries(state_assembler_test ${catkin_LIBRARIES} ${Franka_LIBRARIES})
+add_executable(state_observer_test src/ros/state_observer.cpp src/test/state_observer_node.cpp)
+target_link_libraries(state_observer_test ${catkin_LIBRARIES} ${Franka_LIBRARIES})
 
 #set(CATKIN_ENABLE_TESTING True)
 #if(CATKIN_ENABLE_TESTING)

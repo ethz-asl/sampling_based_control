@@ -3,10 +3,10 @@
 //
 
 #include <ros/ros.h>
-#include "mppi_manipulation/ros/state_assembler.h"
+#include "mppi_manipulation/ros/state_observer.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "state_assembler_test");
+  ros::init(argc, argv, "state_observer_test");
   ros::NodeHandle nh("~");
 
   bool fixed_base;
@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
   std::fill(franka_state.q.begin(), franka_state.q.end(), 0.0);
   std::fill(franka_state.dq.begin(), franka_state.dq.end(), 0.0);
 
-  manipulation::StateAssembler assembler(nh, fixed_base);
-  ROS_INFO("Sleeping 2.0 sec before starting the state assembler functionality");
+  manipulation::StateObserver observer(nh, fixed_base);
+  ROS_INFO("Sleeping 2.0 sec before starting the state observer.");
   ros::Duration(2.0).sleep();
 
   Eigen::VectorXd x;
@@ -28,14 +28,15 @@ int main(int argc, char** argv) {
     franka_state.dq[0] = 0.1;
     franka_state.q[0] += franka_state.dq[0] * 0.1;
 
-    if (!assembler.get_state(x, franka_state)) {
+    observer.set_arm_state(franka_state);
+    if (!observer.get_state(x)) {
       ROS_ERROR("Failed to update the current state.");
       return 0;
     }
 
-    assembler.publish_ros(x);
+    observer.publish_ros(x);
 
-    ROS_INFO_STREAM_THROTTLE(1.0, assembler.state_as_string(x));
+    ROS_INFO_STREAM_THROTTLE(1.0, observer.state_as_string(x));
     rate.sleep();
     ros::spinOnce();
   }

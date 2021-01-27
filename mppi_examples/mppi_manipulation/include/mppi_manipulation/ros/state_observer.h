@@ -17,25 +17,28 @@
 
 namespace manipulation {
 
-/// The scope of this class is to assemble the state vector from multiple source of information
+/// The scope of this class is to collect info and return the complete mobile robot state
 
-class StateAssembler {
+class StateObserver {
  public:
-  StateAssembler(const ros::NodeHandle& nh, bool fixed_base);
-  ~StateAssembler() = default;
+  StateObserver(const ros::NodeHandle& nh, bool fixed_base);
+  ~StateObserver() = default;
 
  public:
-  bool get_state(Eigen::VectorXd& x, const franka::RobotState& arm_state);
+  inline void set_arm_state(const franka::RobotState& arm_state) { arm_state_ = arm_state;}
+  bool get_state(Eigen::VectorXd& x);
   std::string state_as_string(const Eigen::VectorXd& x);
 
   // for debug only
   void publish_ros(const Eigen::VectorXd& x);
 
  private:
+  void base_twist_callback(const geometry_msgs::TwistConstPtr& msg);
+
+  // update methods
   bool update_base_pose();
   bool update_base_twist();
-  void base_twist_callback(const geometry_msgs::TwistConstPtr& msg);
-  bool update_arm_state(const franka::RobotState& arm_state);
+  bool update_arm_state();
   bool update_articulation_state();
 
  private:
@@ -55,6 +58,7 @@ class StateAssembler {
   geometry_msgs::TransformStamped tf_base_;
 
   // arm
+  franka::RobotState arm_state_;
   Eigen::Matrix<double, 9, 1> dq_;
   Eigen::Matrix<double, 9, 1> q_;  // arm plus the gripper joints
 

@@ -2,7 +2,7 @@
 // Created by giuseppe on 25.01.21.
 //
 
-#include "mppi_manipulation/ros/state_assembler.h"
+#include "mppi_manipulation/ros/state_observer.h"
 
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/JointState.h>
@@ -11,14 +11,14 @@
 
 namespace manipulation {
 
-StateAssembler::StateAssembler(const ros::NodeHandle& nh, bool fixed_base)
+StateObserver::StateObserver(const ros::NodeHandle& nh, bool fixed_base)
     : fixed_base_(fixed_base), nh_(nh), tf2_listener_(tf2_buffer_) {
   std::string base_twist_topic;
   nh_.param<std::string>("base_twist_topic", base_twist_topic, "");
 
   ros::SubscribeOptions so;
   so.init<geometry_msgs::Twist>(base_twist_topic, 1,
-                                boost::bind(&StateAssembler::base_twist_callback, this, _1));
+                                boost::bind(&StateObserver::base_twist_callback, this, _1));
   base_twist_queue_ = std::make_unique<ros::CallbackQueue>();
   so.callback_queue = base_twist_queue_.get();
   so.transport_hints = ros::TransportHints().unreliable().tcpNoDelay();
@@ -42,14 +42,14 @@ StateAssembler::StateAssembler(const ros::NodeHandle& nh, bool fixed_base)
       nh_.advertise<sensor_msgs::JointState>("/state_assembler/object_joint_state", 1);
 }
 
-bool StateAssembler::get_state(Eigen::VectorXd& x, const franka::RobotState& arm_state) {
+bool StateObserver::get_state(Eigen::VectorXd& x) {
   bool success = true;
   if (!fixed_base_) {
     success &= update_base_pose();
     success &= update_base_twist();
   }
 
-  success &= update_arm_state(arm_state);
+  success &= update_arm_state();
   success &= update_articulation_state();
 
   if (!success) return success;
@@ -72,7 +72,7 @@ bool StateAssembler::get_state(Eigen::VectorXd& x, const franka::RobotState& arm
   return true;
 }
 
-std::string StateAssembler::state_as_string(const Eigen::VectorXd& x) {
+std::string StateObserver::state_as_string(const Eigen::VectorXd& x) {
   std::stringstream ss;
   ss << "\n";
   ss << "=========================================================\n";
@@ -90,7 +90,7 @@ std::string StateAssembler::state_as_string(const Eigen::VectorXd& x) {
   return ss.str();
 }
 
-bool StateAssembler::update_base_pose() {
+bool StateObserver::update_base_pose() {
   try {
     // get the latest transform
     tf_base_ = tf2_buffer_.lookupTransform("world", "base", ros::Time(0));
@@ -112,7 +112,7 @@ bool StateAssembler::update_base_pose() {
   return true;
 }
 
-bool StateAssembler::update_base_twist() {
+bool StateObserver::update_base_twist() {
   base_twist_queue_->callAvailable();
   if (!base_twist_received_) {
     ROS_ERROR("Failed to update base twist");
@@ -121,7 +121,7 @@ bool StateAssembler::update_base_twist() {
   return true;
 }
 
-void StateAssembler::base_twist_callback(const geometry_msgs::TwistConstPtr& msg) {
+void StateObserver::base_twist_callback(const geometry_msgs::TwistConstPtr& msg) {
   std::unique_lock<std::mutex> lock(base_twist_mutex_);
   base_twist_.x() = msg->linear.x;
   base_twist_.y() = msg->linear.y;
@@ -129,13 +129,13 @@ void StateAssembler::base_twist_callback(const geometry_msgs::TwistConstPtr& msg
   base_twist_received_ = true;
 }
 
-bool StateAssembler::update_arm_state(const franka::RobotState& arm_state) {
-  for (size_t i = 0; i < 7; i++) q_(i) = arm_state.q[i];
-  for (size_t i = 0; i < 7; i++) dq_(i) = arm_state.dq[i];
+bool StateObserver::update_arm_state() {
+  for (size_t i = 0; i < 7; i++) q_(i) = arm_state_.q[i];
+  for (size_t i = 0; i < 7; i++) dq_(i) = arm_state_.dq[i];
   return true;
 }
 
-bool StateAssembler::update_articulation_state() {
+bool StateObserver::update_articulation_state() {
   try {
     // get the latest transform
     tf_handle_current_ = tf2_buffer_.lookupTransform("door_hinge", "handle", ros::Time(0));
@@ -166,7 +166,7 @@ bool StateAssembler::update_articulation_state() {
   return true;
 }
 
-void StateAssembler::publish_ros(const Eigen::VectorXd& x) {
+void StateObserver::publish_ros(const Eigen::VectorXd& x) {
   if (!fixed_base_) {
     geometry_msgs::PoseStamped base_pose;
     base_pose.header.stamp = ros::Time::now();
