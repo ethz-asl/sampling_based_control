@@ -69,10 +69,8 @@ bool StateObserver::initialize() {
     ROS_ERROR("Failed to parse fixed_base param.");
     return false;
   }
-  if (fixed_base_)
-    state_ = Eigen::VectorXd::Zero(27);
-  else
-    state_ = Eigen::VectorXd::Zero(21);
+  if (fixed_base_) state_ = Eigen::VectorXd::Zero(21);
+  else state_ = Eigen::VectorXd::Zero(27);
 
   KDL::Tree object_kinematics;
   if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
