@@ -4,22 +4,14 @@
 
 #pragma once
 
-#include <ros/callback_queue.h>
-#include <ros/subscribe_options.h>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
+#include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/JointState.h>
 #include <nav_msgs/Odometry.h>
-#include <tf2_ros/static_transform_broadcaster.h>
+#include <sensor_msgs/JointState.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-
-#include <kdl/tree.hpp>
-#include <kdl/chainfksolverpos_recursive.hpp>
 
 namespace manipulation {
 
@@ -50,8 +42,6 @@ class StateObserver {
 
   bool fixed_base_;
   ros::NodeHandle nh_;
-  tf2_ros::TransformListener tf2_listener_;
-  tf2_ros::Buffer tf2_buffer_;
 
   // base
   Eigen::Affine3d T_reference_base_;
@@ -59,9 +49,7 @@ class StateObserver {
   Eigen::Affine3d T_world_reference_;
   Eigen::Vector3d base_twist_;
   ros::Subscriber base_twist_subscriber_;
-
   Eigen::Vector3d base_state_;
-  geometry_msgs::TransformStamped tf_base_;
 
   // arm
   Eigen::Matrix<double, 9, 1> dq_;
@@ -99,19 +87,6 @@ class StateObserver {
   Eigen::Affine3d T_world_handle_;
   Eigen::Affine3d T_hinge_handle_;
   Eigen::Affine3d T_hinge_handle_init_;
-
-  geometry_msgs::PoseStamped T_world_shelf_ros_;
-  ros::Publisher object_root_publisher_;
-
-  KDL::Tree robot_kinematics;
-  KDL::Tree object_kinematics;
-  KDL::Chain robot_chain;
-
-  std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver;
-  std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_robot_solver;
-
-  tf2_ros::StaticTransformBroadcaster static_broadcaster;
-  geometry_msgs::TransformStamped T_world_shelf_ros;
 
 };
 }  // namespace manipulation
