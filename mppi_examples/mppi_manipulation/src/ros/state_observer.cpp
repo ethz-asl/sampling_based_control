@@ -9,116 +9,109 @@
 
 #include <Eigen/Geometry>
 
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <eigen_conversions/eigen_msg.h>
+
+#include <eigen_conversions/eigen_kdl.h>
+#include <kdl/chain.hpp>
+#include <kdl/chainfksolver.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl_parser/kdl_parser.hpp>
+#include <memory>
+
 namespace manipulation {
 
-StateObserver::StateObserver(const ros::NodeHandle& nh, bool fixed_base)
-    : fixed_base_(fixed_base), nh_(nh), tf2_listener_(tf2_buffer_) {
+StateObserver::StateObserver(const ros::NodeHandle& nh)
+    : nh_(nh), tf2_listener_(tf2_buffer_) {
+
   std::string base_twist_topic;
-  nh_.param<std::string>("base_twist_topic", base_twist_topic, "");
+  nh_.param<std::string>("base_twist_topic", base_twist_topic, "/twist");
+  base_twist_subscriber_ = nh_.subscribe(base_twist_topic, 1, &StateObserver::base_pose_callback, this);
 
-  ros::SubscribeOptions so;
-  so.init<geometry_msgs::Twist>(base_twist_topic, 1,
-                                boost::bind(&StateObserver::base_twist_callback, this, _1));
-  base_twist_queue_ = std::make_unique<ros::CallbackQueue>();
-  so.callback_queue = base_twist_queue_.get();
-  so.transport_hints = ros::TransportHints().unreliable().tcpNoDelay();
-  base_twist_subscriber_ = nh_.subscribe(so);
-  base_twist_received_ = false;
-  ROS_INFO_STREAM("Subscribing to base twist at topic: " << base_twist_subscriber_.getTopic());
+  std::string arm_state_topic;
+  nh_.param<std::string>("arm_state_topic", arm_state_topic, "/joint_state");
+  arm_state_subscriber_ = nh_.subscribe(base_twist_topic, 1, &StateObserver::arm_state_callback, this);
 
-  q_.setZero();
-  dq_.setZero();
-  q_.tail<2>() << 0.04, 0.04;  // TODO(giuseppe) hard coded gripper position
+  // ros publishing
+  base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
+  object_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 1);
 
-  theta_ = 0.0;
-  dtheta_ = 0.0;
+  object_state_.name.push_back("articulation_joint");
+  object_state_.position.push_back(0.0);
+  object_state_.velocity.push_back(0.0);
   articulation_first_computation_ = true;
 
-  // ros debug publishing
-  base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/state_assembler/base_pose", 1);
-  arm_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("/state_assembler/arm_joint_state", 1);
-  articulation_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("/state_assembler/object_joint_state", 1);
+
 }
 
-bool StateObserver::get_state(Eigen::VectorXd& x) {
-  bool success = true;
-  if (!fixed_base_) {
-    success &= update_base_pose();
-    success &= update_base_twist();
+bool StateObserver::initialize() {
+  if(!nh_.param<bool>("fixed_base", fixed_base_, true)){
+    ROS_ERROR("Failed to parse fixed_base param.");
+    return false;
   }
+  if (fixed_base_) state_ = Eigen::VectorXd::Zero(27);
+  else state_ = Eigen::VectorXd::Zero(21);
 
-  success &= update_arm_state();
-  success &= update_articulation_state();
-
-  if (!success) return success;
-
-  if (!fixed_base_) {
-    x = Eigen::VectorXd::Zero(27);  // last is for contact state - unused
-    x.head<3>() = base_state_;
-    x.segment<9>(3) = q_;
-    x.segment<3>(12) = base_twist_;
-    x.segment<9>(15) = dq_;
-    x(24) = theta_;
-    x(25) = dtheta_;
-  } else {
-    x = Eigen::VectorXd::Zero(21);  // last is for contact state - unused
-    x.head<9>() = q_;
-    x.tail<9>(9) = dq_;
-    x(18) = theta_;
-    x(19) = dtheta_;
-  }
-  return true;
-}
-
-std::string StateObserver::state_as_string(const Eigen::VectorXd& x) {
-  std::stringstream ss;
-  ss << "\n";
-  ss << "=========================================================\n";
-  ss << "                        State                            \n";
-  ss << "=========================================================\n";
-  if (!fixed_base_){
-    ss << "Base position:  " << base_state_.transpose() << std::endl;
-    ss << "Base twist:     " << base_twist_.transpose() << std::endl;
-  }
-  ss << "Joint position: " << q_.transpose() << std::endl;
-  ss << "Joint velocity: " << dq_.transpose() << std::endl;
-  ss << "Theta:          " << theta_ << std::endl;
-  ss << "Theta dot:      " << dtheta_ << std::endl;
-  ss << "x: " << std::setprecision(2) << x.transpose() << std::endl;
-  return ss.str();
-}
-
-bool StateObserver::update_base_pose() {
-  try {
-    // get the latest transform
-    tf_base_ = tf2_buffer_.lookupTransform("world", "base", ros::Time(0));
-  } catch (tf2::TransformException& ex) {
-    ROS_ERROR_STREAM(ex.what());
+  KDL::Tree object_kinematics;
+  if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
+    ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
     return false;
   }
 
-  base_state_.x() = tf_base_.transform.translation.x;
-  base_state_.y() = tf_base_.transform.translation.y;
+  KDL::Chain chain;
+  object_kinematics.getChain("shelf", "handle_link", chain);
+  if (chain.getNrOfJoints() != 1) {
+    ROS_ERROR("The object has more then one joint. Only one joint supported!");
+    return false;
+  }
+
+  // at start-up door is closed
+  std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver;
+  KDL::JntArray joint_pos(chain.getNrOfJoints());
+
+  // required to calibrate the initial shelf position
+  KDL::Frame T_shelf_handle_KDL;
+  fk_solver = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
+  fk_solver->JntToCart(joint_pos, T_shelf_handle_KDL);
+  tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
+
+  // required to now the origin hinge position
+  KDL::Frame T_door_handle_KDL;
+  object_kinematics.getChain("door_hinge", "handle_link", chain);
+  fk_solver = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
+  fk_solver->JntToCart(joint_pos, T_door_handle_KDL);
+  tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
+
+  ROS_INFO("Robot observer correctly initialized.");
+  return true;
+}
+
+void StateObserver::update() {
+  if (!fixed_base_) {
+    state_.head<3>() = base_state_;
+    state_.segment<9>(3) = q_;
+    state_.segment<3>(12) = base_twist_;
+    state_.segment<9>(15) = dq_;
+    state_(24) = object_state_.position[0];
+    state_(25) = object_state_.velocity[0];
+  } else {
+    state_.head<9>() = q_;
+    state_.tail<9>(9) = dq_;
+    state_(18) = object_state_.position[0];
+    state_(19) = object_state_.velocity[0];
+  }
+}
+
+void StateObserver::base_pose_callback(const geometry_msgs::TransformStampedConstPtr& msg) {
+  base_state_.x() = msg->transform.translation.x;
+  base_state_.y() = msg->transform.translation.y;
 
   // set to zero pitch and roll components and normalize.
-  Eigen::Matrix3d m(Eigen::Quaterniond(tf_base_.transform.rotation.w, tf_base_.transform.rotation.x,
-                                       tf_base_.transform.rotation.y,
-                                       tf_base_.transform.rotation.z));
+  Eigen::Matrix3d m(Eigen::Quaterniond(msg->transform.rotation.w, msg->transform.rotation.x,
+                                       msg->transform.rotation.y, msg->transform.rotation.z));
 
   Eigen::Vector3d world_ix = m.col(0);  // 2d projection of forward motion axis
   base_state_.z() = std::atan2(world_ix.y(), world_ix.x());
-  return true;
-}
-
-bool StateObserver::update_base_twist() {
-  base_twist_queue_->callAvailable();
-  if (!base_twist_received_) {
-    ROS_ERROR("Failed to update base twist");
-    return false;
-  }
-  return true;
 }
 
 void StateObserver::base_twist_callback(const geometry_msgs::TwistConstPtr& msg) {
@@ -129,57 +122,63 @@ void StateObserver::base_twist_callback(const geometry_msgs::TwistConstPtr& msg)
   base_twist_received_ = true;
 }
 
-bool StateObserver::update_arm_state() {
-  for (size_t i = 0; i < 7; i++) q_(i) = arm_state_.q[i];
-  for (size_t i = 0; i < 7; i++) dq_(i) = arm_state_.dq[i];
-  return true;
+void StateObserver::arm_state_callback(const sensor_msgs::JointStateConstPtr& msg) {
+  for (size_t i = 0; i < 9; i++) q_(i) = msg->position[i];
+  for (size_t i = 0; i < 9; i++) dq_(i) = msg->velocity[i];
 }
 
-bool StateObserver::update_articulation_state() {
-  try {
-    // get the latest transform
-    tf_handle_current_ = tf2_buffer_.lookupTransform("door_hinge", "handle", ros::Time(0));
-  } catch (tf2::TransformException& ex) {
-    ROS_ERROR_STREAM(ex.what());
-    return false;
-  }
-
+void StateObserver::object_pose_callback(const geometry_msgs::TransformStampedConstPtr& msg) {
+  tf::transformMsgToEigen(msg->transform, T_world_handle_);
   if (articulation_first_computation_) {
-    tf_handle_start_ = tf_handle_current_;
+    T_world_shelf_ = T_world_handle_ * T_handle0_shelf_;
+    T_hinge_world_ = (T_world_handle_ * T_handle0_hinge_).inverse();
+    T_hinge_handle_init_ = T_hinge_world_ * T_world_handle_;
+
+    start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
+                                       T_hinge_handle_init_.translation().y());
     articulation_first_computation_ = false;
     previous_time_ = ros::Time::now().toSec();
-    return true;
+
+    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    geometry_msgs::TransformStamped T_world_shelf_ros;
+    tf::transformEigenToMsg(T_hinge_world_.inverse(), T_world_shelf_ros.transform);
+    T_world_shelf_ros.header.stamp = ros::Time::now();
+    T_world_shelf_ros.header.frame_id = "world";
+    T_world_shelf_ros.child_frame_id = "shelf";
+    static_broadcaster.sendTransform(T_world_shelf_ros);
+    ROS_INFO("Published initial transform from world to shelf frame");
+    return;
   }
 
-  double abs_theta_current = std::atan2(tf_handle_current_.transform.translation.x,
-                                        tf_handle_current_.transform.translation.y);
-  double abs_theta_start = std::atan2(tf_handle_start_.transform.translation.x,
-                                      tf_handle_start_.transform.translation.y);
+  T_hinge_handle_ = T_hinge_world_ * T_world_handle_;
 
-  double theta_new = abs_theta_current - abs_theta_start;
+  current_relative_angle_ = std::atan2(T_hinge_handle_.translation().x(),
+                                       T_hinge_handle_.translation().y());
 
+  double theta_new = current_relative_angle_ - start_relative_angle_;
   double current_time = ros::Time::now().toSec();
-  dtheta_ = (theta_new - theta_) / (current_time - previous_time_);
-  theta_ = theta_new;
+  object_state_.velocity[0] = (theta_new - object_state_.position[0]) / (current_time - previous_time_);
+  object_state_.position[0] = theta_new;
   previous_time_ = current_time;
-
-  return true;
 }
 
-void StateObserver::publish_ros(const Eigen::VectorXd& x) {
+void StateObserver::publish() {
   if (!fixed_base_) {
     geometry_msgs::PoseStamped base_pose;
     base_pose.header.stamp = ros::Time::now();
     base_pose.header.frame_id = "world";
-    base_pose.pose.position.x = x(0);
-    base_pose.pose.position.y = x(1);
+    base_pose.pose.position.x = base_state_.x();
+    base_pose.pose.position.y = base_state_.y();
     base_pose.pose.position.z = 0.0;
-    Eigen::Quaterniond q(Eigen::AngleAxisd(x(2), Eigen::Vector3d::UnitZ()));
+    Eigen::Quaterniond q(Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
     base_pose.pose.orientation.x = q.x();
     base_pose.pose.orientation.y = q.y();
     base_pose.pose.orientation.z = q.z();
     base_pose.pose.orientation.w = q.w();
     base_pose_publisher_.publish(base_pose);
   }
+
+  object_state_publisher_.publish(object_state_);
 }
+
 }  // namespace manipulation

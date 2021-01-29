@@ -27,6 +27,8 @@
     <depend>franka_example_controllers</depend>
     <depend>ridgeback_description</depend>
 
+    <depend>kdl_parser</depend>
+
     <export>
         <controller_interface plugin="${prefix}/plugins.xml"/>
     </export>

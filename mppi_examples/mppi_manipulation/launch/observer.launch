@@ -1,8 +1,8 @@
 <launch>
     <!--    Load and publish to tf info for the articulation model -->
-    <arg name="model" value="$(find mppi_manipulation)/data/shelf.urdf.xacro"/>
-    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
-    <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+    <arg name="model" value="$(find mppi_manipulation)/data/objects/shelf.urdf.xacro"/>
+    <param name="object_description" command="$(find xacro)/xacro $(arg model) fixed:=false"/>
+
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
 
     <node pkg="mppi_manipulation" type="base_odometry_dummy_node" name="base_odometry_dummy_node" output="screen">

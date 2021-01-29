@@ -3,17 +3,21 @@
 //
 
 #pragma once
-#include <franka/robot_state.h>
+
 #include <ros/callback_queue.h>
 #include <ros/subscribe_options.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <sensor_msgs/JointState.h>
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 #include "mppi_manipulation/dimensions.h"
+#include <kdl/tree.hpp>
 
 namespace manipulation {
 
@@ -21,27 +25,27 @@ namespace manipulation {
 
 class StateObserver {
  public:
-  StateObserver(const ros::NodeHandle& nh, bool fixed_base);
+  StateObserver() = delete;
+  explicit StateObserver(const ros::NodeHandle& nh);
   ~StateObserver() = default;
 
  public:
-  inline void set_arm_state(const franka::RobotState& arm_state) { arm_state_ = arm_state;}
-  bool get_state(Eigen::VectorXd& x);
-  std::string state_as_string(const Eigen::VectorXd& x);
-
-  // for debug only
-  void publish_ros(const Eigen::VectorXd& x);
+  bool initialize();
+  void update();
+  void publish();
 
  private:
   void base_twist_callback(const geometry_msgs::TwistConstPtr& msg);
+  void object_pose_callback(const geometry_msgs::TransformStampedConstPtr& msg);
+  void base_pose_callback(const geometry_msgs::TransformStampedConstPtr& msg);
+  void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
 
-  // update methods
-  bool update_base_pose();
-  bool update_base_twist();
-  bool update_arm_state();
-  bool update_articulation_state();
+
+//  friend std::ostream& operator<<(std::ostream& os, const StateObserver& obs);
 
  private:
+  Eigen::VectorXd state_;
+
   bool fixed_base_;
   ros::NodeHandle nh_;
   tf2_ros::TransformListener tf2_listener_;
@@ -58,21 +62,61 @@ class StateObserver {
   geometry_msgs::TransformStamped tf_base_;
 
   // arm
-  franka::RobotState arm_state_;
   Eigen::Matrix<double, 9, 1> dq_;
   Eigen::Matrix<double, 9, 1> q_;  // arm plus the gripper joints
-
-  // articulation
-  double previous_time_;
-  bool articulation_first_computation_;
-  double theta_;
-  double dtheta_;
-  geometry_msgs::TransformStamped tf_handle_start_;
-  geometry_msgs::TransformStamped tf_handle_current_;
 
   // debug ros publishing: do not use for realtime control loops
   ros::Publisher base_pose_publisher_;
   ros::Publisher arm_state_publisher_;
   ros::Publisher articulation_state_publisher_;
+
+  // vicon subscribers
+  ros::Subscriber object_pose_subscriber_;
+  ros::Subscriber base_pose_subscriber_;
+  ros::Subscriber arm_state_subscriber_;
+
+  ///// Articulation
+  // articulation
+  double previous_time_;
+  double start_relative_angle_;
+  double current_relative_angle_;
+  bool articulation_first_computation_;
+  sensor_msgs::JointState object_state_;
+  ros::Publisher object_state_publisher_;
+
+  // Calibration tf
+  Eigen::Affine3d T_handle0_shelf_;
+  Eigen::Affine3d T_handle0_hinge_;
+
+  // Static tf: the result of calibration (done on first tf)
+  Eigen::Affine3d T_world_shelf_;
+  Eigen::Affine3d T_hinge_world_;
+
+  // tf required for joint position estimation
+  Eigen::Affine3d T_world_handle_;
+  Eigen::Affine3d T_hinge_handle_;
+  Eigen::Affine3d T_hinge_handle_init_;
+
+  geometry_msgs::PoseStamped T_world_shelf_ros_;
+  ros::Publisher object_root_publisher_;
 };
 }  // namespace manipulation
+
+//std::ostream& operator<<(std::ostream& os, const manipulation::StateObserver& obs);
+
+//std::ostream& operator<<(std::ostream& os, const manipulation::StateObserver& obs){
+//  os << "\n";
+//  os << "=========================================================\n";
+//  os << "                        State                            \n";
+//  os << "=========================================================\n";
+//  if (!obs.fixed_base_) {
+//    os << "Base position:  " << obs.base_state_.transpose() << std::endl;
+//    os << "Base twist:     " << obs.base_twist_.transpose() << std::endl;
+//  }
+//  os << "Joint position: " << obs.q_.transpose() << std::endl;
+//  os << "Joint velocity: " << obs.dq_.transpose() << std::endl;
+//  os << "Theta:          " << obs.object_state_.position[0] << std::endl;
+//  os << "Theta dot:      " << obs.object_state_.velocity[0] << std::endl;
+//  os << "x: " << std::setprecision(2) << obs.state_.transpose() << std::endl;
+//  return os;
+//};

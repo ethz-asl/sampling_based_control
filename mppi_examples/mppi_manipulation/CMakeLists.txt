@@ -9,6 +9,7 @@ find_package(pinocchio REQUIRED)
 find_package(raisim CONFIG REQUIRED)
 find_package(raisimOgre CONFIG REQUIRED)
 find_package(Franka 0.7.0 REQUIRED)
+find_package(orocos_kdl)
 
 set(PACKAGE_DEPENDENCIES
         sensor_msgs
@@ -22,6 +23,7 @@ set(PACKAGE_DEPENDENCIES
         franka_hw
         hardware_interface
         franka_example_controllers
+        kdl_parser
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -29,7 +31,7 @@ catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-        DEPENDS pinocchio raisim Franka)
+        DEPENDS pinocchio raisim Franka orocos_kdl)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
@@ -52,8 +54,7 @@ target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
 add_dependencies(sim_ogre ${PROJECT_NAME})
 
 add_library(${PROJECT_NAME}_controller
-        src/ros/royal_panda_controller_ros.cpp
-        src/ros/state_observer.cpp)
+        src/ros/royal_panda_controller_ros.cpp)
 target_include_directories(${PROJECT_NAME}_controller PUBLIC ${Franka_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_controller ${PROJECT_NAME} ${Franka_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_controller ${PROJECT_NAME})
@@ -61,8 +62,9 @@ add_dependencies(${PROJECT_NAME}_controller ${PROJECT_NAME})
 add_executable(base_odometry_dummy_node src/test/base_odometry_dummy_node.cpp)
 target_link_libraries(base_odometry_dummy_node ${catkin_LIBRARIES})
 
-add_executable(state_observer_test src/ros/state_observer.cpp src/test/state_observer_node.cpp)
-target_link_libraries(state_observer_test ${catkin_LIBRARIES} ${Franka_LIBRARIES})
+add_executable(state_observer_node src/ros/state_observer.cpp src/ros/state_observer_node.cpp)
+target_include_directories(state_observer_node PUBLIC ${orocos_kdl_INCLUDE_DIRS})
+target_link_libraries(state_observer_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRARY_DIRS})
 
 #set(CATKIN_ENABLE_TESTING True)
 #if(CATKIN_ENABLE_TESTING)

@@ -29,7 +29,6 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
     return false;
   }
 
-  observer_ = std::make_unique<StateObserver>(node_handle, man_interface_->fixed_base_);
   started_ = false;
   return true;
 }
@@ -138,20 +137,14 @@ void RoyalPandaControllerRos::starting(const ros::Time& time) {
 
   arm_state_ = state_handle_->getRobotState();
 
-  observer_->set_arm_state(arm_state_);
-  observer_->get_state(x_);
-
+  // TODO(giuseppe) update the state from the observer
   man_interface_->set_observation(x_, time.toSec());
   man_interface_->start();
   started_ = true;
 }
 
 void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration& period) {
-  observer_->set_arm_state(arm_state_);
-  if (!observer_->get_state(x_)){
-    ROS_WARN_THROTTLE(2.0, "[RoyalPandaControllerRos::update]: failed to assemble state.");
-    return;
-  }
+  // TODO(giuseppe) update the state from the observer
 
   man_interface_->set_observation(x_, time.toSec());
   man_interface_->get_input(x_, u_, time.toSec());

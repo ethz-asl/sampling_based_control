@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "mppi_manipulation/controller_interface.h"
-#include "mppi_manipulation/ros/state_observer.h"
 
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/Twist.h>
@@ -74,7 +73,6 @@ class RoyalPandaControllerRos
 
   Eigen::VectorXd x_;
   Eigen::VectorXd u_;
-  std::unique_ptr<StateObserver> observer_;
 };
 
 }  // namespace manipulation
