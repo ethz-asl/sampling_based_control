@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 
@@ -38,10 +39,12 @@ class StateObserver {
 //  friend std::ostream& operator<<(std::ostream& os, const StateObserver& obs);
 
  private:
-  Eigen::VectorXd state_;
-
   bool fixed_base_;
   ros::NodeHandle nh_;
+
+  Eigen::VectorXd state_;
+  std_msgs::Float64MultiArray state_ros_;
+  ros::Publisher state_publisher_;
 
   // base
   Eigen::Affine3d T_reference_base_;

@@ -48,6 +48,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
       nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
 
   // ros publishing
+  state_publisher_ = nh_.advertise<std_msgs::Float64MultiArray>("/observer/state", 1);
   base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
@@ -69,8 +70,17 @@ bool StateObserver::initialize() {
     ROS_ERROR("Failed to parse fixed_base param.");
     return false;
   }
-  if (fixed_base_) state_ = Eigen::VectorXd::Zero(21);
-  else state_ = Eigen::VectorXd::Zero(27);
+
+  // TODO(giuseppe) this is making a copy. Data in the raw vector does not get updated.
+  if (fixed_base_) {
+    state_ = Eigen::VectorXd::Zero(21);
+    state_ros_.data.resize(21, 0.0);
+    state_ = Eigen::Map<Eigen::VectorXd>(&state_ros_.data[0], state_ros_.data.size());
+  }
+  else {
+    state_ros_.data.resize(27, 0.0);
+    state_ = Eigen::Map<Eigen::VectorXd>(&state_ros_.data[0], state_ros_.data.size());
+  }
 
   KDL::Tree object_kinematics;
   if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
@@ -91,7 +101,6 @@ bool StateObserver::initialize() {
   // required to calibrate the initial shelf position
   KDL::Frame T_shelf_handle_KDL;
   KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
-  ;
   fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
   tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
 
@@ -232,6 +241,8 @@ void StateObserver::publish() {
 
   robot_state_.header.stamp = ros::Time::now();
   robot_state_publisher_.publish(robot_state_);
+
+  state_publisher_.publish(state_ros_);
 }
 
 }  // namespace manipulation
