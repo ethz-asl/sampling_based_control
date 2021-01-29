@@ -143,7 +143,7 @@
     <joint name="handle_joint" type="fixed">
         <parent link="door"/>
         <child link="handle_link"/>
-        <origin xyz="${handle_height + door_width/2} ${handle_offset} 0"
+        <origin xyz="${handle_height + door_width/2} ${handle_offset} -0.15"
                 rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
     </joint>
 

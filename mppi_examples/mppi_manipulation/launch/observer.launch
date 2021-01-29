@@ -1,22 +1,64 @@
 <launch>
-    <!--    Load and publish to tf info for the articulation model -->
+    <arg name="test" default="true"/>
+
+    <!--    Load object description-->
     <arg name="model" value="$(find mppi_manipulation)/data/objects/shelf.urdf.xacro"/>
     <param name="object_description" command="$(find xacro)/xacro $(arg model) fixed:=false"/>
-
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
-
-    <node pkg="mppi_manipulation" type="base_odometry_dummy_node" name="base_odometry_dummy_node" output="screen">
-        <param name="twist_topic"   value="/ridgeback/twist"/>
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+        <remap from="robot_description" to="object_description"/>
+        <remap from="joint_states" to="/observer/object/joint_state"/>
     </node>
 
+    <!--    Load and publish to tf info for the articulation model -->
+    <group if="$(arg test)">
+        <node pkg="mppi_manipulation" type="base_odometry_dummy_node" name="base_odometry_dummy_node" output="screen"/>
+    </group>
+
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true"/>
+
+    <node name="ridgeback_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value=""/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/observer/robot/joint_state"/>
+    </node>
+
+    <node name="arm_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value=""/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/franka_state_controller/joint_states"/>
+    </node>
+
+
+    <group unless="$(arg test)">
+        <!-- Requires to set the vicon ip in hosts 10.10.10.5 -->
+        <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+            <arg name="object_name" value="panda_base"/>
+        </include>
+        <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+            <arg name="object_name" value="shelf_door"/>
+        </include>
+    </group>
+
     <!--    State assembler node-->
-    <node pkg="mppi_manipulation" name="state_assembler_test"  type="state_assembler_test" output="screen">
-        <param name="fixed_base" value="true"/>
-        <param name="base_twist_topic" value="/ridgeback/twist"/>
+    <node pkg="mppi_manipulation" name="state_observer_node" type="state_observer_node" output="screen" launch-prefix="gdb -ex run --args">
+        <param name="fixed_base" value="false"/>
+        <param name="base_pose_topic" value="/panda_base/vrpn_client/estimated_odometry"/>
+        <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
+        <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
+        <param name="arm_state_topic" value="/franka/state"/>
     </node>
 
     <!--    Visualization-->
-    <node pkg="rviz" type="rviz"  name="rviz" args="-d $(find mppi_manipulation)/config/config.rviz"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find mppi_manipulation)/config/config.rviz"/>
 
 </launch>
 

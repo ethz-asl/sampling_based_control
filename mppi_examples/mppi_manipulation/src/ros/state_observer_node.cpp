@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
   ros::Rate rate(frequency);
   while (ros::ok()) {
-    observer.update();
+    // observer.update();
     observer.publish();
 
     rate.sleep();

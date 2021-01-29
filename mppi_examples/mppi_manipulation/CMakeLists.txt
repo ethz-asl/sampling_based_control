@@ -63,7 +63,7 @@ add_executable(base_odometry_dummy_node src/test/base_odometry_dummy_node.cpp)
 target_link_libraries(base_odometry_dummy_node ${catkin_LIBRARIES})
 
 add_executable(state_observer_node src/ros/state_observer.cpp src/ros/state_observer_node.cpp)
-target_include_directories(state_observer_node PUBLIC ${orocos_kdl_INCLUDE_DIRS})
+target_include_directories(state_observer_node PUBLIC include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})
 target_link_libraries(state_observer_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRARY_DIRS})
 
 #set(CATKIN_ENABLE_TESTING True)

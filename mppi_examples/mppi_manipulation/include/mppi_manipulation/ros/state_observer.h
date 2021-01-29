@@ -12,12 +12,14 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/JointState.h>
+#include <nav_msgs/Odometry.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include "mppi_manipulation/dimensions.h"
 #include <kdl/tree.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
 
 namespace manipulation {
 
@@ -35,9 +37,9 @@ class StateObserver {
   void publish();
 
  private:
-  void base_twist_callback(const geometry_msgs::TwistConstPtr& msg);
-  void object_pose_callback(const geometry_msgs::TransformStampedConstPtr& msg);
-  void base_pose_callback(const geometry_msgs::TransformStampedConstPtr& msg);
+  void base_pose_callback(const nav_msgs::OdometryConstPtr& msg);
+  void base_twist_callback(const nav_msgs::OdometryConstPtr& msg);
+  void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
 
 
@@ -52,11 +54,11 @@ class StateObserver {
   tf2_ros::Buffer tf2_buffer_;
 
   // base
-  bool base_twist_received_;
+  Eigen::Affine3d T_reference_base_;
+  Eigen::Affine3d T_world_base_;
+  Eigen::Affine3d T_world_reference_;
   Eigen::Vector3d base_twist_;
-  std::mutex base_twist_mutex_;
   ros::Subscriber base_twist_subscriber_;
-  std::unique_ptr<ros::CallbackQueue> base_twist_queue_;
 
   Eigen::Vector3d base_state_;
   geometry_msgs::TransformStamped tf_base_;
@@ -67,8 +69,9 @@ class StateObserver {
 
   // debug ros publishing: do not use for realtime control loops
   ros::Publisher base_pose_publisher_;
-  ros::Publisher arm_state_publisher_;
-  ros::Publisher articulation_state_publisher_;
+
+  sensor_msgs::JointState robot_state_;
+  ros::Publisher robot_state_publisher_;
 
   // vicon subscribers
   ros::Subscriber object_pose_subscriber_;
@@ -99,6 +102,17 @@ class StateObserver {
 
   geometry_msgs::PoseStamped T_world_shelf_ros_;
   ros::Publisher object_root_publisher_;
+
+  KDL::Tree robot_kinematics;
+  KDL::Tree object_kinematics;
+  KDL::Chain robot_chain;
+
+  std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver;
+  std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_robot_solver;
+
+  tf2_ros::StaticTransformBroadcaster static_broadcaster;
+  geometry_msgs::TransformStamped T_world_shelf_ros;
+
 };
 }  // namespace manipulation
 
