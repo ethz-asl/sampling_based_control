@@ -14,6 +14,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <manipulation_msgs/State.h>
+
 namespace manipulation {
 
 /// The scope of this class is to collect info and return the complete mobile robot state
@@ -42,8 +44,7 @@ class StateObserver {
   bool fixed_base_;
   ros::NodeHandle nh_;
 
-  Eigen::VectorXd state_;
-  std_msgs::Float64MultiArray state_ros_;
+  manipulation_msgs::State state_ros_;
   ros::Publisher state_publisher_;
 
   // base

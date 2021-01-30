@@ -13,6 +13,7 @@
     <depend>mppi</depend>
     <depend>mppi_ros</depend>
     <depend>mppi_panda</depend>
+    <depend>manipulation_msgs</depend>
 
     <depend>eigen</depend>
     <depend>roslib</depend>

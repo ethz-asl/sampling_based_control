@@ -4,7 +4,7 @@
 
 #include "manipulation_msgs/conversions.h"
 
-using namespace manipulation::conversions;
+namespace manipulation::conversions {
 
 void msgToEigen(const manipulation_msgs::State &stateRos, Eigen::VectorXd &state) {
   if (stateRos.mode == manipulation_msgs::State::FIXED_BASE) {
@@ -102,7 +102,7 @@ void toEigenState(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_
 void toMsg(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
            const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
            const double &object_position, const double &object_velocity, const bool &contact_state,
-           manipulation_msgs::State stateRos) {
+           manipulation_msgs::State& stateRos) {
   stateRos.mode = manipulation_msgs::State::MOVING_BASE;
 
   stateRos.base_pose.x = base_pose.x();
@@ -140,7 +140,7 @@ void toEigenState(const Eigen::VectorXd &arm_position, const Eigen::VectorXd &ar
 
 void toMsg(const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
            const double &object_position, const double &object_velocity, const bool &contact_state,
-           manipulation_msgs::State stateRos) {
+           manipulation_msgs::State& stateRos) {
   stateRos.mode = manipulation_msgs::State::FIXED_BASE;
 
   stateRos.arm_state.position.resize(9);
@@ -153,3 +153,4 @@ void toMsg(const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_veloc
   stateRos.object_velocity = object_velocity;
   stateRos.in_contact = contact_state;
 }
+}  // namespace manipulation::conversions

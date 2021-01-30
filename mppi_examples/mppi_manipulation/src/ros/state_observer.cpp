@@ -17,12 +17,11 @@
 
 #include <kdl/chain.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
-#include <kdl/frameacc_io.hpp>
 #include <kdl/frames.hpp>
 #include <kdl/tree.hpp>
 #include <kdl_parser/kdl_parser.hpp>
 
-#include <memory>
+#include <manipulation_msgs/conversions.h>
 
 namespace manipulation {
 
@@ -48,7 +47,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
       nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
 
   // ros publishing
-  state_publisher_ = nh_.advertise<std_msgs::Float64MultiArray>("/observer/state", 1);
+  state_publisher_ = nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
   base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
@@ -69,17 +68,6 @@ bool StateObserver::initialize() {
   if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
     ROS_ERROR("Failed to parse fixed_base param.");
     return false;
-  }
-
-  // TODO(giuseppe) this is making a copy. Data in the raw vector does not get updated.
-  if (fixed_base_) {
-    state_ = Eigen::VectorXd::Zero(21);
-    state_ros_.data.resize(21, 0.0);
-    state_ = Eigen::Map<Eigen::VectorXd>(&state_ros_.data[0], state_ros_.data.size());
-  }
-  else {
-    state_ros_.data.resize(27, 0.0);
-    state_ = Eigen::Map<Eigen::VectorXd>(&state_ros_.data[0], state_ros_.data.size());
   }
 
   KDL::Tree object_kinematics;
@@ -143,17 +131,11 @@ bool StateObserver::initialize() {
 
 void StateObserver::update() {
   if (!fixed_base_) {
-    state_.head<3>() = base_state_;
-    state_.segment<9>(3) = q_;
-    state_.segment<3>(12) = base_twist_;
-    state_.segment<9>(15) = dq_;
-    state_(24) = object_state_.position[0];
-    state_(25) = object_state_.velocity[0];
+    conversions::toMsg(base_state_, base_twist_, q_, dq_, object_state_.position[0],
+                       object_state_.velocity[0], true, state_ros_);
   } else {
-    state_.head<9>() = q_;
-    state_.tail<9>(9) = dq_;
-    state_(18) = object_state_.position[0];
-    state_(19) = object_state_.velocity[0];
+    conversions::toMsg(q_, dq_, object_state_.position[0], object_state_.velocity[0], true,
+                       state_ros_);
   }
 }
 

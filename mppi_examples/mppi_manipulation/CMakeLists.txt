@@ -24,6 +24,7 @@ set(PACKAGE_DEPENDENCIES
         hardware_interface
         franka_example_controllers
         kdl_parser
+        manipulation_msgs
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})

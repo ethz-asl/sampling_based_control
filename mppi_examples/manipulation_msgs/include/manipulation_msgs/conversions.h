@@ -21,7 +21,7 @@ void toEigenState(const Eigen::Vector3d& base_pose, const Eigen::Vector3d& base_
 void toMsg(const Eigen::Vector3d& base_pose, const Eigen::Vector3d& base_twist,
            const Eigen::VectorXd& arm_position, const Eigen::VectorXd& arm_velocity,
            const double& object_position, const double& object_velocity,
-           const bool& contact_state, manipulation_msgs::State );
+           const bool& contact_state, manipulation_msgs::State& );
 
 void toEigenState(const Eigen::VectorXd& arm_position, const Eigen::VectorXd& arm_velocity,
                   const double& object_position, const double& object_velocity,
@@ -29,6 +29,6 @@ void toEigenState(const Eigen::VectorXd& arm_position, const Eigen::VectorXd& ar
 
 void toMsg(const Eigen::VectorXd& arm_position, const Eigen::VectorXd& arm_velocity,
            const double& object_position, const double& object_velocity,
-           const bool& contact_state, manipulation_msgs::State );
+           const bool& contact_state, manipulation_msgs::State& );
 
 }  // namespace manipulation::conversions
