@@ -34,7 +34,7 @@
         <param name="use_tf_static" value="true"/>
         <param name="tf_prefix" value=""/>
         <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states" to="/franka_state_controller/joint_states"/>
+        <remap from="joint_states" to="/panda/joint_states"/>
     </node>
 
 

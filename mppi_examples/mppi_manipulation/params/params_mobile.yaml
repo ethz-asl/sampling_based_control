@@ -35,4 +35,4 @@ sequential: true
 static_optimization: false
 sim_dt: 0.01
 
-initial_configuration: [-1.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]
+initial_configuration: [0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]

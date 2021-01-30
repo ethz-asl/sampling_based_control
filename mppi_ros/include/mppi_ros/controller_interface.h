@@ -95,6 +95,7 @@ class ControllerRos {
 
  private:
   bool initialized_;
+  bool observation_set_;
 
   any_worker::WorkerManager worker_manager_;
 

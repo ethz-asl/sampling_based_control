@@ -1,13 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <launch>
-    <arg name="mobile" default="false"/>
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro" if="$(arg mobile)"/>
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_standalone.urdf.xacro" unless="$(arg mobile)"/>
+    <arg name="debug" default="false"/>
+    <arg name="fixed_base" default="true"/>
+    <arg name="object" default="door"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
+    <arg name="object_height" default="1.0"/>
 
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
       collision_links:=false
       collision_hand:=true
-      add_finger:=true"/>
-    <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
-    <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find mppi_manipulation)/config/debug_urdf.rviz"/>
+      add_finger:=true
+      fixed_base:=$(arg fixed_base)"/>
+
+    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
+      collision_links:=false
+      collision_hand:=true
+      collision_finger:=true
+      collision_format:='obj'
+      add_finger:=true
+      no_position_limits:=true
+      fixed_base:=$(arg fixed_base)"/>
+
+    <param name="object_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           resource_prefix:='file://'
+           height:=$(arg object_height)"/>
+
+    <param name="object_description_raisim"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           height:=$(arg object_height)"/>
+
+    <group if="$(arg debug)">
+        <node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="robot_description"/>
+            <remap from="joint_states" to="/robot/joint_states"/>
+        </node>
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="robot_description"/>
+            <remap from="joint_states" to="/robot/joint_states"/>
+        </node>
+
+        <node name="object_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="object_description"/>
+            <remap from="joint_states" to="/object/joint_states"/>
+        </node>
+        <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="object_description"/>
+            <remap from="joint_states" to="/object/joint_states"/>
+        </node>
+        <node name="rviz" pkg="rviz" type="rviz" output="screen"
+              args="-d $(find mppi_manipulation)/config/debug_urdf.rviz"/>
+
+    </group>
 </launch>

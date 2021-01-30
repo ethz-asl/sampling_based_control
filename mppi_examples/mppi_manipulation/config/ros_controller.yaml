@@ -19,3 +19,6 @@ royal_panda_manipulation_controller:
 
   publish_rate: 10.0
   coriolis_factor: 1.0
+
+  state_topic: /observer/state
+  base_twist_topic: /twist_cmd  #TODO(giuseppe) check this is right

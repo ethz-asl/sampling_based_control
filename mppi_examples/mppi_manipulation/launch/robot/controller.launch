@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <!--    Arguments-->
+    <arg name="fixed_base" default="true"/>
+    <arg name="object" default="door"/>
+
+    <!--    Actor descriptions-->
+    <include file="$(find mppi_manipulation)/launch/load.launch">
+        <arg name="fixed_base" value="$(arg fixed_base)"/>
+        <arg name="object" value="$(arg object)"/>
+    </include>
+
+    <!--  Controller -->
+    <rosparam file="$(find mppi_manipulation)/config/ros_controller.yaml" command="load" subst_value="true"/>
+</launch>

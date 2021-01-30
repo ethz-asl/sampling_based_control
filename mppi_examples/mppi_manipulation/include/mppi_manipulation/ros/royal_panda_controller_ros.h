@@ -23,6 +23,8 @@
 #include <franka_hw/franka_model_interface.h>
 #include <franka_hw/trigger_rate.h>
 
+#include <manipulation_msgs/State.h>
+
 namespace manipulation {
 
 class RoyalPandaControllerRos
@@ -37,8 +39,11 @@ class RoyalPandaControllerRos
 
  private:
   bool init_parameters(ros::NodeHandle& node_handle);
-  bool init_publishers(ros::NodeHandle& node_handle);
+  bool init_ros(ros::NodeHandle& node_handle);
   bool init_interfaces(hardware_interface::RobotHW* robot_hw);
+
+  void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
+  void stop_robot();
 
   // Saturation
   std::array<double, 7> saturateTorqueRate(
@@ -60,12 +65,14 @@ class RoyalPandaControllerRos
   std::vector<double> d_gains_;
   double coriolis_factor_{1.0};
   std::array<double, 7> dq_filtered_;
-  franka::RobotState arm_state_;
+  franka::RobotState robot_state_;
 
   franka_hw::TriggerRate rate_trigger_{1.0};
   std::array<double, 7> last_tau_d_{};
   realtime_tools::RealtimePublisher<franka_example_controllers::JointTorqueComparison>
       torques_publisher_;
+
+  std::string base_twist_topic_;
   realtime_tools::RealtimePublisher<geometry_msgs::Twist> base_twist_publisher_;
 
   bool started_;
@@ -73,6 +80,13 @@ class RoyalPandaControllerRos
 
   Eigen::VectorXd x_;
   Eigen::VectorXd u_;
+
+  bool state_received_;
+  bool state_ok_;
+  double state_last_receipt_time_;
+  std::string state_topic_;
+  ros::Subscriber state_subscriber_;
+
 };
 
 }  // namespace manipulation

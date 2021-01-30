@@ -10,7 +10,7 @@
 
 using namespace mppi_ros;
 
-ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh) {}
+ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh), observation_set_(false) {}
 
 ControllerRos::~ControllerRos() { this->stop(); }
 
@@ -79,12 +79,14 @@ bool ControllerRos::start() {
   return true;
 }
 
-bool ControllerRos::update_policy() { 
+bool ControllerRos::update_policy() {
+  if (!observation_set_) return true;
   controller_->update_policy(); 
   return true;
 }
 
 bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
+  if (!observation_set_) return true;
   controller_->update_policy();
   return true;
 }
@@ -147,6 +149,7 @@ void ControllerRos::publish_input() {
 void ControllerRos::set_observation(const mppi::observation_t &x,
                                     const mppi::time_t &t) {
   controller_->set_observation(x, t);
+  observation_set_ = true;
 }
 
 void ControllerRos::get_input(const mppi::observation_t &x, mppi::input_t &u,
