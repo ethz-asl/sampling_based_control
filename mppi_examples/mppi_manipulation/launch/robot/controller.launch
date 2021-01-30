@@ -3,12 +3,10 @@
 
     <!--    Arguments-->
     <arg name="fixed_base" default="true"/>
-    <arg name="object" default="door"/>
 
     <!--    Actor descriptions-->
-    <include file="$(find mppi_manipulation)/launch/load.launch">
+    <include file="$(find mppi_manipulation)/launch/robot/observer.launch">
         <arg name="fixed_base" value="$(arg fixed_base)"/>
-        <arg name="object" value="$(arg object)"/>
     </include>
 
     <!--  Controller -->

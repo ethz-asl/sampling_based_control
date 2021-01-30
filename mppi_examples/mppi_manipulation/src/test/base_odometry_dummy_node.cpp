@@ -48,12 +48,21 @@ int main(int argc, char** argv){
 
   sensor_msgs::JointState arm_state;
   arm_state.header.frame_id = "world";
-  for(size_t i=0; i<9; i++){
-    arm_state.name.push_back("joint_" + std::to_string(i));
+  for(size_t i=0; i<7; i++){
+    arm_state.name.push_back("panda_joint" + std::to_string(i+1));
     arm_state.position.push_back(0.0);
     arm_state.velocity.push_back(0.0);
     arm_state.effort.push_back(0.0);
   }
+  arm_state.name.push_back("panda_finger_joint1");
+  arm_state.position.push_back(0.0);
+  arm_state.velocity.push_back(0.0);
+  arm_state.effort.push_back(0.0);
+
+  arm_state.name.push_back("panda_finger_joint2");
+  arm_state.position.push_back(0.0);
+  arm_state.velocity.push_back(0.0);
+  arm_state.effort.push_back(0.0);
 
 
   ros::Rate rate(100);

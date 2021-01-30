@@ -216,13 +216,13 @@ void StateObserver::publish() {
     robot_state_.position[0] = base_state_.x();
     robot_state_.position[1] = base_state_.y();
     robot_state_.position[2] = base_state_.z();
+
+    robot_state_.header.stamp = ros::Time::now();
+    robot_state_publisher_.publish(robot_state_);
   }
 
   object_state_.header.stamp = ros::Time::now();
   object_state_publisher_.publish(object_state_);
-
-  robot_state_.header.stamp = ros::Time::now();
-  robot_state_publisher_.publish(robot_state_);
 
   state_publisher_.publish(state_ros_);
 }
