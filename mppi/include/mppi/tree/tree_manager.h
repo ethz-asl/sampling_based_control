@@ -185,14 +185,11 @@ class TreeManager {
   std::vector<mppi::Rollout> rollouts_;  // internal tree rollouts
   Eigen::ArrayXd rollouts_cost_;         // internal tree rollout costs
 
-  std::shared_mutex
-      tree_mutex_;  // Tree mutex to only allow access to the tree by one thread at the time
-
-  std::vector<dynamics_ptr>
-      tree_dynamics_v_;  // tree_dynamics_v_[leaf_position] assigned to every node at beginning
   std::vector<dynamics_ptr>
       tree_dynamics_v_shared_;  // all nodes save the resulting dynamics to this vector.
 
   std::vector<expert_ptr>
       experts_v_;  // vector of experts such that every thread can sample independently
+
+  std::vector<observation_t> leaves_state_;
 };

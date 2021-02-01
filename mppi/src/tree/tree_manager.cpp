@@ -20,12 +20,11 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_pt
   tree_width_ = config_.rollouts;
   tree_target_depth_ = std::floor(config_.horizon / config_.step_size);
 
-  this->tree_dynamics_v_.resize(config_.rollouts);
   this->tree_dynamics_v_shared_.resize(config_.rollouts);
+  leaves_state_.resize(config_.rollouts);
 
   for (int i = 0; i < config_.rollouts; ++i) {
     this->tree_dynamics_v_shared_[i] = dynamics_->create();
-    this->tree_dynamics_v_[i] = dynamics_->create();
   }
 
   experts_v_.resize(config_.rollouts);
@@ -100,8 +99,8 @@ void TreeManager::init_tree() {
 void TreeManager::grow_tree() {
   // reset to initial state first
   for (size_t i=0; i<config_.rollouts; i++){
-    tree_dynamics_v_[i]->reset(x0_internal_);
     tree_dynamics_v_shared_[i]->reset(x0_internal_);
+    leaves_state_[i] = x0_internal_;
   }
 
   for (int horizon_step = 1; horizon_step <= tree_target_depth_; ++horizon_step) {
@@ -128,10 +127,7 @@ void TreeManager::add_depth_level(size_t horizon_step) {
 
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     leaf_handles_[leaf_pos] = futures_add_leaf_to_tree_[leaf_pos].get();
-
-    // tree_dynamics_v is used as an immutable set of system dynamics to know the state
-    // to reset dynamics which do not belong to the estinsible set
-    tree_dynamics_v_[leaf_pos]->reset(tree_dynamics_v_shared_[leaf_pos]->get_state());
+    leaves_state_[leaf_pos] = tree_dynamics_v_shared_[leaf_pos]->get_state();
   }
 }
 
@@ -153,8 +149,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
         extendable_leaf_pos_[random_uniform_int(0, extendable_leaf_pos_.size() - 1)];
     extending_leaf = leaf_handles_[extending_leaf_pos];
 
-    // reset current dynamics to the state of the chosen duplicate node
-    node_dynamics->reset(tree_dynamics_v_[extending_leaf_pos]->get_state());
+    node_dynamics->reset(leaves_state_[extending_leaf_pos]);
   }
 
   // TODO(giuseppe) all the time this stuff gets created
