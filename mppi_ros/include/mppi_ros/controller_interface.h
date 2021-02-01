@@ -35,7 +35,7 @@ class ControllerRos {
    * @return
    */
   virtual bool update_reference();
-  virtual bool init_ros(){};
+  virtual bool init_ros(){ return true; };
   virtual void publish_ros(){};
 
   /**

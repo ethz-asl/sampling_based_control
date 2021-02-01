@@ -18,9 +18,6 @@
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/"
               args="--stopped mppi_panda_sim"/>
 
-        <!--node name="unpause_gazebo_node" pkg="robot_control_ros" type="unpause_gazebo.py" output="screen"
-              args="/-/-delay 5.0"/-->
-
         <!-- Controller manager gui -->
         <node name="rqt_controller_manager" type="rqt_controller_manager" pkg="rqt_controller_manager"/>
 

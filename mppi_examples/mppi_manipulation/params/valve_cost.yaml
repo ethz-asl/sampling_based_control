@@ -1,0 +1,7 @@
+linear_weight: 100.0
+angular_weight: 1.0
+obstacle_radius: 0.15
+contact_weight: 10.0
+
+grasp_translation_offset: [0.0, 0.01, 0.07]
+grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x

@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   // init the controller
   bool ok = controller.init();
   if (!ok) {
-    throw std::runtime_error("Failed to initialzied controller!");
+   throw std::runtime_error("Failed to initialzied controller!");
   }
 
   // set the very first observation
@@ -110,7 +110,6 @@ int main(int argc, char** argv) {
       ROS_WARN_STREAM_THROTTLE(
           3.0, "Simulation slower than real time: last dt=" << elapsed << "s.");
     }
-
     ros::spinOnce();
   }
 }
