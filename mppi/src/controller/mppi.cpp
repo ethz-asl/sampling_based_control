@@ -347,10 +347,7 @@ void PathIntegral::sample_trajectories() {
 }
 
 void PathIntegral::sample_trajectories_via_tree() {
-	for (size_t k = 0; k < config_.rollouts; ++k){
-		tree_dynamics_v_[k]->reset(x0_internal_);
-	}
-	tree_manager_.build_new_tree(tree_dynamics_v_, x0_internal_, t0_internal_, opt_roll_);
+	tree_manager_.build_new_tree(x0_internal_, t0_internal_, opt_roll_);
 }
 
 void PathIntegral::overwrite_rollouts(){

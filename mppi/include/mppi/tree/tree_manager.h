@@ -51,13 +51,11 @@ class TreeManager {
  public:
   /**
    * @brief Builds new tree structure. Called at the beginning of every policy update.
-   * @param tree_dynamics_v: vector of dynamics (dim = n_rollouts) used for multithreading
    * @param x0_internal: internal x0
    * @param t0_internal: internal t0
    * @param opt_roll: optimal rollout calculated from importance sampling
    */
-  void build_new_tree(const std::vector<dynamics_ptr>& tree_dynamics_v,
-                      const observation_t& x0_internal, double t0_internal,
+  void build_new_tree(const observation_t& x0_internal, double t0_internal,
                       const mppi::Rollout& opt_roll);
 
   /**
