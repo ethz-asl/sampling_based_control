@@ -111,7 +111,6 @@ void TreeManager::grow_tree() {
 void TreeManager::add_depth_level(size_t horizon_step) {
   t_ = t0_internal_ + (horizon_step * config_.step_size);
 
-
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     futures_[leaf_pos] = pool_->enqueue(
         bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2,
@@ -123,7 +122,15 @@ void TreeManager::add_depth_level(size_t horizon_step) {
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     futures_[leaf_pos].wait();
   }
+  // TODO(giuseppe) understand what makesp omp so slow
+//  {
+//#pragma omp parallel for default(none) shared(horizon_step, tree_dynamics_v_shared_, experts_v_) ordered schedule(dynamic)
+//    for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
+//      add_node(horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
+//    }
+//  }
 
+  // tree is not thread-safe. Create new level after all nodes have been appended
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     leaf_handles_[leaf_pos] = sampling_tree_.append_child(extensions_[leaf_pos].first, extensions_[leaf_pos].second);
     leaves_state_[leaf_pos] = tree_dynamics_v_shared_[leaf_pos]->get_state();
@@ -171,7 +178,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
 
   {
     // TODO(giuseppe) remove locking but cost function calculation in node constructor is not thread safe
-    std::lock_guard<std::mutex> lock(tree_mutex_);
+    // std::lock_guard<std::mutex> lock(tree_mutex_);
 
     // TODO(giuseppe) node can be a simpler object
     extensions_[leaf_pos] = std::make_pair(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x,
