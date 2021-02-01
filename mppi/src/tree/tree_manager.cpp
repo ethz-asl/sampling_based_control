@@ -158,8 +158,9 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
     node_dynamics->reset(leaves_state_[extending_leaf_pos]);
   }
 
-  // TODO(giuseppe) all the time this stuff gets created
+  Eigen::VectorXd x;
   Eigen::VectorXd u;
+
   if (leaf_pos != 0) {
     u = node_expert->get_sample(expert_type, horizon_step - 1);
   } else {
@@ -168,7 +169,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
   }
 
   bound_input(u);
-  Eigen::VectorXd x = node_dynamics->step(u, config_.step_size);
+  node_dynamics->step(x, u, config_.step_size);
 
   tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 

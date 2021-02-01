@@ -35,7 +35,7 @@ solver:
   debug_print: false            # debug print
   display_update_freq: true     # displays the frequency of the control loop
 
-  use_tree_search: true         # if true tree structure is used
+  use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.04       # controls the structure of the tree
   # expert_types: {NORM, IMP}
   expert_weights: [ 0.5, 0.5 ]  # controls the weights of the different experts

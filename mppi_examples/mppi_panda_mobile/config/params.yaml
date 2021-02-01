@@ -22,7 +22,7 @@ solver:
   threads: 12
   debug_print: false
 
-  use_tree_search: true
+  use_tree_search: false
   pruning_threshold: 0.01
 
 #  expert_types: {NORM, IMP}

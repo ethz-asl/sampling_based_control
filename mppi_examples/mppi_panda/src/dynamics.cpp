@@ -11,13 +11,13 @@
 using namespace mppi;
 namespace panda {
 
-DynamicsBase::observation_t PandaDynamics::step(const DynamicsBase::input_t &u,
+void PandaDynamics::step(observation_t& x, const DynamicsBase::input_t &u,
                                                 const double dt) {
   double dt_internal = dt / config_.substeps;
   for (size_t i = 0; i < config_.substeps; i++) {
     x_.head<7>() += u * dt_internal;
   }
-  return x_;
+  x = x_;
 }
 
 const DynamicsBase::observation_t PandaDynamics::get_state() const { return x_; }

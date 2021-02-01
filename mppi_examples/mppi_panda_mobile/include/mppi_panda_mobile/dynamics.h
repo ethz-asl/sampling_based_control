@@ -55,10 +55,11 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
 
   void reset(const observation_t &x) override;
 
-  observation_t step(const input_t &u, const double dt) override;
+  void step(observation_t& x, const input_t &u, const double dt) override;
+
   input_t get_zero_input(const observation_t& x) override;
 
-	observation_t get_state() override;
+  const observation_t get_state() const override;
 
  private:
   observation_t x_;

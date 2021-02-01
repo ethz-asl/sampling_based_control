@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     if (freeze_robot) u.setZero();
 
     if (!static_optimization) {
-      x = simulation->step(u, sim_dt);
+      simulation->step(x, u, sim_dt);
       sim_time += sim_dt;
     }
 

@@ -171,7 +171,7 @@ void PathIntegral::update_policy() {
       // happening before optimal rollout
       dynamics_->reset(x0_internal_);
       for (size_t t = 0; t < steps_; t++) {
-        opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+         dynamics_->step(opt_roll_.xx[t], opt_roll_.uu[t], config_.step_size);
       }
     }
     swap_policies();
@@ -330,7 +330,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                  sampler_->sigma_inv() * opt_roll_.uu[t];
 
       // integrate dynamics
-      x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
+      dynamics->step(x, rollouts_[k].uu[t], config_.step_size);
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
