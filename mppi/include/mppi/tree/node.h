@@ -8,18 +8,18 @@
 
 #pragma once
 
-#include <cstdio>
-#include <string>
-#include <ctime>
-#include <chrono>
 #include <Eigen/Dense>
+#include <chrono>
+#include <cstdio>
+#include <ctime>
+#include <string>
 
 #include "mppi/cost/cost_base.h"
 #include "mppi/dynamics/dynamics_base.h"
 #include "mppi/solver_config.h"
 #include "mppi/utils/tree.h"
 
-class Node{
+class Node {
  public:
   using cost_ptr = mppi::CostBase::cost_ptr;
   using dynamics_ptr = mppi::DynamicsBase::dynamics_ptr;
@@ -28,7 +28,9 @@ class Node{
   using node_handle = tree<Node>::iterator;
 
   Node() = default;
-  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config, cost_ptr cost, const Eigen::VectorXd& u_applied, const Eigen::VectorXd& x, const Eigen::MatrixXd& sigma_inv, size_t expert_type_applied);
+  Node(size_t step, node_handle parent_node_handle, double t, const mppi::SolverConfig& config,
+       cost_ptr cost, const Eigen::VectorXd& u_applied, const Eigen::VectorXd& x,
+       const Eigen::MatrixXd& sigma_inv, size_t expert_type_applied);
   ~Node() = default;
 
   std::string public_name_;
@@ -40,14 +42,14 @@ class Node{
   double c_cum_;
   double c_cum_discounted_;
 
-	double t_;
+  double t_;
 
-	Eigen::VectorXd xx_;
-	Eigen::VectorXd uu_applied_;
+  Eigen::VectorXd xx_;
+  Eigen::VectorXd uu_applied_;
 
-	Eigen::MatrixXd sigma_inv_;
+  Eigen::MatrixXd sigma_inv_;
 
-	size_t expert_type_applied_;
+  size_t expert_type_applied_;
 
  private:
   config_t config_;
