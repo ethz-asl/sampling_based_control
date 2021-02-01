@@ -22,7 +22,7 @@ solver:
   filter_order: 1               # polynomial used to approximate the input sequence #5
   filter_window: 6              # window length #30
 
-  adaptive_sampling: false      # untested -- leave
+  adaptive_sampling: false      # untested -- leave false
   input_variance: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]  # additive noise variance per input channel
 
   bound_input: true
@@ -31,7 +31,7 @@ solver:
 
   discount_factor: 1.0          # apply a discount factor on the cost over the horizon
   verbose: false                # more prints
-  threads: 8                    # number of threads, set to 1 to not use multithreaded sampling
+  threads: 2                    # number of threads, set to 1 to not use multithreaded sampling
   debug_print: false            # debug print
   display_update_freq: true     # displays the frequency of the control loop
 

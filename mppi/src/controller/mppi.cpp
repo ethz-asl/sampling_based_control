@@ -159,7 +159,7 @@ void PathIntegral::update_policy() {
         timer_.add_interval("sample_trajectories_via_tree");
         overwrite_rollouts();
         timer_.add_interval("overwrite_rollouts");
-        timer_.print_intervals();
+        timer_.print_intervals(100);
       } else {
       	sample_trajectories();
       }
@@ -276,6 +276,9 @@ void PathIntegral::update_reference() {
 
   if (config_.threads > 1) {
     for (auto& cost : cost_v_) cost->set_reference_trajectory(rr_tt_ref_);
+    if (config_.use_tree_search){
+      tree_manager_.set_reference_trajectory(rr_tt_ref_);
+    }
   }
 }
 

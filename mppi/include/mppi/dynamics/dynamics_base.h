@@ -31,7 +31,7 @@ class DynamicsBase {
   virtual void reset(const observation_t& x) = 0;
   virtual void render(){};
   virtual observation_t step(const input_t& u, const double dt) = 0;
-	virtual observation_t get_state() = 0;
+  virtual const observation_t get_state() const = 0;
 
   // TODO: param x is never used!
   virtual input_t get_zero_input(const observation_t& x) {

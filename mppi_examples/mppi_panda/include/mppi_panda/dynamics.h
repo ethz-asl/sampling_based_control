@@ -59,7 +59,7 @@ class PandaDynamics : public mppi::DynamicsBase {
   void reset(const observation_t &x) override;
 
   observation_t step(const input_t &u, const double dt) override;
-	observation_t get_state() override;
+  const observation_t get_state() const override;
   input_t get_zero_input(const observation_t& x) override;
 
  private:

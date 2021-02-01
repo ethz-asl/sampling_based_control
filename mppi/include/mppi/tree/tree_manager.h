@@ -1,6 +1,6 @@
 /*!
  * @file     tree_manager.h
- * @author   Etienne Walther
+ * @author   Etienne Walther, Giuseppe Rizzi
  * @date     08.12.2020
  * @version  1.0
  * @brief    description
@@ -16,6 +16,11 @@
 #include <iostream>
 #include <shared_mutex>
 #include <thread>
+
+#include "mppi/typedefs.h"
+#include "mppi/solver_config.h"
+#include "mppi/cost/cost_base.h"
+#include "mppi/dynamics/dynamics_base.h"
 
 #include "mppi/controller/rollout.h"
 #include "mppi/experts/expert.h"
@@ -34,6 +39,9 @@ class TreeManager {
   using input_t = mppi::DynamicsBase::input_t;
   using sampler_ptr = mppi::GaussianSampler::sampler_ptr;
   using expert_ptr = mppi::Expert::expert_ptr;
+
+  using node_t = Node;
+  using node_iterator_t = tree<node_t>::iterator;
 
   /**
    * @brief Tree Manager class
@@ -75,6 +83,9 @@ class TreeManager {
    */
   void print_tree();
 
+
+  void set_reference_trajectory(const mppi::reference_trajectory_t& traj);
+
  private:
   cost_ptr cost_;
   dynamics_ptr dynamics_;
@@ -82,7 +93,7 @@ class TreeManager {
   sampler_ptr sampler_;
   expert_ptr expert_;
 
-  tree<Node> sampling_tree_;                   // The tree object
+  tree<node_t> sampling_tree_;                   // The tree object
   std::unique_ptr<ThreadPool> pool_;           // The thread pool for sampling the control inputs
 
   /**
@@ -91,7 +102,7 @@ class TreeManager {
   void init_tree();
 
   /**
-   * @brief Called after initalization to add and evaluate the depth levels
+   * @brief Called after initialization to add and evaluate the depth levels
    */
   void grow_tree();
 
@@ -149,7 +160,7 @@ class TreeManager {
    * @param u: input
    * @return trimmed input u
    */
-  void bound_input(input_t& u);
+  void bound_input(input_t& u) const ;
 
  private:
   double t0_internal_;         // copy of internal time from PathIntegral
@@ -164,8 +175,8 @@ class TreeManager {
 
   std::vector<size_t> extendable_leaf_pos_;  // Set of extendable leafs
 
-  std::vector<tree<Node>::iterator> leaf_handles_;  // Vector of leaf handles
-  std::vector<std::pair<tree<Node>::iterator, Node>> extensions_;
+  std::vector<node_iterator_t> leaf_handles_;  // Vector of leaf handles
+  std::vector<std::pair<node_iterator_t, node_t>> extensions_;
 
   // futures vector of booleans. Every thread returns true when control input sampled
   // and applied to the dynamics
@@ -174,11 +185,12 @@ class TreeManager {
   std::vector<mppi::Rollout> rollouts_;  // internal tree rollouts
   Eigen::ArrayXd rollouts_cost_;         // internal tree rollout costs
 
-  std::vector<dynamics_ptr>
-      tree_dynamics_v_shared_;  // all nodes save the resulting dynamics to this vector.
+  // all nodes save the resulting dynamics to this vector.
+  std::vector<dynamics_ptr> tree_dynamics_v_shared_;
+  std::vector<cost_ptr> cost_v_;
 
-  std::vector<expert_ptr>
-      experts_v_;  // vector of experts such that every thread can sample independently
+  // vector of experts such that every thread can sample independently
+  std::vector<expert_ptr> experts_v_;
 
   std::vector<observation_t> leaves_state_;
   std::mutex tree_mutex_;

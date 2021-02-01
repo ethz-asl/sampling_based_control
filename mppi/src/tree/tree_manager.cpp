@@ -7,7 +7,7 @@
  */
 
 #include "mppi/tree/tree_manager.h"
-#include <omp.h>
+// #include <omp.h>
 
 TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler,
                          config_t config, mppi::Expert* expert)
@@ -22,10 +22,12 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_pt
   tree_target_depth_ = std::floor(config_.horizon / config_.step_size);
 
   this->tree_dynamics_v_shared_.resize(config_.rollouts);
+  this->cost_v_.resize(config_.rollouts);
   leaves_state_.resize(config_.rollouts);
 
   for (int i = 0; i < config_.rollouts; ++i) {
     this->tree_dynamics_v_shared_[i] = dynamics_->create();
+    this->cost_v_[i] = cost_->create();
   }
 
   experts_v_.resize(config_.rollouts);
@@ -51,6 +53,10 @@ void TreeManager::init_threading() {
   futures_.resize(tree_width_);
 }
 
+void TreeManager::set_reference_trajectory(const mppi::reference_trajectory_t& traj) {
+  for (auto& cost : cost_v_) cost->set_reference_trajectory(traj);
+}
+
 void TreeManager::build_new_tree(const observation_t& x0_internal, double t0_internal,
                                  const mppi::Rollout& opt_roll) {
   x0_internal_ = x0_internal;
@@ -74,20 +80,13 @@ void TreeManager::init_tree() {
   extendable_leaf_pos_.clear();
   rollouts_cost_.setZero();
 
-  tree<Node>::iterator root = sampling_tree_.insert(
+  node_iterator_t root = sampling_tree_.insert(
       sampling_tree_.begin(),
-      Node(0, nullptr, 0, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_,
-           Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(),
-                                     dynamics_->get_input_dimension()),
-           0));
+      node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_), x0_internal_, 0));
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     leaf_handles_[leaf_pos] = sampling_tree_.append_child(
-        root,
-        Node(0, root, t_, config_, cost_, dynamics_->get_zero_input(x0_internal_), x0_internal_,
-             Eigen::MatrixXd::Identity(dynamics_->get_input_dimension(),
-                                       dynamics_->get_input_dimension()),
-             0));
+        root, node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_), x0_internal_, 0));
   }
 
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
@@ -97,7 +96,7 @@ void TreeManager::init_tree() {
 
 void TreeManager::grow_tree() {
   // reset to initial state first
-  for (size_t i=0; i<config_.rollouts; i++){
+  for (size_t i = 0; i < config_.rollouts; i++) {
     tree_dynamics_v_shared_[i]->reset(x0_internal_);
     leaves_state_[i] = x0_internal_;
   }
@@ -118,21 +117,22 @@ void TreeManager::add_depth_level(size_t horizon_step) {
         horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
   }
 
-
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     futures_[leaf_pos].wait();
   }
-  // TODO(giuseppe) understand what makesp omp so slow
-//  {
-//#pragma omp parallel for default(none) shared(horizon_step, tree_dynamics_v_shared_, experts_v_) ordered schedule(dynamic)
-//    for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
-//      add_node(horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
-//    }
-//  }
+  // TODO(giuseppe) understand what makes omp so slow
+  //  {
+  //#pragma omp parallel for default(none) shared(horizon_step, tree_dynamics_v_shared_, experts_v_)
+  //ordered schedule(dynamic)
+  //    for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
+  //      add_node(horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
+  //    }
+  //  }
 
   // tree is not thread-safe. Create new level after all nodes have been appended
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] = sampling_tree_.append_child(extensions_[leaf_pos].first, extensions_[leaf_pos].second);
+    leaf_handles_[leaf_pos] =
+        sampling_tree_.append_child(extensions_[leaf_pos].first, extensions_[leaf_pos].second);
     leaves_state_[leaf_pos] = tree_dynamics_v_shared_[leaf_pos]->get_state();
   }
 }
@@ -141,7 +141,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
                            const expert_ptr& node_expert) {
   size_t expert_type;
   size_t extending_leaf_pos;
-  tree<Node>::iterator extending_leaf;
+  node_iterator_t extending_leaf;
 
   expert_type = rollout_expert_map_[leaf_pos];
 
@@ -160,30 +160,22 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
 
   // TODO(giuseppe) all the time this stuff gets created
   Eigen::VectorXd u;
-  Eigen::MatrixXd sigma_inv;
   if (leaf_pos != 0) {
     u = node_expert->get_sample(expert_type, horizon_step - 1);
-    sigma_inv = node_expert->get_sigma_inv(expert_type, horizon_step - 1);
   } else {
     u = opt_roll_.uu[horizon_step - 1];
-    expert_type = 1;
-    sigma_inv = node_expert->get_sigma_inv(expert_type, horizon_step - 1);
+//    expert_type = 1;
   }
 
   bound_input(u);
   Eigen::VectorXd x = node_dynamics->step(u, config_.step_size);
-  Eigen::VectorXd u_applied = u;
 
   tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 
-  {
-    // TODO(giuseppe) remove locking but cost function calculation in node constructor is not thread safe
-    // std::lock_guard<std::mutex> lock(tree_mutex_);
-
-    // TODO(giuseppe) node can be a simpler object
-    extensions_[leaf_pos] = std::make_pair(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x,
-                                                                sigma_inv, expert_type));
-  }
+  double cost =
+      cost_v_[leaf_pos]->get_stage_cost(x, t_) * std::pow(config_.discount_factor, horizon_step);
+  extensions_[leaf_pos] =
+      std::make_pair(extending_leaf, node_t(extending_leaf, t_, cost, u, x, expert_type));
 
   return true;
 }
@@ -207,11 +199,11 @@ void TreeManager::eval_depth_level() {
 }
 
 void TreeManager::print_tree() {
-  tree<Node>::iterator start_node = tree<Node>::begin(sampling_tree_.begin());
-  tree<Node>::iterator end_node = tree<Node>::end(sampling_tree_.end());
+  auto start_node = tree<node_t>::begin(sampling_tree_.begin());
+  auto end_node = tree<node_t>::end(sampling_tree_.end());
 
   do {
-    int node_depth = tree<Node>::depth(start_node);
+    int node_depth = tree<node_t>::depth(start_node);
 
     for (int i = 0; i < node_depth; ++i) {
       if (i == node_depth - 1) {
@@ -229,7 +221,7 @@ void TreeManager::print_tree() {
 }
 
 void TreeManager::transform_to_rollouts() {
-// TODO(giuseppe) this can also be parallelized easily with omp
+  // TODO(giuseppe) this can also be parallelized easily with omp
   for (size_t k = 0; k < tree_width_; ++k) {
     // extract path K of depth T (size path_to_leaf = T)
     auto path_to_leaf = sampling_tree_.path_from_iterator(leaf_handles_[k], sampling_tree_.begin());
@@ -241,21 +233,23 @@ void TreeManager::transform_to_rollouts() {
       auto current_node =
           sampling_tree_.iterator_from_path(path_to_leaf_cut_current, sampling_tree_.begin());
 
-      if (std::isnan(current_node->c_discounted)) {
+      if (std::isnan(current_node->c_)) {
         std::cout << "COST IS NAN!" << std::endl;
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
       }
 
+      const Eigen::MatrixXd& sigma_inv =
+          experts_v_[k]->get_sigma_inv(rollout_expert_map_[k], horizon_step);
       rollouts_[k].tt[horizon_step] = current_node->t_;
-      rollouts_[k].xx[horizon_step] = current_node->xx_;
-      rollouts_[k].uu[horizon_step] = current_node->uu_applied_;
-      rollouts_[k].nn[horizon_step] = current_node->uu_applied_ - opt_roll_.uu[horizon_step];
-      rollouts_[k].cc(horizon_step) = current_node->c_discounted;
+      rollouts_[k].xx[horizon_step] = current_node->x_;
+      rollouts_[k].uu[horizon_step] = current_node->u_;
+      rollouts_[k].nn[horizon_step] = current_node->u_ - opt_roll_.uu[horizon_step];
+      rollouts_[k].cc(horizon_step) = current_node->c_;
       rollouts_[k].total_cost += rollouts_[k].cc(horizon_step) -
                                  config_.lambda * opt_roll_.uu[horizon_step].transpose() *
-                                     current_node->sigma_inv_ * rollouts_[k].nn[horizon_step] +
+                                     sigma_inv * rollouts_[k].nn[horizon_step] +
                                  config_.lambda * opt_roll_.uu[horizon_step].transpose() *
-                                     current_node->sigma_inv_ * opt_roll_.uu[horizon_step];
+                                     sigma_inv * opt_roll_.uu[horizon_step];
     }
 
     rollouts_cost_[k] = rollouts_[k].total_cost;
@@ -272,7 +266,7 @@ int TreeManager::random_uniform_int(int v_min, int v_max) {
   return u(gen);
 }
 
-void TreeManager::bound_input(input_t& u) {
+void TreeManager::bound_input(input_t& u) const {
   if (config_.bound_input) {
     u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
   };
@@ -294,6 +288,11 @@ void TreeManager::gen_rollout_expert_mapping(size_t mapping_type_input) {
   }
 
   for (size_t rollout = 0; rollout < config_.rollouts; ++rollout) {
+    if (rollout == 0) {
+      // TODO(giuseppe) use enums for this experts
+      rollout_expert_map_[rollout] = 1;  // first rollout always with Importance Sampling
+      continue;
+    }
     size_t expert_type;
 
     double pos_rollout = (double)rollout / (double)config_.rollouts;

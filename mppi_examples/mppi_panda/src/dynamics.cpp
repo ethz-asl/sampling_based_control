@@ -20,7 +20,7 @@ DynamicsBase::observation_t PandaDynamics::step(const DynamicsBase::input_t &u,
   return x_;
 }
 
-DynamicsBase::observation_t PandaDynamics::get_state() { return x_; }
+const DynamicsBase::observation_t PandaDynamics::get_state() const { return x_; }
 
 void PandaDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
 
