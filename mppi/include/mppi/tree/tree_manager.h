@@ -84,7 +84,6 @@ class TreeManager {
 
   tree<Node> sampling_tree_;                   // The tree object
   std::unique_ptr<ThreadPool> pool_;           // The thread pool for sampling the control inputs
-  std::unique_ptr<ThreadPool> pool_add_leaf_;  // The thread pool for appending leafs to the tree
 
   /**
    * @brief Initialization of a variables related to a new tree
@@ -138,15 +137,6 @@ class TreeManager {
                 const expert_ptr& node_expert);
 
   /**
-   * @brief Adds new leaf to the tree. This is non-thread-safe and therefore the tree needs to be
-   * locked by a mutex
-   * @return leaf handle of added leaf
-   */
-  tree<Node>::iterator append_child_to_tree_via_pool(
-      tree<Node>::iterator extending_leaf, size_t horizon_step, const Eigen::VectorXd& u_applied,
-      const Eigen::VectorXd& x, const Eigen::MatrixXd& sigma_inv, size_t expert_type_applied);
-
-  /**
    * @brief Helper function to sample from the uniform distribution in the range [v_min, v_max]
    * @param v_min: lower bound
    * @param v_max: upper bound
@@ -159,7 +149,7 @@ class TreeManager {
    * @param u: input
    * @return trimmed input u
    */
-  Eigen::VectorXd bound_input(input_t& u);
+  void bound_input(input_t& u);
 
  private:
   double t0_internal_;         // copy of internal time from PathIntegral
@@ -175,12 +165,11 @@ class TreeManager {
   std::vector<size_t> extendable_leaf_pos_;  // Set of extendable leafs
 
   std::vector<tree<Node>::iterator> leaf_handles_;  // Vector of leaf handles
-  std::vector<std::future<bool>>
-      futures_;  // futures vector of booleans. Every thread returns true when control input sampled
-                 // and applied to the dynamics
-  std::vector<std::future<tree<Node>::iterator>>
-      futures_add_leaf_to_tree_;  // futures vector of leaf handles. Every thread returns the leaf
-                                  // handle of the appended leaf to the tree
+  std::vector<std::pair<tree<Node>::iterator, Node>> extensions_;
+
+  // futures vector of booleans. Every thread returns true when control input sampled
+  // and applied to the dynamics
+  std::vector<std::future<bool>> futures_;
 
   std::vector<mppi::Rollout> rollouts_;  // internal tree rollouts
   Eigen::ArrayXd rollouts_cost_;         // internal tree rollout costs
@@ -192,4 +181,5 @@ class TreeManager {
       experts_v_;  // vector of experts such that every thread can sample independently
 
   std::vector<observation_t> leaves_state_;
+  std::mutex tree_mutex_;
 };

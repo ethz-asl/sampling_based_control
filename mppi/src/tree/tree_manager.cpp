@@ -7,6 +7,7 @@
  */
 
 #include "mppi/tree/tree_manager.h"
+#include <omp.h>
 
 TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler,
                          config_t config, mppi::Expert* expert)
@@ -41,15 +42,13 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_pt
   init_threading();
 
   leaf_handles_.resize(tree_width_);
+  extensions_.resize(tree_width_);
 }
 
 void TreeManager::init_threading() {
   std::cout << "Using multithreading. Number of threads: " << config_.threads << std::endl;
   pool_ = std::make_unique<ThreadPool>(config_.threads);
-  pool_add_leaf_ = std::make_unique<ThreadPool>(1);
-
   futures_.resize(tree_width_);
-  futures_add_leaf_to_tree_.resize(tree_width_);
 }
 
 void TreeManager::build_new_tree(const observation_t& x0_internal, double t0_internal,
@@ -120,13 +119,13 @@ void TreeManager::add_depth_level(size_t horizon_step) {
         horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
   }
 
+
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     futures_[leaf_pos].wait();
-    futures_add_leaf_to_tree_[leaf_pos].wait();
   }
 
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] = futures_add_leaf_to_tree_[leaf_pos].get();
+    leaf_handles_[leaf_pos] = sampling_tree_.append_child(extensions_[leaf_pos].first, extensions_[leaf_pos].second);
     leaves_state_[leaf_pos] = tree_dynamics_v_shared_[leaf_pos]->get_state();
   }
 }
@@ -164,32 +163,22 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
     sigma_inv = node_expert->get_sigma_inv(expert_type, horizon_step - 1);
   }
 
-  u = bound_input(u);
+  bound_input(u);
   Eigen::VectorXd x = node_dynamics->step(u, config_.step_size);
   Eigen::VectorXd u_applied = u;
 
   tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 
-  futures_add_leaf_to_tree_[leaf_pos] = pool_add_leaf_->enqueue(
-      bind(&TreeManager::append_child_to_tree_via_pool, this, std::placeholders::_1,
-           std::placeholders::_2, std::placeholders::_3, std::placeholders::_4,
-           std::placeholders::_5, std::placeholders::_6),
-      extending_leaf, horizon_step, u_applied, x, sigma_inv, expert_type);
+  {
+    // TODO(giuseppe) remove locking but cost function calculation in node constructor is not thread safe
+    std::lock_guard<std::mutex> lock(tree_mutex_);
+
+    // TODO(giuseppe) node can be a simpler object
+    extensions_[leaf_pos] = std::make_pair(extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x,
+                                                                sigma_inv, expert_type));
+  }
 
   return true;
-}
-
-tree<Node>::iterator TreeManager::append_child_to_tree_via_pool(
-    tree<Node>::iterator extending_leaf,
-    size_t horizon_step,
-    const Eigen::VectorXd& u_applied,
-    const Eigen::VectorXd& x,
-    const Eigen::MatrixXd& sigma_inv,
-    size_t expert_type_applied) {
-  tree<Node>::iterator child_handle = sampling_tree_.append_child(
-      extending_leaf, Node(horizon_step, extending_leaf, t_, config_, cost_, u_applied, x,
-                           sigma_inv, expert_type_applied));
-  return child_handle;
 }
 
 void TreeManager::eval_depth_level() {
@@ -276,11 +265,10 @@ int TreeManager::random_uniform_int(int v_min, int v_max) {
   return u(gen);
 }
 
-Eigen::VectorXd TreeManager::bound_input(input_t& u) {
+void TreeManager::bound_input(input_t& u) {
   if (config_.bound_input) {
     u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
-  }
-  return u;
+  };
 }
 
 void TreeManager::gen_rollout_expert_mapping(size_t mapping_type_input) {
