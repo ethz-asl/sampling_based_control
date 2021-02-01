@@ -29,6 +29,8 @@
 #include "mppi/tree/tree_manager.h"
 #include "mppi/experts/expert.h"
 
+#include "mppi/utils/timer.h"
+
 namespace mppi {
 
 class PathIntegral {
@@ -347,6 +349,8 @@ class PathIntegral {
   std::vector<dynamics_ptr> tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts) for multithreading
   double stage_cost_ = 0;  // stage_cost used for logging
   std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
+
+  Timer timer_;
 };
 
 }  // namespace mppi

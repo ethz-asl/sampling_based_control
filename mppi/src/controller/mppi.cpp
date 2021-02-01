@@ -84,15 +84,15 @@ void PathIntegral::init_data() {
     if (config_.u_min.size() != nu_)
     {
       std::stringstream error;
-      error << "Bounding input and min constraint size " << config_.u_min.size() << " != " << nu_; 
+      error << "Bounding input and min constraint size " << config_.u_min.size() << " != " << nu_;
       throw std::runtime_error(error.str());
     }
     if (config_.u_max.size() != nu_)
     {
       std::stringstream error;
-      error << "Bounding input and max constraint size " << config_.u_max.size() << " != " << nu_; 
+      error << "Bounding input and max constraint size " << config_.u_max.size() << " != " << nu_;
       throw std::runtime_error(error.str());
-    } 
+    }
   }
   observation_set_ = false;
   reference_set_ = false;
@@ -136,7 +136,7 @@ void PathIntegral::init_tree_manager_dynamics() {
 
 void PathIntegral::update_policy() {
   if (config_.display_update_freq){
-    time_it();
+    // time_it();
   }
 
   if (!observation_set_) {
@@ -152,9 +152,14 @@ void PathIntegral::update_policy() {
       update_reference();
 
       if (config_.use_tree_search){
-				update_experts();
-				sample_trajectories_via_tree();
-				overwrite_rollouts();
+        timer_.reset();
+        update_experts();
+        timer_.add_interval("update_experts");
+        sample_trajectories_via_tree();
+        timer_.add_interval("sample_trajectories_via_tree");
+        overwrite_rollouts();
+        timer_.add_interval("overwrite_rollouts");
+        timer_.print_intervals();
       } else {
       	sample_trajectories();
       }
@@ -577,7 +582,7 @@ void PathIntegral::print_cost_histogram() const {
 }
 
 void PathIntegral::bound_input(input_t& u) {
-  if (config_.bound_input) 
+  if (config_.bound_input)
     u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
 }
 
