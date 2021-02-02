@@ -87,9 +87,18 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   if (!fixed_base_) {
     for (size_t i = 0; i < 7; i++) {
       if (x(i + BASE_DIMENSION) < joint_limits_lower_(i))
-        cost += 1000 + 100 * std::pow(joint_limits_lower_(i) - x(i), 2);
+        cost += 1000 + 100 * std::pow(joint_limits_lower_(i) - x(i + BASE_DIMENSION), 2);
 
       if (x(i + BASE_DIMENSION) > joint_limits_upper_(i))
+        cost += 1000 + 100 * std::pow(x(i + BASE_DIMENSION) - joint_limits_upper_(i), 2);
+    }
+  }
+  else{
+    for (size_t i = 0; i < 7; i++) {
+      if (x(i) < joint_limits_lower_(i))
+        cost += 1000 + 100 * std::pow(joint_limits_lower_(i) - x(i), 2);
+
+      if (x(i) > joint_limits_upper_(i))
         cost += 1000 + 100 * std::pow(x(i) - joint_limits_upper_(i), 2);
     }
   }
