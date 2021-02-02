@@ -7,4 +7,7 @@
     <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
         <arg name="object_name" value="shelf_door"/>
     </include>
+
+        <!--    Visualization-->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find mppi_manipulation)/config/config.rviz"/>
 </launch>
