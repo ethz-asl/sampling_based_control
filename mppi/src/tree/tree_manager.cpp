@@ -123,7 +123,7 @@ void TreeManager::add_depth_level(size_t horizon_step) {
   // TODO(giuseppe) understand what makes omp so slow
   //  {
   //#pragma omp parallel for default(none) shared(horizon_step, tree_dynamics_v_shared_, experts_v_)
-  //ordered schedule(dynamic)
+  // ordered schedule(dynamic)
   //    for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
   //      add_node(horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
   //    }
@@ -164,7 +164,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
     u = node_expert->get_sample(expert_type, horizon_step - 1);
   } else {
     u = opt_roll_.uu[horizon_step - 1];
-//    expert_type = 1;
+    //    expert_type = 1;
   }
 
   bound_input(u);

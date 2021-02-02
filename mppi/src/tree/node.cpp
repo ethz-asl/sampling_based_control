@@ -9,7 +9,7 @@
 #include "mppi/tree/node.h"
 
 Node::Node(node_handle parent_node_handle, double t, double cost, const Eigen::VectorXd& u,
-             const Eigen::VectorXd& x, size_t expert_type)
+           const Eigen::VectorXd& x, size_t expert_type)
     : t_(t),
       x_(x),
       u_(u),
