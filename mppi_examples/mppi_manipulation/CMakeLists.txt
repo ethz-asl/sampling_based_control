@@ -4,10 +4,11 @@ project(mppi_manipulation)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
+option(BUILD_OGRE_EXAMPLE "Build the ogre example." OFF)
+
 find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
 find_package(raisim CONFIG REQUIRED)
-find_package(raisimOgre CONFIG REQUIRED)
 find_package(Franka 0.7.0 REQUIRED)
 find_package(orocos_kdl)
 
@@ -50,9 +51,13 @@ add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_raisim ${PROJECT_NAME})
 
-add_executable(sim_ogre src/tests/sim.cpp)
-target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
-add_dependencies(sim_ogre ${PROJECT_NAME})
+if (BUILD_OGRE_EXAMPLE)
+  find_package(raisimOgre CONFIG REQUIRED)
+  add_executable(sim_ogre src/tests/sim.cpp)
+  target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
+  add_dependencies(sim_ogre ${PROJECT_NAME})
+enif(BUILD_OGRE_EXAMPLE)
+
 
 add_library(${PROJECT_NAME}_controller
         src/ros/royal_panda_controller_ros.cpp)
