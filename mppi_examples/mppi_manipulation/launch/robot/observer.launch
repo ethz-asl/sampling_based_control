@@ -44,11 +44,12 @@
 
     <!--    State observer node-->
     <node pkg="mppi_manipulation" name="state_observer_node" type="state_observer_node" output="screen">
-        <param name="fixed_base" value="false"/>
+        <param name="fixed_base" value="$(arg fixed_base)"/>
         <param name="base_pose_topic" value="/panda_base/vrpn_client/estimated_odometry"/>
         <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
         <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="observer_update_frequency" value="200"/>
     </node>
 
     <!--    Visualization-->

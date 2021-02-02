@@ -1,5 +1,5 @@
 <library path="lib/libmppi_manipulation_controller">
-    <class name="mppi_manipulation/RoyalPandaControllerRos" type="mppi_manipulation::RoyalPandaControllerRos"
+    <class name="manipulation/RoyalPandaControllerRos" type="manipulation::RoyalPandaControllerRos"
            base_class_type="controller_interface::ControllerBase">
         <description>
             A sampling based controller for the royal-panda robot using a dynamic model for interaction handling.

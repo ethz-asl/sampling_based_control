@@ -25,10 +25,12 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
 
   std::fill(dq_filtered_.begin(), dq_filtered_.end(), 0);
 
-  man_interface_ = std::make_unique<manipulation::PandaControllerInterface>(node_handle);
-  if (!man_interface_->init()) {
-    ROS_ERROR("Failed to initialized manipulation interface");
-    return false;
+  if (!debug_){
+    man_interface_ = std::make_unique<manipulation::PandaControllerInterface>(node_handle);
+    if (!man_interface_->init()) {
+      ROS_ERROR("Failed to initialized manipulation interface");
+      return false;
+    }
   }
 
   started_ = false;
@@ -36,6 +38,11 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
 }
 
 bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
+  if (!node_handle.getParam("fixed_base", fixed_base_)) {
+    ROS_ERROR("RoyalPandaControllerRos: Could not read parameter fixed_base");
+    return false;
+  }
+
   if (!node_handle.getParam("arm_id", arm_id_)) {
     ROS_ERROR("RoyalPandaControllerRos: Could not read parameter arm_id");
     return false;
@@ -85,7 +92,10 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
   }
 
   node_handle.param<bool>("debug", debug_, true);
-  if (debug_) ROS_WARN_STREAM("In debug mode: running controller without sending commands.");
+  if (debug_) ROS_WARN_STREAM("In debug mode: running controller with debug velocity commands.");
+
+  node_handle.param<double>("debug_amplitude", amplitude_, 0.0);
+  if (debug_) ROS_WARN_STREAM("Debug amplitude is: " << amplitude_);
 
   return true;
 }
@@ -169,11 +179,22 @@ void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConst
 
 void RoyalPandaControllerRos::starting(const ros::Time& time) {
   if (started_) return;
-  if (!man_interface_->start()) {
-    ROS_ERROR("[RoyalPandaControllerRos::starting] Failed  to initialize controller");
-    started_ = false;
-    return;
+  
+  if (!debug_){
+    if (!man_interface_->start()) {
+      ROS_ERROR("[RoyalPandaControllerRos::starting] Failed  to initialize controller");
+      started_ = false;
+      return;
+    }
   }
+
+  // initial configuration
+  robot_state_ = state_handle_->getRobotState();
+  for (size_t i=0; i<7; i++){
+    qd_[i] = robot_state_.q[i];
+  }
+
+  start_time_ = time.toSec();
   started_ = true;
 }
 
@@ -193,8 +214,10 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
     stop_robot();
   }
 
-  man_interface_->set_observation(x_, time.toSec());
-  man_interface_->get_input(x_, u_, time.toSec());
+  if (!debug_){
+    man_interface_->set_observation(x_, time.toSec());
+    man_interface_->get_input(x_, u_, time.toSec());
+  }
 
   robot_state_ = state_handle_->getRobotState();
   std::array<double, 7> coriolis = model_handle_->getCoriolis();
@@ -210,19 +233,37 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
     tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
     if (!debug_) {
       tau_d_calculated[i] += d_gains_[i] * (u_.tail<8>()(i) - dq_filtered_[i]);
-    } else {
+    } 
+    else {
+      double dt = ros::Time::now().toSec() - start_time_;
+      double speed_desired = 0;
+      double position_desired = qd_[i];
+      if (i==0){
+        position_desired += amplitude_ * std::sin(2 * M_PI * dt * frequency_);
+        speed_desired = amplitude_ * 2 * M_PI * frequency_ * std::cos(2 * M_PI * dt * frequency_);
+      }
       tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
-                            // k_gains_[i] * (robot_state.q_d[i] - robot_state.q[i]) +
-                            d_gains_[i] * (robot_state_.dq_d[i] - dq_filtered_[i]);
+                            k_gains_[i] * (position_desired - robot_state_.q[i]) +
+                            d_gains_[i] * (speed_desired - dq_filtered_[i]);
     }
   }
-
+  
   // send velocity commands to the base
-  if (!man_interface_->fixed_base_) {
+  if (!fixed_base_ && !debug_) {
     if (base_twist_publisher_.trylock()) {
       base_twist_publisher_.msg_.linear.x = u_[0];
       base_twist_publisher_.msg_.linear.y = u_[1];
       base_twist_publisher_.msg_.angular.z = u_[2];
+      base_twist_publisher_.unlockAndPublish();
+    }
+  }
+
+  if (!fixed_base_ && debug_) {
+    if (base_twist_publisher_.trylock()) {
+      double dt = time.toSec() - start_time_;
+      base_twist_publisher_.msg_.linear.x = 0.0;
+      base_twist_publisher_.msg_.linear.y = 0.0;
+      base_twist_publisher_.msg_.angular.z = amplitude_ * std::sin(2 * M_PI * dt * frequency_);
       base_twist_publisher_.unlockAndPublish();
     }
   }
@@ -259,7 +300,7 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
 }
 
 void RoyalPandaControllerRos::stopping(const ros::Time& time) {
-  man_interface_->stop();
+  if (!debug_) man_interface_->stop();
   started_ = false;
 }
 

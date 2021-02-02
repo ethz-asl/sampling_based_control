@@ -87,6 +87,14 @@ class RoyalPandaControllerRos
   std::string state_topic_;
   ros::Subscriber state_subscriber_;
 
+  // debug
+  bool fixed_base_;
+  double start_time_;
+  const double frequency_ = 0.5;
+  double amplitude_ = 0.2; 
+
+  std::array<double, 7> qd_;
+
 };
 
 }  // namespace manipulation
