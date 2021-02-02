@@ -78,7 +78,7 @@ struct MovingExtendedWindow {
     assert(lower != tt.end());
     size_t idx = std::distance(tt.begin(), lower - 1);
 
-    return std::vector<double>(uu.begin() + idx - window,
+    return std::vector<double>(uu.begin() + idx - window - 1,
                                uu.begin() + idx + window);
   }
 
