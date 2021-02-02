@@ -56,7 +56,7 @@ if (BUILD_OGRE_EXAMPLE)
   add_executable(sim_ogre src/tests/sim.cpp)
   target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
   add_dependencies(sim_ogre ${PROJECT_NAME})
-enif(BUILD_OGRE_EXAMPLE)
+endif(BUILD_OGRE_EXAMPLE)
 
 
 add_library(${PROJECT_NAME}_controller
