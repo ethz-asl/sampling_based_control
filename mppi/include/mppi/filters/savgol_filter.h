@@ -24,8 +24,13 @@ namespace mppi {
 struct MovingExtendedWindow {
   MovingExtendedWindow(const int size, const int w) {
     window = w;
-    uu.resize(size + 2 * window, 0);
-    tt.resize(size + 2 * window, -1);
+    // the first and last input need half horizon in the past and in the future in order
+    // to be centered leaving with a total size equal to weigths size (2 * window) + 1 + horizon/2
+    // + horizon/2 = 2 * window + 1 + horizon
+    uu.resize(size + 2 * window + 1, 0);
+
+    // initialization to -1 makes sure everything starts correctly with a positive initial time
+    tt.resize(size + 2 * window + 1, -1);
   }
 
   double last_trim_t;
@@ -45,10 +50,11 @@ struct MovingExtendedWindow {
     std::rotate(tt.begin(), tt.begin() + offset, tt.end());
     std::rotate(uu.begin(), uu.begin() + offset, uu.end());
 
-    if (offset > 0)
-      std::fill(tt.end() - offset, tt.end(), *(tt.end() - offset - 1));
-    if (offset > 0)
-      std::fill(uu.end() - offset, uu.end(), *(uu.end() - offset - 1));
+    // extend the trimmed portion with the last elements in the vector
+    if (offset > 0){
+      std::fill(tt.end() - offset, tt.end(), *tt.end());
+      std::fill(uu.end() - offset, uu.end(), *uu.end());
+    }
 
     start_idx = window;
     tt[start_idx] = t;
@@ -73,15 +79,23 @@ struct MovingExtendedWindow {
     start_idx++;
   }
 
+  /**
+   * Extract a window centered at the query time
+   * @param t: query time
+   * @return
+   */
   std::vector<double> extract(const double t) {
     auto lower = std::lower_bound(tt.begin(), tt.end(), t);
     assert(lower != tt.end());
-    size_t idx = std::distance(tt.begin(), lower - 1);
+    size_t idx = std::distance(tt.begin(), lower);
 
-    return std::vector<double>(uu.begin() + idx - window,
-                               uu.begin() + idx + window);
+    return std::vector<double>(uu.begin() + idx - window ,
+                               uu.begin() + idx + window + 1);
   }
 
+  /**
+   * Extend the window until the end with the latest received measurement
+   */
   void extend() {
     std::fill(uu.begin() + start_idx + 1, uu.end(), uu[start_idx]);
     std::fill(tt.begin() + start_idx + 1, tt.end(), tt[start_idx]);
