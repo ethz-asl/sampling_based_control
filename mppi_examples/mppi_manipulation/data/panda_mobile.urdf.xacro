@@ -24,6 +24,7 @@
         <joint name="world_joint" type="fixed">
             <parent link="world"/>
             <child link="base_link"/>
+            <origin xyz="0.004 1.087 0.000" rpy="0.000 0.000 -1.500"/>
         </joint>
     </xacro:if>
 
