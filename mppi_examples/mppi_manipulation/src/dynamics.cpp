@@ -48,8 +48,6 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
     input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   }
   x_ = observation_t::Zero(state_dimension_);
-  std::cout << "Fixed base? " << fixed_base_ << ", robot dof: " << robot_dof_
-            << ", from model: " << panda->getDOF() << std::endl;
 }
 
 void PandaRaisimDynamics::initialize_pd() {
