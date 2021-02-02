@@ -7,7 +7,7 @@
     </include>
 
     <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
-        <rosparam command="load" file="$(find franka_control)/config/franka_control_node.yaml" />
+        <rosparam command="load" file="$(find mppi_manipulation)/config/franka_control_node.yaml" />
         <param name="robot_ip" value="$(arg robot_ip)" />
     </node>
 
