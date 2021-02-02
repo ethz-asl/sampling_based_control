@@ -32,8 +32,8 @@ void PoleCartDynamics::integrate_internal(double u, double dt) {
   x_ += xd_ * dt;
 }
 
-void PoleCartDynamics::step(
-    observation_t& x, const DynamicsBase::input_t &u, const double dt) {
+DynamicsBase::observation_t PoleCartDynamics::step(
+    const DynamicsBase::input_t &u, const double dt) {
   size_t steps = std::floor(dt / config_.dt_internal);
   if (steps > 0) {
     for (size_t i = 0; i < steps; i++)
@@ -41,10 +41,10 @@ void PoleCartDynamics::step(
   }
   double dt_last = dt - steps * config_.dt_internal;
   integrate_internal(u(0), dt_last);
-  x = x_;
+  return x_;
 }
 
-const DynamicsBase::observation_t PoleCartDynamics::get_state() const { return x_; }
+DynamicsBase::observation_t PoleCartDynamics::get_state() { return x_; }
 
 void PoleCartDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
 }  // namespace pole_cart

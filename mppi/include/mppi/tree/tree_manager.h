@@ -193,5 +193,5 @@ class TreeManager {
   std::vector<expert_ptr> experts_v_;
 
   std::vector<observation_t> leaves_state_;
-
+  std::mutex tree_mutex_;
 };

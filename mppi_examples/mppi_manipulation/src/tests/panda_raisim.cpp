@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   std::cout << "Starting simulation!" << std::endl;
   for (size_t i = 0; i < loopN; i++) {
     start = steady_clock::now();
-    simulation.step(x, u, TIMESTEP);
+    x = simulation.step(u, TIMESTEP);
     end = steady_clock::now();
     elapsed = duration_cast<nanoseconds>(end - start).count() / 1e6;
     total_time += elapsed;

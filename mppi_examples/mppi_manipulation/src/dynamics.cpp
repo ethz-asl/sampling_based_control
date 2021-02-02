@@ -88,7 +88,7 @@ void PandaRaisimDynamics::set_collision() {
     for (const auto body_idx2 : pandaBodyIdxs) panda->ignoreCollisionBetween(body_idx1, body_idx2);
 }
 
-void PandaRaisimDynamics::step(observation_t& x, const DynamicsBase::input_t& u,
+DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t& u,
                                                       const double dt) {
   // no mimic support --> 1 input for gripper but 2 joints to control
   // cmd(PandaDim::ARM_DIMENSION) = x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
@@ -134,7 +134,7 @@ void PandaRaisimDynamics::step(observation_t& x, const DynamicsBase::input_t& u,
     x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v(0);
     x_.tail<1>()(0) = in_contact;
   }
-  x = x_;
+  return x_;
 }
 
 void PandaRaisimDynamics::reset(const DynamicsBase::observation_t& x) {
@@ -157,8 +157,6 @@ void PandaRaisimDynamics::reset(const DynamicsBase::observation_t& x) {
 DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
 }
-
-const DynamicsBase::observation_t PandaRaisimDynamics::get_state() const { return x_; }
 
 void PandaRaisimDynamics::get_end_effector_pose(Eigen::Vector3d& position,
                                                 Eigen::Quaterniond& orientation) {

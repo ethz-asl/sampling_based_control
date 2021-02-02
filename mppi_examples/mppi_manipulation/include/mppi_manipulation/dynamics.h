@@ -54,15 +54,13 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
 
   void reset(const observation_t& x) override;
 
-  void step(observation_t& x, const input_t& u, const double dt) override;
+  observation_t step(const input_t& u, const double dt) override;
   input_t get_zero_input(const observation_t& x) override;
 
   std::vector<force_t> get_contact_forces();
   void get_end_effector_pose(Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
   void get_handle_pose(Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
   double get_object_displacement() const;
-
-  const obervation_t get_state() const;
 
  protected:
   bool fixed_base_;

@@ -72,7 +72,7 @@ int main(int argc, char** argv){
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
     if (!static_optimization){
-      simulation.step(x, u, sim_dt);
+      x = simulation.step(u, sim_dt);
       sim_time += sim_dt;
     }
 

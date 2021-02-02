@@ -11,7 +11,7 @@
 using namespace mppi;
 namespace  panda_mobile{
 
-void PandaMobileDynamics::step(observation_t& x, const DynamicsBase::input_t &u, const double dt) {
+DynamicsBase::observation_t PandaMobileDynamics::step(const DynamicsBase::input_t &u, const double dt) {
   // integrate joint velocities
   x_.head<7>() += u.head<7>() * dt;
   
@@ -24,10 +24,10 @@ void PandaMobileDynamics::step(observation_t& x, const DynamicsBase::input_t &u,
   x_(7) += ( vx * std::cos(yaw) + vy * std::sin(yaw)) * dt;
   x_(8) += (-vx * std::sin(yaw) + vy * std::cos(yaw)) * dt;
   x_(9) += yawd * dt;
-  x = x_;
+  return x_;
 }
 
-const DynamicsBase::observation_t PandaMobileDynamics::get_state() const { return x_; }
+DynamicsBase::observation_t PandaMobileDynamics::get_state() { return x_; }
 
 void PandaMobileDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
 
