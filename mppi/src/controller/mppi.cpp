@@ -88,8 +88,8 @@ void PathIntegral::init_filter() {
       break;
     }
     case InputFilterType::SAVITZKY_GOLEY: {
-      filter_ = SavGolFilter(steps_, nu_, config_.filter_window,
-                             config_.filter_order);
+      filter_ = SavGolFilter(steps_, nu_, config_.filters_window,
+                             config_.filters_order);
       break;
     }
     default: {

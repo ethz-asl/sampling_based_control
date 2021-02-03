@@ -34,7 +34,15 @@ SavGolFilter::SavGolFilter(const int steps, const int nu, const std::vector<int>
              const std::vector<uint>& poly_order, const uint der_order,
              const double time_step) {
 
+  // TODO(giuseppe) uniform the filter initialization
+  if (window.size() == 1){
+    filters_.resize(nu, gram_sg::SavitzkyGolayFilter(window[0], 0, poly_order[0], der_order));
+    windows_.resize(nu, MovingExtendedWindow(steps, window[0]));
+    return;
+  }
+
   for (size_t i=0; i < nu; i++){
+    std::cout << "Creating new filter: window=" << window[i] << ", order: " << poly_order[i] << std::endl;
     filters_.emplace_back(window[i], 0, poly_order[i], der_order);
     windows_.emplace_back(steps, window[i]);
   }
@@ -45,7 +53,7 @@ void SavGolFilter::reset(const double t) {
 }
 
 void SavGolFilter::add_measurement(const Eigen::VectorXd& u, const double t) {
-  assert(u.size() == windows.size());
+  assert(u.size() == windows_.size());
   for (size_t i = 0; i < u.size(); i++) {
     windows_[i].add_point(u(i), t);
   }

@@ -46,6 +46,10 @@ struct SolverConfig {
   uint filter_window = 10;
   uint filter_order = 3;
 
+  std::vector<int> filters_type;
+  std::vector<int> filters_window;
+  std::vector<uint> filters_order;
+
   size_t threads = 1;
 
   bool init_from_file(const std::string& file);

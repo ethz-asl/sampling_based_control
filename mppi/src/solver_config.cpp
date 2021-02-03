@@ -53,6 +53,12 @@ bool SolverConfig::init_from_file(const std::string &file) {
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
+
+  filters_type    = parse_key_quiet<std::vector<int>>(solver_options, "filters_type").value_or(std::vector<int>{});
+  filters_window  = parse_key_quiet<std::vector<int>>(solver_options, "filters_window").value_or(std::vector<int>{});
+  filters_order   = parse_key_quiet<std::vector<uint>>(solver_options, "filters_order").value_or(std::vector<uint>{});
+
+
   //clang-format on
 
   if (parsing_error) return false;
@@ -87,6 +93,19 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " filter type:      " << config.filter_type << std::endl;
   os << " filter window:    " << config.filter_window << std::endl;
   os << " filter order:     " << config.filter_order << std::endl;
+
+  os << " filters type:    [";
+  for (const auto& type :  config.filters_type) os << type << " ";
+  os << "]" << std::endl;
+
+  os << " filters window:  [";
+  for (const auto& window :  config.filters_window) os << window << " ";
+  os << "]" << std::endl;
+
+  os << " filters order:   [";
+  for (const auto& order :  config.filters_order) os << order << " ";
+  os << "]" << std::endl;
+
   os << " filtering:        " << config.filtering << std::endl;
   os << " cost ratio:       " << config.cost_ratio << std::endl;
 
