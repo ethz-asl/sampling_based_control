@@ -23,6 +23,7 @@ class SingleMarkerBroadcaster:
         self.tf_buffer = tf2_ros.Buffer(rospy.Duration(2))
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
+        self.frame_id = rospy.get_param('~frame_id', 'odom')
         target_frame = rospy.get_param("~target_frame", "")
         if not target_frame:
             self.init_pose()
@@ -32,7 +33,6 @@ class SingleMarkerBroadcaster:
         
         target_pose_topic = rospy.get_param("~target_pose_topic", "/target_pose_marker")
         self.pose_pub = rospy.Publisher(target_pose_topic, PoseStamped, queue_size=1)
-        self.frame_id = rospy.get_param('~frame_id', 'odom')
 
     def init_pose(self):
         self.initial_pose = PoseStamped()
