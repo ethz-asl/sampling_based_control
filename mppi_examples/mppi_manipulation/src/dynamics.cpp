@@ -94,7 +94,10 @@ DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_
   if (fixed_base_) {
     cmdv.head<ARM_DIMENSION>() = u.head<ARM_DIMENSION>();
   } else {
-    cmdv.head<ARM_DIMENSION + BASE_DIMENSION>() = u.head<BASE_DIMENSION + ARM_DIMENSION>();
+    cmdv(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
+    cmdv(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
+    cmdv(2) = u(2);
+    cmdv.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);
   }
 
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
