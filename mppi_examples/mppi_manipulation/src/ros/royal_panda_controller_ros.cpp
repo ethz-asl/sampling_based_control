@@ -164,6 +164,7 @@ bool RoyalPandaControllerRos::init_ros(ros::NodeHandle& node_handle) {
 
 void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConstPtr& state_msg) {
   manipulation::conversions::msgToEigen(*state_msg, x_);
+  state_ros_ = *state_msg;
   if (!state_received_) {
     state_ok_ = true;
     state_received_ = true;
@@ -259,9 +260,14 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   // send velocity commands to the base
   if (!fixed_base_ && !debug_) {
     if (base_twist_publisher_.trylock()) {
-      base_twist_publisher_.msg_.linear.x = u_[0];
-      base_twist_publisher_.msg_.linear.y = u_[1];
-      base_twist_publisher_.msg_.angular.z = u_[2];
+      double alpha_base = 0.99;
+      double vx = alpha_base * state_ros_.base_twist.linear.x +  (1-alpha_base) * u_[0];
+      double vy = alpha_base * state_ros_.base_twist.linear.y +  (1-alpha_base) * u_[1];
+      double omega = alpha_base * state_ros_.base_twist.angular.z +  (1-alpha_base) * u_[2];
+
+      base_twist_publisher_.msg_.linear.x = vx;
+      base_twist_publisher_.msg_.linear.y = vy;
+      base_twist_publisher_.msg_.angular.z = omega;
       base_twist_publisher_.unlockAndPublish();
     }
   }
