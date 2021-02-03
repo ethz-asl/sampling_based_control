@@ -5,7 +5,7 @@ royal_panda_manipulation_controller:
   angular_weight: 1.0
   obstacle_radius: 0.1
 
-  debug: true
+  debug: false
   debug_amplitude: 0.0
 
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]

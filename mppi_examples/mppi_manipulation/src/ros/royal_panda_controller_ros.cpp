@@ -31,6 +31,7 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
       ROS_ERROR("Failed to initialized manipulation interface");
       return false;
     }
+    ROS_INFO("Controller successfully initialized!");
   }
 
   started_ = false;
@@ -97,6 +98,7 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
   node_handle.param<double>("debug_amplitude", amplitude_, 0.0);
   if (debug_) ROS_WARN_STREAM("Debug amplitude is: " << amplitude_);
 
+  ROS_INFO("[RoyalPandaControllerRos::init_parameters]: Parameters successfully initialized.");
   return true;
 }
 
@@ -145,6 +147,8 @@ bool RoyalPandaControllerRos::init_interfaces(hardware_interface::RobotHW* robot
       return false;
     }
   }
+
+  ROS_INFO("[RoyalPandaControllerRos::init_interfaces]: Interfaces successfully initialized.");
   return true;
 }
 
@@ -180,12 +184,13 @@ void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConst
 void RoyalPandaControllerRos::starting(const ros::Time& time) {
   if (started_) return;
   
-  if (!debug_){
+  if (!debug_ && !started_){
     if (!man_interface_->start()) {
-      ROS_ERROR("[RoyalPandaControllerRos::starting] Failed  to initialize controller");
+      ROS_ERROR("[RoyalPandaControllerRos::starting] Failed  to start controller");
       started_ = false;
       return;
     }
+    started_ = true;
   }
 
   // initial configuration
@@ -303,8 +308,6 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
 }
 
 void RoyalPandaControllerRos::stopping(const ros::Time& time) {
-  if (!debug_) man_interface_->stop();
-  started_ = false;
 }
 
 std::array<double, 7> RoyalPandaControllerRos::saturateTorqueRate(

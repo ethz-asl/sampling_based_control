@@ -41,6 +41,8 @@ bool ControllerRos::init() {
   if (controller_ == nullptr || !ok) return false;
 
   initialized_ = true;
+  started_ = false;
+  
   return initialized_;
 }
 
@@ -50,6 +52,11 @@ bool ControllerRos::start() {
         "The controller is not initialized. Have you called the init() "
         "method?");
     return false;
+  }
+
+  if (started_){
+    ROS_WARN_STREAM("The controller has already been started.");
+    return true;
   }
 
   any_worker::WorkerOptions update_policy_opt;
@@ -76,6 +83,7 @@ bool ControllerRos::start() {
     worker_manager_.addWorker(publish_ros_opt, true);
   }
 
+  started_ = true;
   return true;
 }
 

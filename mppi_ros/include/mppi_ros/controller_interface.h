@@ -94,6 +94,7 @@ class ControllerRos {
   void publish_input();
 
  private:
+  bool started_;
   bool initialized_;
   bool observation_set_;
 
