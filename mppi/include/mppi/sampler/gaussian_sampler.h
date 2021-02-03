@@ -6,6 +6,7 @@
  * @brief    description
  */
 #pragma once
+#include <iostream>
 #include "multivariate_normal_eigen.h"
 
 namespace mppi {

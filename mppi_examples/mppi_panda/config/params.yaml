@@ -1,4 +1,4 @@
-sequential: false           # true to run an asynchronous thread where controller optimize given the latest observation
+sequential: true           # true to run an asynchronous thread where controller optimize given the latest observation
 rendering: false            # use a custom renderer to visualize the trajectory
 
 # dynamics parameters
@@ -7,7 +7,7 @@ dynamics:
 
 # solver parameters. Check mppi/src/solver_config.cpp
 solver:
-  rollouts: 24                  # number of rollouts
+  rollouts: 40                  # number of rollouts
   lambda: 0.001 #0.001         # scaling on input/noise cost
   h: 10.0                       # scaling on exponential cost for computing rollouts' weights
   step_size: 0.01               # simulation step size
@@ -18,9 +18,9 @@ solver:
   filtering: true               # if to use cost ratio to cuf off some rollouts
   substeps: 1                   # number of optimization substeps (never investigated)
 
-  filter_type: 1                # currently only savitzky-golay (1) or none (0)
+  filter_type: 1               # currently only savitzky-golay (1) or none (0)
   filter_order: 1               # polynomial used to approximate the input sequence #5
-  filter_window: 6              # window length #30
+  filter_window: 5              # window length #30
 
   adaptive_sampling: false      # untested -- leave false
   input_variance: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]  # additive noise variance per input channel
@@ -35,10 +35,10 @@ solver:
   debug_print: false            # debug print
   display_update_freq: true     # displays the frequency of the control loop
 
-  use_tree_search: true         # if true tree structure is used
+  use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.04       # controls the structure of the tree
   # expert_types: {NORM, IMP}
-  expert_weights: [ 0.5, 0.5 ]  # controls the weights of the different experts
+  expert_weights: [ 0.1, 0.5 ]  # controls the weights of the different experts
 
 # custom params
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]

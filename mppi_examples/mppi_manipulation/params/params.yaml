@@ -11,8 +11,8 @@ solver:
   substeps: 1
 
   filter_type: 1
-  filter_order: 5
-  filter_window: 30
+  filter_order: 1
+  filter_window: 10
 
   bound_input: true
   u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
