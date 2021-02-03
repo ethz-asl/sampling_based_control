@@ -11,8 +11,8 @@ solver:
   substeps: 1
 
   filter_type: 1
-  filter_order: 5
-  filter_window: 30
+  filter_order: 1
+  filter_window: 10
 
   bound_input: true
   u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
@@ -31,7 +31,7 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-sequential: true
+sequential: false
 static_optimization: false
 sim_dt: 0.01
 
