@@ -39,8 +39,18 @@
             </inertial>
         </link>
 
-        <joint name="x_base_joint" type="prismatic">
+        <joint name="pivot_joint" type="revolute">
             <parent link="omni_base_root_link"/>
+            <child link="pivot"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="0 0 1"/>
+            <limit effort="1000.0" velocity="1.0" upper="10.0" lower="-10.0"/>
+            <dynamics damping="1.0" friction="1"/>
+        </joint>
+        <xacro:add_transmission joint_name="pivot_joint"/>
+
+        <joint name="x_base_joint" type="prismatic">
+            <parent link="pivot"/>
             <child link="x_slider"/>
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="1 0 0"/>
@@ -59,18 +69,8 @@
         </joint>
         <xacro:add_transmission joint_name="y_base_joint"/>
 
-        <joint name="pivot_joint" type="revolute">
-            <parent link="y_slider"/>
-            <child link="pivot"/>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-            <axis xyz="0 0 1"/>
-            <limit effort="1000.0" velocity="1.0" upper="10.0" lower="-10.0"/>
-            <dynamics damping="1.0" friction="1"/>
-        </joint>
-        <xacro:add_transmission joint_name="pivot_joint"/>
-
         <joint name="omni_base_flange" type="fixed">
-            <parent link="pivot"/>
+            <parent link="y_slider"/>
             <child link="${connect_to}"/>
         </joint>
     </xacro:macro>
