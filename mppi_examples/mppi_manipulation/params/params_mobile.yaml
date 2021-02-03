@@ -2,7 +2,7 @@ solver:
   rollouts: 50
   lambda: 0.0001 #0.001
   h: 10.0
-  step_size: 0.01
+  step_size: 0.015
   horizon: 1.0
 
   cost_ratio: 0.2
@@ -11,12 +11,12 @@ solver:
   substeps: 1
 
   filter_type: 1
-  filter_order: 5
-  filter_window: 30
+  filter_order: 1
+  filter_window: 10
 
   bound_input: true
-  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  u_min: [-0.5, -0.5, -0.5, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   adaptive_sampling: false
   input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
@@ -31,8 +31,8 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-sequential: false
+sequential: true
 static_optimization: false
-sim_dt: 0.01
+sim_dt: 0.015
 
 initial_configuration: [0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04]
