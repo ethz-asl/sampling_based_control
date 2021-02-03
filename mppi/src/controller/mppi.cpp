@@ -201,13 +201,13 @@ void PathIntegral::prepare_rollouts() {
 
   // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
-    shift_back(roll.uu, roll.uu.back(), offset);
+    shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()) /*roll.uu.back()*/, offset);
     roll.clear_cost();
     roll.clear_observation();
   }
 
   // shift and trim the previously optimized trajectory
-  shift_back(opt_roll_.uu, opt_roll_.uu.back(),
+  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_.xx.back()) /*opt_roll_.uu.back()*/,
              offset);
 }
 
@@ -238,6 +238,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              cost_ptr& cost,
                                              const size_t start_idx,
                                              const size_t end_idx) {
+  const int decimation_ = 3;
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
@@ -262,9 +263,11 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       bound_input(rollouts_[k].uu[t]);
 
       // compute input-state stage cost
-      double cost_temp =
-          std::pow(config_.discount_factor, t) *
+      double cost_temp = 0;
+      if (std::fmod(t, decimation_) == 0)
+          cost_temp = std::pow(config_.discount_factor, t) *
           cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
+
       if (std::isnan(cost_temp)) {
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
       }
