@@ -29,7 +29,6 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
-  for (const auto& joint_name : panda->getMovableJointNames()) std::cout << joint_name << std::endl;
 
   /// create raisim objects
   object_description_ = object_description;
@@ -48,8 +47,6 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
     input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   }
   x_ = observation_t::Zero(state_dimension_);
-  std::cout << "Fixed base? " << fixed_base_ << ", robot dof: " << robot_dof_
-            << ", from model: " << panda->getDOF() << std::endl;
 }
 
 void PandaRaisimDynamics::initialize_pd() {
