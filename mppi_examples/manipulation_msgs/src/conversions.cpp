@@ -20,12 +20,12 @@ void msgToEigen(const manipulation_msgs::State &stateRos, Eigen::VectorXd &state
   } else {
     state.resize(manipulation_msgs::State::MOVING_BASE_SIZE);
 
-    state(0) = stateRos.base_pose.z;
-    state(1) = stateRos.base_pose.x;
-    state(2) = stateRos.base_pose.y;
-    state(12) = stateRos.base_twist.angular.z;
-    state(13) = stateRos.base_twist.linear.x;
-    state(14) = stateRos.base_twist.linear.y;
+    state(0) = stateRos.base_pose.x;
+    state(1) = stateRos.base_pose.y;
+    state(2) = stateRos.base_pose.z;
+    state(12) = stateRos.base_twist.linear.x;
+    state(13) = stateRos.base_twist.linear.y;
+    state(14) = stateRos.base_twist.angular.z;
 
     for (size_t i = 0; i < 9; i++) {
       state(3 + i) = stateRos.arm_state.position[i];
@@ -54,12 +54,12 @@ void eigenToMsg(const Eigen::VectorXd &state, manipulation_msgs::State &stateRos
   } else if (state.size() == manipulation_msgs::State::MOVING_BASE_SIZE) {
     stateRos.mode = manipulation_msgs::State::MOVING_BASE;
 
-    stateRos.base_pose.z = state(0);
-    stateRos.base_pose.x = state(1);
-    stateRos.base_pose.y = state(2);
-    stateRos.base_twist.angular.z = state(12);
-    stateRos.base_twist.linear.x = state(13);
-    stateRos.base_twist.linear.y = state(14);
+    stateRos.base_pose.x = state(0);
+    stateRos.base_pose.y = state(1);
+    stateRos.base_pose.z = state(2);
+    stateRos.base_twist.linear.x = state(12);
+    stateRos.base_twist.linear.y = state(13);
+    stateRos.base_twist.angular.z = state(14);
 
     stateRos.arm_state.position.resize(9);
     stateRos.arm_state.velocity.resize(9);
@@ -82,12 +82,12 @@ void toEigenState(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_
                   const bool &contact_state, Eigen::VectorXd &state) {
   state.resize(manipulation_msgs::State::MOVING_BASE_SIZE);
 
-  state(0) = base_pose.z();
-  state(1) = base_pose.x();
-  state(2) = base_pose.y();
-  state(12) = base_twist.z();
-  state(13) = base_twist.x();
-  state(14) = base_twist.y();
+  state(0) = base_pose.x();
+  state(1) = base_pose.y();
+  state(2) = base_pose.z();
+  state(12) = base_twist.x();
+  state(13) = base_twist.y();
+  state(14) = base_twist.z();
 
   for (size_t i = 0; i < 9; i++) {
     state(3 + i) = arm_position(i);

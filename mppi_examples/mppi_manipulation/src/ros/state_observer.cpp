@@ -143,13 +143,11 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   tf::poseMsgToEigen(msg->pose.pose, T_world_reference_);
   T_world_base_ = T_world_reference_ * T_reference_base_;
 
+  base_state_.x() = T_world_base_.translation().x();
+  base_state_.y() = T_world_base_.translation().y();
+
   Eigen::Vector3d ix = T_world_base_.rotation().col(0);  // 2d projection of forward motion axis
   base_state_.z() = std::atan2(ix.y(), ix.x());
-
-  // translation is in the base frame
-  Eigen::Vector3d b_t_bw = T_world_base_.rotation().transpose() * T_world_base_.linear();
-  base_state_.x() = b_t_bw.x();
-  base_state_.y() = b_t_bw.y();
 }
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
@@ -205,8 +203,8 @@ void StateObserver::publish() {
     geometry_msgs::PoseStamped base_pose;
     base_pose.header.stamp = ros::Time::now();
     base_pose.header.frame_id = "world";
-    base_pose.pose.position.x = T_world_base_.translation().x();
-    base_pose.pose.position.y = T_world_base_.translation().y();
+    base_pose.pose.position.x = base_state_.x();
+    base_pose.pose.position.y = base_state_.y();
     base_pose.pose.position.z = 0.0;
     Eigen::Quaterniond q(Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
     base_pose.pose.orientation.x = q.x();
@@ -215,9 +213,9 @@ void StateObserver::publish() {
     base_pose.pose.orientation.w = q.w();
     base_pose_publisher_.publish(base_pose);
 
-    robot_state_.position[0] = base_state_.z();  // angle
-    robot_state_.position[1] = base_state_.x();  // base x
-    robot_state_.position[2] = base_state_.y();  // base y
+    robot_state_.position[0] = base_state_.x();
+    robot_state_.position[1] = base_state_.y();
+    robot_state_.position[2] = base_state_.z();
 
     robot_state_.header.stamp = ros::Time::now();
     robot_state_publisher_.publish(robot_state_);

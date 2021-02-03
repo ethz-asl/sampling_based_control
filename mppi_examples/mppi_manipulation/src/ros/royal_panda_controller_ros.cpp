@@ -261,9 +261,9 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   if (!fixed_base_ && !debug_) {
     if (base_twist_publisher_.trylock()) {
       double alpha_base = 0.99;
-      double omega = alpha_base * state_ros_.base_twist.angular.z +  (1-alpha_base) * u_[0];
-      double vx = alpha_base * state_ros_.base_twist.linear.x +  (1-alpha_base) * u_[1];
-      double vy = alpha_base * state_ros_.base_twist.linear.y +  (1-alpha_base) * u_[2];
+      double vx = alpha_base * state_ros_.base_twist.linear.x +  (1-alpha_base) * u_[0];
+      double vy = alpha_base * state_ros_.base_twist.linear.y +  (1-alpha_base) * u_[1];
+      double omega = alpha_base * state_ros_.base_twist.angular.z +  (1-alpha_base) * u_[2];
 
       base_twist_publisher_.msg_.linear.x = vx;
       base_twist_publisher_.msg_.linear.y = vy;

@@ -24,7 +24,7 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
                          "panda_joint4", "panda_joint5",        "panda_joint6",
                          "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
   } else {
-    joint_state_.name = {"pivot_joint", "x_base_joint", "y_base_joint",
+    joint_state_.name = {"x_base_joint", "y_base_joint",        "pivot_joint",
                          "panda_joint1", "panda_joint2",        "panda_joint3",
                          "panda_joint4", "panda_joint5",        "panda_joint6",
                          "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
