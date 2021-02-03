@@ -107,34 +107,27 @@ class SavGolFilter {
   SavGolFilter() = default;
   SavGolFilter(const int steps, const int nu, const int window,
                const uint poly_order, const uint der_order = 0,
-               const double time_step = 1.) {
-    filter = gram_sg::SavitzkyGolayFilter(window, 0, poly_order, der_order);
-    windows.resize(nu, MovingExtendedWindow(steps, window));
-  };
+               const double time_step = 1.);
+  /**
+  Filter with custom filtering per input channel
+  **/
+  SavGolFilter(const int steps, const int nu, const std::vector<int>& window,
+               const std::vector<uint>& poly_order, const uint der_order = 0,
+               const double time_step = 1.);
+
   ~SavGolFilter() = default;
 
  public:
-  void reset(const double t) {
-    for (auto& w : windows) w.trim(t);
-  }
-
-  void add_measurement(const Eigen::VectorXd& u, const double t) {
-    assert(u.size() == windows.size());
-    for (size_t i = 0; i < u.size(); i++) {
-      windows[i].add_point(u(i), t);
-    }
-  }
-
-  void apply(Eigen::VectorXd& u, const double t) {
-    for (size_t i = 0; i < u.size(); i++) {
-      u[i] = filter.filter(windows[i].extract(t));
-    }
-  }
+  void reset(const double t);
+  void add_measurement(const Eigen::VectorXd& u, const double t);
+  void apply(Eigen::VectorXd& u, const double t);
 
  private:
   int window_size_;
-  std::vector<MovingExtendedWindow> windows;
   gram_sg::SavitzkyGolayFilter filter;
+
+  std::vector<MovingExtendedWindow> windows_;
+  std::vector<gram_sg::SavitzkyGolayFilter> filters_;
 };
 
 }  // namespace mppi
