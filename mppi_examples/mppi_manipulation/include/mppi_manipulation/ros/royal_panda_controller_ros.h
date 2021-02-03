@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "mppi_manipulation/controller_interface.h"
+#include <manipulation_msgs/State.h>
 
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/Twist.h>
@@ -94,6 +95,7 @@ class RoyalPandaControllerRos
   double amplitude_ = 0.2; 
 
   std::array<double, 7> qd_;
+  manipulation_msgs::State state_ros_;
 
 };
 
