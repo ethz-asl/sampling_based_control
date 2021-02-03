@@ -23,14 +23,13 @@ class SingleMarkerBroadcaster:
         self.tf_buffer = tf2_ros.Buffer(rospy.Duration(2))
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
-        subscribe_initial_pose = rospy.get_param("~subscribe_initial_pose", False)
-        inital_pose_topic = rospy.get_param("~initial_pose_topic", "/init_pose_sub")
-
-        if subscribe_initial_pose:
-            self.pose_init_sub = rospy.Subscriber(inital_pose_topic, PoseStamped, self.init_pose_from_ros)
-        else:
+        target_frame = rospy.get_param("~target_frame", "")
+        if not target_frame:
             self.init_pose()
-
+        elif not self.init_pose_from_ros(target_frame):
+            rospy.logerr("Failed to initialize interactive_marker from tf tree")
+        
+        
         target_pose_topic = rospy.get_param("~target_pose_topic", "/target_pose_marker")
         self.pose_pub = rospy.Publisher(target_pose_topic, PoseStamped, queue_size=1)
         self.frame_id = rospy.get_param('~frame_id', 'odom')
@@ -42,16 +41,18 @@ class SingleMarkerBroadcaster:
         self.initial_pose.pose.position.z = 0.5
         self.initialized = True
 
-    def init_pose_from_ros(self, msg):
+    def init_pose_from_ros(self, frame_id):
         try:
-            transform = self.tf_buffer.lookup_transform(self.frame_id, msg.header.frame_id,
-                                                        rospy.Time(0), rospy.Duration(2))
+            transform = self.tf_buffer.lookup_transform(self.frame_id, frame_id,
+                                                        rospy.Time(0), rospy.Duration(3))
             self.initial_pose = tf2_geometry_msgs.do_transform_pose(msg, transform)
             self.initialized = True
+            return True
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
             rospy.logerr("Failed to lookup transform: {}".format(exc))
             rospy.logwarn("Initializing marker in hard coded pose")
             self.init_pose()
+            return False
 
     def make_box_control(self, msg):
         control = InteractiveMarkerControl()

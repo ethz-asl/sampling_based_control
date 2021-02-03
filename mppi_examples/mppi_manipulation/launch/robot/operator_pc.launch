@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<arg name="plot_cost" default="true"/>
+    <arg name="plot_input" default="true"/>
+    <arg name="enable_obstacle" default="false"/>
+
+	<include file="$(find mppi_manipulation)/launch/robot/vicon.launch"/>
+
+	<include file="$(find mppi_manipulation)/launch/common.launch">
+	    <arg name="plot_cost" default="$(arg plot_cost)"/>
+	    <arg name="plot_input" default="$(arg plot_input)"/>
+	    <arg name="enable_obstacle" default="$(arg enable_obstacle)"/>
+	</include>
+</launch>

@@ -200,7 +200,7 @@ void RoyalPandaControllerRos::starting(const ros::Time& time) {
 
 void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration& period) {
   if (!started_) {
-    ROS_WARN("Controller not started.");
+    ROS_ERROR_ONCE("[RoyalPandaControllerRos::update]: Controller not started. Probably some error occourred...");
     return;
   }
 
@@ -232,7 +232,10 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   for (size_t i = 0; i < 7; ++i) {
     tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
     if (!debug_) {
-      tau_d_calculated[i] += d_gains_[i] * (u_.tail<8>()(i) - dq_filtered_[i]);
+      qd_[i] += u_.tail<8>()(i) * period.toSec();
+      tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
+                            k_gains_[i] * (qd_[i] - robot_state_.q[i]) +
+                            d_gains_[i] * (u_.tail<8>()(i) - dq_filtered_[i]);
     } 
     else {
       double dt = ros::Time::now().toSec() - start_time_;
