@@ -201,13 +201,13 @@ void PathIntegral::prepare_rollouts() {
 
   // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
-    shift_back(roll.uu, roll.uu.back(), offset);
+    shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()) /*roll.uu.back()*/, offset);
     roll.clear_cost();
     roll.clear_observation();
   }
 
   // shift and trim the previously optimized trajectory
-  shift_back(opt_roll_.uu, opt_roll_.uu.back(),
+  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_.xx.back()) /*opt_roll_.uu.back()*/,
              offset);
 }
 
