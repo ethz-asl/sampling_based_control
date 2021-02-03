@@ -147,7 +147,7 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   base_state_.z() = std::atan2(ix.y(), ix.x());
 
   // translation is in the base frame
-  Eigen::Vector3d b_t_bw = T_world_base_.rotation().transpose() * T_world_base_.translation();
+  Eigen::Vector3d b_t_bw = T_world_base_.rotation().transpose() * T_world_base_.linear();
   base_state_.x() = b_t_bw.x();
   base_state_.y() = b_t_bw.y();
 }
