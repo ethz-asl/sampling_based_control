@@ -45,7 +45,16 @@ class SingleMarkerBroadcaster:
         try:
             transform = self.tf_buffer.lookup_transform(self.frame_id, frame_id,
                                                         rospy.Time(0), rospy.Duration(3))
-            self.initial_pose = tf2_geometry_msgs.do_transform_pose(msg, transform)
+            self.initial_pose = PoseStamped()
+            self.initial_pose.header.frame_id = self.frame_id
+            self.initial_pose.header.stamp = rospy.Time.now()
+            self.initial_pose.pose.position.x = transform.transform.translation.x
+            self.initial_pose.pose.position.y = transform.transform.translation.y
+            self.initial_pose.pose.position.z = transform.transform.translation.z
+            self.initial_pose.pose.orientation.x = transform.transform.rotation.x
+            self.initial_pose.pose.orientation.y = transform.transform.rotation.y
+            self.initial_pose.pose.orientation.z = transform.transform.rotation.z
+            self.initial_pose.pose.orientation.w = transform.transform.rotation.w
             self.initialized = True
             return True
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
