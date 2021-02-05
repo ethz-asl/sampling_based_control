@@ -17,8 +17,9 @@ find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES} message_generati
 find_package(gram_savitzky_golay)
 
 # Messages
-add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg FILES RolloutsInfo.msg)
-generate_messages(DEPENDENCIES)
+add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg
+        FILES Config.msg Rollout.msg Data.msg)
+generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
         LIBRARIES ${PROJECT_NAME}
