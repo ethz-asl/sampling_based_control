@@ -64,6 +64,10 @@ void PathIntegral::init_data() {
     sampler_->set_covariance(config_.input_variance);
   }
 
+  if (config_.logging){
+    data_.config = config_;
+  }
+
   if (config_.bound_input){
     if (config_.u_min.size() != nu_)
     {
@@ -128,7 +132,7 @@ void PathIntegral::update_policy() {
       optimize();
       filter_input();
 
-      // TODO move this away. This goes year since there might be filtering
+      // TODO(giuseppe) move this away. This goes year since there might be filtering
       // happening before optimal rollout
       dynamics_->reset(x0_internal_);
       for (size_t t = 0; t < steps_; t++) {
@@ -138,6 +142,14 @@ void PathIntegral::update_policy() {
     swap_policies();
 
     if (renderer_) renderer_->render(rollouts_);
+    if (config_.logging){
+      std::cout << "Writing data" << std::endl;
+      data_.rollouts = rollouts_;
+      data_.weights = omega;
+      data_.optimization_time = 0.0;
+      data_.reset_time = t0_internal_;
+      data_.optimal_rollout = opt_roll_;
+    }
   }
 }
 

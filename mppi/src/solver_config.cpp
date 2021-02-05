@@ -53,6 +53,7 @@ bool SolverConfig::init_from_file(const std::string &file) {
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
+  logging         = parse_key_quiet<bool>(solver_options, "logging").value_or(logging);
   //clang-format on
 
   if (parsing_error) return false;
@@ -95,6 +96,7 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " verbose:          " << config.verbose << std::endl;
   os << " debug_print:      " << config.debug_print << std::endl;
   os << " threads:          " << config.threads << std::endl;
+  os << " logging:          " << config.logging << std::endl;
   os << "--------------------------------------------------" << std::endl;
   return os;
 }

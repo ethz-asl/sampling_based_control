@@ -7,6 +7,7 @@
  */
 
 #include "mppi_ros/controller_interface.h"
+#include "mppi_ros/conversions.h"
 
 using namespace mppi_ros;
 
@@ -30,6 +31,7 @@ void ControllerRos::init_default_ros() {
       nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 10);
   max_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
+  data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
 }
 
 bool ControllerRos::init() {
@@ -86,6 +88,11 @@ bool ControllerRos::update_policy() {
 
 bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
   controller_->update_policy();
+
+  if (controller_->config_.logging){
+    mppi_ros::to_msg(controller_->get_data(), data_ros_);
+    data_publisher_.publish(data_ros_);
+  }
   return true;
 }
 

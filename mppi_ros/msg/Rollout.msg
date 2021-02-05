@@ -6,6 +6,7 @@ float64 total_cost
 
 
 float64[] cost_vector
+float64[] time_vector
 std_msgs/Float64MultiArray[] state_vector
 std_msgs/Float64MultiArray[] input_vector
 std_msgs/Float64MultiArray[] noise_vector

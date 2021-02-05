@@ -25,6 +25,7 @@
 #include "mppi/solver_config.h"
 #include "mppi/utils/thread_pool.h"
 #include "mppi/visualization/rederer.h"
+#include "mppi/controller/data.h"
 
 namespace mppi {
 
@@ -240,6 +241,7 @@ class PathIntegral {
   inline const Rollout& get_optimal_rollout() { return opt_roll_; }
   inline const Rollout& get_optimal_rollout_cache() { return opt_roll_cache_; }
   inline observation_t get_current_observation() { return x0_internal_; }
+  inline data_t get_data() { return data_; }
 
  public:
   /**
@@ -307,6 +309,8 @@ class PathIntegral {
       cost_v_;  // vector of cost functions used per each thread
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
+
+  data_t data_;
 };
 
 }  // namespace mppi

@@ -31,8 +31,7 @@ add_library(${PROJECT_NAME}
         src/dynamics/dynamics_base.cpp
         src/cost/cost_base.cpp
         src/solver_config.cpp
-        src/filters/savgol_filter.cpp
-        )
+        src/filters/savgol_filter.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)

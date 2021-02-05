@@ -34,6 +34,8 @@ solver:
   threads: 8                    # number of threads, set to 1 to not use multithreaded sampling
   debug_print: false            # debug print
 
+  logging: true
+
 # custom params
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
 linear_weight: 100.0

@@ -75,7 +75,7 @@ class SingleMarkerBroadcaster:
 
     def create_marker(self):
         while not self.initialized:
-            rospy.loginfo_throttle(1.0, "Waiting the first pose to initialize marker.")
+            rospy.loginfo_throttle(10.0, "Waiting the first pose to initialize marker.")
         rospy.loginfo("Initializing marker at {}".format(str(self.initial_pose)))
 
         self.int_marker = InteractiveMarker()
