@@ -5,8 +5,8 @@ int64 state_dim
 float64 total_cost
 
 
-float64[] cost_vector
-float64[] time_vector
-std_msgs/Float64MultiArray[] state_vector
-std_msgs/Float64MultiArray[] input_vector
-std_msgs/Float64MultiArray[] noise_vector
+mppi_ros/Array cost_vector
+mppi_ros/Array time_vector
+mppi_ros/Array[] state_vector
+mppi_ros/Array[] input_vector
+mppi_ros/Array[] noise_vector

@@ -11,6 +11,7 @@
 #include "mppi_ros/Config.h"
 #include "mppi_ros/Rollout.h"
 #include "mppi_ros/Data.h"
+#include "mppi_ros/Array.h"
 
 namespace mppi_ros{
 

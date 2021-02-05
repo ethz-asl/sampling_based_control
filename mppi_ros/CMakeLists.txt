@@ -19,7 +19,7 @@ find_package(gram_savitzky_golay)
 
 # Messages
 add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg
-        FILES Config.msg Rollout.msg Data.msg)
+        FILES Array.msg Config.msg Rollout.msg Data.msg)
 generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
@@ -39,6 +39,9 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
 
+catkin_install_python(PROGRAMS scripts/plot_experiment.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
 ## Testing
 if (CATKIN_ENABLE_TESTING)
     #    catkin_add_gtest()

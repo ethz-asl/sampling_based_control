@@ -143,8 +143,8 @@ void PathIntegral::update_policy() {
 
     if (renderer_) renderer_->render(rollouts_);
     if (config_.logging){
-      std::cout << "Writing data" << std::endl;
-      data_.rollouts = rollouts_;
+      //data_.rollouts = rollouts_;
+      data_.rollouts_cost = rollouts_cost_;
       data_.weights = omega;
       data_.optimization_time = 0.0;
       data_.reset_time = t0_internal_;

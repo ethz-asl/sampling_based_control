@@ -15,6 +15,7 @@ struct data_t {
   double reset_time;
   double optimization_time;
 
+  Eigen::ArrayXd rollouts_cost;
   Eigen::ArrayXd weights;
   std::vector<Rollout> rollouts;
   Rollout optimal_rollout;

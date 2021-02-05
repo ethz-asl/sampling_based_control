@@ -5,7 +5,7 @@
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
     <arg name="joint_state_topic" default="/joint_states"/>
-    <arg name="tf_prefix" default=""/>
+    <arg name="record_bag" default="false"/>
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>
@@ -44,4 +44,8 @@
             <param name="target_pose_topic" value="/obstacle"/>
         </node>
     </group>
+
+    <node pkg="rosbag" type="record" name="rosbag"
+          args="record -o $(find mppi_panda)/bag/experiment /mppi_data"
+          if="$(arg record_bag)" />
 </launch>
