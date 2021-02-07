@@ -82,6 +82,9 @@ class RoyalPandaControllerRos
   Eigen::VectorXd x_;
   Eigen::VectorXd u_;
 
+  Eigen::VectorXd x_nom_;
+  manipulation_msgs::State x_nom_ros_;
+
   bool state_received_;
   bool state_ok_;
   double state_last_receipt_time_;
