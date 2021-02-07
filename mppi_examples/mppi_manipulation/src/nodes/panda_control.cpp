@@ -8,6 +8,7 @@
 #include "mppi_manipulation/controller_interface.h"
 
 #include <mppi_manipulation/dynamics_ros.h>
+#include <manipulation_msgs/conversions.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
@@ -47,6 +48,10 @@ int main(int argc, char** argv) {
   observation_t x = observation_t::Zero(simulation->get_state_dimension());
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < x0.size(); i++) x(i) = x0[i];
+
+  observation_t x_nom;
+  manipulation_msgs::State x_nom_ros;
+  ros::Publisher x_nom_publisher_ = nh.advertise<manipulation_msgs::State>("/x_nom", 10);
 
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);
@@ -98,6 +103,11 @@ int main(int argc, char** argv) {
       sim_time += sim_dt;
     }
 
+
+    controller.get_input_state(x, x_nom, u, sim_time);
+    manipulation::conversions::eigenToMsg(x_nom, x_nom_ros);
+    x_nom_publisher_.publish(x_nom_ros);
+
     end = steady_clock::now();
     elapsed = duration_cast<milliseconds>(end - start).count() / 1000.0;
     if (sim_dt - elapsed > 0)
@@ -111,10 +121,6 @@ int main(int argc, char** argv) {
     double object_displacement = simulation->get_object_displacement();
     double displacement_error = std::abs(object_displacement - M_PI / 2.0);
     if (displacement_error < 1.0 * M_PI / 180.0) freeze_robot = true;
-
-    ROS_INFO_STREAM_THROTTLE(
-        1.0, "Object displacement: " << object_displacement
-                                     << ". Displacement error: " << displacement_error);
 
     ros::spinOnce();
   }
