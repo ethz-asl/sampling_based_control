@@ -6,7 +6,7 @@
     <arg name="enable_obstacle" default="false"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/config.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot_cost)">
@@ -18,7 +18,7 @@
 
     <!--    Plot input-->
     <group if="$(arg plot_input)">
-        <arg name="mp_config_input" default="$(find mppi_panda)/resources/rqt_multiplot_input.xml"/>
+        <arg name="mp_config_input" default="$(find mppi_manipulation)/config/multiplot/rqt_multiplot_input.xml"/>
         <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
               args="--multiplot-config $(arg mp_config_input)"
               output="screen"/>

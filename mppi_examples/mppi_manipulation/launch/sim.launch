@@ -56,10 +56,5 @@
         <param name="fixed_base" value="$(arg fixed_base)"/>
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/config.rviz" output="screen"/>
-
-    <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot"
-          args="--multiplot-config $(find mppi_manipulation)/config/joint_velocity_tracking.xml"
-          output="screen"/>
-
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>
 </launch>
