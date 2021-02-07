@@ -14,6 +14,10 @@ solver:
   filter_order: 1
   filter_window: 10
 
+  filters_type: [1, 1, 1, 1, 1, 1, 1, 1]
+  filters_order: [3, 3, 3, 3, 3, 3, 3, 3]
+  filters_window: [2, 10, 10, 10, 10, 10, 10, 10]
+
   bound_input: true
   u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
   u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
