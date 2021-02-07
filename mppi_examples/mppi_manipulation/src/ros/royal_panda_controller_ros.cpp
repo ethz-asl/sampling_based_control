@@ -159,6 +159,7 @@ bool RoyalPandaControllerRos::init_ros(ros::NodeHandle& node_handle) {
       node_handle.subscribe(state_topic_, 1, &RoyalPandaControllerRos::state_callback, this);
   ROS_INFO_STREAM("Sending base commands to: " << base_twist_topic_ << std::endl
                   << "Received state at: " << state_topic_);
+  nominal_state_publisher_.init(node_handle, "/x_nom", 1);
   return true;
 }
 
@@ -309,9 +310,13 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
     }
     torques_publisher_.unlockAndPublish();
   }
-
   for (size_t i = 0; i < 7; ++i) {
     last_tau_d_[i] = tau_d_saturated[i] + gravity[i];  // torque sent is already gravity compensated
+  }
+
+  if (rate_trigger_() && nominal_state_publisher_.trylock()){
+    nominal_state_publisher_.msg_ = x_nom_ros_;
+    nominal_state_publisher_.unlockAndPublish();
   }
 }
 
