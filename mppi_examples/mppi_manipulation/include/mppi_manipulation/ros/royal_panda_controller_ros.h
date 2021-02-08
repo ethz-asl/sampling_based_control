@@ -84,6 +84,8 @@ class RoyalPandaControllerRos
   Eigen::VectorXd u_;
 
   Eigen::VectorXd x_nom_;
+
+  manipulation_msgs::State x_ros_;
   manipulation_msgs::State x_nom_ros_;
 
   bool state_received_;
@@ -99,7 +101,8 @@ class RoyalPandaControllerRos
   double amplitude_ = 0.2; 
 
   std::array<double, 7> qd_;
-  manipulation_msgs::State state_ros_;
+
+  Eigen::Vector3d base_gains_;
 
 };
 
