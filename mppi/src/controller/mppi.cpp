@@ -441,6 +441,7 @@ void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
     }
 
     size_t idx = std::distance(opt_roll_cache_.tt.begin(), lower);
+    std::cout << "Nominal idx: " << idx << std::endl;
     // first
     if (idx == 0) {
       x_nom = opt_roll_cache_.xx.front();

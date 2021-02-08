@@ -68,6 +68,7 @@ class RoyalPandaControllerRos
   std::array<double, 7> dq_filtered_;
   franka::RobotState robot_state_;
 
+  franka_hw::TriggerRate base_trigger_{50.0};
   franka_hw::TriggerRate rate_trigger_{1.0};
   std::array<double, 7> last_tau_d_{};
   realtime_tools::RealtimePublisher<franka_example_controllers::JointTorqueComparison>
