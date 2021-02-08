@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     return -1;
   }
   auto simulation = std::make_shared<ManipulatorDynamicsRos>(
-      nh, robot_description_raisim, object_description_raisim, 0.01, fixed_base);
+      nh, robot_description_raisim, object_description_raisim, 0.015, fixed_base);
 
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "mppi_manipulation/dynamics_ros.h"
 #include "mppi_manipulation/controller_interface.h"
 #include <manipulation_msgs/State.h>
 
@@ -41,10 +42,12 @@ class RoyalPandaControllerRos
  private:
   bool init_parameters(ros::NodeHandle& node_handle);
   bool init_ros(ros::NodeHandle& node_handle);
+  bool init_model(ros::NodeHandle& node_handle);
   bool init_interfaces(hardware_interface::RobotHW* robot_hw);
 
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
   void stop_robot();
+  void run_model();
 
   // Saturation
   std::array<double, 7> saturateTorqueRate(
@@ -53,6 +56,7 @@ class RoyalPandaControllerRos
 
  private:
   bool debug_;
+  bool stopped_;
 
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
@@ -104,6 +108,12 @@ class RoyalPandaControllerRos
 
   Eigen::Vector3d base_gains_;
 
+  std::shared_mutex input_mutex_;
+  Eigen::VectorXd x_model_;
+  manipulation_msgs::State x_model_ros_;
+  realtime_tools::RealtimePublisher x_model_publisher_;
+  std::thread model_thread_;
+  std::unique_ptr<manipulation::ManipulatorDynamicsRos> model_;
 };
 
 }  // namespace manipulation
