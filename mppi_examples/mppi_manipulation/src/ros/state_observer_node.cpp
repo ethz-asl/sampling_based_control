@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh("~");
 
   double frequency;
-  nh.param<double>("observer_update_frequency", frequency, 100);
+  nh.param<double>("observer_update_frequency", frequency, 200);
 
   manipulation::StateObserver observer(nh);
   if (!observer.initialize()){
