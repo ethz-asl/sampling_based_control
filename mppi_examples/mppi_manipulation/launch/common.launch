@@ -3,7 +3,7 @@
 
     <arg name="plot_cost" default="true"/>
     <arg name="plot_input" default="true"/>
-    <arg name="plot_nominal_state" default="true"/>
+    <arg name="plot_state" default="true"/>
     <arg name="enable_obstacle" default="false"/>
 
     <!-- Open Rviz -->
@@ -25,12 +25,18 @@
               output="screen"/>
     </group>
 
-    <!--    Plot nominal base state -->
-    <group if="$(arg plot_nominal_state)">
+    <!--    Plot base state -->
+    <group if="$(arg plot_state)">
         <arg name="mp_config_nominal" default="$(find mppi_manipulation)/config/multiplot/base_nominal.xml"/>
         <node name="rqt_multiplot_nominal" pkg="rqt_multiplot" type="rqt_multiplot"
               args="--multiplot-config $(arg mp_config_nominal)"
               output="screen"/>
+
+        <arg name="mp_config_measured" default="$(find mppi_manipulation)/config/multiplot/base_measured.xml"/>
+        <node name="rqt_multiplot_measured" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config_measured)"
+              output="screen"/>
+
     </group>
 
     <!--        Interactive marker to command the end effector-->
