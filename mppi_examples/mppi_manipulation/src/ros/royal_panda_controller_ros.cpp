@@ -297,6 +297,7 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
                                     x_ros_.base_twist.linear.y,
                                     x_ros_.base_twist.angular.z);
       
+      // Eigen::Vector3d twist_nominal(u_[0], u_[1], u_[2]);
       Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
                                     x_nom_ros_.base_twist.linear.y,
                                     x_nom_ros_.base_twist.angular.z);
@@ -306,9 +307,9 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
       Eigen::Vector3d twist_curr = r_world_base.transpose() * twist_current;
       Eigen::Vector3d twist_filt = base_filter_alpha_ * twist_curr + (1 - base_filter_alpha_) * twist_cmd;
 
-      base_twist_publisher_.msg_.linear.x = 0.0; twist_filt.x();
-      base_twist_publisher_.msg_.linear.y = 0.0; twist_filt.y();
-      base_twist_publisher_.msg_.angular.z = 0.0; twist_filt.z();
+      base_twist_publisher_.msg_.linear.x = u_[0]; //twist_filt.x();
+      base_twist_publisher_.msg_.linear.y = u_[1]; //twist_filt.y();
+      base_twist_publisher_.msg_.angular.z = u_[2]; //twist_filt.z();
       ROS_INFO_STREAM_THROTTLE(1.0, "Twist command in world frame is: " << twist_nominal.transpose());
       base_twist_publisher_.unlockAndPublish();
 

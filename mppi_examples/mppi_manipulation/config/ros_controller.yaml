@@ -19,7 +19,7 @@ royal_panda_manipulation_controller:
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
 
   base_gains: [1.0, 1.0, 0.1]
-  base_filter_alpha: 0.9
+  base_filter_alpha: 0.0
   
   publish_rate: 10.0
   coriolis_factor: 1.0
