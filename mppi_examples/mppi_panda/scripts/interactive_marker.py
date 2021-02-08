@@ -42,26 +42,33 @@ class SingleMarkerBroadcaster:
         self.initialized = True
 
     def init_pose_from_ros(self, frame_id):
-        try:
-            transform = self.tf_buffer.lookup_transform(self.frame_id, frame_id,
-                                                        rospy.Time(0), rospy.Duration(3))
-            self.initial_pose = PoseStamped()
-            self.initial_pose.header.frame_id = self.frame_id
-            self.initial_pose.header.stamp = rospy.Time.now()
-            self.initial_pose.pose.position.x = transform.transform.translation.x
-            self.initial_pose.pose.position.y = transform.transform.translation.y
-            self.initial_pose.pose.position.z = transform.transform.translation.z
-            self.initial_pose.pose.orientation.x = transform.transform.rotation.x
-            self.initial_pose.pose.orientation.y = transform.transform.rotation.y
-            self.initial_pose.pose.orientation.z = transform.transform.rotation.z
-            self.initial_pose.pose.orientation.w = transform.transform.rotation.w
-            self.initialized = True
-            return True
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
-            rospy.logerr("Failed to lookup transform: {}".format(exc))
-            rospy.logwarn("Initializing marker in hard coded pose")
-            self.init_pose()
-            return False
+        max_attempts = 10
+        attempts = 0
+        while attempts < max_attempts:
+            try:
+                transform = self.tf_buffer.lookup_transform(self.frame_id, frame_id,
+                                                            rospy.Time(0), rospy.Duration(10))
+                self.initial_pose = PoseStamped()
+                self.initial_pose.header.frame_id = self.frame_id
+                self.initial_pose.header.stamp = rospy.Time.now()
+                self.initial_pose.pose.position.x = transform.transform.translation.x
+                self.initial_pose.pose.position.y = transform.transform.translation.y
+                self.initial_pose.pose.position.z = transform.transform.translation.z
+                self.initial_pose.pose.orientation.x = transform.transform.rotation.x
+                self.initial_pose.pose.orientation.y = transform.transform.rotation.y
+                self.initial_pose.pose.orientation.z = transform.transform.rotation.z
+                self.initial_pose.pose.orientation.w = transform.transform.rotation.w
+                self.initialized = True
+                return True
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
+                rospy.logwarn(exc)
+                rospy.logwarn("Attempting again")
+                attempts += 1
+                
+        rospy.logerr("Failed to lookup transform: {}".format(exc))
+        rospy.logwarn("Initializing marker in hard coded pose")
+        self.init_pose()        
+        return False
 
     def make_box_control(self, msg):
         control = InteractiveMarkerControl()
