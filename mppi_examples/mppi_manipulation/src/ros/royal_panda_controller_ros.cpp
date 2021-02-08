@@ -175,11 +175,11 @@ void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConst
     double elapsed = current_time - state_last_receipt_time_;
     if (elapsed > 0.01) {
       state_ok_ = false;
-      ROS_ERROR_STREAM(
+      ROS_WARN_STREAM_THROTTLE(2.0, 
           "[RoyalPandaControllerRos::state_callback] State update is too slow. Current delay: "
           << elapsed);
     }
-    state_last_receipt_time_ = ros::Time::now().toSec();
+    state_last_receipt_time_ = current_time;
   }
 }
 
@@ -214,11 +214,6 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   if (!state_received_) {
     ROS_WARN_STREAM_THROTTLE(2.0, "[RoyalPandaControllerRos::update]State not received yet.");
     return;
-  }
-
-  if (!state_ok_) {
-    ROS_ERROR_ONCE("[RoyalPandaControllerRos::update] Failed to update the state. Stopping ....");
-    stop_robot();
   }
 
   if (!debug_){
@@ -294,29 +289,37 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
     joint_handles_[i].setCommand(tau_d_saturated[i]);
   }
 
-  if (rate_trigger_() && torques_publisher_.trylock()) {
-    std::array<double, 7> tau_j = robot_state_.tau_J;
-    std::array<double, 7> tau_error{};
-    double error_rms(0.0);
-    for (size_t i = 0; i < 7; ++i) {
-      tau_error[i] = last_tau_d_[i] - tau_j[i];
-      error_rms += std::sqrt(std::pow(tau_error[i], 2.0)) / 7.0;
+  if (rate_trigger_()) {  
+    if (torques_publisher_.trylock()){
+      std::array<double, 7> tau_j = robot_state_.tau_J;
+      std::array<double, 7> tau_error{};
+      double error_rms(0.0);
+      for (size_t i = 0; i < 7; ++i) {
+        tau_error[i] = last_tau_d_[i] - tau_j[i];
+        error_rms += std::sqrt(std::pow(tau_error[i], 2.0)) / 7.0;
+      }
+      torques_publisher_.msg_.root_mean_square_error = error_rms;
+      for (size_t i = 0; i < 7; ++i) {
+        torques_publisher_.msg_.tau_commanded[i] = last_tau_d_[i];
+        torques_publisher_.msg_.tau_error[i] = tau_error[i];
+        torques_publisher_.msg_.tau_measured[i] = tau_j[i];
+      }
+      torques_publisher_.unlockAndPublish();
     }
-    torques_publisher_.msg_.root_mean_square_error = error_rms;
-    for (size_t i = 0; i < 7; ++i) {
-      torques_publisher_.msg_.tau_commanded[i] = last_tau_d_[i];
-      torques_publisher_.msg_.tau_error[i] = tau_error[i];
-      torques_publisher_.msg_.tau_measured[i] = tau_j[i];
+
+    if (nominal_state_publisher_.trylock()){
+      nominal_state_publisher_.msg_ = x_nom_ros_;
+      nominal_state_publisher_.unlockAndPublish();
     }
-    torques_publisher_.unlockAndPublish();
   }
+
   for (size_t i = 0; i < 7; ++i) {
     last_tau_d_[i] = tau_d_saturated[i] + gravity[i];  // torque sent is already gravity compensated
   }
 
   if (rate_trigger_() && nominal_state_publisher_.trylock()){
-    nominal_state_publisher_.msg_ = x_nom_ros_;
-    nominal_state_publisher_.unlockAndPublish();
+
+    ROS_INFO("Publising");
   }
 }
 
