@@ -79,6 +79,13 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
   }
   base_gains_ << base_gains[0], base_gains[1], base_gains[2];
 
+  if (!node_handle.getParam("base_filter_alpha", base_filter_alpha_) || (base_filter_alpha_ < 0) || (base_filter_alpha_ > 1)) {
+    ROS_ERROR_STREAM(
+        "RoyalPandaControllerRos:  Invalid or no base_filter_alpha parameters provided, aborting "
+        "controller init!" << base_filter_alpha_);
+    return false;
+  }
+
   if (!node_handle.getParam("state_topic", state_topic_)) {
     ROS_INFO_STREAM("RoyalPandaControllerRos: state_topic not found");
     return false;
@@ -286,16 +293,23 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
       // base_twist_publisher_.msg_.linear.x = vel_cmd.x();
       // base_twist_publisher_.msg_.linear.y = vel_cmd.y();
       // base_twist_publisher_.msg_.angular.z = vel_cmd.z();
-
+      Eigen::Vector3d twist_current(x_ros_.base_twist.linear.x,
+                                    x_ros_.base_twist.linear.y,
+                                    x_ros_.base_twist.angular.z);
+      
       Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
                                     x_nom_ros_.base_twist.linear.y,
                                     x_nom_ros_.base_twist.angular.z);
+
       Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
       Eigen::Vector3d twist_cmd = r_world_base.transpose() * twist_nominal;
+      Eigen::Vector3d twist_curr = r_world_base.transpose() * twist_current;
+      Eigen::Vector3d twist_filt = base_filter_alpha_ * twist_curr + (1 - base_filter_alpha_) * twist_cmd;
 
-      base_twist_publisher_.msg_.linear.x = twist_cmd.x();
-      base_twist_publisher_.msg_.linear.y = twist_cmd.y();
-      base_twist_publisher_.msg_.angular.z = twist_cmd.z();
+      base_twist_publisher_.msg_.linear.x = 0.0; twist_filt.x();
+      base_twist_publisher_.msg_.linear.y = 0.0; twist_filt.y();
+      base_twist_publisher_.msg_.angular.z = 0.0; twist_filt.z();
+      ROS_INFO_STREAM_THROTTLE(1.0, "Twist command in world frame is: " << twist_nominal.transpose());
       base_twist_publisher_.unlockAndPublish();
 
     }

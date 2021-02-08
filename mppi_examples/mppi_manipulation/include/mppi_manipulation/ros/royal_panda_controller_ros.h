@@ -104,6 +104,7 @@ class RoyalPandaControllerRos
   std::array<double, 7> qd_;
 
   Eigen::Vector3d base_gains_;
+  double base_filter_alpha_;
 
 };
 
