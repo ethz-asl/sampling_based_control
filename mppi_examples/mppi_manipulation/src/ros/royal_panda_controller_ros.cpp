@@ -22,7 +22,7 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
   if (!init_parameters(node_handle)) return false;
   if (!init_interfaces(robot_hw)) return false;
   if (!init_ros(node_handle)) return false;
-  if (!init_model(node_handle)) return false;
+  //if (!init_model(node_handle)) return false;
 
   std::fill(dq_filtered_.begin(), dq_filtered_.end(), 0);
 
@@ -178,6 +178,7 @@ bool RoyalPandaControllerRos::init_ros(ros::NodeHandle& node_handle) {
                   << "Received state at: " << state_topic_);
   nominal_state_publisher_.init(node_handle, "/x_nom", 1);
   x_model_publisher_.init(node_handle, "/x_model", 1);
+  world_twist_publisher_ = node_handle.advertise<geometry_msgs::TwistStamped>("/base_twist", 1);
   return true;
 }
 
@@ -191,8 +192,8 @@ void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConst
   if (!state_received_) {
     state_received_ = true;
     state_last_receipt_time_ = ros::Time::now().toSec();
-    model_->reset(x_);
-    model_thread_ = std::thread(&RoyalPandaControllerRos::run_model, this);
+    //model_->reset(x_);
+    //model_thread_ = std::thread(&RoyalPandaControllerRos::run_model, this);
   } else {
     double current_time = ros::Time::now().toSec();
     double elapsed = current_time - state_last_receipt_time_;
@@ -251,8 +252,9 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   }
 
   if (!debug_){
+    std::unique_lock<std::shared_mutex> lock(input_mutex_);
     //man_interface_->get_input(x_, u_, time.toSec());
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
+    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() + 0.015);
     conversions::eigenToMsg(x_nom_, x_nom_ros_);
   }
 
@@ -317,17 +319,33 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
                                     x_nom_ros_.base_twist.linear.y,
                                     x_nom_ros_.base_twist.angular.z);
 
-      Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
-      Eigen::Vector3d twist_cmd = r_world_base.transpose() * twist_nominal;
-      Eigen::Vector3d twist_curr = r_world_base.transpose() * twist_current;
-      Eigen::Vector3d twist_filt = base_filter_alpha_ * twist_curr + (1 - base_filter_alpha_) * twist_cmd;
+      //Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
+      Eigen::Matrix3d r_world_base;
+      double theta = x_ros_.base_pose.z;
+      r_world_base << std::cos(theta), -std::sin(theta), 0.0,
+                      std::sin(theta), std::cos(theta), 0.0,
+                      0.0, 0.0, 1.0;
+      Eigen::Matrix3d r_base_world = r_world_base.transpose();
+      // ROS_INFO_STREAM_THROTTLE(2.0, "theta is: " << theta << "R is\n" << r_world_base.transpose());
+      Eigen::Vector3d twist_cmd = r_base_world * twist_nominal;
+      // Eigen::Vector3d twist_curr = r_world_base.transpose() * twist_current;
+      // Eigen::Vector3d twist_filt = base_filter_alpha_ * twist_curr + (1 - base_filter_alpha_) * twist_cmd;
 
-      base_twist_publisher_.msg_.linear.x = u_[0]; //twist_filt.x();
-      base_twist_publisher_.msg_.linear.y = u_[1]; //twist_filt.y();
-      base_twist_publisher_.msg_.angular.z = u_[2]; //twist_filt.z();
+      base_twist_publisher_.msg_.linear.x = twist_cmd.x();
+      base_twist_publisher_.msg_.linear.y = twist_cmd.y();
+      base_twist_publisher_.msg_.angular.z = 0.0; //twist_cmd.z();
       ROS_INFO_STREAM_THROTTLE(1.0, "Twist command in world frame is: " << twist_nominal.transpose());
       base_twist_publisher_.unlockAndPublish();
 
+      
+      twist_stamped_.twist = x_nom_ros_.base_twist;
+      twist_stamped_.header.frame_id = "world";
+      // twist_stamped_.twist.linear.x = twist_filt.x() * 100;
+      // twist_stamped_.twist.linear.y = twist_filt.y() * 100;
+      // twist_stamped_.twist.angular.z = twist_filt.z() * 10;
+      // twist_stamped_.header.frame_id = "base_link";
+      twist_stamped_.header.stamp = ros::Time::now();
+      world_twist_publisher_.publish(twist_stamped_);
     }
   }
 
@@ -374,20 +392,20 @@ void RoyalPandaControllerRos::run_model(){
   while (ros::ok()){
     {
       std::shared_lock<std::shared_mutex> lock(input_mutex_);
-      x_model_ = model_->step(u_, 0.0); // dt not used here
+      //x_model_ = model_->step(u_, 0.0); // dt not used here
     }
-    conversions::eigenToMsg(x_model_, x_model_ros_);
-    if (x_model_publisher_.trylock()){
-      x_model_publisher_.msg_ = x_model_ros_;
-      x_model_publisher_.unlockAndPublish();
-    }
+    // conversions::eigenToMsg(x_model_, x_model_ros_);
+    // if (x_model_publisher_.trylock()){
+    //   x_model_publisher_.msg_ = x_model_ros_;
+    //   x_model_publisher_.unlockAndPublish();
+    // }
     rate.sleep();
   }
 }
 
 void RoyalPandaControllerRos::stopping(const ros::Time& time) {
   stopped_ = true;
-  model_thread_.join();
+  //model_thread_.join();
 }
 
 std::array<double, 7> RoyalPandaControllerRos::saturateTorqueRate(

@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "mppi_manipulation/dynamics_ros.h"
 #include "mppi_manipulation/controller_interface.h"
+#include "mppi_manipulation/dynamics_ros.h"
 #include <manipulation_msgs/State.h>
 
 #include <controller_interface/multi_interface_controller.h>
@@ -26,6 +26,7 @@
 #include <franka_hw/trigger_rate.h>
 
 #include <manipulation_msgs/State.h>
+#include <geometry_msgs/TwistStamped.h>
 
 namespace manipulation {
 
@@ -113,9 +114,13 @@ class RoyalPandaControllerRos
   std::shared_mutex input_mutex_;
   Eigen::VectorXd x_model_;
   manipulation_msgs::State x_model_ros_;
-  realtime_tools::RealtimePublisher x_model_publisher_;
+  realtime_tools::RealtimePublisher<manipulation_msgs::State> x_model_publisher_;
   std::thread model_thread_;
   std::unique_ptr<manipulation::ManipulatorDynamicsRos> model_;
+
+  geometry_msgs::TwistStamped twist_stamped_;
+  ros::Publisher world_twist_publisher_;
+  
 };
 
 }  // namespace manipulation
