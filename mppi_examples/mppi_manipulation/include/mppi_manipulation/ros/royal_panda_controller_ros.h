@@ -75,12 +75,16 @@ class RoyalPandaControllerRos
 
   std::string base_twist_topic_;
   realtime_tools::RealtimePublisher<geometry_msgs::Twist> base_twist_publisher_;
+  realtime_tools::RealtimePublisher<manipulation_msgs::State> nominal_state_publisher_;
 
   bool started_;
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
   Eigen::VectorXd x_;
   Eigen::VectorXd u_;
+
+  Eigen::VectorXd x_nom_;
+  manipulation_msgs::State x_nom_ros_;
 
   bool state_received_;
   bool state_ok_;

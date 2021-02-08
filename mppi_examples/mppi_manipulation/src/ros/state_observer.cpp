@@ -151,8 +151,8 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
 }
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
-  base_twist_.x() = msg->twist.twist.linear.x;
-  base_twist_.y() = msg->twist.twist.linear.y;
+  Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x, msg->twist.twist.linear.y, 0.0);
+  base_twist_ = T_world_base_.rotation() * odom_base_twist;
   base_twist_.z() = msg->twist.twist.angular.z;
 }
 

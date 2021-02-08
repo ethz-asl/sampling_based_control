@@ -3,10 +3,11 @@
 
     <arg name="plot_cost" default="true"/>
     <arg name="plot_input" default="true"/>
+    <arg name="plot_nominal_state" default="true"/>
     <arg name="enable_obstacle" default="false"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/config.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot_cost)">
@@ -18,9 +19,17 @@
 
     <!--    Plot input-->
     <group if="$(arg plot_input)">
-        <arg name="mp_config_input" default="$(find mppi_panda)/resources/rqt_multiplot_input.xml"/>
+        <arg name="mp_config_input" default="$(find mppi_manipulation)/config/multiplot/rqt_multiplot.xml"/>
         <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
               args="--multiplot-config $(arg mp_config_input)"
+              output="screen"/>
+    </group>
+
+    <!--    Plot nominal base state -->
+    <group if="$(arg plot_nominal_state)">
+        <arg name="mp_config_nominal" default="$(find mppi_manipulation)/config/multiplot/base_nominal.xml"/>
+        <node name="rqt_multiplot_nominal" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config_nominal)"
               output="screen"/>
     </group>
 
