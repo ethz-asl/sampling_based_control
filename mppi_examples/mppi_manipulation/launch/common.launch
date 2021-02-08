@@ -13,7 +13,7 @@
     <group if="$(arg plot_cost)">
         <arg name="mp_config" default="$(find mppi_panda)/resources/rqt_multiplot.xml"/>
         <node name="rqt_multiplot_cost" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config)"
+              args="--multiplot-config $(arg mp_config) --multiplot-run-all"
               output="screen"/>
     </group>
 
@@ -21,7 +21,7 @@
     <group if="$(arg plot_input)">
         <arg name="mp_config_input" default="$(find mppi_manipulation)/config/multiplot/rqt_multiplot.xml"/>
         <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_input)"
+              args="--multiplot-config $(arg mp_config_input) --multiplot-run-all"
               output="screen"/>
     </group>
 
@@ -29,12 +29,12 @@
     <group if="$(arg plot_state)">
         <arg name="mp_config_nominal" default="$(find mppi_manipulation)/config/multiplot/base_nominal.xml"/>
         <node name="rqt_multiplot_nominal" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_nominal)"
+              args="--multiplot-config $(arg mp_config_nominal)  --multiplot-run-all"
               output="screen"/>
 
         <arg name="mp_config_measured" default="$(find mppi_manipulation)/config/multiplot/base_measured.xml"/>
         <node name="rqt_multiplot_measured" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_measured)"
+              args="--multiplot-config $(arg mp_config_measured)  --multiplot-run-all"
               output="screen"/>
 
     </group>

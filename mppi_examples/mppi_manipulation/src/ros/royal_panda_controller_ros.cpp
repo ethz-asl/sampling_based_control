@@ -22,6 +22,7 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
   if (!init_parameters(node_handle)) return false;
   if (!init_interfaces(robot_hw)) return false;
   if (!init_ros(node_handle)) return false;
+  if (!init_model(node_handle)) return false;
 
   std::fill(dq_filtered_.begin(), dq_filtered_.end(), 0);
 
@@ -176,6 +177,7 @@ bool RoyalPandaControllerRos::init_ros(ros::NodeHandle& node_handle) {
   ROS_INFO_STREAM("Sending base commands to: " << base_twist_topic_ << std::endl
                   << "Received state at: " << state_topic_);
   nominal_state_publisher_.init(node_handle, "/x_nom", 1);
+  x_model_publisher_.init(node_handle, "/x_model", 1);
   return true;
 }
 
@@ -189,6 +191,8 @@ void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConst
   if (!state_received_) {
     state_received_ = true;
     state_last_receipt_time_ = ros::Time::now().toSec();
+    model_->reset(x_);
+    model_thread_ = std::thread(&RoyalPandaControllerRos::run_model, this);
   } else {
     double current_time = ros::Time::now().toSec();
     double elapsed = current_time - state_last_receipt_time_;
@@ -212,6 +216,7 @@ void RoyalPandaControllerRos::starting(const ros::Time& time) {
       return;
     }
     started_ = true;
+    stopped_ = false;
   }
 
   // initial configuration
@@ -222,6 +227,16 @@ void RoyalPandaControllerRos::starting(const ros::Time& time) {
 
   start_time_ = time.toSec();
   started_ = true;
+  stopped_ = false;
+}
+
+bool RoyalPandaControllerRos::init_model(ros::NodeHandle& nh){
+  auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
+  auto object_description_raisim = nh.param<std::string>("/object_description_raisim", "");
+
+  model_ = std::make_unique<manipulation::ManipulatorDynamicsRos>(
+      nh, robot_description_raisim, object_description_raisim, 0.015, fixed_base_);
+  return true;
 }
 
 void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration& period) {
@@ -354,7 +369,25 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   }
 }
 
+void RoyalPandaControllerRos::run_model(){
+  ros::Rate rate(1./model_->get_dt());
+  while (ros::ok()){
+    {
+      std::shared_lock<std::shared_mutex> lock(input_mutex_);
+      x_model_ = model_->step(u_, 0.0); // dt not used here
+    }
+    conversions::eigenToMsg(x_model_, x_model_ros_);
+    if (x_model_publisher_.trylock()){
+      x_model_publisher_.msg_ = x_model_ros_;
+      x_model_publisher_.unlockAndPublish();
+    }
+    rate.sleep();
+  }
+}
+
 void RoyalPandaControllerRos::stopping(const ros::Time& time) {
+  stopped_ = true;
+  model_thread_.join();
 }
 
 std::array<double, 7> RoyalPandaControllerRos::saturateTorqueRate(

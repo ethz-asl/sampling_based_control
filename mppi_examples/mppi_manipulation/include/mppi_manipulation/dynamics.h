@@ -39,6 +39,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   void set_collision();
 
  public:
+  double get_dt() {return dt_; }
   size_t get_input_dimension() override { return input_dimension_; }
   size_t get_state_dimension() override { return state_dimension_; }
   dynamics_ptr create() override {
