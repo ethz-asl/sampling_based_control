@@ -80,6 +80,13 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
   }
   base_gains_ << base_gains[0], base_gains[1], base_gains[2];
 
+  if (!node_handle.getParam("base_filter_alpha", base_filter_alpha_) || (base_filter_alpha_ < 0) || (base_filter_alpha_ > 1)) {
+    ROS_ERROR_STREAM(
+        "RoyalPandaControllerRos:  Invalid or no base_filter_alpha parameters provided, aborting "
+        "controller init!" << base_filter_alpha_);
+    return false;
+  }
+
   if (!node_handle.getParam("state_topic", state_topic_)) {
     ROS_INFO_STREAM("RoyalPandaControllerRos: state_topic not found");
     return false;
@@ -175,10 +182,13 @@ bool RoyalPandaControllerRos::init_ros(ros::NodeHandle& node_handle) {
 }
 
 void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConstPtr& state_msg) {
+  if (!started_) return;
+
   manipulation::conversions::msgToEigen(*state_msg, x_);
+  man_interface_->set_observation(x_, ros::Time::now().toSec());
   x_ros_ = *state_msg;
+  
   if (!state_received_) {
-    state_ok_ = true;
     state_received_ = true;
     state_last_receipt_time_ = ros::Time::now().toSec();
     model_->reset(x_);
@@ -241,7 +251,6 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   }
 
   if (!debug_){
-    man_interface_->set_observation(x_, time.toSec());
     //man_interface_->get_input(x_, u_, time.toSec());
     man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
     conversions::eigenToMsg(x_nom_, x_nom_ros_);
@@ -281,26 +290,41 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   
   // send velocity commands to the base
   if (!fixed_base_ && !debug_) {
-    if (base_twist_publisher_.trylock()) {
+    if (base_trigger_() && base_twist_publisher_.trylock()) {
 //      double alpha_base = 0.99;
 //      double vx = alpha_base * state_ros_.base_twist.linear.x +  (1-alpha_base) * u_[0];
 //      double vy = alpha_base * state_ros_.base_twist.linear.y +  (1-alpha_base) * u_[1];
 //      double omega = alpha_base * state_ros_.base_twist.angular.z +  (1-alpha_base) * u_[2];
 
       // error is in the world frame
-      Eigen::Vector3d base_error(x_nom_ros_.base_pose.x - x_ros_.base_pose.x,
-                                 x_nom_ros_.base_pose.y - x_ros_.base_pose.y,
-                                 x_nom_ros_.base_pose.z - x_ros_.base_pose.z);
+      // Eigen::Vector3d base_error(x_nom_ros_.base_pose.x - x_ros_.base_pose.x,
+      //                            x_nom_ros_.base_pose.y - x_ros_.base_pose.y,
+      //                            x_nom_ros_.base_pose.z - x_ros_.base_pose.z);
+      // Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
+      // ROS_INFO_STREAM_THROTTLE(1.0, "Current base error: " << base_error);
+
+      // Eigen::Vector3d vel_cmd = base_gains_.cwiseProduct(r_world_base.transpose() * base_error);
+
+      // base_twist_publisher_.msg_.linear.x = vel_cmd.x();
+      // base_twist_publisher_.msg_.linear.y = vel_cmd.y();
+      // base_twist_publisher_.msg_.angular.z = vel_cmd.z();
+      Eigen::Vector3d twist_current(x_ros_.base_twist.linear.x,
+                                    x_ros_.base_twist.linear.y,
+                                    x_ros_.base_twist.angular.z);
+      
+      Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
+                                    x_nom_ros_.base_twist.linear.y,
+                                    x_nom_ros_.base_twist.angular.z);
+
       Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
-      Eigen::Vector3d vel_cmd = base_gains_.cwiseProduct(r_world_base.transpose() * base_error);
+      Eigen::Vector3d twist_cmd = r_world_base.transpose() * twist_nominal;
+      Eigen::Vector3d twist_curr = r_world_base.transpose() * twist_current;
+      Eigen::Vector3d twist_filt = base_filter_alpha_ * twist_curr + (1 - base_filter_alpha_) * twist_cmd;
 
-      base_twist_publisher_.msg_.linear.x = vel_cmd.x();
-      base_twist_publisher_.msg_.linear.y = vel_cmd.y();
-      base_twist_publisher_.msg_.angular.z = vel_cmd.z();
-
-//      base_twist_publisher_.msg_.linear.x = x_nom_ros_.base_twist.linear.x;
-//      base_twist_publisher_.msg_.linear.y = x_nom_ros_.base_twist.linear.y;
-//      base_twist_publisher_.msg_.angular.z = x_nom_ros_.base_twist.angular.z;
+      base_twist_publisher_.msg_.linear.x = 0.0; twist_filt.x();
+      base_twist_publisher_.msg_.linear.y = 0.0; twist_filt.y();
+      base_twist_publisher_.msg_.angular.z = 0.0; twist_filt.z();
+      ROS_INFO_STREAM_THROTTLE(1.0, "Twist command in world frame is: " << twist_nominal.transpose());
       base_twist_publisher_.unlockAndPublish();
 
     }
