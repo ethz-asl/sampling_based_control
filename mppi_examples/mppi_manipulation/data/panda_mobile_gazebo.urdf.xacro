@@ -16,7 +16,7 @@
         <origin xyz="0.30 0.0 0.445" rpy="0 0 0"/>
     </joint>
     <link name="franka_mount_link"/>
-    <xacro:panda_robot parent_link="franka_mount_link"/>
+    <xacro:panda_robot parent_link="franka_mount_link" robot_description="/robot_description_for_gazebo"/>
 
     <!--    Add utility grasp frame-->
     <xacro:if value="${add_finger}">

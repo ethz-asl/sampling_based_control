@@ -26,6 +26,7 @@ set(PACKAGE_DEPENDENCIES
         franka_example_controllers
         kdl_parser
         manipulation_msgs
+        gazebo_msgs
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -67,6 +68,14 @@ add_dependencies(${PROJECT_NAME}_controller ${PROJECT_NAME})
 
 add_executable(base_odometry_dummy_node src/test/base_odometry_dummy_node.cpp)
 target_link_libraries(base_odometry_dummy_node ${catkin_LIBRARIES})
+
+add_executable(joint_state_filter_node src/ros/joint_state_filter_node.cpp)
+target_include_directories(joint_state_filter_node PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(joint_state_filter_node ${catkin_LIBRARIES})
+
+add_executable(vicon_emulator_node src/ros/vicon_emulator_node.cpp)
+target_include_directories(vicon_emulator_node PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(vicon_emulator_node ${catkin_LIBRARIES})
 
 add_executable(state_observer_node src/ros/state_observer.cpp src/ros/state_observer_node.cpp)
 target_include_directories(state_observer_node PUBLIC include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})

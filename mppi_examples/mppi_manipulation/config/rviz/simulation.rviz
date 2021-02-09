@@ -6,8 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
-        - /RobotModel1/Status1
       Splitter Ratio: 0.5
     Tree Height: 866
   - Class: rviz/Selection
@@ -213,6 +211,10 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        reference_link_gazebo:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         ridgeback_sensor_mount_link:
           Alpha: 1
           Show Axes: false
@@ -228,17 +230,72 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-      Name: RobotModel
+      Name: Robot
       Robot Description: robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Axes Length: 1
+          Axes Radius: 0.10000000149011612
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.30000001192092896
+          Head Radius: 0.10000000149011612
+          Name: Base Pose
+          Queue Size: 10
+          Shaft Length: 1
+          Shaft Radius: 0.05000000074505806
+          Shape: Axes
+          Topic: /observer/base_pose
+          Unreliable: false
+          Value: true
+        - Angle Tolerance: 0.10000000149011612
+          Class: rviz/Odometry
+          Covariance:
+            Orientation:
+              Alpha: 0.5
+              Color: 255; 255; 127
+              Color Style: Unique
+              Frame: Local
+              Offset: 1
+              Scale: 1
+              Value: true
+            Position:
+              Alpha: 0.30000001192092896
+              Color: 204; 51; 204
+              Scale: 1
+              Value: true
+            Value: true
+          Enabled: true
+          Keep: 1
+          Name: Vicon Panda Odometry
+          Position Tolerance: 0.10000000149011612
+          Queue Size: 10
+          Shape:
+            Alpha: 1
+            Axes Length: 0.10000000149011612
+            Axes Radius: 0.009999999776482582
+            Color: 255; 25; 0
+            Head Length: 0.30000001192092896
+            Head Radius: 0.10000000149011612
+            Shaft Length: 1
+            Shaft Radius: 0.05000000074505806
+            Value: Axes
+          Topic: /panda_base/vrpn_client/estimated_odometry
+          Unreliable: false
+          Value: true
+      Enabled: true
+      Name: Observer
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 243; 243; 243
     Default Light: true
-    Fixed Frame: base_link
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -262,7 +319,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.995882511138916
+      Distance: 5.027848243713379
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -270,9 +327,9 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 0.11259904503822327
+        Y: 0.02394254133105278
+        Z: 0.03571319207549095
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -280,7 +337,7 @@ Visualization Manager:
       Near Clip Distance: 0.009999999776482582
       Pitch: 0.6553985476493835
       Target Frame: <Fixed Frame>
-      Yaw: 1.7503981590270996
+      Yaw: 2.075406789779663
     Saved: ~
 Window Geometry:
   Displays:

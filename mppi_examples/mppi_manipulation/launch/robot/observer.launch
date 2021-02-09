@@ -2,6 +2,7 @@
 <launch>
     <arg name="test" default="false"/>
     <arg name="fixed_base" default="false"/>
+    <arg name="sim" default="false"/>
 
     <!--    World description-->
     <include file="$(find mppi_manipulation)/launch/load.launch">
@@ -11,8 +12,8 @@
     </include>
 
     <!-- Start the robot state controller publisher -->
-    <include file="$(find mppi_manipulation)/launch/robot/bringup.launch"/>
-
+    <include file="$(find mppi_manipulation)/launch/robot/bringup.launch" unless="$(arg sim)"/>
+    <include file="$(find mppi_manipulation)/launch/sim/gazebo.launch" if="$(arg sim)"/>
 
     <node name="ridgeback_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
@@ -42,7 +43,7 @@
     </group>
 
     <!--    State observer node-->
-    <node pkg="mppi_manipulation" name="state_observer_node" type="state_observer_node" output="screen">
+    <node pkg="mppi_manipulation" name="state_observer_node" type="state_observer_node" output="screen" launch-prefix="gdb -ex run --args">
         <param name="fixed_base" value="$(arg fixed_base)"/>
         <param name="base_pose_topic" value="/panda_base/vrpn_client/estimated_odometry"/>
         <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>

@@ -158,6 +158,10 @@ void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
 }
 
 void StateObserver::arm_state_callback(const sensor_msgs::JointStateConstPtr& msg) {
+  if (msg->name.size() != 9){
+    ROS_WARN_STREAM_THROTTLE(2.0, "Joint state has the wrong size: " << msg->name.size());
+    return;
+  }
   for (size_t i = 0; i < 9; i++) q_(i) = msg->position[i];
   for (size_t i = 0; i < 9; i++) dq_(i) = msg->velocity[i];
 }

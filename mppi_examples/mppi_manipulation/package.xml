@@ -27,6 +27,7 @@
     <depend>franka</depend>
     <depend>franka_example_controllers</depend>
     <depend>ridgeback_description</depend>
+    <depend>gazebo_msgs</depend>
 
     <depend>kdl_parser</depend>
 

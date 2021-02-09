@@ -20,7 +20,7 @@
     <xacro:property name="no_position_limits" value="$(arg no_position_limits)"/>
     <xacro:property name="add_finger" value="$(arg add_finger)"/>
 
-    <xacro:macro name="panda_robot" params="parent_link:='world'">
+    <xacro:macro name="panda_robot" params="parent_link:='world' robot_description:=''">
         <joint name="panda_joint_${parent_link}" type="fixed">
             <parent link="${parent_link}"/>
             <child link="panda_link0"/>
@@ -29,6 +29,7 @@
         <gazebo>
             <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
                 <robotNamespace>/</robotNamespace>
+                <robotParam>/${robot_description}</robotParam>
             </plugin>
         </gazebo>
         <gazebo reference="panda_link0"/>

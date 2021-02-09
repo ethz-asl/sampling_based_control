@@ -3,16 +3,18 @@
     <arg name="config" default="base" />
     <arg name="x" default="0" />
     <arg name="y" default="0" />
-    <arg name="z" default="1" />
+    <arg name="z" default="0" />
     <arg name="yaw" default="0" />
     <arg name="joystick" default="true" />
 
     <!-- Load Ridgeback's description, controllers, and teleop nodes. -->
-    <param name="robot_description"
+    <param name="robot_description_for_gazebo"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/panda_mobile_gazebo.urdf.xacro
                    resources_directory:='package://mppi_panda' collision_links:=true collision_hand:=true add_finger:=true" />
 
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+<!--    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">-->
+<!--      <remap from="robot_description" to="/robot_description_for_gazebo"/>-->
+<!--    </node>-->
 
     <include file="$(find mppi_manipulation)/launch/sim/control_sim.launch" />
 
@@ -54,7 +56,7 @@
                   -J panda_joint6 1.48333
                   -J panda_joint7 0.75098"/>
     <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
-          args="-urdf -model ridgeback -param robot_description -urdf $(arg inital_config) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw)"
+          args="-urdf -model ridgeback -param robot_description_for_gazebo -urdf $(arg inital_config) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw)"
           output="screen"/>
 
     <!-- Open Rviz -->
@@ -63,4 +65,8 @@
     <node name="unpause_physics" type="unpause_physics.py" pkg="mppi_manipulation" output="screen">
       <param name="delay_sec" value="5.0"/>
     </node>
+
+    <node name="vicon_emulator_node" type="vicon_emulator_node" pkg="mppi_manipulation"/>
+    <node name="joint_state_filter_node" type="joint_state_filter_node" pkg="mppi_manipulation"/>
 </launch>
+
