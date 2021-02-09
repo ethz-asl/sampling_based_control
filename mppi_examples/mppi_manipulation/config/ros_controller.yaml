@@ -1,3 +1,7 @@
+joint_publisher:
+  type: "joint_state_controller/JointStateController"
+  publish_rate: 50
+
 royal_panda_manipulation_controller:
   type: manipulation/RoyalPandaControllerRos
   fixed_base: $(arg fixed_base)
@@ -33,3 +37,26 @@ royal_panda_manipulation_controller:
   ros_publish_rate: 10.0
   static_optimization: false
 
+panda_position_controller:
+  type: effort_controllers/JointGroupPositionController
+  joints: ["panda_joint1",
+           "panda_joint2",
+           "panda_joint3",
+           "panda_joint4",
+           "panda_joint5",
+           "panda_joint6",
+           "panda_joint7"]
+  panda_joint1:
+    pid: { p: 12000, d: 50, i: 0.0, i_clamp: 10000 }
+  panda_joint2:
+    pid: { p: 30000, d: 100, i: 0.02, i_clamp: 10000 }
+  panda_joint3:
+    pid: { p: 18000, d: 50, i: 0.01, i_clamp: 1 }
+  panda_joint4:
+    pid: { p: 18000, d: 70, i: 0.01, i_clamp: 10000 }
+  panda_joint5:
+    pid: { p: 12000, d: 70, i: 0.01, i_clamp: 1 }
+  panda_joint6:
+    pid: { p: 7000, d: 50, i: 0.01, i_clamp: 1 }
+  panda_joint7:
+    pid: { p: 2000, d: 20, i: 0.0, i_clamp: 1 }

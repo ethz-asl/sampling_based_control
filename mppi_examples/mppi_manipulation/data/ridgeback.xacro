@@ -9,8 +9,13 @@
     <xacro:property name="chassis_width" value="0.793" />
     <xacro:property name="chassis_height" value="0.216" />
     <xacro:property name="deck_height" value="0.280" />
+    <xacro:property name="axle_offset" value="0.0500" />
 
     <xacro:property name="dummy_inertia" value="1e-09"/>
+
+    <xacro:property name="imu_offset_x" value="0.2085"/>
+    <xacro:property name="imu_offset_y" value="-0.2902"/>
+    <xacro:property name="imu_offset_z" value="0.1681"/>
 
     <material name="dark_grey"><color rgba="0.2 0.2 0.2 1.0" /></material>
     <material name="light_grey"><color rgba="0.4 0.4 0.4 1.0" /></material>
@@ -171,6 +176,35 @@
             <material name="black" />
         </visual>
     </link>
+
+    <joint name="axle_joint" type="fixed">
+        <origin xyz="0 0 ${axle_offset}" rpy="0 0 0" />
+        <parent link="chassis_link"/>
+        <child link="axle_link" />
+    </joint>
+
+    <link name="axle_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${PI/2} 0" />
+            <geometry>
+                <mesh filename="package://ridgeback_description/meshes/axle.stl" />
+            </geometry>
+            <material name="black" />
+        </visual>
+    </link>
+
+    <link name="imu_link">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+        </inertial>
+    </link>
+    <joint name="imu_joint" type="fixed">
+        <parent link="chassis_link" />
+        <child link="imu_link" />
+        <origin xyz="${imu_offset_x} ${imu_offset_y} ${imu_offset_z}" rpy="0 0 0"/>
+    </joint>
 
     <link name="mid_mount" />
     <joint name="mid_mount_joint" type="fixed">

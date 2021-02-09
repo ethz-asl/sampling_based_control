@@ -85,3 +85,7 @@ target_link_libraries(state_observer_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRA
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
+
+catkin_install_python(PROGRAMS scripts/unpause_physics.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
