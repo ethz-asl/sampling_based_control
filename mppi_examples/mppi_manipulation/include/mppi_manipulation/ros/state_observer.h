@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
@@ -61,6 +62,9 @@ class StateObserver {
 
   // debug ros publishing: do not use for realtime control loops
   ros::Publisher base_pose_publisher_;
+
+  geometry_msgs::TwistStamped base_twist_ros_;
+  ros::Publisher base_twist_publisher_;
 
   sensor_msgs::JointState robot_state_;
   ros::Publisher robot_state_publisher_;

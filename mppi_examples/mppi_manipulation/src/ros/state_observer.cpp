@@ -49,6 +49,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   // ros publishing
   state_publisher_ = nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
   base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
+  base_twist_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
   robot_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/robot/joint_state", 1);
@@ -216,6 +217,15 @@ void StateObserver::publish() {
     robot_state_.position[0] = base_state_.x();
     robot_state_.position[1] = base_state_.y();
     robot_state_.position[2] = base_state_.z();
+
+    base_twist_ros_.header.frame_id = "world";
+    base_twist_ros_.header.stamp = ros::Time::now();
+    base_twist_ros_.twist.linear.x = base_twist_.x();
+    base_twist_ros_.twist.linear.y = base_twist_.y();
+    base_twist_ros_.twist.angular.z = base_twist_.z();
+    base_twist_publisher_.publish(base_twist_ros_);
+
+
 
     robot_state_.header.stamp = ros::Time::now();
     robot_state_publisher_.publish(robot_state_);

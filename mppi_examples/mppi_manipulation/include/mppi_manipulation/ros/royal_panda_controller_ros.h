@@ -26,6 +26,7 @@
 #include <franka_hw/trigger_rate.h>
 
 #include <manipulation_msgs/State.h>
+#include <geometry_msgs/TwistStamped.h>
 
 namespace manipulation {
 
@@ -116,6 +117,10 @@ class RoyalPandaControllerRos
   realtime_tools::RealtimePublisher<manipulation_msgs::State> x_model_publisher_;
   std::thread model_thread_;
   std::unique_ptr<manipulation::ManipulatorDynamicsRos> model_;
+
+  geometry_msgs::TwistStamped twist_stamped_;
+  ros::Publisher world_twist_publisher_;
+  
 };
 
 }  // namespace manipulation
