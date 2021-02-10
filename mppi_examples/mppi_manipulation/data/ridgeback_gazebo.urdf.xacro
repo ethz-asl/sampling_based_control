@@ -15,7 +15,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
                 <geometry>
-                    <mesh filename="package://ridgeback_description/meshes/wheel.stl"/>
+                    <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/wheel.stl"/>
                 </geometry>
                 <material name="black"/>
             </visual>
@@ -51,6 +51,15 @@
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
+
+<!--        <gazebo reference="${prefix}_${side}_wheel_link">-->
+<!--            <mu1 value="50.0"/>-->
+<!--            <mu2 value="100.0"/>-->
+<!--            <kp>1000000.0</kp>-->
+<!--            <kd>100.0</kd>-->
+<!--            <minDepth>0.001</minDepth>-->
+<!--            <maxVel>1.0</maxVel>-->
+<!--        </gazebo>-->
     </xacro:macro>
 
 
@@ -59,7 +68,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
                 <geometry>
-                    <mesh filename="package://ridgeback_description/meshes/rocker.stl"/>
+                    <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/rocker.stl"/>
                 </geometry>
                 <material name="black"/>
             </visual>
@@ -96,6 +105,21 @@
     <xacro:rocker prefix="rear" joint_type="fixed" location="-1">
         <limit effort="0" velocity="0"/>
     </xacro:rocker>
+
+    <!--        Just an hack to get the reference pose from gazebo: using a movable joint does not cause collapse of the model-->
+    <link name="reference_link_gazebo">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+        </inertial>
+    </link>
+    <joint name="reference_link_gazebo_joint" type="revolute">
+        <origin xyz="-0.343 0 0.77" rpy="0 0 0"/>
+        <parent link="mid_mount"/>
+        <child link="reference_link_gazebo"/>
+        <limit upper="0.0" lower="0.0" effort="0.0" velocity="0.0"/>
+    </joint>
 
     <!-- Bring in simulation data for Gazebo. -->
     <xacro:include filename="$(find mppi_manipulation)/data/ridgeback_plugins.xacro"/>

@@ -8,7 +8,7 @@
         <link name="ridgeback_sensor_mount_link">
             <visual>
                 <geometry>
-                    <mesh filename="package://mppi_manipulation/data/meshes/ridgeback_sensor_mount.dae"/>
+                    <mesh filename="${resources_prefix}$(find mppi_manipulation)/data/meshes/ridgeback_sensor_mount.dae"/>
                 </geometry>
             </visual>
         </link>
@@ -26,20 +26,6 @@
             <child link="reference_link"/>
         </joint>
 
-<!--        Just an hack to get the reference pose from gazebo: using a movable joint does not cause collapse of the model-->
-        <link name="reference_link_gazebo">
-            <inertial>
-                <mass value="0.001"/>
-                <origin xyz="0 0 0" rpy="0 0 0"/>
-                <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
-            </inertial>
-        </link>
-        <joint name="reference_link_gazeb_joint" type="revolute">
-            <origin xyz="-0.343 0 0.77" rpy="0 0 0"/>
-            <parent link="mid_mount"/>
-            <child link="reference_link_gazebo"/>
-            <limit upper="0.0" lower="0.0" effort="0.0" velocity="0.0"/>
-        </joint>
 
     </xacro:macro>
 </robot>
