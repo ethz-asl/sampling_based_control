@@ -52,7 +52,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   base_twist_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
-  robot_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/robot/joint_state", 1);
+  robot_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
 
   object_state_.name.push_back("articulation_joint");
   object_state_.position.push_back(0.0);
@@ -133,10 +133,12 @@ bool StateObserver::initialize() {
 void StateObserver::update() {
   if (!fixed_base_) {
     conversions::toMsg(base_state_, base_twist_, q_, dq_, object_state_.position[0],
-                       object_state_.velocity[0], true, state_ros_);
+                       object_state_.velocity[0], false, state_ros_);
+    state_ros_.header.stamp = ros::Time::now();
   } else {
-    conversions::toMsg(q_, dq_, object_state_.position[0], object_state_.velocity[0], true,
+    conversions::toMsg(q_, dq_, object_state_.position[0], object_state_.velocity[0], false,
                        state_ros_);
+    state_ros_.header.stamp = ros::Time::now();
   }
 }
 
@@ -228,8 +230,6 @@ void StateObserver::publish() {
     base_twist_ros_.twist.linear.y = base_twist_.y();
     base_twist_ros_.twist.angular.z = base_twist_.z();
     base_twist_publisher_.publish(base_twist_ros_);
-
-
 
     robot_state_.header.stamp = ros::Time::now();
     robot_state_publisher_.publish(robot_state_);
