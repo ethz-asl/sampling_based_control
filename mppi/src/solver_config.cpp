@@ -6,27 +6,25 @@
  * @brief    description
  */
 
+#include "mppi/solver_config.h"
 #include <math.h>
 #include <iostream>
-#include "mppi/solver_config.h"
 
 using namespace mppi;
 
 bool SolverConfig::init_from_file(const std::string &file) {
   parsing_error = false;
   YAML::Node config;
-  try{
+  try {
     config = YAML::LoadFile(file);
-  }
-  catch(const YAML::ParserException& ex) {
+  } catch (const YAML::ParserException &ex) {
     std::cout << ex.what() << std::endl;
-  }
-  catch(const YAML::BadFile& ex){
+  } catch (const YAML::BadFile &ex) {
     std::cout << ex.what() << std::endl;
   }
 
   YAML::Node solver_options = config["solver"];
-  if (!solver_options){
+  if (!solver_options) {
     std::cout << "Failed to parse solver options." << std::endl;
     return false;
   }
@@ -53,7 +51,12 @@ bool SolverConfig::init_from_file(const std::string &file) {
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
-  //clang-format on
+  use_tree_search = parse_key_quiet<bool>(solver_options, "use_tree_search").value_or(use_tree_search);
+  pruning_threshold = parse_key_quiet<double>(solver_options, "pruning_threshold").value_or(pruning_threshold);
+  expert_weights   = parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
+  expert_types 	   = {NORM, IMP};
+  display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
+//clang-format on
 
   if (parsing_error) return false;
   std::cout << "Solver options correctly parsed from: " << file << std::endl;

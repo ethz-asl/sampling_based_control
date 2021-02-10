@@ -6,6 +6,7 @@
  * @brief    description
  */
 #pragma once
+#include <iostream>
 #include "multivariate_normal_eigen.h"
 
 namespace mppi {
@@ -14,7 +15,7 @@ class GaussianSampler {
  public:
   using sampler_ptr = std::shared_ptr<GaussianSampler>;
 
-  GaussianSampler() = delete;
+  GaussianSampler() = default;
   explicit GaussianSampler(size_t n) : n_(n), solver_(n) {
     sigma_ = Eigen::MatrixXd::Identity(n_, n_);
     sigma_inv_ = Eigen::MatrixXd::Identity(n_, n_);
@@ -47,7 +48,9 @@ class GaussianSampler {
     dist_->set_covariance(sigma_);
   }
 
-  void get_sample(DynamicsBase::input_t& sample) { sample = (*dist_)(); }
+  void get_sample(DynamicsBase::input_t& sample) {sample = (*dist_)(); }
+
+  Eigen::VectorXd get_sample() {return (*dist_)(); }
 
   Eigen::MatrixXd stable_inverse(const Eigen::MatrixXd& A) {
     solver_.compute(A, Eigen::ComputeEigenvectors);

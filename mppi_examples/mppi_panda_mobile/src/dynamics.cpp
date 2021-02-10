@@ -27,6 +27,8 @@ DynamicsBase::observation_t PandaMobileDynamics::step(const DynamicsBase::input_
   return x_;
 }
 
+const DynamicsBase::observation_t PandaMobileDynamics::get_state() const { return x_; }
+
 void PandaMobileDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
 
 DynamicsBase::input_t PandaMobileDynamics::get_zero_input(const observation_t& x) {

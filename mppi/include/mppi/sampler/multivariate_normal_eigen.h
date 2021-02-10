@@ -45,7 +45,7 @@ struct multivariate_normal
     static std::mt19937 gen{ std::random_device{}() };
     static std::normal_distribution<double> dist;
 
-    return mean + transform * Eigen::VectorXd{ mean.size() }.unaryExpr([&](auto x) { return dist(gen); });
+		return mean + transform * Eigen::VectorXd{ mean.size() }.unaryExpr([&](auto x) { return dist(gen); });
   }
 };
 
