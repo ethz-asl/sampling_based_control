@@ -6,3 +6,12 @@
         </description>
     </class>
 </library>
+
+<library path="lib/libcontroller_test">
+<class name="manipulation/ControllerTest" type="manipulation::ControllerTest"
+       base_class_type="controller_interface::ControllerBase">
+    <description>
+        Simple testing of solver initialization.
+    </description>
+</class>
+</library>
