@@ -11,8 +11,8 @@ solver:
   substeps: 1
 
   filter_type: 1
-  filter_order: 5
-  filter_window: 30
+  filter_order: 1
+  filter_window: 10
 
   bound_input: true
   u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
@@ -20,6 +20,11 @@ solver:
 
   adaptive_sampling: false
   input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+
+  use_tree_search: false         # if true tree structure is used
+  pruning_threshold: 0.04       # controls the structure of the tree
+  # expert_types: {NORM, IMP}
+  expert_weights: [ 0.1, 0.5 ]  # controls the weights of the different experts
 
   discount_factor: 1.0
   verbose: false
