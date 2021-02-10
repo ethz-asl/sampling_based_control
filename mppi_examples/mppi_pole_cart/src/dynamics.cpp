@@ -24,9 +24,11 @@ void PoleCartDynamics::compute_velocities(double F) {
 }
 
 void PoleCartDynamics::integrate_internal(double u, double dt) {
-  if (dt > config_.dt_internal)
-    throw std::runtime_error(
-        "Integrate internal called with dt smaller that internal dt");
+  if (dt > config_.dt_internal){
+    std::stringstream ss;
+    ss << "Integrate internal called with dt larger that internal dt: " << dt << "> " << config_.dt_internal;
+    throw std::runtime_error(ss.str());
+  }
 
   compute_velocities(u);
   x_ += xd_ * dt;
@@ -44,7 +46,7 @@ DynamicsBase::observation_t PoleCartDynamics::step(
   return x_;
 }
 
-DynamicsBase::observation_t PoleCartDynamics::get_state() { return x_; }
+const DynamicsBase::observation_t PoleCartDynamics::get_state() const { return x_; }
 
 void PoleCartDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
 }  // namespace pole_cart

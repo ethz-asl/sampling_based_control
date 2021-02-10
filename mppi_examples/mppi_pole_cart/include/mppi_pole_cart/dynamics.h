@@ -62,7 +62,7 @@ class PoleCartDynamics : public mppi::DynamicsBase {
 
   observation_t step(const input_t &u, const double dt) override;
 
-	observation_t get_state() override;
+  const observation_t get_state() const override;
 
   private:
    void compute_velocities(double F);
