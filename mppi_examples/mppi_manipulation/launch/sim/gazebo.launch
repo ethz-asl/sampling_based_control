@@ -1,22 +1,30 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="config" default="base" />
-    <arg name="x" default="0" />
-    <arg name="y" default="0" />
-    <arg name="z" default="0" />
-    <arg name="yaw" default="0" />
-    <arg name="joystick" default="true" />
+    <arg name="run_rviz" default="false"/>
+    <arg name="config" default="base"/>
+    <arg name="x" default="0"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
+    <arg name="yaw" default="0"/>
+    <arg name="joystick" default="true"/>
 
     <!-- Load Ridgeback's description, controllers, and teleop nodes. -->
     <param name="robot_description_for_gazebo"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/panda_mobile_gazebo.urdf.xacro
-                   resources_directory:='package://mppi_panda' collision_links:=true collision_hand:=true add_finger:=true" />
+                   resources_directory:='package://mppi_panda' collision_links:=true collision_hand:=true add_finger:=true"/>
 
-<!--    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">-->
-<!--      <remap from="robot_description" to="/robot_description_for_gazebo"/>-->
-<!--    </node>-->
+    <!--    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">-->
+    <!--      <remap from="robot_description" to="/robot_description_for_gazebo"/>-->
+    <!--    </node>-->
 
-    <include file="$(find mppi_manipulation)/launch/sim/control_sim.launch" />
+    <!--    Description used by pinocchio to get the arm dynamics-->
+    <param name="arm_description" command="$(find xacro)/xacro $(find mppi_manipulation)/data/panda_standalone.urdf.xacro
+      resources_directory:='package://mppi_panda'
+      collision_links:=true
+      collision_hand:=true
+      add_finger:=true"/>
+
+    <include file="$(find mppi_manipulation)/launch/sim/control_sim.launch"/>
 
     <rosparam param="/gazebo_ros_control/pid_gains">
         front_left_wheel:
@@ -39,10 +47,11 @@
 
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="debug" value="0" />
-        <arg name="gui" value="false" />
-        <arg name="use_sim_time" value="true" />
-        <arg name="headless" value="false" />
+        <arg name="debug" value="false"/>
+        <arg name="gui" value="false"/>
+        <arg name="world_name" value="$(find mppi_manipulation)/config/gazebo/empty.world"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="headless" value="false"/>
         <arg name="paused" value="true"/>
     </include>
 
@@ -60,13 +69,17 @@
           output="screen"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/simulation.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/simulation.rviz"
+          output="screen" if="$(arg run_rviz)"/>
 
     <node name="unpause_physics" type="unpause_physics.py" pkg="mppi_manipulation" output="screen">
-      <param name="delay_sec" value="5.0"/>
+        <param name="delay_sec" value="5.0"/>
     </node>
 
-    <node name="vicon_emulator_node" type="vicon_emulator_node" pkg="mppi_manipulation"/>
-    <node name="joint_state_filter_node" type="joint_state_filter_node" pkg="mppi_manipulation"/>
+    <node name="vicon_emulator_node" type="vicon_emulator_node" pkg="mppi_manipulation" output="screen"/>
+    <node name="joint_state_filter_node" type="joint_state_filter_node" pkg="mppi_manipulation" output="screen"/>
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_odom_publisher" args="0 0 0 0 0 0 world odom"
+          output="screen"/>
 </launch>
 

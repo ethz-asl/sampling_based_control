@@ -3,14 +3,8 @@
 
     <!--    Arguments-->
     <arg name="fixed_base" default="true"/>
+    <arg name="simulation" default="false"/>
 
-    <!--    Actor descriptions-->
-<!--     <include file="$(find mppi_manipulation)/launch/robot/observer.launch">
-        <arg name="fixed_base" value="$(arg fixed_base)"/>
-    </include>
-
-
- -->
  	<!-- Config file for controller -->
     <group if="$(arg fixed_base)">
         <param name="/config_file" value="$(find mppi_manipulation)/params/params.yaml"/>

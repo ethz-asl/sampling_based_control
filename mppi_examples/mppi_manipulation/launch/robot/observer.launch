@@ -2,7 +2,7 @@
 <launch>
     <arg name="test" default="false"/>
     <arg name="fixed_base" default="false"/>
-    <arg name="sim" default="false"/>
+    <arg name="simulation" default="false"/>
 
     <!--    World description-->
     <include file="$(find mppi_manipulation)/launch/load.launch">
@@ -12,23 +12,24 @@
     </include>
 
     <!-- Start the robot state controller publisher -->
-    <include file="$(find mppi_manipulation)/launch/robot/bringup.launch" unless="$(arg sim)"/>
-    <include file="$(find mppi_manipulation)/launch/sim/gazebo.launch" if="$(arg sim)"/>
+    <include file="$(find mppi_manipulation)/launch/robot/bringup.launch" unless="$(arg simulation)"/>
+    <include file="$(find mppi_manipulation)/launch/sim/gazebo.launch" if="$(arg simulation)"/>
 
-    <node name="ridgeback_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <param name="use_tf_static" value="true"/>
-        <param name="tf_prefix" value=""/>
+    <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state
+            (published either from gazebo or franka state publisher) -->
+    <node name="joint_state_publisher" type="joint_state_publisher" pkg="joint_state_publisher" output="screen">
+        <rosparam param="source_list">[/observer/base/joint_state, /panda/joint_states] </rosparam>
+        <param name="rate" value="200"/>
         <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states" to="/observer/robot/joint_state"/>
+        <remap from="joint_states" to="/observer/joint_states"/>
     </node>
 
-    <node name="arm_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <param name="use_tf_static" value="true"/>
         <param name="tf_prefix" value=""/>
         <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states" to="/panda/joint_states"/>
+        <remap from="joint_states" to="/observer/joint_states"/>
     </node>
 
     <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">

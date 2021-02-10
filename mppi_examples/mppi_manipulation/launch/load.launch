@@ -7,7 +7,7 @@
     <arg name="object_height" default="1.0"/>
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
-      resources_directory:='package://mppi_panda'
+      resources_prefix:='file://'
       collision_links:=false
       collision_hand:=true
       add_finger:=true
