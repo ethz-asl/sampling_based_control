@@ -36,8 +36,17 @@ bool ControllerRos::init() {
   init_default_params();
   init_default_ros();
   init_ros();
-  
-  bool ok = set_controller(controller_);
+
+  bool ok;
+  try{
+    ok = set_controller(controller_);
+  } catch (std::runtime_error& err){
+    ROS_ERROR_STREAM(err.what());
+    ok = false;
+  } catch (...){
+    ROS_ERROR("Unknown exception caught while setting the controller.");
+    ok = false;
+  }
   if (controller_ == nullptr || !ok) return false;
 
   initialized_ = true;
