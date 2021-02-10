@@ -92,6 +92,7 @@ void PathIntegral::init_data() {
       throw std::runtime_error(error.str());
     }
   }
+  step_count_ = 0;
   observation_set_ = false;
   reference_set_ = false;
 }
@@ -168,17 +169,21 @@ void PathIntegral::update_policy() {
       for (size_t t = 0; t < steps_; t++) {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
+      stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
     }
     swap_policies();
 
     if (renderer_) renderer_->render(rollouts_);
     if (config_.logging) {
       // data_.rollouts = rollouts_;
+      data_.step_count = step_count_;
+      data_.stage_cost = stage_cost_;
       data_.rollouts_cost = rollouts_cost_;
       data_.weights = omega;
       data_.optimization_time = 0.0;
       data_.reset_time = t0_internal_;
       data_.optimal_rollout = opt_roll_;
+      step_count_++;
     }
   }
 }

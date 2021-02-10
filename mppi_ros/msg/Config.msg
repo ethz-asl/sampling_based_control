@@ -15,6 +15,8 @@ float64 discount_factor
 bool verbose
 bool debug_print
 
+bool tree_search
+
 bool bound_input
 mppi_ros/Array input_min
 mppi_ros/Array input_max

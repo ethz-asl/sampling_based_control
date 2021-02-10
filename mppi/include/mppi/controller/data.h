@@ -12,6 +12,8 @@ namespace mppi {
 struct data_t {
   SolverConfig config;
 
+  double step_count;
+  double stage_cost;
   double reset_time;
   double optimization_time;
 

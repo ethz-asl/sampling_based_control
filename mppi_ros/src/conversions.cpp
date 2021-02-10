@@ -26,6 +26,7 @@ void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
   config_ros.input_max.array.assign(config.u_max.data(), config.u_max.data() + config.u_max.size());
   config_ros.filter_order = config.filter_order;
   config_ros.filter_window = config.filter_window;
+  config_ros.tree_search = config.use_tree_search;
 }
 
 void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros) {
@@ -60,7 +61,8 @@ void to_msg(const mppi::data_t& data, Data& data_ros) {
 //    to_msg(roll, rollout_ros);
 //    data_ros.rollouts.push_back(rollout_ros);
 //  }
-
+  data_ros.step_count = data.step_count;
+  data_ros.stage_cost = data.stage_cost;
   data_ros.reset_time = data.reset_time;
   data_ros.optimization_time = data.optimization_time;
   data_ros.rollouts_cost.array.assign(data.rollouts_cost.data(), data.rollouts_cost.data()+data.rollouts_cost.size());

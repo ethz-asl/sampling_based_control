@@ -348,6 +348,7 @@ class PathIntegral {
   double stage_cost_ = 0;  // stage_cost used for logging
   std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
 
+  size_t step_count_;  // total amount of solver optimization steps
   Timer timer_;
 };
 

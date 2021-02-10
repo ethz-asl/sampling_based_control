@@ -82,7 +82,12 @@ bool ControllerRos::start() {
 }
 
 bool ControllerRos::update_policy() { 
-  controller_->update_policy(); 
+  controller_->update_policy();
+
+  if (controller_->config_.logging){
+    mppi_ros::to_msg(controller_->get_data(), data_ros_);
+    data_publisher_.publish(data_ros_);
+  }
   return true;
 }
 
