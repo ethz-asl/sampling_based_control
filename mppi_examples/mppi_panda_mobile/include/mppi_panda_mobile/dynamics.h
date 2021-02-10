@@ -8,22 +8,22 @@
 
 #pragma once
 #include <pinocchio/fwd.hpp>
-#include <pinocchio/parsers/urdf.hpp>
+#include <pinocchio/algorithm/aba.hpp>
+#include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/model.hpp>
 #include <pinocchio/multibody/data.hpp>
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/aba.hpp>
+#include <pinocchio/parsers/urdf.hpp>
 
 #include <math.h>
-#include <iostream>
-#include <stdexcept>
-#include <Eigen/Core>
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
+#include <Eigen/Core>
+#include <iostream>
+#include <stdexcept>
 
-namespace panda_mobile{
+namespace panda_mobile {
 
-enum PandaMobileDim{
+enum PandaMobileDim {
   STATE_DIMENSION = 10,     // q, x, y, yaw
   INPUT_DIMENSION = 10,     // q_dot, x_dot, y_dot, yaw_dot
   REFERENCE_DIMENSION = 10  // x_t, x_q, obstacle_t
@@ -31,8 +31,8 @@ enum PandaMobileDim{
 
 class PandaMobileDynamics : public mppi::DynamicsBase {
  public:
-  PandaMobileDynamics(const std::string& robot_description): robot_description_(robot_description){
-
+  PandaMobileDynamics(const std::string& robot_description)
+      : robot_description_(robot_description) {
     x_ = observation_t::Zero(PandaMobileDim::STATE_DIMENSION);
 
     // init model
@@ -49,16 +49,14 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
     return std::make_shared<PandaMobileDynamics>(robot_description_);
   }
 
-  dynamics_ptr clone() const override {
-    return std::make_shared<PandaMobileDynamics>(*this);
-  }
+  dynamics_ptr clone() const override { return std::make_shared<PandaMobileDynamics>(*this); }
 
-  void reset(const observation_t &x) override;
+  void reset(const observation_t& x) override;
 
-  observation_t step(const input_t &u, const double dt) override;
+  observation_t step(const input_t& u, const double dt) override;
   input_t get_zero_input(const observation_t& x) override;
 
-	observation_t get_state() override;
+  const observation_t get_state() const override;
 
  private:
   observation_t x_;
@@ -66,8 +64,5 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
   std::string robot_description_;
   pinocchio::Model model_;
   pinocchio::Data data_;
-
 };
-}
-
-
+}  // namespace panda_mobile
