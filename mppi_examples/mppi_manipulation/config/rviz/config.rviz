@@ -4,10 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /TF1/Frames1
         - /World1/Panda1
-      Splitter Ratio: 0.5
-    Tree Height: 719
+        - /Observer1/Vicon Odometry1/Shape1
+      Splitter Ratio: 0.49884527921676636
+    Tree Height: 455
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -56,71 +56,87 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
+        axle_link:
+          Value: false
         base_link:
-          Value: true
+          Value: false
         chassis_link:
-          Value: true
+          Value: false
         door:
-          Value: true
+          Value: false
         door_hinge:
-          Value: true
+          Value: false
         franka_mount_link:
-          Value: true
+          Value: false
         front_cover_link:
-          Value: true
+          Value: false
         front_lights_link:
-          Value: true
+          Value: false
         handle_link:
-          Value: true
+          Value: false
         handle_support_left:
-          Value: true
+          Value: false
         handle_support_right:
-          Value: true
+          Value: false
+        imu_link:
+          Value: false
         left_side_cover_link:
-          Value: true
+          Value: false
         mid_mount:
-          Value: true
+          Value: false
+        odom:
+          Value: false
         omni_base_root_link:
-          Value: true
-        panda_base:
-          Value: true
+          Value: false
         panda_grasp:
           Value: true
         panda_hand:
-          Value: true
+          Value: false
+        panda_leftfinger:
+          Value: false
         panda_link0:
-          Value: true
+          Value: false
+        panda_link1:
+          Value: false
+        panda_link2:
+          Value: false
+        panda_link3:
+          Value: false
+        panda_link4:
+          Value: false
+        panda_link5:
+          Value: false
+        panda_link6:
+          Value: false
         panda_link7:
-          Value: true
+          Value: false
         panda_link8:
-          Value: true
+          Value: false
+        panda_rightfinger:
+          Value: false
         pivot:
-          Value: true
+          Value: false
         rear_cover_link:
-          Value: true
+          Value: false
         rear_lights_link:
-          Value: true
+          Value: false
         reference_link:
-          Value: true
+          Value: false
         ridgeback_sensor_mount_link:
-          Value: true
+          Value: false
         right_side_cover_link:
-          Value: true
+          Value: false
         shelf:
-          Value: true
-        shelf_door:
-          Value: true
+          Value: false
         top_link:
-          Value: true
-        vicon:
-          Value: true
+          Value: false
         world:
-          Value: true
+          Value: false
         x_slider:
-          Value: true
+          Value: false
         y_slider:
-          Value: true
+          Value: false
       Marker Alpha: 1
       Marker Scale: 0.699999988079071
       Name: TF
@@ -129,15 +145,21 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          odom:
+            {}
           omni_base_root_link:
             x_slider:
               y_slider:
                 pivot:
                   base_link:
                     chassis_link:
+                      axle_link:
+                        {}
                       front_cover_link:
                         {}
                       front_lights_link:
+                        {}
+                      imu_link:
                         {}
                       left_side_cover_link:
                         {}
@@ -152,7 +174,21 @@ Visualization Manager:
                     mid_mount:
                       franka_mount_link:
                         panda_link0:
-                          {}
+                          panda_link1:
+                            panda_link2:
+                              panda_link3:
+                                panda_link4:
+                                  panda_link5:
+                                    panda_link6:
+                                      panda_link7:
+                                        panda_link8:
+                                          panda_hand:
+                                            panda_grasp:
+                                              {}
+                                            panda_leftfinger:
+                                              {}
+                                            panda_rightfinger:
+                                              {}
                       reference_link:
                         {}
                       ridgeback_sensor_mount_link:
@@ -249,13 +285,17 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+            world:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
           Name: Object
           Robot Description: object_description
           TF Prefix: ""
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Alpha: 1
+        - Alpha: 0.20000000298023224
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -265,6 +305,11 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            axle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             base_link:
               Alpha: 1
               Show Axes: false
@@ -289,6 +334,10 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            imu_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             left_side_cover_link:
               Alpha: 1
               Show Axes: false
@@ -460,6 +509,41 @@ Visualization Manager:
           Topic: /observer/base_pose
           Unreliable: false
           Value: true
+        - Angle Tolerance: 0.10000000149011612
+          Class: rviz/Odometry
+          Covariance:
+            Orientation:
+              Alpha: 0.5
+              Color: 255; 255; 127
+              Color Style: Unique
+              Frame: Local
+              Offset: 1
+              Scale: 1
+              Value: true
+            Position:
+              Alpha: 0.30000001192092896
+              Color: 204; 51; 204
+              Scale: 1
+              Value: true
+            Value: true
+          Enabled: true
+          Keep: 1
+          Name: Vicon Odometry
+          Position Tolerance: 0.10000000149011612
+          Queue Size: 10
+          Shape:
+            Alpha: 1
+            Axes Length: 0.10000000149011612
+            Axes Radius: 0.009999999776482582
+            Color: 255; 25; 0
+            Head Length: 0.30000001192092896
+            Head Radius: 0.10000000149011612
+            Shaft Length: 1
+            Shaft Radius: 0.05000000074505806
+            Value: Axes
+          Topic: /panda_base/vrpn_client/estimated_odometry
+          Unreliable: false
+          Value: true
       Enabled: true
       Name: Observer
     - Class: rviz/Group
@@ -520,6 +604,30 @@ Visualization Manager:
             {}
           Queue Size: 100
           Value: true
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 25; 255; 0
+          Enabled: true
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.10000000149011612
+          Line Style: Lines
+          Line Width: 0.029999999329447746
+          Name: Optimal Base Path
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Pose Color: 255; 85; 255
+          Pose Style: Axes
+          Queue Size: 10
+          Radius: 0.009999999776482582
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
+          Topic: /optimal_base_trajectory
+          Unreliable: false
+          Value: true
       Enabled: true
       Name: Controller
   Enabled: true
@@ -550,7 +658,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.572157859802246
+      Distance: 2.9135489463806152
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -566,17 +674,17 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3417750597000122
+      Pitch: 0.626775324344635
       Target Frame: <Fixed Frame>
-      Yaw: 2.2737276554107666
+      Yaw: 1.5887264013290405
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 752
   Hide Left Dock: false
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001b30000035afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000035a000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007380000003efc0100000002fb0000000800540069006d0065010000000000000738000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000057f0000035a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001b300000252fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000252000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000056a0000003efc0100000002fb0000000800540069006d006501000000000000056a000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000003b10000025200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -585,6 +693,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 1848
-  X: 72
-  Y: 27
+  Width: 1386
+  X: 2005
+  Y: 89

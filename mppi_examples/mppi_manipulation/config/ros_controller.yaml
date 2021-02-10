@@ -2,15 +2,17 @@ joint_publisher:
   type: "joint_state_controller/JointStateController"
   publish_rate: 50
 
-royal_panda_manipulation_controller:
+controller_test:
+  type: manipulation/ControllerTest
+  fixed_base: false
+
+manipulation_controller:
   type: manipulation/RoyalPandaControllerRos
+  simulation: $(arg simulation)
   fixed_base: $(arg fixed_base)
   linear_weight: 10.0
   angular_weight: 1.0
   obstacle_radius: 0.1
-
-  debug: false
-  debug_amplitude: 0.0
 
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
   grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068]    # -90deg around y
@@ -25,6 +27,39 @@ royal_panda_manipulation_controller:
   base_gains: [1.0, 1.0, 0.1]
   base_filter_alpha: 0.0
   
+  publish_rate: 10.0
+  coriolis_factor: 1.0
+
+  state_topic: /observer/state
+  base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+
+  policy_update_rate: 0.0  # execute as fast as possible
+  reference_update_rate: 10.0
+  publish_ros: true
+  ros_publish_rate: 10.0
+  static_optimization: false
+
+manipulation_controller_sim:
+  type: manipulation/RoyalPandaControllerRos
+  simulation: $(arg simulation)
+  fixed_base: $(arg fixed_base)
+  linear_weight: 10.0
+  angular_weight: 1.0
+  obstacle_radius: 0.1
+
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068]    # -90deg around y
+
+  object_reference_position: 1.50   #  85 deg, slightly less than the limit (90 deg)
+
+  arm_id: panda
+  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  k_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
+  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+
+  base_gains: [1.0, 1.0, 0.1]
+  base_filter_alpha: 0.0
+
   publish_rate: 10.0
   coriolis_factor: 1.0
 
