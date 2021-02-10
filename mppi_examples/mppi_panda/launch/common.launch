@@ -5,7 +5,7 @@
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
     <arg name="joint_state_topic" default="/joint_states"/>
-    <arg name="record_bag" default="false"/>
+    <arg name="log_data" default="false"/>
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>
@@ -45,7 +45,7 @@
         </node>
     </group>
 
-    <node pkg="rosbag" type="record" name="rosbag"
-          args="record -o $(find mppi_panda)/bag/experiment /mppi_data"
-          if="$(arg record_bag)" />
+    <node pkg="mppi_ros" type="record_data.py" name="record_data">
+        <param name="experiment_id" value="mppi_panda"/>
+    </node>
 </launch>

@@ -5,7 +5,7 @@
     <arg name="plot_cost" default="false"/>
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
-    <arg name="record_bag" default="false"/>
+    <arg name="log_data" default="false"/>
 
     <arg name="description_file" default="$(find mppi_panda)/resources/panda/panda_standalone.urdf.xacro"/>
     <!-- TF prefix -->
@@ -35,7 +35,7 @@
         <arg name="plot_cost" value="$(arg plot_cost)"/>
         <arg name="plot_input" value="$(arg plot_input)"/>
         <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
-        <arg name="record_bag" value="$(arg record_bag)"/>
+        <arg name="log_data" value="$(arg log_data)"/>
     </include>
 </launch>
 
