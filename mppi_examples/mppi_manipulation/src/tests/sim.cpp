@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   vis->initApp();
 
   /// create raisim objects
-  auto panda = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/panda.urdf", "/");
+  auto panda = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/panda_mobile_fixed.urdf", "/");
   auto door = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/objects/shelf.urdf");
   auto ground = world.addGround(-1);
   //ground->setName("checkerboard"); /// not necessary here but once you set name, you can later retrieve it using raisim::World::getObject()
