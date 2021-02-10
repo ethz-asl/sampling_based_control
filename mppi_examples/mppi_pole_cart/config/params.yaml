@@ -4,17 +4,17 @@ dynamics:
   length: 1.0
   linear_friction: 1.0
   angular_friction: 0.7
-  substep_size: 0.001
+  substep_size: 0.01
 
 solver:
-  rollouts: 100
+  rollouts: 200
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
   horizon: 2.0
 
   cost_ratio: 0.2
-  caching_factor: 0.2
+  caching_factor: 0.1
   filtering: false
   substeps: 1
 
@@ -27,7 +27,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 8
+  threads: 1
   debug_print: false
 
   use_tree_search: false
