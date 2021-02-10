@@ -13,6 +13,7 @@ using namespace manipulation;
 
 bool PandaControllerInterface::init_ros() {
   optimal_trajectory_publisher_ = nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
+  optimal_base_trajectory_publisher_ = nh_.advertise<nav_msgs::Path>("/optimal_base_trajectory", 10);
   obstacle_marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
 
   mode_subscriber_ = nh_.subscribe("/mode", 10, &PandaControllerInterface::mode_callback, this);
@@ -43,6 +44,7 @@ bool PandaControllerInterface::init_ros() {
   obstacle_pose_.header.seq = last_ob_ref_id_;
 
   optimal_path_.header.frame_id = "world";
+  optimal_base_path_.header.frame_id = "world";
   return true;
 }
 
@@ -95,9 +97,11 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
     throw std::runtime_error("Could not parse fixed_base. Is the parameter set?");
   }
+  ROS_INFO_STREAM("Fixed base? " << fixed_base_);
 
   dynamics = std::make_shared<PandaRaisimDynamics>(
       robot_description_raisim, object_description_raisim, config_.step_size, fixed_base_);
+  std::cout << "Done." << std::endl;
 
   // -------------------------------
   // cost
@@ -203,6 +207,20 @@ geometry_msgs::PoseStamped PandaControllerInterface::pose_pinocchio_to_ros(
   return pose_ros;
 }
 
+geometry_msgs::PoseStamped PandaControllerInterface::get_pose_base(const mppi::observation_t& x){
+  geometry_msgs::PoseStamped pose_ros;
+  pose_ros.header.stamp = ros::Time::now();
+  pose_ros.header.frame_id = "world";
+  pose_ros.pose.position.x = x(0);
+  pose_ros.pose.position.y = x(1);
+  pose_ros.pose.position.z = 0.0;
+  pose_ros.pose.orientation.x = 0.0;
+  pose_ros.pose.orientation.y = 0.0;
+  pose_ros.pose.orientation.z = std::sin(0.5 * x(2));
+  pose_ros.pose.orientation.w = std::cos(0.5 * x(2));
+  return pose_ros;
+}
+
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
     const Eigen::VectorXd& x) {
   pinocchio::SE3 pose = get_pose_end_effector(x);
@@ -222,11 +240,20 @@ void PandaControllerInterface::publish_ros() {
 
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
+
+  optimal_base_path_.header.stamp = ros::Time::now();
+  optimal_base_path_.poses.clear();
+
   pinocchio::SE3 pose_temp;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_) {
     optimal_path_.poses.push_back(pose_pinocchio_to_ros(get_pose_end_effector(x)));
+    if (!fixed_base_)
+      optimal_base_path_.poses.push_back(get_pose_base(x));
   }
+
   optimal_trajectory_publisher_.publish(optimal_path_);
+
+  if (!fixed_base_) optimal_base_trajectory_publisher_.publish(optimal_base_path_);
 }

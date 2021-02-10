@@ -32,6 +32,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   geometry_msgs::PoseStamped pose_pinocchio_to_ros(const pinocchio::SE3& pose);
   geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
 
  private:
   void init_model(const std::string& robot_description, const std::string& object_description);
@@ -66,6 +67,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   // ros
   ros::Publisher optimal_trajectory_publisher_;
+  ros::Publisher optimal_base_trajectory_publisher_;
   ros::Publisher obstacle_marker_publisher_;
 
   ros::Subscriber mode_subscriber_;
@@ -73,6 +75,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   ros::Subscriber ee_pose_desired_subscriber_;
 
   nav_msgs::Path optimal_path_;
+  nav_msgs::Path optimal_base_path_;
   geometry_msgs::PoseStamped obstacle_pose_;
   geometry_msgs::PoseStamped ee_desired_pose_;
   visualization_msgs::Marker obstacle_marker_;
