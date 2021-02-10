@@ -27,7 +27,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 1  # it works only with one thread ... investigate this further
   debug_print: false
 
   use_tree_search: false
