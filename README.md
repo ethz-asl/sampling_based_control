@@ -7,6 +7,7 @@ Create a ROS workspace and install the following dependencies.
 - Clone the following repos in the src folder of your catkin workspace:
     - Dependency of `any_worker`: `git clone git@github.com:ANYbotics/message_logger.git`
     - Required for multi-threading: `git clone git@github.com:ANYbotics/any_node.git`
+    - Robot control utilities: `git clone git@github.com:ethz-asl/robot_control.git`
     - This repo: `git clone git@github.com:ethz-asl/sampling_based_control.git`
 - Install additional dependencies script which is in the `sampling_based_control` repo:  `sudo ./install_dependencies.sh`
     

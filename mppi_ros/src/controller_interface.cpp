@@ -117,7 +117,7 @@ bool ControllerRos::publish_ros_thread(const any_worker::WorkerEvent &event) {
 }
 
 void ControllerRos::publish_stage_cost() {
-  stage_cost_.data = 0.0;  // TODO(giuseppe) see how to do this
+  stage_cost_.data = controller_->get_stage_cost();  // TODO(giuseppe) see how to do this
   cost_publisher_.publish(stage_cost_);
 }
 

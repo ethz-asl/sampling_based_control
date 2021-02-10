@@ -14,6 +14,7 @@
 #include <random>
 #include <shared_mutex>
 #include <vector>
+#include <boost/filesystem.hpp>
 
 #include <Eigen/Core>
 
@@ -26,6 +27,9 @@
 #include "mppi/utils/thread_pool.h"
 #include "mppi/visualization/rederer.h"
 #include "mppi/controller/data.h"
+#include "mppi/tree/tree_manager.h"
+#include "mppi/experts/expert.h"
+#include "mppi/utils/timer.h"
 
 namespace mppi {
 
@@ -41,6 +45,7 @@ class PathIntegral {
   using observation_t = DynamicsBase::observation_t;
   using observation_array_t = std::vector<observation_t>;
   using renderer_ptr = std::shared_ptr<Renderer>;
+  using expert_ptr = Expert::expert_ptr;
 
   /**
    * @brief Path Integral Control class
@@ -72,6 +77,16 @@ class PathIntegral {
    * 1)
    */
   void init_threading();
+
+	/**
+   * @brief Initializes the variables for the tree manager
+   */
+  void init_tree_manager_dynamics();
+
+  /**
+   * @brief Calculates and displays the frequency of the control loop
+   */
+  void time_it();
 
  public:
   /**
@@ -116,6 +131,20 @@ class PathIntegral {
    * one rollout is a noise free one.
    */
   void sample_trajectories();
+
+  /**
+   * @brief Samples multiple control trajectories using a FD-MCTS. Based on a
+   * pruning threshold the structure of the tree can be controlled. The last
+   * optimal rollout is always fully propagated through the tree.
+   */
+  void sample_trajectories_via_tree();
+
+  /**
+   * @brief Overwrites the rollouts, since the tree has no direct access to the
+   * PathIntegral class.
+   */
+  void overwrite_rollouts();
+
 
   /**
    * @brief Use the data collected from rollouts and return the optimal input
@@ -163,6 +192,11 @@ class PathIntegral {
    * @brief Initializes rollouts for the first time
    */
   void initialize_rollouts();
+
+	/**
+	 * @brief Update the experts based on data from last iteration
+	 */
+	void update_experts();
 
   /**
    * @brief Fill the optimized policy cache with the latest policy and set flags
@@ -224,7 +258,6 @@ class PathIntegral {
    * while the public one can be potentially changed by a different thread.
    */
   void copy_observation();
-
   /**
    * @brief Set the reference of the cost function to the latest received for
    * the new optimization
@@ -233,6 +266,7 @@ class PathIntegral {
 
   // Generic getters
   inline const Eigen::ArrayXd& get_weights() const { return omega; }
+  inline double get_stage_cost() { return stage_cost_; }
   inline double get_rollout_cost() { return rollouts_cost_.minCoeff(); }
   inline double get_rollout_min_cost() { return rollouts_cost_.minCoeff(); }
   inline double get_rollout_max_cost() { return rollouts_cost_.maxCoeff(); }
@@ -262,6 +296,7 @@ class PathIntegral {
   config_t config_;
   SavGolFilter filter_;
   sampler_ptr sampler_;
+
 
   dynamics_ptr dynamics_;
   size_t cached_rollouts_;
@@ -294,23 +329,26 @@ class PathIntegral {
   std::shared_mutex rollout_cache_mutex_;  // protects access to the solution
   std::shared_mutex state_mutex_;          // protects access to the state
 
-  std::atomic_bool
-      reference_set_;  // flag to check that reference has ever been set
-  std::shared_mutex
-      reference_mutex_;  // protects access to the reference trajectory
+  std::atomic_bool reference_set_;  // flag to check that reference has ever been set
+  std::shared_mutex reference_mutex_;  // protects access to the reference trajectory
   reference_trajectory_t rr_tt_ref_;  // reference used during optimization
 
   std::unique_ptr<ThreadPool> pool_;  // thread pool
-  std::vector<std::future<void>>
-      futures_;  // futures results from the thread pool
-  std::vector<dynamics_ptr>
-      dynamics_v_;  // vector of dynamics functions used per each thread
-  std::vector<cost_ptr>
-      cost_v_;  // vector of cost functions used per each thread
+  std::vector<std::future<void>>futures_;  // futures results from the thread pool
+  std::vector<dynamics_ptr> dynamics_v_;  // vector of dynamics functions used per each thread
+  std::vector<cost_ptr> cost_v_;  // vector of cost functions used per each thread
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 
   data_t data_;
+
+  Expert expert_;  // expert class gives access to all experts implemented
+  TreeManager tree_manager_;  // tree_manager class controls the building of the tree
+  std::vector<dynamics_ptr> tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts) for multithreading
+  double stage_cost_ = 0;  // stage_cost used for logging
+  std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
+
+  Timer timer_;
 };
 
 }  // namespace mppi

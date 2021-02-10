@@ -1,1 +1,4 @@
 *.bag
+.idea/
+cmake-build-release/
+cmake-build-debug/
