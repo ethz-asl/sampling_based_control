@@ -4,7 +4,7 @@ project(mppi_manipulation)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
-option(BUILD_OGRE_EXAMPLE "Build the ogre example." OFF)
+option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." ON)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
@@ -20,6 +20,7 @@ set(PACKAGE_DEPENDENCIES
         mppi_ros
         roslib
         roscpp
+        robot_control
         controller_interface
         franka_hw
         hardware_interface
@@ -52,19 +53,32 @@ add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_raisim ${PROJECT_NAME})
 
-if (BUILD_OGRE_EXAMPLE)
+if (${BUILD_WITH_OGRE})
   find_package(raisimOgre CONFIG REQUIRED)
   add_executable(sim_ogre src/tests/sim.cpp)
   target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
   add_dependencies(sim_ogre ${PROJECT_NAME})
-endif(BUILD_OGRE_EXAMPLE)
+
+  add_executable(raisim_rendering_node src/nodes/raisim_rendering_node.cpp)
+  target_link_libraries(raisim_rendering_node PUBLIC ${PROJECT_NAME} ${catkin_LIBRARIES} raisim::raisimOgre)
+  add_dependencies(raisim_rendering_node ${PROJECT_NAME})
+endif()
 
 
 add_library(${PROJECT_NAME}_controller
         src/ros/royal_panda_controller_ros.cpp)
-target_include_directories(${PROJECT_NAME}_controller PUBLIC ${Franka_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_controller ${PROJECT_NAME} ${Franka_LIBRARIES})
+target_include_directories(${PROJECT_NAME}_controller PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_controller ${PROJECT_NAME} ${catkin_LIBRARIES} ${Franka_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_controller ${PROJECT_NAME})
+
+add_library(controller_test src/ros/controller_test.cpp)
+target_include_directories(controller_test PUBLIC ${catkin_INCLUDE_DIRS})
+target_link_libraries(controller_test ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(controller_test ${PROJECT_NAME})
+
+add_executable(controller_node src/nodes/controller_node.cpp)
+target_link_libraries(controller_node ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(controller_test ${PROJECT_NAME})
 
 add_executable(base_odometry_dummy_node src/test/base_odometry_dummy_node.cpp)
 target_link_libraries(base_odometry_dummy_node ${catkin_LIBRARIES})
