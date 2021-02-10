@@ -4,6 +4,8 @@
 
 #pragma once
 #include "manipulation_msgs/State.h"
+#include "manipulation_msgs/Input.h"
+#include "manipulation_msgs/InputState.h"
 
 #include <Eigen/Core>
 
@@ -12,6 +14,10 @@ namespace manipulation::conversions {
 void msgToEigen(const manipulation_msgs::State& stateRos, Eigen::VectorXd& state);
 
 void eigenToMsg(const Eigen::VectorXd& state, manipulation_msgs::State&);
+
+void msgToEigen(const manipulation_msgs::Input& inputRos, Eigen::VectorXd& input);
+
+void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input&);
 
 void toEigenState(const Eigen::Vector3d& base_pose, const Eigen::Vector3d& base_twist,
                   const Eigen::VectorXd& arm_position, const Eigen::VectorXd& arm_velocity,

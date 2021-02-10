@@ -76,6 +76,43 @@ void eigenToMsg(const Eigen::VectorXd &state, manipulation_msgs::State &stateRos
   }
 }
 
+void msgToEigen(const manipulation_msgs::Input& inputRos, Eigen::VectorXd& input){
+  if (inputRos.mode == manipulation_msgs::Input::FIXED_BASE){
+    input = Eigen::VectorXd::Zero(manipulation_msgs::Input::FIXED_BASE_SIZE);
+    for (size_t i=0; i<7; i++)
+      input(i) = inputRos.joint_velocities[i];  // gripper stays at zero
+  }
+  else{
+    input = Eigen::VectorXd::Zero(manipulation_msgs::Input::MOVING_BASE_SIZE);
+    input(0) = inputRos.base_twist.linear.x;
+    input(1) = inputRos.base_twist.linear.y;
+    input(2) = inputRos.base_twist.angular.z;
+    for (size_t i=0; i<7; i++)
+      input(3+i) = inputRos.joint_velocities[i]; // gripper stays at zero
+  }
+}
+
+void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input& inputRos){
+  if (input.size() == manipulation_msgs::Input::FIXED_BASE_SIZE){
+    inputRos.joint_velocities.resize(manipulation_msgs::Input::FIXED_BASE_SIZE);
+    for (size_t i=0; i<8; i++)
+      inputRos.joint_velocities[i] = input(i);
+  }
+  else if (input.size() == manipulation_msgs::Input::MOVING_BASE_SIZE){
+    inputRos.base_twist.linear.x = input(0);
+    inputRos.base_twist.linear.x = input(1);
+    inputRos.base_twist.linear.x = input(2);
+    inputRos.joint_velocities.resize(manipulation_msgs::Input::MOVING_BASE_SIZE);
+    for (size_t i=0; i<8; i++)
+      inputRos.joint_velocities[i] = input(3+i);
+  }
+}
+
+
+void eigenToMsg(const Eigen::VectorXd& inputState, manipulation_msgs::InputState&);
+
+
+
 void toEigenState(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
                   const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
                   const double &object_position, const double &object_velocity,

@@ -1,3 +1,4 @@
+std_msgs/Header header
 int32 mode
 geometry_msgs/Vector3 base_pose
 geometry_msgs/Twist base_twist
