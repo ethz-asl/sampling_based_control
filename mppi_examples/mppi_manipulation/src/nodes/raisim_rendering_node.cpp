@@ -94,17 +94,14 @@ int main(int argc, char** argv) {
 
   /// create visualizer objects
   auto ground_graphics = vis->createGraphicalObject(ground, 20, "floor", "checkerboard_green");
-  auto object_graphics = vis->createGraphicalObject(dynamics.object, "object");
-  auto panda_graphics = vis->createGraphicalObject(dynamics.panda, "panda");
-
-  dynamics.panda->setPdGains(Eigen::VectorXd::Zero(dynamics.panda->getDOF()), Eigen::VectorXd::Zero(dynamics.panda->getDOF()));
+  auto object_graphics = vis->createGraphicalObject(dynamics.get_object(), "object");
+  auto panda_graphics = vis->createGraphicalObject(dynamics.get_panda(), "panda");
 
   mppi::DynamicsBase::observation_t current_state;
 
   auto cb = [&](const manipulation_msgs::StateConstPtr& msg){
     manipulation::conversions::msgToEigen(*msg, current_state);
     dynamics.reset(current_state);
-    dynamics.panda->setGeneralizedForce(dynamics.panda->getNonlinearities());
   };
 
   ros::Subscriber current_state_subscriber = nh.subscribe<manipulation_msgs::State>("/observer/state", 1, cb);
