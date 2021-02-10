@@ -21,12 +21,6 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
 
-  // activate raisim
-  std::string activation_file;
-  nh.param<std::string>("activation_file", activation_file,
-                        "/home/giuseppe/git/raisimlib/rsc/activation.raisim");
-  raisim::World::setActivationKey(activation_file);
-
   // ros interface
   auto controller = PandaControllerInterface(nh);
 
