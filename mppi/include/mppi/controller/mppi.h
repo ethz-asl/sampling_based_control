@@ -81,12 +81,12 @@ class PathIntegral {
 	/**
    * @brief Initializes the variables for the tree manager
    */
-	void init_tree_manager_dynamics();
+  void init_tree_manager_dynamics();
 
   /**
    * @brief Calculates and displays the frequency of the control loop
    */
-	void time_it();
+  void time_it();
 
  public:
   /**
@@ -328,19 +328,14 @@ class PathIntegral {
   std::shared_mutex rollout_cache_mutex_;  // protects access to the solution
   std::shared_mutex state_mutex_;          // protects access to the state
 
-  std::atomic_bool
-      reference_set_;  // flag to check that reference has ever been set
-  std::shared_mutex
-      reference_mutex_;  // protects access to the reference trajectory
+  std::atomic_bool reference_set_;  // flag to check that reference has ever been set
+  std::shared_mutex reference_mutex_;  // protects access to the reference trajectory
   reference_trajectory_t rr_tt_ref_;  // reference used during optimization
 
   std::unique_ptr<ThreadPool> pool_;  // thread pool
-  std::vector<std::future<void>>
-      futures_;  // futures results from the thread pool
-  std::vector<dynamics_ptr>
-      dynamics_v_;  // vector of dynamics functions used per each thread
-  std::vector<cost_ptr>
-      cost_v_;  // vector of cost functions used per each thread
+  std::vector<std::future<void>>futures_;  // futures results from the thread pool
+  std::vector<dynamics_ptr> dynamics_v_;  // vector of dynamics functions used per each thread
+  std::vector<cost_ptr> cost_v_;  // vector of cost functions used per each thread
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 

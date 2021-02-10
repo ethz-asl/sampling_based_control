@@ -1,6 +1,6 @@
 /*!
  * @file     node.cpp
- * @author   Etienne Walther
+ * @author   Etienne Walther, Giuseppe Rizzi
  * @date     08.12.2020
  * @version  1.0
  * @brief    description
