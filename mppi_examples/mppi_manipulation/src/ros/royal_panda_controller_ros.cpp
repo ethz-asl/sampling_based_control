@@ -20,26 +20,41 @@ namespace manipulation {
 bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
                                    ros::NodeHandle& node_handle) {
   if (!init_parameters(node_handle)) return false;
-  if (!init_interfaces(robot_hw)) return false;
+  if (!init_common_interfaces(robot_hw)) return false;
+  if (!init_franka_interfaces(robot_hw)) return false;
   if (!init_ros(node_handle)) return false;
-  //if (!init_model(node_handle)) return false;
 
   std::fill(dq_filtered_.begin(), dq_filtered_.end(), 0);
 
-  if (!debug_){
+  if (sim_) {
+    std::string arm_description;
+    if (!node_handle.getParam("/arm_description", arm_description)) {
+      ROS_ERROR("Could not find arm_description on the param server.");
+      return false;
+    }
+    robot_model_ = std::make_unique<rc::RobotWrapper>();
+    robot_model_->initFromXml(arm_description);
+  }
+  else{
     man_interface_ = std::make_unique<manipulation::PandaControllerInterface>(node_handle);
     if (!man_interface_->init()) {
       ROS_ERROR("Failed to initialized manipulation interface");
       return false;
     }
-    ROS_INFO("Controller successfully initialized!");
+    ROS_INFO("Solver initialized correctly.");
   }
 
+  ROS_INFO("Controller successfully initialized!");
   started_ = false;
   return true;
 }
 
 bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
+  if (!node_handle.getParam("simulation", sim_)) {
+    ROS_ERROR("RoyalPandaControllerRos: Could not read parameter simulation");
+    return false;
+  }
+
   if (!node_handle.getParam("fixed_base", fixed_base_)) {
     ROS_ERROR("RoyalPandaControllerRos: Could not read parameter fixed_base");
     return false;
@@ -80,10 +95,12 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
   }
   base_gains_ << base_gains[0], base_gains[1], base_gains[2];
 
-  if (!node_handle.getParam("base_filter_alpha", base_filter_alpha_) || (base_filter_alpha_ < 0) || (base_filter_alpha_ > 1)) {
+  if (!node_handle.getParam("base_filter_alpha", base_filter_alpha_) || (base_filter_alpha_ < 0) ||
+      (base_filter_alpha_ > 1)) {
     ROS_ERROR_STREAM(
         "RoyalPandaControllerRos:  Invalid or no base_filter_alpha parameters provided, aborting "
-        "controller init!" << base_filter_alpha_);
+        "controller init!"
+        << base_filter_alpha_);
     return false;
   }
 
@@ -109,17 +126,32 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
                     << coriolis_factor_);
   }
 
-  node_handle.param<bool>("debug", debug_, true);
-  if (debug_) ROS_WARN_STREAM("In debug mode: running controller with debug velocity commands.");
-
-  node_handle.param<double>("debug_amplitude", amplitude_, 0.0);
-  if (debug_) ROS_WARN_STREAM("Debug amplitude is: " << amplitude_);
-
   ROS_INFO("[RoyalPandaControllerRos::init_parameters]: Parameters successfully initialized.");
   return true;
 }
 
-bool RoyalPandaControllerRos::init_interfaces(hardware_interface::RobotHW* robot_hw) {
+bool RoyalPandaControllerRos::init_common_interfaces(hardware_interface::RobotHW* robot_hw) {
+  // Effort interface for compliant control
+  auto* effort_joint_interface = robot_hw->get<hardware_interface::EffortJointInterface>();
+  if (effort_joint_interface == nullptr) {
+    ROS_ERROR_STREAM("RoyalPandaControllerRos: Error getting effort joint interface from hardware");
+    return false;
+  }
+  for (size_t i = 0; i < 7; ++i) {
+    try {
+      joint_handles_.push_back(effort_joint_interface->getHandle(joint_names_[i]));
+    } catch (const hardware_interface::HardwareInterfaceException& ex) {
+      ROS_ERROR_STREAM("RoyalPandaControllerRos: Exception getting joint handles: " << ex.what());
+      return false;
+    }
+  }
+  ROS_INFO("[RoyalPandaControllerRos::init_common_interfaces]: Interfeces successfully initialized.");
+  return true;
+}
+
+bool RoyalPandaControllerRos::init_franka_interfaces(hardware_interface::RobotHW* robot_hw) {
+  if (sim_) return true;
+
   // Model interface: returns kino-dynamic properties of the manipulator
   auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
   if (model_interface == nullptr) {
@@ -149,36 +181,21 @@ bool RoyalPandaControllerRos::init_interfaces(hardware_interface::RobotHW* robot
         "RoyalPandaControllerRos: Exception getting state handle from interface: " << ex.what());
     return false;
   }
-
-  // Effort interface for compliant control
-  auto* effort_joint_interface = robot_hw->get<hardware_interface::EffortJointInterface>();
-  if (effort_joint_interface == nullptr) {
-    ROS_ERROR_STREAM("RoyalPandaControllerRos: Error getting effort joint interface from hardware");
-    return false;
-  }
-  for (size_t i = 0; i < 7; ++i) {
-    try {
-      joint_handles_.push_back(effort_joint_interface->getHandle(joint_names_[i]));
-    } catch (const hardware_interface::HardwareInterfaceException& ex) {
-      ROS_ERROR_STREAM("RoyalPandaControllerRos: Exception getting joint handles: " << ex.what());
-      return false;
-    }
-  }
-
-  ROS_INFO("[RoyalPandaControllerRos::init_interfaces]: Interfaces successfully initialized.");
+  ROS_INFO("[RoyalPandaControllerRos::iinit_franka_interfaces]: Interfaces successfully initialized.");
   return true;
 }
 
 bool RoyalPandaControllerRos::init_ros(ros::NodeHandle& node_handle) {
+  input_state_subscriber_ = node_handle.subscribe("/controller/input_state", 1, &RoyalPandaControllerRos::input_state_callback, this);
   torques_publisher_.init(node_handle, "torque_comparison", 1);
   base_twist_publisher_.init(node_handle, base_twist_topic_, 1);
   state_subscriber_ =
       node_handle.subscribe(state_topic_, 1, &RoyalPandaControllerRos::state_callback, this);
   ROS_INFO_STREAM("Sending base commands to: " << base_twist_topic_ << std::endl
-                  << "Received state at: " << state_topic_);
+                                               << "Receiving state at: " << state_topic_);
   nominal_state_publisher_.init(node_handle, "/x_nom", 1);
-  x_model_publisher_.init(node_handle, "/x_model", 1);
   world_twist_publisher_ = node_handle.advertise<geometry_msgs::TwistStamped>("/base_twist", 1);
+  ROS_INFO("[RoyalPandaControllerRos::init_ros]: Ros successfully initialized.");
   return true;
 }
 
@@ -186,63 +203,128 @@ void RoyalPandaControllerRos::state_callback(const manipulation_msgs::StateConst
   if (!started_) return;
 
   manipulation::conversions::msgToEigen(*state_msg, x_);
-  man_interface_->set_observation(x_, ros::Time::now().toSec());
   x_ros_ = *state_msg;
-  
+
+  if (!sim_){
+    man_interface_->set_observation(x_, ros::Time::now().toSec());
+  }
+
   if (!state_received_) {
     state_received_ = true;
     state_last_receipt_time_ = ros::Time::now().toSec();
-    //model_->reset(x_);
-    //model_thread_ = std::thread(&RoyalPandaControllerRos::run_model, this);
   } else {
     double current_time = ros::Time::now().toSec();
     double elapsed = current_time - state_last_receipt_time_;
     if (elapsed > 0.01) {
       state_ok_ = false;
-      ROS_WARN_STREAM_THROTTLE(2.0, 
-          "[RoyalPandaControllerRos::state_callback] State update is too slow. Current delay: "
-          << elapsed);
+      ROS_DEBUG_STREAM_THROTTLE(
+          2.0, "[RoyalPandaControllerRos::state_callback] State update is too slow. Current delay: "
+                   << elapsed);
     }
     state_last_receipt_time_ = current_time;
   }
 }
 
+void RoyalPandaControllerRos::input_state_callback(const manipulation_msgs::InputStateConstPtr& msg){
+  manipulation::conversions::msgToEigen(msg->state, x_nom_);
+  manipulation::conversions::msgToEigen(msg->input, u_);
+}
+
 void RoyalPandaControllerRos::starting(const ros::Time& time) {
   if (started_) return;
-  
-  if (!debug_ && !started_){
+
+  if (!started_ && !sim_) {
     if (!man_interface_->start()) {
       ROS_ERROR("[RoyalPandaControllerRos::starting] Failed  to start controller");
       started_ = false;
       return;
     }
-    started_ = true;
-    stopped_ = false;
   }
 
-  // initial configuration
-  robot_state_ = state_handle_->getRobotState();
-  for (size_t i=0; i<7; i++){
-    qd_[i] = robot_state_.q[i];
-  }
+  // integral behavior
+  for (size_t i = 0; i < 7; i++) { qd_[i] = joint_handles_[i].getPosition(); }
 
-  start_time_ = time.toSec();
   started_ = true;
-  stopped_ = false;
+  ROS_INFO("[RoyalPandaControllerRos::starting] Controller started!");
 }
 
-bool RoyalPandaControllerRos::init_model(ros::NodeHandle& nh){
-  auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
-  auto object_description_raisim = nh.param<std::string>("/object_description_raisim", "");
+void RoyalPandaControllerRos::send_command_base(const ros::Duration& period) {
+  if (base_trigger_() && base_twist_publisher_.trylock()) {
+    Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x, x_nom_ros_.base_twist.linear.y,
+                                  x_nom_ros_.base_twist.angular.z);
 
-  model_ = std::make_unique<manipulation::ManipulatorDynamicsRos>(
-      nh, robot_description_raisim, object_description_raisim, 0.015, fixed_base_);
-  return true;
+    Eigen::Matrix3d r_world_base;
+    double theta = x_ros_.base_pose.z;
+    r_world_base << std::cos(theta), -std::sin(theta), 0.0, std::sin(theta), std::cos(theta), 0.0,
+        0.0, 0.0, 1.0;
+    Eigen::Matrix3d r_base_world = r_world_base.transpose();
+    Eigen::Vector3d twist_cmd = r_base_world * twist_nominal;
+
+    base_twist_publisher_.msg_.linear.x = twist_cmd.x();
+    base_twist_publisher_.msg_.linear.y = twist_cmd.y();
+    base_twist_publisher_.msg_.angular.z = twist_cmd.z();
+    base_twist_publisher_.unlockAndPublish();
+
+    twist_stamped_.twist = x_nom_ros_.base_twist;
+    twist_stamped_.header.frame_id = "world";
+    twist_stamped_.header.stamp = ros::Time::now();
+    world_twist_publisher_.publish(twist_stamped_);
+  }
+}
+
+void RoyalPandaControllerRos::send_command_arm(const ros::Duration& period) {
+  if (sim_) {
+    Eigen::Matrix<double, 9, 1> q = Eigen::Matrix<double, 9, 1>::Zero();
+    Eigen::Matrix<double, 9, 1> v = Eigen::Matrix<double, 9, 1>::Zero();
+    for (size_t i = 0; i < 7; i++) {
+      q[i] = joint_handles_[i].getPosition();
+      v[i] = joint_handles_[i].getVelocity();
+    }
+
+    robot_model_->updateState(q, v);
+    robot_model_->computeAllTerms();
+    Eigen::VectorXd tau = robot_model_->getNonLinearTerms();
+
+    for (size_t i = 0; i < 7; i++) {
+      qd_[i] += u_.tail<8>()(i) * period.toSec();
+      tau[i] += k_gains_[i] * (qd_[i] - q[i]) + d_gains_[i] * (u_.tail<8>()[i] - v[i]);
+      joint_handles_[i].setCommand(tau[i]);
+    }
+  } else {
+    robot_state_ = state_handle_->getRobotState();
+    std::array<double, 7> coriolis = model_handle_->getCoriolis();
+    std::array<double, 7> gravity = model_handle_->getGravity();
+
+    double alpha = 0.99;
+    for (size_t i = 0; i < 7; i++) {
+      dq_filtered_[i] = (1 - alpha) * dq_filtered_[i] + alpha * robot_state_.dq[i];
+    }
+
+    std::array<double, 7> tau_d_calculated{};
+    for (size_t i = 0; i < 7; ++i) {
+      tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
+      qd_[i] += u_.tail<8>()(i) * period.toSec();
+      tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
+                            k_gains_[i] * (qd_[i] - robot_state_.q[i]) +
+                            d_gains_[i] * (u_.tail<8>()(i) - dq_filtered_[i]);
+    }
+
+    // Maximum torque difference with a sampling rate of 1 kHz. The maximum torque rate is
+    // 1000 * (1 / sampling_time).
+    std::array<double, 7> tau_d_saturated =
+        saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d);
+
+    for (size_t i = 0; i < 7; ++i) {
+      joint_handles_[i].setCommand(tau_d_saturated[i]);
+    }
+  }
 }
 
 void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration& period) {
   if (!started_) {
-    ROS_ERROR_ONCE("[RoyalPandaControllerRos::update]: Controller not started. Probably some error occourred...");
+    ROS_ERROR_ONCE(
+        "[RoyalPandaControllerRos::update]: Controller not started. Probably some error "
+        "occourred...");
     return;
   }
 
@@ -251,162 +333,23 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
     return;
   }
 
-  if (!debug_){
-    std::unique_lock<std::shared_mutex> lock(input_mutex_);
-    //man_interface_->get_input(x_, u_, time.toSec());
+  if (!sim_){
+    // TODO(giuseppe) supposed to provide all the time the next solver step
     man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() + 0.015);
-    conversions::eigenToMsg(x_nom_, x_nom_ros_);
   }
 
-  robot_state_ = state_handle_->getRobotState();
-  std::array<double, 7> coriolis = model_handle_->getCoriolis();
-  std::array<double, 7> gravity = model_handle_->getGravity();
+  conversions::eigenToMsg(x_nom_, x_nom_ros_);
 
-  double alpha = 0.99;
-  for (size_t i = 0; i < 7; i++) {
-    dq_filtered_[i] = (1 - alpha) * dq_filtered_[i] + alpha * robot_state_.dq[i];
-  }
+  send_command_arm(period);
+  if (!fixed_base_) send_command_base(period);
 
-  std::array<double, 7> tau_d_calculated{};
-  for (size_t i = 0; i < 7; ++i) {
-    tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
-    if (!debug_) {
-      qd_[i] += u_.tail<8>()(i) * period.toSec();
-      tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
-                            k_gains_[i] * (qd_[i] - robot_state_.q[i]) +
-                            d_gains_[i] * (u_.tail<8>()(i) - dq_filtered_[i]);
-    } 
-    else {
-      double dt = ros::Time::now().toSec() - start_time_;
-      double speed_desired = 0;
-      double position_desired = qd_[i];
-      if (i==0){
-        position_desired += amplitude_ * std::sin(2 * M_PI * dt * frequency_);
-        speed_desired = amplitude_ * 2 * M_PI * frequency_ * std::cos(2 * M_PI * dt * frequency_);
-      }
-      tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
-                            k_gains_[i] * (position_desired - robot_state_.q[i]) +
-                            d_gains_[i] * (speed_desired - dq_filtered_[i]);
-    }
-  }
-  
-  // send velocity commands to the base
-  if (!fixed_base_ && !debug_) {
-    if (base_trigger_() && base_twist_publisher_.trylock()) {
-//      double alpha_base = 0.99;
-//      double vx = alpha_base * state_ros_.base_twist.linear.x +  (1-alpha_base) * u_[0];
-//      double vy = alpha_base * state_ros_.base_twist.linear.y +  (1-alpha_base) * u_[1];
-//      double omega = alpha_base * state_ros_.base_twist.angular.z +  (1-alpha_base) * u_[2];
-
-      // error is in the world frame
-      // Eigen::Vector3d base_error(x_nom_ros_.base_pose.x - x_ros_.base_pose.x,
-      //                            x_nom_ros_.base_pose.y - x_ros_.base_pose.y,
-      //                            x_nom_ros_.base_pose.z - x_ros_.base_pose.z);
-      // Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
-      // ROS_INFO_STREAM_THROTTLE(1.0, "Current base error: " << base_error);
-
-      // Eigen::Vector3d vel_cmd = base_gains_.cwiseProduct(r_world_base.transpose() * base_error);
-
-      // base_twist_publisher_.msg_.linear.x = vel_cmd.x();
-      // base_twist_publisher_.msg_.linear.y = vel_cmd.y();
-      // base_twist_publisher_.msg_.angular.z = vel_cmd.z();
-      Eigen::Vector3d twist_current(x_ros_.base_twist.linear.x,
-                                    x_ros_.base_twist.linear.y,
-                                    x_ros_.base_twist.angular.z);
-      
-      // Eigen::Vector3d twist_nominal(u_[0], u_[1], u_[2]);
-      Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
-                                    x_nom_ros_.base_twist.linear.y,
-                                    x_nom_ros_.base_twist.angular.z);
-
-      //Eigen::Matrix3d r_world_base(Eigen::AngleAxisd(x_ros_.base_pose.z, Eigen::Vector3d::UnitZ()));
-      Eigen::Matrix3d r_world_base;
-      double theta = x_ros_.base_pose.z;
-      r_world_base << std::cos(theta), -std::sin(theta), 0.0,
-                      std::sin(theta), std::cos(theta), 0.0,
-                      0.0, 0.0, 1.0;
-      Eigen::Matrix3d r_base_world = r_world_base.transpose();
-      // ROS_INFO_STREAM_THROTTLE(2.0, "theta is: " << theta << "R is\n" << r_world_base.transpose());
-      Eigen::Vector3d twist_cmd = r_base_world * twist_nominal;
-      // Eigen::Vector3d twist_curr = r_world_base.transpose() * twist_current;
-      // Eigen::Vector3d twist_filt = base_filter_alpha_ * twist_curr + (1 - base_filter_alpha_) * twist_cmd;
-
-      base_twist_publisher_.msg_.linear.x = twist_cmd.x();
-      base_twist_publisher_.msg_.linear.y = twist_cmd.y();
-      base_twist_publisher_.msg_.angular.z = 0.0; //twist_cmd.z();
-      ROS_INFO_STREAM_THROTTLE(1.0, "Twist command in world frame is: " << twist_nominal.transpose());
-      base_twist_publisher_.unlockAndPublish();
-
-      
-      twist_stamped_.twist = x_nom_ros_.base_twist;
-      twist_stamped_.header.frame_id = "world";
-      // twist_stamped_.twist.linear.x = twist_filt.x() * 100;
-      // twist_stamped_.twist.linear.y = twist_filt.y() * 100;
-      // twist_stamped_.twist.angular.z = twist_filt.z() * 10;
-      // twist_stamped_.header.frame_id = "base_link";
-      twist_stamped_.header.stamp = ros::Time::now();
-      world_twist_publisher_.publish(twist_stamped_);
-    }
-  }
-
-  // Maximum torque difference with a sampling rate of 1 kHz. The maximum torque rate is
-  // 1000 * (1 / sampling_time).
-  std::array<double, 7> tau_d_saturated =
-      saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d);
-
-  for (size_t i = 0; i < 7; ++i) {
-    joint_handles_[i].setCommand(tau_d_saturated[i]);
-  }
-
-  if (rate_trigger_()) {  
-    if (torques_publisher_.trylock()){
-      std::array<double, 7> tau_j = robot_state_.tau_J;
-      std::array<double, 7> tau_error{};
-      double error_rms(0.0);
-      for (size_t i = 0; i < 7; ++i) {
-        tau_error[i] = last_tau_d_[i] - tau_j[i];
-        error_rms += std::sqrt(std::pow(tau_error[i], 2.0)) / 7.0;
-      }
-      torques_publisher_.msg_.root_mean_square_error = error_rms;
-      for (size_t i = 0; i < 7; ++i) {
-        torques_publisher_.msg_.tau_commanded[i] = last_tau_d_[i];
-        torques_publisher_.msg_.tau_error[i] = tau_error[i];
-        torques_publisher_.msg_.tau_measured[i] = tau_j[i];
-      }
-      torques_publisher_.unlockAndPublish();
-    }
-
-    if (nominal_state_publisher_.trylock()){
-      nominal_state_publisher_.msg_ = x_nom_ros_;
-      nominal_state_publisher_.unlockAndPublish();
-    }
-  }
-
-  for (size_t i = 0; i < 7; ++i) {
-    last_tau_d_[i] = tau_d_saturated[i] + gravity[i];  // torque sent is already gravity compensated
+  if (nominal_state_publisher_.trylock()) {
+    nominal_state_publisher_.msg_ = x_nom_ros_;
+    nominal_state_publisher_.unlockAndPublish();
   }
 }
 
-void RoyalPandaControllerRos::run_model(){
-  ros::Rate rate(1./model_->get_dt());
-  while (ros::ok()){
-    {
-      std::shared_lock<std::shared_mutex> lock(input_mutex_);
-      //x_model_ = model_->step(u_, 0.0); // dt not used here
-    }
-    // conversions::eigenToMsg(x_model_, x_model_ros_);
-    // if (x_model_publisher_.trylock()){
-    //   x_model_publisher_.msg_ = x_model_ros_;
-    //   x_model_publisher_.unlockAndPublish();
-    // }
-    rate.sleep();
-  }
-}
-
-void RoyalPandaControllerRos::stopping(const ros::Time& time) {
-  stopped_ = true;
-  //model_thread_.join();
-}
+void RoyalPandaControllerRos::stopping(const ros::Time& time) {}
 
 std::array<double, 7> RoyalPandaControllerRos::saturateTorqueRate(
     const std::array<double, 7>& tau_d_calculated,
@@ -419,16 +362,6 @@ std::array<double, 7> RoyalPandaControllerRos::saturateTorqueRate(
   return tau_d_saturated;
 }
 
-void RoyalPandaControllerRos::stop_robot() {
-  std::array<double, 7> tau_d_calculated{};
-  tau_d_calculated.fill(0.0);
-  robot_state_ = state_handle_->getRobotState();
-  std::array<double, 7> tau_d_saturated =
-      saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d);
-  for (size_t i = 0; i < 7; ++i) {
-    joint_handles_[i].setCommand(tau_d_saturated[i]);
-  }
-}
 }  // namespace manipulation
 
 PLUGINLIB_EXPORT_CLASS(manipulation::RoyalPandaControllerRos, controller_interface::ControllerBase)

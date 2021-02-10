@@ -9,8 +9,11 @@
 #include <vector>
 
 #include "mppi_manipulation/controller_interface.h"
+#include <robot_control/modeling/robot_wrapper.h>
+
 #include "mppi_manipulation/dynamics_ros.h"
 #include <manipulation_msgs/State.h>
+#include <manipulation_msgs/InputState.h>
 
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/Twist.h>
@@ -35,6 +38,12 @@ class RoyalPandaControllerRos
           franka_hw::FrankaModelInterface, hardware_interface::EffortJointInterface,
           franka_hw::FrankaStateInterface> {
  public:
+  // explicit controller to allow for a missing hardware interface
+  using BASE = controller_interface::MultiInterfaceController<
+      franka_hw::FrankaModelInterface, hardware_interface::EffortJointInterface,
+      franka_hw::FrankaStateInterface>;
+  RoyalPandaControllerRos() : BASE(true){};
+
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& node_handle) override;
   void starting(const ros::Time&) override;
   void update(const ros::Time&, const ros::Duration& period) override;
@@ -43,21 +52,25 @@ class RoyalPandaControllerRos
  private:
   bool init_parameters(ros::NodeHandle& node_handle);
   bool init_ros(ros::NodeHandle& node_handle);
-  bool init_model(ros::NodeHandle& node_handle);
-  bool init_interfaces(hardware_interface::RobotHW* robot_hw);
+
+  bool init_common_interfaces(hardware_interface::RobotHW* robot_hw);
+  bool init_franka_interfaces(hardware_interface::RobotHW* robot_hw);
 
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
-  void stop_robot();
-  void run_model();
+
+  void send_command_base(const ros::Duration& period);
+  void send_command_arm(const ros::Duration& period);
 
   // Saturation
   std::array<double, 7> saturateTorqueRate(
       const std::array<double, 7>& tau_d_calculated,
       const std::array<double, 7>& tau_J_d);  // NOLINT (readability-identifier-naming)
 
+  // simulation subscribers to external controller
+  void input_state_callback(const manipulation_msgs::InputStateConstPtr& msg);
+
  private:
-  bool debug_;
-  bool stopped_;
+  bool sim_;
 
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
@@ -94,33 +107,27 @@ class RoyalPandaControllerRos
   manipulation_msgs::State x_ros_;
   manipulation_msgs::State x_nom_ros_;
 
-  bool state_received_;
   bool state_ok_;
+  bool state_received_;
   double state_last_receipt_time_;
   std::string state_topic_;
   ros::Subscriber state_subscriber_;
 
-  // debug
   bool fixed_base_;
   double start_time_;
-  const double frequency_ = 0.5;
-  double amplitude_ = 0.2; 
 
   std::array<double, 7> qd_;
 
   Eigen::Vector3d base_gains_;
   double base_filter_alpha_;
 
-  std::shared_mutex input_mutex_;
-  Eigen::VectorXd x_model_;
-  manipulation_msgs::State x_model_ros_;
-  realtime_tools::RealtimePublisher<manipulation_msgs::State> x_model_publisher_;
-  std::thread model_thread_;
-  std::unique_ptr<manipulation::ManipulatorDynamicsRos> model_;
-
   geometry_msgs::TwistStamped twist_stamped_;
   ros::Publisher world_twist_publisher_;
-  
+
+  std::unique_ptr<rc::RobotWrapper> robot_model_;
+
+  manipulation_msgs::InputState input_state_;
+  ros::Subscriber input_state_subscriber_;
 };
 
 }  // namespace manipulation
