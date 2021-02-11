@@ -5,7 +5,6 @@
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
     <arg name="joint_state_topic" default="/joint_states"/>
-    <arg name="log_data" default="false"/>
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>
@@ -44,8 +43,4 @@
             <param name="target_pose_topic" value="/obstacle"/>
         </node>
     </group>
-
-    <node pkg="mppi_ros" type="record_data.py" name="record_data">
-        <param name="experiment_id" value="mppi_panda"/>
-    </node>
 </launch>
