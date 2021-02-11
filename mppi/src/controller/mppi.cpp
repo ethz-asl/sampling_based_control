@@ -67,6 +67,8 @@ void PathIntegral::init_data() {
   omega = Eigen::ArrayXd::Zero(config_.rollouts);
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
 
+  momentum_.resize(steps_, input_t::Zero(nu_));
+
   if (sampler_ == nullptr) {
     log_info("No sampler provided, using gaussian sampler");
     if (config_.input_variance.size() != nu_)
@@ -246,6 +248,7 @@ void PathIntegral::prepare_rollouts() {
 
   // shift and trim the previously optimized trajectory
   shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()), offset);
+  shift_back(momentum_, momentum_.back(), offset);
 }
 
 void PathIntegral::set_reference_trajectory(mppi::reference_trajectory_t& ref) {
@@ -369,11 +372,17 @@ void PathIntegral::optimize() {
 
   // rollouts averaging
   for (size_t t = 0; t < steps_; t++) {
+    momentum_[t] = config_.beta * momentum_[t];
     for (size_t k = 0; k < config_.rollouts; k++) {
-      opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
-      opt_roll_.uu[t] += omega[k] * rollouts_[k].nn[t];
+      momentum_[t] += omega[k] * rollouts_[k].nn[t];
     }
   }
+
+  for (size_t t=0; t<steps_; t++){
+    opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
+    opt_roll_.uu[t] += config_.alpha * momentum_[t];
+  }
+
 
   // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
   if (config_.adaptive_sampling) {

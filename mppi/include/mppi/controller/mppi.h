@@ -345,6 +345,7 @@ class PathIntegral {
   double stage_cost_ = 0;  // stage_cost used for logging
   std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
 
+  std::vector<input_t> momentum_;
   Timer timer_;
 };
 

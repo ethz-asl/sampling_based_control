@@ -34,6 +34,8 @@ struct SolverConfig {
   double caching_factor = 0.0;
   size_t substeps = 1;
 
+  double alpha = 1.0;
+  double beta = 0.0;
   bool adaptive_sampling = false;
   Eigen::VectorXd input_variance;
 

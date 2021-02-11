@@ -37,6 +37,8 @@ bool SolverConfig::init_from_file(const std::string &file) {
   caching_factor  = parse_key<double>(solver_options, "caching_factor").value_or(caching_factor);
   step_size       = parse_key<double>(solver_options, "step_size").value_or(step_size);
   horizon         = parse_key<double>(solver_options, "horizon").value_or(horizon);
+  alpha           = parse_key_quiet<double>(solver_options, "gradient_step_size").value_or(alpha);
+  beta            = parse_key_quiet<double>(solver_options, "momentum_step_size").value_or(beta);
   adaptive_sampling = parse_key_quiet<bool>(solver_options, "adaptive_sampling").value_or(adaptive_sampling);
   input_variance  = parse_key<Eigen::VectorXd>(solver_options, "input_variance").value_or(Eigen::VectorXd(0));
   filter_type     = (InputFilterType)parse_key_quiet<int>(solver_options, "filter_type").value_or(filter_type);
@@ -73,6 +75,8 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " lambda:           " << config.lambda << std::endl;
   os << " h:                " << config.h << std::endl;
   os << " substeps:         " << config.substeps << std::endl;
+  os << " gradient_step_size: " << config.alpha << std::endl;
+  os << " momentum_step_size: " << config.beta << std::endl;
   os << " adaptive sampling " << config.adaptive_sampling << std::endl;
   os << " input_variance:   " << config.input_variance.transpose() << std::endl; 
   
