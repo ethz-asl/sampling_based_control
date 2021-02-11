@@ -65,6 +65,18 @@ class Plotter:
         nr_samples = len(df["nr_rollouts"].unique())
         sns.lineplot(data=df, x="index", y="stage_cost", hue="nr_rollouts", ci="sd", palette=sns.color_palette("tab10", n_colors=nr_samples))
 
+    def plot_momentum_samples_comparison(self):
+        plt.figure()
+        df_alpha_1 = self.df.loc[(self.df['tree_search'] == False) & (self.df['alpha'] == 1.0)]
+        nr_samples = len(df_alpha_1["nr_rollouts"].unique())
+        ax_1 = sns.lineplot(data=df_alpha_1, x="index", y="effective_samples", hue="nr_rollouts", ci="sd", palette=sns.color_palette("tab10", n_colors=nr_samples))
+        ax_1.set_title("Effective Samples (no momentum)")
+
+        df_momentum = self.df.loc[(self.df['tree_search'] == False) & (self.df['alpha'] < 1.0)]
+        nr_samples = len(df_momentum["nr_rollouts"].unique())
+        ax_m = sns.lineplot(data=df_momentum, x="index", y="effective_samples", hue="nr_rollouts", ci="sd", palette=sns.color_palette("tab10", n_colors=nr_samples))
+        ax_m.set_title("Effective Samples (with momentum)")
+
 
 if __name__ == "__main__":
     plotter = Plotter("mppi_panda")
@@ -72,4 +84,5 @@ if __name__ == "__main__":
     plotter.plot_average_cost_per_rollout()
     plotter.plot_effective_samples_per_rollout()
     plotter.plot_cost()
+    plotter.plot_momentum_samples_comparison()
     plt.show()

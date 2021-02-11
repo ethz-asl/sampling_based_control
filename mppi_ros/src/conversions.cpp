@@ -10,6 +10,8 @@ void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
   config_ros.nr_rollouts = config.rollouts;
   config_ros.lambda = config.lambda;
   config_ros.h = config.h;
+  config_ros.alpha = config.alpha;
+  config_ros.beta = config.beta;
   config_ros.step_size = config.step_size;
   config_ros.caching_factor = config.caching_factor;
   config_ros.horizon = config.horizon;

@@ -19,6 +19,8 @@ class DataRecorder:
                           "index": [],
                           "horizon": [],
                           "nr_rollouts": [],
+                          "alpha": [],
+                          "beta": [],
                           "filter_window": [],
                           "tree_search": [],
                           "stage_cost": [],
@@ -34,7 +36,7 @@ class DataRecorder:
         self.csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log", "record.csv")
         rospy.loginfo("Writing to {}".format(self.csv_file))
 
-    def data_callback(self, data):
+    def data_callback(self, data: Data):
         if len(data.weights.array) == 0:
             return
 
@@ -48,6 +50,8 @@ class DataRecorder:
         self.data_dict["index"].append(self.idx)
         self.data_dict["horizon"].append(data.config.horizon)
         self.data_dict["nr_rollouts"].append(data.config.nr_rollouts)
+        self.data_dict["alpha"].append(data.config.alpha)
+        self.data_dict["beta"].append(data.config.beta)
         self.data_dict["filter_window"].append(data.config.filter_window)
         self.data_dict["tree_search"].append(data.config.tree_search)
         self.data_dict["stage_cost"].append(data.stage_cost)

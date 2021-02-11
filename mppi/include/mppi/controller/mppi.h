@@ -349,6 +349,7 @@ class PathIntegral {
   std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
 
   size_t step_count_;  // total amount of solver optimization steps
+  std::vector<input_t> momentum_;
   Timer timer_;
 };
 

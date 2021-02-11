@@ -4,6 +4,8 @@ float64 h
 float64 step_size
 float64 caching_factor
 float64 horizon
+float64 alpha
+float64 beta
 
 bool adaptive_sampling
 mppi_ros/Array input_variance
