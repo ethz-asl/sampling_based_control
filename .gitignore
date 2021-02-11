@@ -1,3 +1,4 @@
+*.csv
 *.bag
 .idea/
 cmake-build-release/
