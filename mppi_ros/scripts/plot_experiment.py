@@ -59,30 +59,56 @@ class Plotter:
     def plot_effective_samples_per_rollout_tree(self):
         self.plot_effective_samples_per_rollout(tree=True)
 
-    def plot_cost(self, tree=False):
+    def plot_cost_comparison(self):
         plt.figure()
-        df = self.df.loc[self.df['tree_search'] == tree]
-        nr_samples = len(df["nr_rollouts"].unique())
-        sns.lineplot(data=df, x="index", y="stage_cost", hue="nr_rollouts", ci="sd", palette=sns.color_palette("tab10", n_colors=nr_samples))
 
-    def plot_momentum_samples_comparison(self):
+        df_no_tree = self.df.loc[self.df['tree_search'] == False]
+        sample_sizes_no_tree = df_no_tree["nr_rollouts"].unique()
+
+        df_tree = self.df.loc[self.df['tree_search'] == True]
+        sample_sizes_tree = df_tree["nr_rollouts"].unique()
+
+        common_sample_sizes = set(sample_sizes_tree).intersection(set(sample_sizes_no_tree))
+        for samples_size in common_sample_sizes:
+            plt.figure()
+            df_ = self.df.loc[self.df['nr_rollouts'] == samples_size]
+            ax = sns.lineplot(data=df_, x="index", y="stage_cost", hue="tree_search", ci="sd", palette=sns.color_palette("tab10", n_colors=2))
+            #ax.set_yscale('log')
+            ax.set_title("Effective Samples ({} samples)".format(samples_size))
+
+    def plot_momentum_comparison(self):
         plt.figure()
-        df_alpha_1 = self.df.loc[(self.df['tree_search'] == False) & (self.df['alpha'] == 1.0)]
-        nr_samples = len(df_alpha_1["nr_rollouts"].unique())
-        ax_1 = sns.lineplot(data=df_alpha_1, x="index", y="effective_samples", hue="nr_rollouts", ci="sd", palette=sns.color_palette("tab10", n_colors=nr_samples))
-        ax_1.set_title("Effective Samples (no momentum)")
 
-        df_momentum = self.df.loc[(self.df['tree_search'] == False) & (self.df['alpha'] < 1.0)]
-        nr_samples = len(df_momentum["nr_rollouts"].unique())
-        ax_m = sns.lineplot(data=df_momentum, x="index", y="effective_samples", hue="nr_rollouts", ci="sd", palette=sns.color_palette("tab10", n_colors=nr_samples))
-        ax_m.set_title("Effective Samples (with momentum)")
+        df_no_tree = self.df.loc[self.df['tree_search'] == False]
+        sample_sizes_no_tree = df_no_tree["nr_rollouts"].unique()
+
+        for samples_size in sample_sizes_no_tree:
+            plt.figure()
+            df_ = df_no_tree.loc[df_no_tree['nr_rollouts'] == samples_size]
+            ax = sns.lineplot(data=df_, x="time", y="effective_samples", ci="sd", hue="alpha", size="beta")
+            ax.set_title("Effective Samples ({} samples)".format(samples_size))
+
+        df_tree = self.df.loc[self.df['tree_search'] == True]
+        sample_sizes_tree = df_tree["nr_rollouts"].unique()
+
+        for samples_size in sample_sizes_tree:
+            plt.figure()
+            df_ = df_tree.loc[df_tree['nr_rollouts'] == samples_size]
+            ax = sns.lineplot(data=df_, x="time", y="effective_samples", ci="sd", hue="alpha", size="beta")
+            ax.set_title("Effective Samples FD-MCTS ({} samples)".format(samples_size))
 
 
 if __name__ == "__main__":
-    plotter = Plotter("mppi_panda")
-    # plotter.plot_experiment("mppi_panda")
+    import sys
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('experiment_id', type=str, help='the id of the experiment to plot')
+    args = parser.parse_args(sys.argv[1:])
+
+    plotter = Plotter(args.experiment_id)
     plotter.plot_average_cost_per_rollout()
     plotter.plot_effective_samples_per_rollout()
-    plotter.plot_cost()
-    plotter.plot_momentum_samples_comparison()
+    plotter.plot_cost_comparison()
+    # plotter.plot_momentum_comparison()
     plt.show()
