@@ -306,7 +306,11 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& c
       double cost_temp = std::pow(config_.discount_factor, t) *
                          cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
       if (std::isnan(cost_temp)) {
-        throw std::runtime_error("Something went wrong ... dynamics diverged?");
+        std::stringstream error;
+        error << "Something went wrong ... dynamics diverged?" << std::endl
+              << "Current state: " << x.transpose() << std::endl
+              << "Current input: " << rollouts_[k].uu[t].transpose();
+        throw std::runtime_error(error.str());
       }
 
       // store data
