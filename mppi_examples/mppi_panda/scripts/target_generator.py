@@ -73,8 +73,8 @@ pose4.pose.orientation.z = -0.082
 pose4.pose.orientation.w = -0.004
 
 
-poses = [pose0, pose1, pose2, pose3, pose4]
-
+#poses = [pose0, pose1, pose2, pose3, pose4]
+poses = [pose0]
 
 if __name__ == "__main__":
     rospy.init_node("target_generator")
