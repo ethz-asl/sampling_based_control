@@ -286,9 +286,10 @@ void PathIntegral::update_reference() {
 
   if (config_.threads > 1) {
     for (auto& cost : cost_v_) cost->set_reference_trajectory(rr_tt_ref_);
-    if (config_.use_tree_search) {
-      tree_manager_.set_reference_trajectory(rr_tt_ref_);
-    }
+  }
+
+  if (config_.use_tree_search) {
+    tree_manager_.set_reference_trajectory(rr_tt_ref_);
   }
 }
 
@@ -540,11 +541,6 @@ bool PathIntegral::get_optimal_rollout(observation_array_t& xx, input_array_t& u
 
 void PathIntegral::update_experts() {
   expert_.update_expert(1, opt_roll_.uu);
-  //	for (int i = 0; i < 100; ++i) {
-  //		std::cout << "h step: " << i << std::endl;
-  //		std::cout << opt_roll_.uu[i] << std::endl;
-  //		std::cout << std::endl;
-  //	}
 };
 
 void PathIntegral::swap_policies() {
