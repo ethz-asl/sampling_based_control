@@ -38,3 +38,7 @@ add_dependencies(panda_mobile_control ${PROJECT_NAME})
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
+
+catkin_install_python(PROGRAMS scripts/target_generator.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
