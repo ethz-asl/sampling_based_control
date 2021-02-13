@@ -21,10 +21,13 @@ manipulation_controller:
 
   arm_id: panda
   joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
-  k_gains: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # this is actually an integral gain
-  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+  i_gains: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0]  # this is actually an integral gain
+  d_gains: [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0]
+  arm_I_max: 0.1
 
-  base_gains: [1.0, 1.0, 0.1]
+  base_K_gains: [10.0, 10.0, 10.0]
+  base_I_gains: [1.0, 1.0, 1.0]
+  I_max: 0.0
   base_filter_alpha: 0.0
   
   publish_rate: 10.0
@@ -57,7 +60,10 @@ manipulation_controller_sim:
   k_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
 
-  base_gains: [1.0, 1.0, 0.1]
+  base_K_gains: [10.0, 10.0, 10.0]
+  base_I_gains: [0.01, 0.01, 0.01]
+  I_max: 1.0
+
   base_filter_alpha: 0.0
 
   publish_rate: 10.0

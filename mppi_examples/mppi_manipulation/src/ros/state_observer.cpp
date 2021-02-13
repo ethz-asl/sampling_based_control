@@ -71,6 +71,12 @@ bool StateObserver::initialize() {
     return false;
   }
 
+  if (!nh_.getParam("base_alpha", base_alpha_) || base_alpha_ < 0 || base_alpha_ > 1) {
+    ROS_ERROR("Failed to parse base_alpha param or invalid.");
+    return false;
+  }
+
+
   KDL::Tree object_kinematics;
   if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
     ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
@@ -155,8 +161,8 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
   Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x, msg->twist.twist.linear.y, 0.0);
-  base_twist_ = T_world_base_.rotation() * odom_base_twist;
-  base_twist_.z() = msg->twist.twist.angular.z;
+  odom_base_twist = Eigen::AngleAxis(base_state_.z(), Eigen::Vector3d::UnitZ()) * odom_base_twist;
+  base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
 }
 
 void StateObserver::arm_state_callback(const sensor_msgs::JointStateConstPtr& msg) {

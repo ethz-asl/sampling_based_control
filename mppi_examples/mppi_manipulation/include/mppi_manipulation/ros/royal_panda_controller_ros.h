@@ -58,8 +58,9 @@ class RoyalPandaControllerRos
 
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
 
-  void send_command_base(const ros::Duration& period);
   void send_command_arm(const ros::Duration& period);
+  void send_command_base(const ros::Duration& period);
+  void send_command_base_from_position(const ros::Duration& period);
 
   // Saturation
   std::array<double, 7> saturateTorqueRate(
@@ -80,7 +81,7 @@ class RoyalPandaControllerRos
 
   std::string arm_id_;
   std::vector<std::string> joint_names_;
-  std::vector<double> k_gains_;
+  std::vector<double> i_gains_;
   std::vector<double> d_gains_;
   double coriolis_factor_{1.0};
   std::array<double, 7> dq_filtered_;
@@ -118,7 +119,6 @@ class RoyalPandaControllerRos
 
   std::array<double, 7> qd_;
 
-  Eigen::Vector3d base_gains_;
   double base_filter_alpha_;
 
   geometry_msgs::TwistStamped twist_stamped_;
@@ -128,6 +128,17 @@ class RoyalPandaControllerRos
 
   manipulation_msgs::InputState input_state_;
   ros::Subscriber input_state_subscriber_;
+
+  Eigen::Vector3d base_K_gains_;
+  Eigen::Vector3d base_I_gains_;
+  double I_max_;
+
+  Eigen::Vector3d twist_cmd_;
+  Eigen::Vector3d base_position_error_;
+  Eigen::Vector3d base_integral_error_;
+
+  Eigen::Matrix<double, 7, 1> arm_integral_error_;
+  double arm_I_max_;
 };
 
 }  // namespace manipulation

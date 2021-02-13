@@ -72,9 +72,9 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
-  if (!node_handle.getParam("k_gains", k_gains_) || k_gains_.size() != 7) {
+  if (!node_handle.getParam("i_gains", i_gains_) || i_gains_.size() != 7) {
     ROS_ERROR(
-        "RoyalPandaControllerRos:  Invalid or no k_gain parameters provided, aborting "
+        "RoyalPandaControllerRos:  Invalid or no i_gain parameters provided, aborting "
         "controller init!");
     return false;
   }
@@ -86,14 +86,38 @@ bool RoyalPandaControllerRos::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
-  std::vector<double> base_gains;
-  if (!node_handle.getParam("base_gains", base_gains) || base_gains.size() != 3) {
+  if (!node_handle.getParam("arm_I_max", arm_I_max_) || arm_I_max_ < 0) {
     ROS_ERROR(
-        "RoyalPandaControllerRos:  Invalid or no base_gains parameters provided, aborting "
+        "RoyalPandaControllerRos:  Invalid or no arm_I_max parameters provided, aborting "
         "controller init!");
     return false;
   }
-  base_gains_ << base_gains[0], base_gains[1], base_gains[2];
+
+  std::vector<double> base_K_gains;
+  if (!node_handle.getParam("base_K_gains", base_K_gains) || base_K_gains.size() != 3) {
+    ROS_ERROR(
+        "RoyalPandaControllerRos:  Invalid or no base_K_gains parameters provided, aborting "
+        "controller init!");
+    return false;
+  }
+  base_K_gains_ << base_K_gains[0], base_K_gains[1], base_K_gains[2];
+
+
+  std::vector<double> base_I_gains;
+  if (!node_handle.getParam("base_I_gains", base_I_gains) || base_I_gains.size() != 3) {
+    ROS_ERROR(
+        "RoyalPandaControllerRos:  Invalid or no base_I_gains parameters provided, aborting "
+        "controller init!");
+    return false;
+  }
+  base_I_gains_ << base_I_gains[0], base_I_gains[1], base_I_gains[2];
+  
+  if (!node_handle.getParam("I_max", I_max_) || I_max_ < 0) {
+    ROS_ERROR(
+        "RoyalPandaControllerRos:  Invalid or no I_max parameters provided, aborting "
+        "controller init!");
+    return false;
+  }
 
   if (!node_handle.getParam("base_filter_alpha", base_filter_alpha_) || (base_filter_alpha_ < 0) ||
       (base_filter_alpha_ > 1)) {
@@ -243,6 +267,8 @@ void RoyalPandaControllerRos::starting(const ros::Time& time) {
 
   // integral behavior
   for (size_t i = 0; i < 7; i++) { qd_[i] = joint_handles_[i].getPosition(); }
+  base_integral_error_.setZero();  
+  arm_integral_error_.setZero();
 
   started_ = true;
   ROS_INFO("[RoyalPandaControllerRos::starting] Controller started!");
@@ -260,9 +286,52 @@ void RoyalPandaControllerRos::send_command_base(const ros::Duration& period) {
     Eigen::Matrix3d r_base_world = r_world_base.transpose();
     Eigen::Vector3d twist_cmd = r_base_world * twist_nominal;
 
-    base_twist_publisher_.msg_.linear.x = twist_cmd.x();
-    base_twist_publisher_.msg_.linear.y = twist_cmd.y();
-    base_twist_publisher_.msg_.angular.z = twist_cmd.z();
+    base_twist_publisher_.msg_.linear.x = u_[0]; //twist_cmd.x();
+    base_twist_publisher_.msg_.linear.y = u_[1]; //twist_cmd.y();
+    base_twist_publisher_.msg_.angular.z = u_[2]; //twist_cmd.z();
+    base_twist_publisher_.unlockAndPublish();
+
+    twist_stamped_.twist = x_nom_ros_.base_twist;
+    twist_stamped_.header.frame_id = "world";
+    twist_stamped_.header.stamp = ros::Time::now();
+    world_twist_publisher_.publish(twist_stamped_);
+  }
+}
+
+void RoyalPandaControllerRos::send_command_base_from_position(const ros::Duration& period) {
+  if (base_trigger_() && base_twist_publisher_.trylock()) {
+    Eigen::Vector3d position_current(x_ros_.base_pose.x, 
+                                     x_ros_.base_pose.y,
+                                     x_ros_.base_pose.z);
+
+    Eigen::Vector3d position_nominal(x_nom_ros_.base_pose.x, 
+                                     x_nom_ros_.base_pose.y,
+                                     x_nom_ros_.base_pose.z);
+
+    Eigen::Matrix3d r_base_world;
+    double theta = x_ros_.base_pose.z;
+    r_base_world << std::cos(theta), std::sin(theta), 0.0, -std::sin(theta), std::cos(theta), 0.0,
+        0.0, 0.0, 1.0;
+
+    base_position_error_ = r_base_world * (position_nominal - position_current);
+    
+    // compute integral and cap error
+    base_integral_error_ += base_position_error_ * 0.02;
+    base_integral_error_ = base_integral_error_.cwiseMax(-I_max_).cwiseMin(I_max_);
+    
+    
+    twist_cmd_ = base_K_gains_.cwiseProduct(base_position_error_) + base_I_gains_.cwiseProduct(base_integral_error_); 
+    ROS_INFO_STREAM_THROTTLE(2.0, "Integral error is: " << base_integral_error_.transpose() << std::endl
+                              << "Position error is: " << base_position_error_.transpose() << std::endl
+                              << "Twist cmd is:" << twist_cmd_.transpose());
+    
+    // twist_cmd_.x() = std::abs(twist_cmd_.x()) > 0.01 ? twist_cmd_.x() : 0.0;
+    // twist_cmd_.y() = std::abs(twist_cmd_.y()) > 0.01 ? twist_cmd_.y() : 0.0;
+    // twist_cmd_.z() = std::abs(twist_cmd_.z()) > 0.01 ? twist_cmd_.z() : 0.0;
+    
+    base_twist_publisher_.msg_.linear.x = twist_cmd_.x();
+    base_twist_publisher_.msg_.linear.y = twist_cmd_.y();
+    base_twist_publisher_.msg_.angular.z = twist_cmd_.z();
     base_twist_publisher_.unlockAndPublish();
 
     twist_stamped_.twist = x_nom_ros_.base_twist;
@@ -287,7 +356,7 @@ void RoyalPandaControllerRos::send_command_arm(const ros::Duration& period) {
 
     for (size_t i = 0; i < 7; i++) {
       qd_[i] += u_.tail<8>()(i) * period.toSec();
-      tau[i] += k_gains_[i] * (qd_[i] - q[i]) + d_gains_[i] * (u_.tail<8>()[i] - v[i]);
+      tau[i] += i_gains_[i] * (qd_[i] - q[i]) + d_gains_[i] * (u_.tail<8>()[i] - v[i]);
       joint_handles_[i].setCommand(tau[i]);
     }
   } else {
@@ -302,12 +371,16 @@ void RoyalPandaControllerRos::send_command_arm(const ros::Duration& period) {
 
     std::array<double, 7> tau_d_calculated{};
     for (size_t i = 0; i < 7; ++i) {
-      tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
       qd_[i] += u_.tail<8>()(i) * period.toSec();
+      arm_integral_error_[i] = (x_nom_ros_.arm_state.position[i] - x_ros_.arm_state.position[i]) * period.toSec();
+      arm_integral_error_[i] = std::max(std::min(arm_integral_error_[i], arm_I_max_), -arm_I_max_);
+
+      tau_d_calculated[i] = coriolis_factor_ * coriolis[i];
       tau_d_calculated[i] = coriolis_factor_ * coriolis[i] +
-                            k_gains_[i] * (qd_[i] - robot_state_.q[i]) +
+                            i_gains_[i] * (qd_[i] - robot_state_.q[i]) +
+                            //i_gains_[i] * arm_integral_error_[i] +
                             d_gains_[i] * (u_.tail<8>()(i) - dq_filtered_[i]);
-    }
+    } 
 
     // Maximum torque difference with a sampling rate of 1 kHz. The maximum torque rate is
     // 1000 * (1 / sampling_time).
@@ -334,8 +407,7 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
   }
 
   if (!sim_){
-    // TODO(giuseppe) supposed to provide all the time the next solver step
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() + 0.015);
+    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
   }
 
   conversions::eigenToMsg(x_nom_, x_nom_ros_);
