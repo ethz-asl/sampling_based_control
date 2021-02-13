@@ -8,7 +8,7 @@ controller_test:
 
 manipulation_controller:
   type: manipulation/RoyalPandaControllerRos
-  simulation: $(arg simulation)
+  simulation: false
   fixed_base: $(arg fixed_base)
   linear_weight: 10.0
   angular_weight: 1.0
@@ -41,7 +41,7 @@ manipulation_controller:
 
 manipulation_controller_sim:
   type: manipulation/RoyalPandaControllerRos
-  simulation: $(arg simulation)
+  simulation: true
   fixed_base: $(arg fixed_base)
   linear_weight: 10.0
   angular_weight: 1.0
