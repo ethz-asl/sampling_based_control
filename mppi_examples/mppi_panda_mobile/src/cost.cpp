@@ -23,11 +23,12 @@
 namespace panda_mobile {
 
 PandaMobileCost::PandaMobileCost(const std::string& robot_description, const double linear_weight,
-                                 const double angular_weight, const double obstacle_radius)
+                                 const double angular_weight, const double obstacle_radius, bool joint_limits)
     : robot_description_(robot_description),
       linear_weight_(linear_weight),
       angular_weight_(angular_weight),
-      obstacle_radius_(obstacle_radius) {
+      obstacle_radius_(obstacle_radius),
+      joint_limits_(joint_limits) {
   pinocchio::urdf::buildModelFromXML(robot_description_, model_);
   data_ = pinocchio::Data(model_);
   frame_id_ = model_.getFrameId(tracked_frame_);
@@ -42,7 +43,7 @@ PandaMobileCost::PandaMobileCost(const std::string& robot_description, const dou
 
 PandaMobileCost::cost_ptr PandaMobileCost::create() {
   return std::make_shared<PandaMobileCost>(robot_description_, linear_weight_, angular_weight_,
-                                           obstacle_radius_);
+                                           obstacle_radius_, joint_limits_);
 }
 
 PandaMobileCost::cost_ptr PandaMobileCost::clone() const {
@@ -88,11 +89,13 @@ PandaMobileCost::cost_t PandaMobileCost::compute_cost(const mppi::observation_t&
     cost += Q_reach_;
 
   // joint limits cost
-  for(size_t i=0; i<7; i++){
-    if (x(i) < joint_limits_lower_(i))
-      cost += 100 + 10 * std::pow(joint_limits_lower_(i) - x(i), 2);
-    if (x(i) > joint_limits_upper_(i))
-      cost += 100 + 10 * std::pow(x(i) - joint_limits_upper_(i), 2);
+  if (joint_limits_){
+    for(size_t i=0; i<7; i++){
+      if (x(i) < joint_limits_lower_(i))
+        cost += 100 + 10 * std::pow(joint_limits_lower_(i) - x(i), 2);
+      if (x(i) > joint_limits_upper_(i))
+        cost += 100 + 10 * std::pow(x(i) - joint_limits_upper_(i), 2);
+    }
   }
 
   return cost;

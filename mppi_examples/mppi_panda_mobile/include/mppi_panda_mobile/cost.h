@@ -24,10 +24,11 @@ class PandaMobileCost : public mppi::CostBase {
   using cost_ptr = mppi::CostBase::cost_ptr;
 
   PandaMobileCost(const std::string& robot_description, const double linear_weight,
-                  const double angular_weight, const double obstacle_radius);
+                  const double angular_weight, const double obstacle_radius, bool joint_limits=false);
   ~PandaMobileCost() = default;
 
  private:
+  bool joint_limits_;
   double linear_weight_;
   double angular_weight_;
   double obstacle_radius_;
