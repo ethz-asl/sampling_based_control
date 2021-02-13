@@ -11,7 +11,7 @@
     <!-- Load Ridgeback's description, controllers, and teleop nodes. -->
     <param name="robot_description_for_gazebo"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/panda_mobile_gazebo.urdf.xacro
-                   resources_directory:='package://mppi_panda' collision_links:=true collision_hand:=true add_finger:=true"/>
+                   resources_directory:='package://mppi_panda' collision_links:=true collision_hand:=true add_finger:=true ridgeback_resources_prefix:='$(find ridgeback_description)'"/>
 
     <!--    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">-->
     <!--      <remap from="robot_description" to="/robot_description_for_gazebo"/>-->

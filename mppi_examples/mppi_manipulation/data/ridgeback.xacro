@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <robot name="ridgeback" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:arg name='ridgeback_resources_prefix' default='package://ridgeback_description'/>
+    <xacro:property name='ridgeback_resources_prefix' default="$(arg ridgeback_resources_prefix)"/>
+    
     <xacro:property name="PI" value="3.1415926535897931" />
 
     <xacro:property name="wheel_radius" value="0.0759" />
@@ -55,7 +58,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/body.stl"/>
+                <mesh filename="${ridgeback_resources_prefix}/meshes/body.stl"/>
             </geometry>
             <material name="black" />
         </visual>
@@ -84,7 +87,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 ${PI}" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/side-cover.stl"/>
+                <mesh filename="${ridgeback_resources_prefix}/meshes/side-cover.stl"/>
             </geometry>
             <material name="yellow" />
         </visual>
@@ -93,7 +96,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/side-cover.stl"/>
+                <mesh filename="${ridgeback_resources_prefix}/meshes/side-cover.stl"/>
             </geometry>
             <material name="yellow" />
         </visual>
@@ -109,7 +112,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/end-cover.stl" />
+                <mesh filename="${ridgeback_resources_prefix}/meshes/end-cover.stl" />
             </geometry>
             <material name="black" />
         </visual>
@@ -125,7 +128,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 ${PI}" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/end-cover.stl" />
+                <mesh filename="${ridgeback_resources_prefix}/meshes/end-cover.stl" />
             </geometry>
             <material name="black" />
         </visual>
@@ -146,7 +149,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/lights.stl" />
+                <mesh filename="${ridgeback_resources_prefix}/meshes/lights.stl" />
             </geometry>
             <material name="white" />
         </visual>
@@ -155,7 +158,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 ${PI}" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/lights.stl" />
+                <mesh filename="${ridgeback_resources_prefix}/meshes/lights.stl" />
             </geometry>
             <material name="red" />
         </visual>
@@ -171,7 +174,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/top.stl" />
+                <mesh filename="${ridgeback_resources_prefix}/meshes/top.stl" />
             </geometry>
             <material name="black" />
         </visual>
@@ -187,7 +190,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 ${PI/2} 0" />
             <geometry>
-                <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/axle.stl" />
+                <mesh filename="${ridgeback_resources_prefix}/meshes/axle.stl" />
             </geometry>
             <material name="black" />
         </visual>

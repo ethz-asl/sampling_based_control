@@ -15,7 +15,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
                 <geometry>
-                    <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/wheel.stl"/>
+                    <mesh filename="package://ridgeback_description/meshes/wheel.stl"/>
                 </geometry>
                 <material name="black"/>
             </visual>
@@ -68,7 +68,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
                 <geometry>
-                    <mesh filename="${resources_prefix}$(find ridgeback_description)/meshes/rocker.stl"/>
+                    <mesh filename="package://ridgeback_description/meshes/rocker.stl"/>
                 </geometry>
                 <material name="black"/>
             </visual>
