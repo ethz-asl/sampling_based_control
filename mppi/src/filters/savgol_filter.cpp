@@ -33,16 +33,12 @@ SavGolFilter::SavGolFilter(const int steps, const int nu, const int window,
 SavGolFilter::SavGolFilter(const int steps, const int nu, const std::vector<int>& window,
              const std::vector<uint>& poly_order, const uint der_order,
              const double time_step) {
-
-  // TODO(giuseppe) uniform the filter initialization
   if (window.size() == 1){
     filters_.resize(nu, gram_sg::SavitzkyGolayFilter(window[0], 0, poly_order[0], der_order));
     windows_.resize(nu, MovingExtendedWindow(steps, window[0]));
     return;
   }
-
   for (size_t i=0; i < nu; i++){
-    std::cout << "Creating new filter: window=" << window[i] << ", order: " << poly_order[i] << std::endl;
     filters_.emplace_back(window[i], 0, poly_order[i], der_order);
     windows_.emplace_back(steps, window[i]);
   }

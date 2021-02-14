@@ -139,6 +139,118 @@ TEST(FilterTest, TestVisual){
   matplotlibcpp::show(true);
 }
 
+TEST(FilterTest, TestRealTime){
+  const int nu = 1;
+  const int steps = 100;
+  const int window_size = 20;
+  const int poly_order = 3;
+
+  std::vector<double> t1(steps, 0.0);
+
+  mppi::SavGolFilter filter(steps, nu, window_size, poly_order);
+  std::default_random_engine generator;
+  std::normal_distribution<double> dist(0.0, 0.1);
+
+
+  Eigen::VectorXd z(1);
+  Eigen::VectorXd z_noisy(1);
+  constexpr double dt = 0.1;
+
+  std::vector<double> t_hist;
+  std::vector<double> z_hist;
+  std::vector<double> z_noisy_hist;
+  std::vector<double> z_filt_hist;
+
+
+  double t = 0.0;
+  for(size_t i=0; i<steps; i++){
+    filter.reset(t);
+
+    z(0) = std::sin(t);
+    z_noisy(0) =  z(0) + dist(generator);
+
+    t_hist.push_back(t);
+    z_hist.push_back(z(0));
+    z_noisy_hist.push_back(z_noisy(0));
+
+    filter.add_measurement(z_noisy, t);
+    filter.apply(z_noisy, t);
+    z_filt_hist.push_back(z_noisy(0));
+
+    t += dt;
+  }
+
+
+  matplotlibcpp::subplot(1, 2, 1);
+  matplotlibcpp::named_plot("raw", t_hist, z_noisy_hist, "--");
+  matplotlibcpp::named_plot("filt", t_hist, z_filt_hist, "o-");
+  matplotlibcpp::legend();
+  matplotlibcpp::grid(true);
+  matplotlibcpp::show(true);
+}
+
+TEST(FilterTest, MultiChannelTest){
+  Eigen::VectorXd u = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd u_filtered = Eigen::VectorXd::Zero(3);
+  mppi::SavGolFilter filter (10, 3, {5, 5, 5}, {3, 3, 3});
+  double t = 0;
+  for(size_t steps=0; steps<8; steps++){
+    std::cout << "t: " << t << std::endl;
+    if (t == 0.06) u << 1, 1, 1;
+    if (t == 0.075) u << 2, 2, 2;
+    if (t == 0.9) u << 0, 0, 0;
+
+
+    std::cout << "In: " << u.transpose() << std::endl;
+    filter.reset(t);
+    filter.add_measurement(u, t);
+    std::cout << "Printing windows" << std::endl;
+    for (size_t i=0; i<u.size(); i++){
+      std::cout << "Window " << i << " " << std::endl;
+      std::cout << filter.get_windows()[i];
+      std::cout << std::endl;
+    }
+    filter.apply(u_filtered, t);
+    t+=0.015;
+  }
+
+  std::cout << "\n\n\nAdding more points without reset\n\n\n";
+  u << 4, 4, 4;
+  for(size_t steps=0; steps<5; steps++){
+    std::cout << "t: " << t << std::endl;
+    std::cout << "In: " << u.transpose() << std::endl;
+    filter.add_measurement(u, t);
+    std::cout << "Printing windows" << std::endl;
+    for (size_t i=0; i<u.size(); i++){
+      std::cout << "Window " << i << " " << std::endl;
+      std::cout << filter.get_windows()[i];
+      std::cout << std::endl;
+    }
+    filter.apply(u_filtered, t);
+    t+=0.015;
+  }
+
+  std::cout << "\n\n\n\Trimming at intermediate time and restarting at t=0.13\n\n\n";
+  t = 0.13;
+  filter.reset(t);
+  u << 0, 0, 0;
+  for(size_t steps=0; steps<8; steps++){
+    std::cout << "t: " << t << std::endl;
+    std::cout << "In: " << u.transpose() << std::endl;
+    filter.add_measurement(u, t);
+    std::cout << "Printing windows" << std::endl;
+    for (size_t i=0; i<u.size(); i++){
+      std::cout << "Window " << i << " " << std::endl;
+      std::cout << filter.get_windows()[i];
+      std::cout << std::endl;
+    }
+    filter.apply(u_filtered, t);
+    std::cout << "Out: " << u.transpose() << std::endl;
+    t+=0.015;
+  }
+
+
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
