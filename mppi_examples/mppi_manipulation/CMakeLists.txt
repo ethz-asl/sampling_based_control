@@ -4,7 +4,7 @@ project(mppi_manipulation)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
-option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." ON)
+option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." OFF)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(pinocchio REQUIRED)
@@ -53,7 +53,7 @@ add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_raisim ${PROJECT_NAME})
 
-if (${BUILD_WITH_OGRE})
+if (BUILD_WITH_OGRE)
   find_package(raisimOgre CONFIG REQUIRED)
   add_executable(sim_ogre src/tests/sim.cpp)
   target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)

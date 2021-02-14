@@ -62,7 +62,7 @@ void PandaRaisimDynamics::initialize_pd() {
 
   if (!fixed_base_) {
     joint_p_gain.head(BASE_DIMENSION).setConstant(0);
-    joint_d_gain.head(BASE_DIMENSION).setConstant(200.0);
+    joint_d_gain.head(BASE_DIMENSION).setConstant(1000.0);
     joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(0.0);
     joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(10.0);
   } else {

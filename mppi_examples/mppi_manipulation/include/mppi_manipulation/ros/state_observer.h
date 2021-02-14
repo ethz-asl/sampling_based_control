@@ -96,6 +96,9 @@ class StateObserver {
   Eigen::Affine3d T_hinge_handle_;
   Eigen::Affine3d T_hinge_handle_init_;
 
+  // filter base odometry
+  double base_alpha_;
+
 };
 }  // namespace manipulation
 
