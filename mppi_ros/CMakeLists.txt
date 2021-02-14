@@ -11,19 +11,21 @@ set(PACKAGE_DEPENDENCIES
         std_msgs
         roscpp
         any_worker
-        param_io)
+        param_io
+        message_generation)
 
-find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES} message_generation)
+find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 find_package(gram_savitzky_golay)
 
 # Messages
-add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg FILES RolloutsInfo.msg)
-generate_messages(DEPENDENCIES)
+add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg
+        FILES Array.msg Config.msg Rollout.msg Data.msg)
+generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
-        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES})
+        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES} message_runtime)
 
 set(COMMON_LIBRARIES ${catkin_LIBRARIES})
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
@@ -33,9 +35,13 @@ include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Libraries
 add_library(${PROJECT_NAME}
-        src/controller_interface.cpp)
+        src/controller_interface.cpp src/conversions.cpp)
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
 
+catkin_install_python(PROGRAMS scripts/plot_experiment.py scripts/record_data.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
 ## Testing
 if (CATKIN_ENABLE_TESTING)
     #    catkin_add_gtest()

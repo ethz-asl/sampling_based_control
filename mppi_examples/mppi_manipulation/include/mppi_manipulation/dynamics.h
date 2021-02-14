@@ -57,6 +57,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
 
   observation_t step(const input_t& u, const double dt) override;
   input_t get_zero_input(const observation_t& x) override;
+  const observation_t get_state() const override {return x_;}
 
   raisim::World* get_world() { return &sim_; }
   raisim::ArticulatedSystem* get_panda() { return panda; }

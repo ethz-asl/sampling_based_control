@@ -7,10 +7,11 @@
  */
 
 #include "mppi_ros/controller_interface.h"
+#include "mppi_ros/conversions.h"
 
 using namespace mppi_ros;
 
-ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh), observation_set_(false) {}
+ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh) {}
 
 ControllerRos::~ControllerRos() { this->stop(); }
 
@@ -30,6 +31,7 @@ void ControllerRos::init_default_ros() {
       nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 10);
   max_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
+  data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
 }
 
 bool ControllerRos::init() {
@@ -99,13 +101,23 @@ bool ControllerRos::start() {
 
 bool ControllerRos::update_policy() {
   if (!observation_set_) return true;
-  controller_->update_policy(); 
+  controller_->update_policy();
+
+  if (controller_->config_.logging){
+    mppi_ros::to_msg(controller_->get_data(), data_ros_);
+    data_publisher_.publish(data_ros_);
+  }
   return true;
 }
 
 bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
   if (!observation_set_) return true;
   controller_->update_policy();
+
+  if (controller_->config_.logging){
+    mppi_ros::to_msg(controller_->get_data(), data_ros_);
+    data_publisher_.publish(data_ros_);
+  }
   return true;
 }
 
@@ -130,7 +142,7 @@ bool ControllerRos::publish_ros_thread(const any_worker::WorkerEvent &event) {
 }
 
 void ControllerRos::publish_stage_cost() {
-  stage_cost_.data = 0.0;  // TODO(giuseppe) see how to do this
+  stage_cost_.data = controller_->get_stage_cost();  // TODO(giuseppe) see how to do this
   cost_publisher_.publish(stage_cost_);
 }
 

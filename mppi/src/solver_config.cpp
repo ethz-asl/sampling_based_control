@@ -39,6 +39,8 @@ bool SolverConfig::init_from_file(const std::string &file) {
   caching_factor  = parse_key<double>(solver_options, "caching_factor").value_or(caching_factor);
   step_size       = parse_key<double>(solver_options, "step_size").value_or(step_size);
   horizon         = parse_key<double>(solver_options, "horizon").value_or(horizon);
+  alpha           = parse_key_quiet<double>(solver_options, "gradient_step_size").value_or(alpha);
+  beta            = parse_key_quiet<double>(solver_options, "momentum_step_size").value_or(beta);
   adaptive_sampling = parse_key_quiet<bool>(solver_options, "adaptive_sampling").value_or(adaptive_sampling);
   input_variance  = parse_key<Eigen::VectorXd>(solver_options, "input_variance").value_or(Eigen::VectorXd(0));
   filter_type     = (InputFilterType)parse_key_quiet<int>(solver_options, "filter_type").value_or(filter_type);
@@ -53,12 +55,15 @@ bool SolverConfig::init_from_file(const std::string &file) {
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
-
   filters_type    = parse_key_quiet<std::vector<int>>(solver_options, "filters_type").value_or(std::vector<int>{});
   filters_window  = parse_key_quiet<std::vector<int>>(solver_options, "filters_window").value_or(std::vector<int>{});
   filters_order   = parse_key_quiet<std::vector<uint>>(solver_options, "filters_order").value_or(std::vector<uint>{});
-
-
+  logging         = parse_key_quiet<bool>(solver_options, "logging").value_or(logging);
+  use_tree_search = parse_key_quiet<bool>(solver_options, "use_tree_search").value_or(use_tree_search);
+  pruning_threshold = parse_key_quiet<double>(solver_options, "pruning_threshold").value_or(pruning_threshold);
+  expert_weights   = parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
+  expert_types 	   = {NORM, IMP};
+  display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
   //clang-format on
 
   if (parsing_error) return false;
@@ -76,6 +81,8 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " lambda:           " << config.lambda << std::endl;
   os << " h:                " << config.h << std::endl;
   os << " substeps:         " << config.substeps << std::endl;
+  os << " gradient_step_size: " << config.alpha << std::endl;
+  os << " momentum_step_size: " << config.beta << std::endl;
   os << " adaptive sampling " << config.adaptive_sampling << std::endl;
   os << " input_variance:   " << config.input_variance.transpose() << std::endl; 
   
@@ -114,6 +121,7 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " verbose:          " << config.verbose << std::endl;
   os << " debug_print:      " << config.debug_print << std::endl;
   os << " threads:          " << config.threads << std::endl;
+  os << " logging:          " << config.logging << std::endl;
   os << "--------------------------------------------------" << std::endl;
   return os;
 }

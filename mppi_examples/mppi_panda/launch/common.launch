@@ -5,7 +5,6 @@
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
     <arg name="joint_state_topic" default="/joint_states"/>
-    <arg name="tf_prefix" default=""/>
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/config.rviz" output="screen"/>

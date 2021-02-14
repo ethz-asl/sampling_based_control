@@ -14,6 +14,7 @@
 
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
+#include <mppi_ros/Data.h>
 
 #include "mppi/filters/savgol_filter.h"
 
@@ -133,6 +134,10 @@ class ControllerRos {
   mppi::input_t input_ = mppi::input_t::Zero(1);
   std_msgs::Float32MultiArray input_ros_;
   std_msgs::Float32MultiArray var_ros_;
+
+  // logging
+  mppi_ros::Data data_ros_;
+  ros::Publisher data_publisher_;
   
 };
 
