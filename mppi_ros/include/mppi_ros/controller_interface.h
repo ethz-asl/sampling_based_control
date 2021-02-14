@@ -15,6 +15,8 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
 
+#include "mppi/filters/savgol_filter.h"
+
 using namespace mppi;
 namespace mppi_ros {
 
@@ -111,6 +113,8 @@ class ControllerRos {
 
   bool publish_ros_ = false;
   double ros_publish_rate_ = 0.0;
+
+  mppi::SavGolFilter filter_;
 
  public:
   ros::NodeHandle nh_;

@@ -48,10 +48,11 @@ bool ControllerRos::init() {
     ok = false;
   }
   if (controller_ == nullptr || !ok) return false;
-
+  filter_ = SavGolFilter(controller_->steps_, controller_->config_.filters_window.size(), controller_->config_.filters_window,
+               controller_->config_.filters_order);
   initialized_ = true;
   started_ = false;
-  
+  ROS_INFO("Controller interface initialized.");
   return initialized_;
 }
 
@@ -172,6 +173,10 @@ void ControllerRos::set_observation(const mppi::observation_t &x,
 void ControllerRos::get_input(const mppi::observation_t &x, mppi::input_t &u,
                               const mppi::time_t &t) {
   controller_->get_input(x, u, t);
+//  filter_.reset(t);
+//  filter_.add_measurement(u, t);
+//  filter_.apply(u, t);
+
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;
@@ -182,6 +187,10 @@ void ControllerRos::get_input_state(const observation_t &x,
                                     observation_t &x_nom, input_t &u,
                                     const mppi::time_t &t) {
   controller_->get_input_state(x, x_nom, u, t);
+//  filter_.reset(t);
+//  filter_.add_measurement(u, t);
+//  filter_.apply(u, t);
+
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;
