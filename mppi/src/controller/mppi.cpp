@@ -365,6 +365,15 @@ void PathIntegral::sample_trajectories() {
   }
 }
 
+void PathIntegral::sample_trajectories_via_tree() {
+  tree_manager_.build_new_tree(x0_internal_, t0_internal_, opt_roll_);
+}
+
+void PathIntegral::overwrite_rollouts() {
+  rollouts_ = tree_manager_.get_rollouts();
+  rollouts_cost_ = tree_manager_.get_rollouts_cost();
+}
+
 void PathIntegral::compute_exponential_cost() {
   min_cost_ = rollouts_cost_.minCoeff();
   max_cost_ = rollouts_cost_.maxCoeff();
