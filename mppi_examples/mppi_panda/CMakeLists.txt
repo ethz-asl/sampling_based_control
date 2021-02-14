@@ -34,7 +34,7 @@ add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRAIRES} ${PINOCCHIO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} ${PINOCCHIO_LIBRARIES})
 
 add_executable(panda_control src/nodes/panda_control.cpp)
 target_link_libraries(panda_control ${PROJECT_NAME} ${catkin_LIBRARIES})
