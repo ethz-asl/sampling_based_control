@@ -4,8 +4,10 @@
     <arg name="plot_cost" default="false"/>
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="true"/>
-    <arg name="experiment" default="false"/>
     <arg name="debug" default="false"/>
+
+    <arg name="experiment" default="false"/>
+    <arg name="experiment_id" default="panda_mobile_kin_single_target"/>
 
     <arg name="description_file" default="$(find mppi_panda_mobile)/resources/panda/panda_mobile.urdf.xacro"/>
     <!-- TF prefix -->
@@ -72,8 +74,10 @@
 
     <group if="$(arg experiment)">
         <node pkg="mppi_ros" type="record_data.py" name="record_data">
-            <param name="experiment_id" value="mppi_panda_mobile"/>
+            <param name="experiment_id" value="$(arg experiment_id)"/>
         </node>
-        <node pkg="mppi_panda_mobile" type="target_generator.py" name="target_generator"/>
+        <node pkg="mppi_panda_mobile" type="target_generator.py" name="target_generator" output="screen">
+            <param name="experiment_id" value="$(arg experiment_id)"/>
+        </node>
     </group>
 </launch>

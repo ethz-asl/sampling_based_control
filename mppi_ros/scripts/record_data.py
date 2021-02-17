@@ -75,11 +75,10 @@ class DataRecorder:
         self.data_dict['effective_samples'] = gaussian_filter1d(self.data_dict['effective_samples'], sigma=2)
 
         # Resampling of cost and timestamps: data needs to be aligned for aggregation
-        dt = 0.01
         t_min = min(self.data_dict['time'])
         t_max = max(self.data_dict['time'])
         t_old = self.data_dict['time']
-        t_new = np.round(np.arange(t_min, t_max, step=dt), decimals=3)
+        t_new = np.round(np.linspace(t_min, t_max, len(self.data_dict["index"])), decimals=3)
         self.data_dict['time'] = t_new
 
         cost_int_fun = interp1d(t_old, self.data_dict['stage_cost'], fill_value='extrapolate')
@@ -87,11 +86,6 @@ class DataRecorder:
 
         samples_int_fun = interp1d(t_old, self.data_dict['effective_samples'], fill_value='extrapolate')
         self.data_dict['effective_samples'] = samples_int_fun(t_new)
-
-        for key, value in self.data_dict.items():
-            rospy.loginfo("{} {}".format(key, value))
-            if key not in ('time', 'stage_cost', 'effective_samples'):
-                self.resize_array(value, len(self.data_dict['time']))
 
     def save(self):
         df = pd.DataFrame(self.data_dict)

@@ -70,15 +70,17 @@ bool PandaMobileControllerInterface::set_controller(
   // -------------------------------
   // dynamics
   // -------------------------------
-  auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description);
+  double holonomic = param_io::param(nh_, "holonomic", true);
+  auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description, holonomic);
 
   // -------------------------------
   // cost
   // -------------------------------
   double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
   double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
+  bool joint_limits = param_io::param(nh_, "joint_limits", false);
   auto cost = std::make_shared<PandaMobileCost>(
-      robot_description, linear_weight, angular_weight, obstacle_radius_);
+      robot_description, linear_weight, angular_weight, obstacle_radius_, joint_limits);
 
   // -------------------------------
   // config
