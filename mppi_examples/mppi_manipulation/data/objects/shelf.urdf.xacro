@@ -29,10 +29,9 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="-0.318 -0.510 0.904" rpy="-0.007 0.002 1.5999"/>
+            <origin xyz="-0.011 -0.431 0.905" rpy="-0.006 0.001 1.585"/>
         </joint>
     </xacro:if>
-
 
     <link name="shelf"/>
     <link name="door">
