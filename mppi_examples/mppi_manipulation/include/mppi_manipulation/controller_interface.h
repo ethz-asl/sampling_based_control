@@ -70,6 +70,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   ros::Publisher optimal_base_trajectory_publisher_;
   ros::Publisher obstacle_marker_publisher_;
   ros::Publisher base_twist_from_path_publisher_;
+  ros::Publisher pose_handle_publisher_;
 
   ros::Subscriber mode_subscriber_;
   ros::Subscriber obstacle_subscriber_;

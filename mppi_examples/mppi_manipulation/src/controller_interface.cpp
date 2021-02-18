@@ -16,7 +16,8 @@ bool PandaControllerInterface::init_ros() {
   optimal_base_trajectory_publisher_ = nh_.advertise<nav_msgs::Path>("/optimal_base_trajectory", 10);
   obstacle_marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
   base_twist_from_path_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>("/twist_from_path", 10);
-
+  pose_handle_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/handle_from_model", 10);
+  
   mode_subscriber_ = nh_.subscribe("/mode", 10, &PandaControllerInterface::mode_callback, this);
   obstacle_subscriber_ =
       nh_.subscribe("/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
@@ -270,6 +271,8 @@ void PandaControllerInterface::publish_ros() {
     base_twist_from_path.twist.angular.y = 0.0;
     base_twist_from_path.twist.angular.z = (x_opt_[1](3) - x_opt_[0](3)) / config_.step_size;
     base_twist_from_path_publisher_.publish(base_twist_from_path);
-
   }
+
+  // for debug
+  pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));
 }
