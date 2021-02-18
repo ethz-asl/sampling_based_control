@@ -23,7 +23,7 @@
         <joint name="world_joint" type="fixed">
             <parent link="world"/>
             <child link="base_link"/>
-            <origin xyz="-0.2667636086710243 0.7114964305976865 0.0" rpy="0.000 0.000 -1.5898602011730607"/>
+             <origin xyz="0.016562803523970236 0.536778652875357 0.0" rpy="0.000 0.000 -1.5943151411055445"/>
         </joint>
     </xacro:if>
 
@@ -48,7 +48,7 @@
             <parent link="panda_hand"/>
             <child link="panda_grasp"/>
             <axis xyz="0 1 0"/>
-            <origin xyz="0 0 0.085" rpy="0 0 0"/>
+            <origin xyz="0 0 0.10" rpy="0 0 0"/>
         </joint>
     </xacro:if>
 
