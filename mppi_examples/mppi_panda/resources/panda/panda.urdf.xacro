@@ -489,11 +489,21 @@
                 </visual>
                 <xacro:if value="${collision_finger}">
                     <collision>
-                        <!--origin rpy="0 0 0" xyz="0 0 0"/-->
-                        <origin rpy="0 0 3.14159265359" xyz="0 0.01 0.028"/>
+                        <origin rpy="0.0 0 0.0" xyz="0 0.018 0.01"/>
                         <geometry>
-                            <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/-->
-                            <box size="0.02 0.02 0.05"/>
+                            <box size="0.0222 0.015 0.02"/>
+                        </geometry>
+                    </collision>
+                    <collision>
+                        <origin rpy="${3.14 * 30 / 180.0} 0 0.0" xyz="0 0.017 0.027"/>
+                        <geometry>
+                            <box size="0.0222 0.007 0.025"/>
+                        </geometry>
+                    </collision>
+                    <collision>
+                        <origin rpy="0.0 0 0.0" xyz="0 0.007 0.045"/>
+                        <geometry>
+                            <box size="0.0222 0.0145 0.018"/>
                         </geometry>
                     </collision>
                 </xacro:if>
@@ -516,13 +526,23 @@
                 </visual>
                 <xacro:if value="${collision_finger}">
                     <collision>
-                        <!-- origin rpy="0 0 3.14159265359" xyz="0 0 0"/ -->
-                        <origin rpy="0 0 3.14159265359" xyz="0 -0.01 0.028"/>
+                        <origin rpy="0.0 0 0.0" xyz="0 -0.018 0.01"/>
                         <geometry>
-                            <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/-->
-                            <box size="0.02 0.02 0.05"/>
+                            <box size="0.0222 0.015 0.02"/>
                         </geometry>
                     </collision>
+                    <collision>
+                        <origin rpy="${-3.14 * 30 / 180.0} 0 0.0" xyz="0 -0.017 0.027"/>
+                        <geometry>
+                            <box size="0.0222 0.007 0.025"/>
+                        </geometry>
+                    </collision>
+                    <collision>
+                        <origin rpy="0.0 0 0.0" xyz="0 -0.007 0.045"/>
+                        <geometry>
+                            <box size="0.0222 0.0145 0.018"/>
+                        </geometry>
+                    </collision>    
                 </xacro:if>
             </link>
             <joint name="panda_finger_joint1" type="prismatic">
