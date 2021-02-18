@@ -19,12 +19,11 @@
         <xacro:planar_base connect_to="base_link"/>
     </xacro:unless>
 
-
     <xacro:if value="$(arg fixed_base)">
         <joint name="world_joint" type="fixed">
             <parent link="world"/>
             <child link="base_link"/>
-            <origin xyz="0.004 1.087 0.000" rpy="0.000 0.000 -1.500"/>
+            <origin xyz="-0.2667636086710243 0.7114964305976865 0.0" rpy="0.000 0.000 -1.5898602011730607"/>
         </joint>
     </xacro:if>
 
