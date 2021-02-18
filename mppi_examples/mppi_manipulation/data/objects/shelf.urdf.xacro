@@ -4,7 +4,7 @@
     <xacro:arg name="height" default="0.0"/>
     <xacro:property name="height" default="$(arg height)"/>
 
-    <xacro:property name="door_length" default="0.30"/>
+    <xacro:property name="door_length" default="0.295"/>
     <xacro:property name="door_height" default="0.90"/>
     <xacro:property name="door_width" default="0.016"/>
     <xacro:property name="handle_height" default="0.026"/>
