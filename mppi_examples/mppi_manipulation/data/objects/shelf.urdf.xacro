@@ -97,6 +97,9 @@
             <geometry>
                 <box size="0.01 0.01 ${handle_length+0.01}"/>
             </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
         </collision>
     </link>
 
@@ -120,6 +123,9 @@
             <geometry>
                 <box size="${handle_height} 0.01 0.01"/>
             </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
         </collision>
     </link>
 
@@ -143,6 +149,9 @@
             <geometry>
                 <box size="${handle_height} 0.01 0.01"/>
             </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
         </collision>
     </link>
 

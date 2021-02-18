@@ -493,18 +493,27 @@
                         <geometry>
                             <box size="0.0222 0.015 0.02"/>
                         </geometry>
-                    </collision>
+                         <material name="">
+                            <contact name="steel"/>
+                        </material>
+                   </collision>
                     <collision>
                         <origin rpy="${3.14 * 30 / 180.0} 0 0.0" xyz="0 0.017 0.027"/>
                         <geometry>
                             <box size="0.0222 0.007 0.025"/>
                         </geometry>
+                        <material name="">
+                            <contact name="steel"/>
+                        </material>
                     </collision>
                     <collision>
                         <origin rpy="0.0 0 0.0" xyz="0 0.007 0.045"/>
                         <geometry>
                             <box size="0.0222 0.0145 0.018"/>
                         </geometry>
+                        <material name="">
+                            <contact name="steel"/>
+                        </material>
                     </collision>
                 </xacro:if>
             </link>
@@ -530,18 +539,27 @@
                         <geometry>
                             <box size="0.0222 0.015 0.02"/>
                         </geometry>
+                        <material name="">
+                            <contact name="steel"/>
+                        </material>
                     </collision>
                     <collision>
                         <origin rpy="${-3.14 * 30 / 180.0} 0 0.0" xyz="0 -0.017 0.027"/>
                         <geometry>
                             <box size="0.0222 0.007 0.025"/>
                         </geometry>
+                        <material name="">
+                            <contact name="steel"/>
+                        </material>
                     </collision>
                     <collision>
                         <origin rpy="0.0 0 0.0" xyz="0 -0.007 0.045"/>
                         <geometry>
                             <box size="0.0222 0.0145 0.018"/>
                         </geometry>
+                        <material name="">
+                            <contact name="steel"/>
+                        </material>
                     </collision>    
                 </xacro:if>
             </link>
