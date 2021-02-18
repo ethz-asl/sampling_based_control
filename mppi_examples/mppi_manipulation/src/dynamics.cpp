@@ -26,6 +26,7 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
                                            const std::string& object_description) {
   sim_.setTimeStep(dt_);
   sim_.setERP(0., 0.);
+  sim_.setMaterialPairProp("steel", "steel", 0.001, 0.0, 0.0);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
