@@ -6,8 +6,8 @@
 
     <xacro:property name="door_length" default="0.30"/>
     <xacro:property name="door_height" default="0.90"/>
-    <xacro:property name="door_width" default="0.02"/>
-    <xacro:property name="handle_height" default="0.036"/>
+    <xacro:property name="door_width" default="0.016"/>
+    <xacro:property name="handle_height" default="0.026"/>
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.25"/>
 
@@ -158,4 +158,14 @@
         <child link="handle_support_right"/>
         <origin xyz="-${handle_height/2} 0 -${handle_length/2}" rpy="0 0 0"/>
     </joint>
+
+    <link name="measured_joint_link"/>
+
+    <joint name="measured_joint_handle_joint" type="fixed">
+        <parent link="handle_link"/>
+        <child link="measured_joint_link"/>
+        <origin xyz="-0.038456463645002395 -0.24676779774627114 0.0" rpy="0 0 0"/>
+    </joint>
+
+    
 </robot>
