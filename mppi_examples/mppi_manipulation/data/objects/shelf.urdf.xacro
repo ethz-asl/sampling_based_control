@@ -64,13 +64,19 @@
 
     <joint name="articulation_joint" type="revolute">
         <parent link="door_hinge"/>
-        <child link="door"/>
+        <child link="measured_joint_link"/>
         <dynamics damping="2.0" friction="4.0"/>
-        <origin xyz="0 0 0"/>
+        <origin xyz=" -0.004 0.023 -0.150"/>
         <axis xyz="0 0 -1"/>
         <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
     </joint>
 
+    <joint name="door_link" type="fixed">
+        <parent link="measured_joint_link"/>
+        <child link="door"/>
+        <origin xyz="0.004 -0.023 0.150"/>
+    </joint>
+    
     <link name="handle_link">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -161,11 +167,11 @@
 
     <link name="measured_joint_link"/>
 
-    <joint name="measured_joint_handle_joint" type="fixed">
+<!--     <joint name="measured_joint_handle_joint" type="fixed">
         <parent link="handle_link"/>
         <child link="measured_joint_link"/>
         <origin xyz="-0.038456463645002395 -0.24676779774627114 0.0" rpy="0 0 0"/>
-    </joint>
+    </joint> -->
 
     
 </robot>
