@@ -71,8 +71,8 @@ void PandaRaisimDynamics::initialize_pd() {
     joint_d_gain.head(ARM_DIMENSION).setConstant(10.0);
   }
 
-  joint_p_gain.tail(GRIPPER_DIMENSION).setConstant(200);
-  joint_d_gain.tail(GRIPPER_DIMENSION).setConstant(1.0);
+  joint_p_gain.tail(GRIPPER_DIMENSION).setConstant(100);
+  joint_d_gain.tail(GRIPPER_DIMENSION).setConstant(50.0);
 
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
