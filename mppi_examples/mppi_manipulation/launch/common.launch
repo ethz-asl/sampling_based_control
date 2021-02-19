@@ -21,7 +21,7 @@
     <group if="$(arg plot_input)">
         <arg name="mp_config_input" default="$(find mppi_manipulation)/config/multiplot/rqt_multiplot.xml"/>
         <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_input) --multiplot-run-all"
+              args="--multiplot-config $(arg mp_config_input)"
               output="screen"/>
     </group>
 

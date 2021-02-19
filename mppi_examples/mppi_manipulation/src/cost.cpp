@@ -10,8 +10,8 @@
 #include <ros/package.h>
 #include "mppi_manipulation/dimensions.h"
 
-#define LOWER_LIMITS -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
-#define UPPER_LIMITS 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
+#define LOWER_LIMITS -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -20.8973
+#define UPPER_LIMITS 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 20.8973
 
 // TODO(giuseppe) remove the gripper cost and hand code the gripper positions
 using namespace manipulation;
