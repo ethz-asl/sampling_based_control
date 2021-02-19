@@ -35,7 +35,7 @@
       custom_fingers:=true
       no_position_limits:=false
       friction:=0.0
-      damping:=0.0
+      damping:=10.0
       fixed_base:=$(arg fixed_base)"/>
 
     <param name="object_description"

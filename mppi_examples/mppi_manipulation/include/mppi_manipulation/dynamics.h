@@ -18,6 +18,7 @@
 #include <numeric>
 #include <stdexcept>
 #include "mppi_manipulation/dimensions.h"
+#include "mppi_manipulation/gains.h"
 
 namespace manipulation {
 
@@ -29,7 +30,7 @@ struct force_t {
 class PandaRaisimDynamics : public mppi::DynamicsBase {
  public:
   PandaRaisimDynamics(const std::string& robot_description, const std::string& object_description,
-                      const double dt, const bool fixed_base = true);
+                      const double dt, const bool fixed_base = true, const PandaRaisimGains& = PandaRaisimGains());
   ~PandaRaisimDynamics() = default;
 
  private:
@@ -91,5 +92,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   Eigen::VectorXd joint_p, joint_v;
   Eigen::VectorXd joint_p_gain, joint_d_gain;
   Eigen::VectorXd joint_p_desired, joint_v_desired;
+
+  PandaRaisimGains gains_;
 };
 }  // namespace manipulation

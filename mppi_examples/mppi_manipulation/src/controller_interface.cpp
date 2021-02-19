@@ -101,8 +101,14 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   }
   ROS_INFO_STREAM("Fixed base? " << fixed_base_);
 
+  PandaRaisimGains dyanmics_gains;
+  if (!dyanmics_gains.parse_from_ros(nh_)){
+    ROS_ERROR("Failed to parse dynamics gains.");
+    return false;
+  }
+  ROS_INFO_STREAM("Successfully parsed dynamics gains: \n" << dyanmics_gains);
   dynamics = std::make_shared<PandaRaisimDynamics>(
-      robot_description_raisim, object_description_raisim, config_.step_size, fixed_base_);
+      robot_description_raisim, object_description_raisim, config_.step_size, fixed_base_, dyanmics_gains);
   std::cout << "Done." << std::endl;
 
   // -------------------------------

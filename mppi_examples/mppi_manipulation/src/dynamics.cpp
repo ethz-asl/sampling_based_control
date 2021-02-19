@@ -15,8 +15,8 @@ namespace manipulation {
 
 PandaRaisimDynamics::PandaRaisimDynamics(const std::string& robot_description,
                                          const std::string& object_description, const double dt,
-                                         const bool fixed_base)
-    : fixed_base_(fixed_base), dt_(dt) {
+                                         const bool fixed_base, const PandaRaisimGains& gains)
+    : fixed_base_(fixed_base), dt_(dt), gains_(gains) {
   initialize_world(robot_description, object_description);
   initialize_pd();
   set_collision();
@@ -62,17 +62,17 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_v_desired.setZero(robot_dof_);
 
   if (!fixed_base_) {
-    joint_p_gain.head(BASE_DIMENSION).setConstant(0);
-    joint_d_gain.head(BASE_DIMENSION).setConstant(1000.0);
-    joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(0.0);
-    joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(10.0);
+    joint_p_gain.head(BASE_DIMENSION) = gains_.base_gains.Kp; //.setConstant(0);
+    joint_d_gain.head(BASE_DIMENSION) = gains_.base_gains.Kd; //.setConstant(1000.0);
+    joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = gains_.arm_gains.Kp; //.setConstant(0.0);
+    joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = gains_.arm_gains.Kd; //.setConstant(10.0);
   } else {
-    joint_p_gain.head(ARM_DIMENSION).setConstant(0);
-    joint_d_gain.head(ARM_DIMENSION).setConstant(10.0);
+    joint_p_gain.head(ARM_DIMENSION) = gains_.arm_gains.Kp; //.setConstant(0);
+    joint_d_gain.head(ARM_DIMENSION) = gains_.arm_gains.Kd; //.setConstant(10.0);
   }
 
-  joint_p_gain.tail(GRIPPER_DIMENSION).setConstant(100);
-  joint_d_gain.tail(GRIPPER_DIMENSION).setConstant(50.0);
+  joint_p_gain.tail(GRIPPER_DIMENSION) = gains_.gripper_gains.Kp; //.setConstant(100);
+  joint_d_gain.tail(GRIPPER_DIMENSION) = gains_.gripper_gains.Kd; //.setConstant(50.0);
 
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
