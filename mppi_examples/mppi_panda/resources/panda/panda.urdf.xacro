@@ -9,6 +9,8 @@
     <xacro:arg name="collision_finger" default="true"/>
     <xacro:arg name="custom_fingers" default="false"/>
     <xacro:arg name="no_position_limits" default="true"/>
+    <xacro:arg name="friction" default="0.0"/>
+    <xacro:arg name="damping"  default="0.0"/>
 
     <xacro:arg name="add_finger" default="false"/>
 
@@ -20,6 +22,8 @@
     <xacro:property name="collision_finger" value="$(arg collision_finger)"/>
     <xacro:property name="no_position_limits" value="$(arg no_position_limits)"/>
     <xacro:property name="add_finger" value="$(arg add_finger)"/>
+    <xacro:property name="friction" default="$(arg friction)"/>
+    <xacro:property name="damping"  default="$(arg damping)"/>
 
     <xacro:include filename="$(find mppi_panda)/resources/panda/custom_fingers.urdf"/>
 
@@ -170,6 +174,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link2">
             <inertial>
@@ -209,6 +214,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="87" lower="-1.7628" upper="1.7628" velocity="2.1750"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link3">
             <inertial>
@@ -248,6 +254,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link4">
             <inertial>
@@ -289,6 +296,7 @@
                 <limit effort="87" lower="-3.0718" upper="0.0698" velocity="2.1750"/>
                 <!-- upper should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link5">
             <inertial>
@@ -328,6 +336,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link6">
             <inertial>
@@ -367,6 +376,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="12" lower="-0.0175" upper="3.7525" velocity="2.6100"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link7">
             <inertial>
@@ -406,6 +416,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link8">
             <inertial>
