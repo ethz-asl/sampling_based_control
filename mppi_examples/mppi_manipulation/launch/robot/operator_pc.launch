@@ -3,6 +3,8 @@
 	<arg name="plot_cost" default="false"/>
     <arg name="plot_input" default="true"/>
     <arg name="enable_obstacle" default="false"/>
+    <arg name="ogre_vis" default="false"/>
+    <arg name="fixed_base" default="false"/>
 
 	<include file="$(find mppi_manipulation)/launch/robot/vicon.launch"/>
 
@@ -13,4 +15,10 @@
 	</include>
 
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
+
+	<group if="$(arg ogre_vis)">
+      <include file="$(find mppi_manipulation)/launch/ogre.launch">
+      	<arg name="fixed_base" value="$(arg fixed_base)"/>
+      </include>
+	</group>
 </launch>
