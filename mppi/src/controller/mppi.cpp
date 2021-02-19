@@ -525,7 +525,7 @@ void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
       double coeff = (t - *(lower - 1)) / (*lower - *(lower - 1));
       u_nom = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
               coeff * opt_roll_cache_.uu[idx];
-      x_nom = opt_roll_cache_.xx[idx - 1];  // TODO offer a way to also do
+      x_nom = opt_roll_cache_.xx[idx];  // TODO offer a way to also do
                                             // interpolation of the state
     }
   }
