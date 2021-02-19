@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
   /// Initialize the dynamics
   std::string robot_description_raisim;
-  if (!nh.getParam("/robot_description_raisim", robot_description_raisim)) {
+  if (!nh.getParam("/robot_description_ogre", robot_description_raisim)) {
     ROS_ERROR("Could not parse robot_description_raisim. Is the parameter set?");
     return 0;
   }
@@ -80,6 +80,7 @@ int main(int argc, char** argv) {
   auto vis = raisim::OgreVis::get();
 
   /// these method must be called before initApp
+  dynamics.get_world()->setTimeStep(0.0001);
   vis->setWorld(dynamics.get_world());
   vis->setWindowSize(1800, 1200);
   vis->setSetUpCallback(setupCallback);
