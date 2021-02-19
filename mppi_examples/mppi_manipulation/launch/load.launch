@@ -12,6 +12,7 @@
       collision_links:=false
       collision_hand:=true
       add_finger:=true
+      custom_fingers:=true
       fixed_base:=$(arg fixed_base)"/>
 
     <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
@@ -21,6 +22,7 @@
       collision_links:=false
       collision_hand:=true
       add_finger:=true
+      custom_fingers:=true
       fixed_base:=true"/>
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
@@ -30,6 +32,7 @@
       collision_finger:=true
       collision_format:='obj'
       add_finger:=true
+      custom_fingers:=true
       no_position_limits:=true
       fixed_base:=$(arg fixed_base)"/>
 
@@ -61,7 +64,7 @@
             <remap from="joint_states" to="/object/joint_states"/>
         </node>
         <node name="rviz" pkg="rviz" type="rviz" output="screen"
-              args="-d $(find mppi_manipulation)/config/debug_urdf.rviz"/>
+              args="-d $(find mppi_manipulation)/config/rviz/debug_urdf.rviz"/>
 
     </group>
 </launch>

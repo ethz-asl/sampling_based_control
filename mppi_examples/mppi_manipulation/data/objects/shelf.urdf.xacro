@@ -7,7 +7,7 @@
     <xacro:property name="door_length" default="0.295"/>
     <xacro:property name="door_height" default="0.90"/>
     <xacro:property name="door_width" default="0.016"/>
-    <xacro:property name="handle_height" default="0.026"/>
+    <xacro:property name="handle_height" default="0.05"/> <!-- 0.026 -->
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.27"/>
 
