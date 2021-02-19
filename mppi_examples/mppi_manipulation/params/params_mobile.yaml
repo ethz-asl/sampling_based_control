@@ -10,6 +10,9 @@ solver:
   filtering: true
   substeps: 1
 
+  gradient_step_size: 1.0
+  momentum_step_size: 0.0
+
   filter_type: 1
   filter_order: 1
   filter_window: 10

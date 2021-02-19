@@ -33,7 +33,7 @@
       collision_format:='obj'
       add_finger:=true
       custom_fingers:=true
-      no_position_limits:=true
+      no_position_limits:=false
       fixed_base:=$(arg fixed_base)"/>
 
     <param name="object_description"
