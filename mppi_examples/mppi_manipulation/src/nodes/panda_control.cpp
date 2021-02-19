@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
   observation_t x_nom;
   manipulation_msgs::State x_nom_ros;
-  ros::Publisher x_nom_publisher_ = nh.advertise<manipulation_msgs::State>("/x_nom", 10);
+  ros::Publisher x_nom_publisher_ = nh.advertise<manipulation_msgs::State>("/observer/state", 10);
 
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);

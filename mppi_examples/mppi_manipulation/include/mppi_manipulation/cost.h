@@ -23,11 +23,21 @@ namespace manipulation {
 
 struct PandaCostParam {
   double Qt;  // translation cost
+  double Qt2;
   double Qr;  // rotation cost
+  double Qr2;
   double Qo;  // obstacle cost
   double Qc;  // contact cost
   double ro;  // obstacle radius
+  double Q_obj;
+  double Q_tol;
   pinocchio::SE3 grasp_offset;
+  double Q_joint_limit;
+  double Q_joint_limit_slope;
+  std::vector<double> upper_joint_limits;
+  std::vector<double> lower_joint_limits;
+
+  bool parse_from_ros(const ros::NodeHandle& nh);
 };
 
 class PandaCost : public mppi::CostBase {
@@ -60,9 +70,6 @@ class PandaCost : public mppi::CostBase {
   pinocchio::SE3 pose_reference_;
   pinocchio::SE3 pose_obstacle_;
 
-  Eigen::Matrix<double, 7, 1> joint_limits_lower_;
-  Eigen::Matrix<double, 7, 1> joint_limits_upper_;
-
  public:
   cost_ptr create() override {
     return std::make_shared<PandaCost>(robot_description_, object_description_, param_, fixed_base_);
@@ -80,3 +87,5 @@ class PandaCost : public mppi::CostBase {
   pinocchio::SE3 get_pose_handle(const Eigen::VectorXd& x);
 };
 }  // namespace manipulation
+
+std::ostream& operator<<(std::ostream& os, const manipulation::PandaCostParam& param);

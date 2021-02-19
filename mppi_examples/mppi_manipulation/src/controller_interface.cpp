@@ -109,22 +109,12 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   // cost
   // -------------------------------
   PandaCostParam cost_param;
-  cost_param.Qo = 10000;
-  cost_param.Qt = param_io::param(nh_, "linear_weight", 10.0);
-  cost_param.Qr = param_io::param(nh_, "angular_weight", 10.0);
-  cost_param.Qc = param_io::param(nh_, "contact_weight", 0.0);
-  cost_param.ro = obstacle_radius_;
-
-  using vd = std::vector<double>;
-  vd grasp_t = param_io::param<vd>(nh_, "grasp_translation_offset", {});
-  vd grasp_r = param_io::param<vd>(nh_, "grasp_orientation_offset", {});
-  Eigen::Vector3d t(grasp_t[0], grasp_t[1], grasp_t[2]);
-  Eigen::Quaterniond q(grasp_r[3], grasp_r[0], grasp_r[1], grasp_r[2]);
-  pinocchio::SE3 grasp_offset(q, t);
-  cost_param.grasp_offset = grasp_offset;
-
-  auto cost =
-      std::make_shared<PandaCost>(robot_description, object_description, cost_param, fixed_base_);
+  if (!cost_param.parse_from_ros(nh_)){
+    ROS_ERROR("Failed to parse cost parameters.");
+    return false;
+  }
+  ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
+  auto cost = std::make_shared<PandaCost>(robot_description, object_description, cost_param, fixed_base_);
 
   // -------------------------------
   // controller
