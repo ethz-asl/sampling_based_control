@@ -70,8 +70,6 @@ int main(int argc, char** argv) {
   nh.param<bool>("sequential", sequential, false);
   if (!sequential) controller.start();
 
-  bool freeze_robot = false;  // hack to freeze the robot once task is done
-
   // do some timing
   double elapsed;
   time_point<steady_clock> start, end;
@@ -89,8 +87,6 @@ int main(int argc, char** argv) {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
     }
-
-    if (freeze_robot) u.setZero();
 
     if (!static_optimization) {
       x = simulation->step(u, sim_dt);
@@ -114,7 +110,7 @@ int main(int argc, char** argv) {
     // TODO(giuseppe) read the actual reference position
     double object_displacement = simulation->get_object_displacement();
     double displacement_error = std::abs(object_displacement - M_PI / 2.0);
-    if (displacement_error < 1.0 * M_PI / 180.0) freeze_robot = true;
+    //if (displacement_error < 1.0 * M_PI / 180.0) freeze_robot = true;
 
     ros::spinOnce();
   }
