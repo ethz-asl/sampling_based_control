@@ -11,6 +11,10 @@
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.27"/>
 
+    <xacro:property name="shelf_x" default="-0.011"/>
+    <xacro:property name="shelf_y" default="-0.431"/>
+    <xacro:property name="shelf_z" default="0.905"/>
+    
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -29,11 +33,29 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="-0.011 -0.431 0.905" rpy="-0.006 0.001 1.585"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.006 0.001 1.585"/>
         </joint>
     </xacro:if>
 
-    <link name="shelf"/>
+    <link name="shelf">
+        <xacro:box_inertia m="5" x="${door_width}" y="${door_length}" z="${shelf_z}"/>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 -${door_length/2} ${-shelf_z/2}"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${shelf_z}"/>
+            </geometry>
+            <material name="shelf_material">
+                <color rgba="0.0 1.0 1.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 -${door_length/2} ${-shelf_z/2}"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${shelf_z}"/>
+            </geometry>
+        </collision>
+    </link>
+
     <link name="door">
         <xacro:box_inertia m="5.8" x="${door_width}" y="${door_length}" z="${door_height}"/>
         <visual>
