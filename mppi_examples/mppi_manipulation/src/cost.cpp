@@ -73,12 +73,7 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                          ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
 
     // when almost opened reintroduce contact cost to release contact
-    if (std::abs(object_error) < param_.Q_tol){
-      cost += param_.Qc;
-    }
-    else{
-      cost += object_error * object_error * param_.Q_obj;
-    }
+    cost += object_error * object_error * param_.Q_obj;
   }
 
   double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();
