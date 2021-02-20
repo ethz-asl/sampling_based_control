@@ -101,7 +101,7 @@ bool StateObserver::initialize() {
 
   // required to now the origin hinge position
   KDL::Frame T_door_handle_KDL;
-  object_kinematics.getChain("door_hinge", "handle_link", chain);
+  object_kinematics.getChain("axis_link", "handle_link", chain);
   KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
   fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
   tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);

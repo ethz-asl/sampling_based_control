@@ -23,7 +23,7 @@
         <joint name="world_joint" type="fixed">
             <parent link="world"/>
             <child link="base_link"/>
-             <origin xyz="0.016562803523970236 0.536778652875357 0.0" rpy="0.000 0.000 -1.5943151411055445"/>
+             <origin xyz="0.01085080249015791 0.6237166552544203 0.0" rpy="0.000 0.000 -1.6091077199502668"/>
         </joint>
     </xacro:if>
 
@@ -35,7 +35,7 @@
         <parent link="mid_mount"/>
         <child link="franka_mount_link"/>
         <!--        <origin xyz="$(optenv RIDGEBACK_FRANKA_XYZ 0.21 0.0 0.2)" rpy="$(optenv RIDGEBACK_FRANKA_RPY 0 0 0)"/>-->
-        <origin xyz="$(optenv RIDGEBACK_FRANKA_XYZ 0.30 0.0 0.445)" rpy="$(optenv RIDGEBACK_FRANKA_RPY 0 0 0)"/>
+        <origin xyz="0.30 0.0 0.445" rpy="0 0 0"/>
 
     </joint>
     <link name="franka_mount_link"/>
@@ -48,7 +48,7 @@
             <parent link="panda_hand"/>
             <child link="panda_grasp"/>
             <axis xyz="0 1 0"/>
-            <origin xyz="0 0 0.10" rpy="0 0 0"/>
+            <origin xyz="0 0 0.106" rpy="0 0 0"/> <!-- 0.106-->
         </joint>
     </xacro:if>
 

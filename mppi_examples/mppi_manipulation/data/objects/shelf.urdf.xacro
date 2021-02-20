@@ -7,13 +7,13 @@
     <xacro:property name="door_length" default="0.295"/>
     <xacro:property name="door_height" default="0.90"/>
     <xacro:property name="door_width" default="0.016"/>
-    <xacro:property name="handle_height" default="0.05"/> <!-- 0.026 -->
+    <xacro:property name="handle_height" default="0.056"/> <!-- 0.026 -->
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.27"/>
 
-    <xacro:property name="shelf_x" default="-0.011"/>
-    <xacro:property name="shelf_y" default="-0.431"/>
-    <xacro:property name="shelf_z" default="0.905"/>
+    <xacro:property name="shelf_x" default="0.012"/>
+    <xacro:property name="shelf_y" default="-0.410"/>
+    <xacro:property name="shelf_z" default="0.903"/>
     
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
@@ -33,7 +33,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.006 0.001 1.585"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.012 0.003 1.583"/>
         </joint>
     </xacro:if>
 
@@ -83,19 +83,27 @@
         <origin xyz="0 -${door_length} ${door_height/2}"/>
     </joint>
 
-    <joint name="articulation_joint" type="revolute">
+    <link name="axis_link"/>
+    <joint name="axis_joint" type="fixed">
         <parent link="door_hinge"/>
+        <child link="axis_link"/>
+        <origin xyz="0.004 0.027 -0.150"/>
+    </joint>
+
+    <joint name="articulation_joint" type="revolute">
+        <parent link="axis_link"/>
         <child link="measured_joint_link"/>
         <dynamics damping="2.0" friction="4.0"/>
-        <origin xyz=" -0.004 0.023 -0.150"/>
+        <origin xyz="0 0 0"/>
         <axis xyz="0 0 -1"/>
         <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
     </joint>
 
+
     <joint name="door_link" type="fixed">
         <parent link="measured_joint_link"/>
         <child link="door"/>
-        <origin xyz="0.004 -0.023 0.150"/>
+        <origin xyz="-0.004 -0.027 0.150"/>
     </joint>
     
     <link name="handle_link">
@@ -197,11 +205,12 @@
 
     <link name="measured_joint_link"/>
 
-<!--     <joint name="measured_joint_handle_joint" type="fixed">
+    <link name="measured_joint_link_test"/>
+    <joint name="measured_test_handle_joint" type="fixed">
         <parent link="handle_link"/>
-        <child link="measured_joint_link"/>
-        <origin xyz="-0.038456463645002395 -0.24676779774627114 0.0" rpy="0 0 0"/>
-    </joint> -->
+        <child link="measured_joint_link_test"/>
+        <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
+    </joint>
 
     
 </robot>
