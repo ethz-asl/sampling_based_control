@@ -9,7 +9,7 @@
             <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0"
                      izz="0.001"/>
         </inertial>
-        <visual>
+<!--         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
                 <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
@@ -39,7 +39,7 @@
                 <box size="0.021 0.009 0.070"/>
             </geometry>
             <material name="">
-              <contact name="steel"/>  <!-- for raisim -->
+              <contact name="steel"/>
             </material>
         </collision>
 
@@ -49,9 +49,9 @@
                 <box size="0.021 0.025 0.015"/>
             </geometry>
             <material name="">
-              <contact name="steel"/>  <!-- for raisim -->
+              <contact name="steel"/> 
             </material>
-        </collision>     
+        </collision>    -->  
     </link>
 
     <link name="panda_rightfinger">
