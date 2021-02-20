@@ -11,8 +11,8 @@
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.27"/>
 
-    <xacro:property name="shelf_x" default="0.012"/>
-    <xacro:property name="shelf_y" default="-0.410"/>
+    <xacro:property name="shelf_x" default="0.469"/>
+    <xacro:property name="shelf_y" default="-0.358"/>
     <xacro:property name="shelf_z" default="0.903"/>
     
     <xacro:macro name="box_inertia" params="m x y z">
@@ -33,7 +33,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.012 0.003 1.583"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.008 0.007 -3.104"/>
         </joint>
     </xacro:if>
 
@@ -79,7 +79,7 @@
     <joint name="door_hinge_joint" type="fixed">
         <parent link="shelf"/>
         <child link="door_hinge"/>
-        <dynamics damping="2.0" friction="4.0"/>
+        <dynamics damping="2.0" friction="8.0"/>
         <origin xyz="0 -${door_length} ${door_height/2}"/>
     </joint>
 
