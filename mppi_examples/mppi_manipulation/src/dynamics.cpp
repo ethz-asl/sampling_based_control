@@ -26,7 +26,7 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
                                            const std::string& object_description) {
   sim_.setTimeStep(dt_);
   sim_.setERP(0., 0.);
-  sim_.setMaterialPairProp("steel", "steel", 0.001, 0.0, 0.0);
+  sim_.setMaterialPairProp("steel", "steel", 0.01, 0.0, 0.0);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
@@ -88,9 +88,14 @@ void PandaRaisimDynamics::set_collision() {
 
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t& u,
                                                       const double dt) {
-  // no mimic support --> 1 input for gripper but 2 joints to control
-  // cmd(PandaDim::ARM_DIMENSION) = x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>() << 0.04, 0.04;
+  // keep the gripper in the current position
+  if (fixed_base_){
+    cmd.tail<PandaDim::GRIPPER_DIMENSION>() << x_.head<ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
+  }
+  else{
+    cmd.tail<PandaDim::GRIPPER_DIMENSION>() << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();  
+  }
+
 
   if (fixed_base_) {
     cmdv.head<ARM_DIMENSION>() = u.head<ARM_DIMENSION>();
