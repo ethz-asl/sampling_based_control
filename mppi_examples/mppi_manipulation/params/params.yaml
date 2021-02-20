@@ -5,8 +5,8 @@ solver:
   step_size: 0.015
   horizon: 1.0
 
-  gradient_step_size: 1.0
-  momentum_step_size: 0.0
+  gradient_step_size: 0.1
+  momentum_step_size: 0.5
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -37,6 +37,8 @@ solver:
   verbose: false
   threads: 8
   debug_print: false
+
+  logging: true
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0

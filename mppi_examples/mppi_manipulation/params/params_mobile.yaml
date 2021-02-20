@@ -1,5 +1,5 @@
 solver:
-  rollouts: 50
+  rollouts: 20
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.015
@@ -10,23 +10,23 @@ solver:
   filtering: true
   substeps: 1
 
-  gradient_step_size: 1.0
-  momentum_step_size: 0.0
+  gradient_step_size: 0.1
+  momentum_step_size: 0.8
 
   filter_type: 1
   filter_order: 1
   filter_window: 10
 
   filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  filters_order: [5, 5, 5, 1, 1, 1, 1, 1, 1, 1, 1]
+  filters_order: [3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1]
   filters_window: [50, 50, 50, 10, 10, 10, 10, 10, 10, 10, 10]
 
   bound_input: true
-  u_min: [-0.5, -0.5, -0.5, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-  u_max: [0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  u_min: [-0.2, -0.2, -0.2, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   adaptive_sampling: false
-  input_variance: [0.05, 0.05, 0.05, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [0.05, 0.05, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.04       # controls the structure of the tree
@@ -37,6 +37,8 @@ solver:
   verbose: false
   threads: 8
   debug_print: false
+
+  logging: true
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
@@ -55,7 +57,7 @@ base_gains:
 
 arm_gains: 
   kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-  kd: [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  kd: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
 
 gripper_gains:
   kp: [100.0, 100.0]
