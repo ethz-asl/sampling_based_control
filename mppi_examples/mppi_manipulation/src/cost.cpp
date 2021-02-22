@@ -77,9 +77,12 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += object_error * object_error * param_.Q_obj;
   }
 
-  // obstacle
-  double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();
-  if (obstacle_dist < param_.ro) cost += param_.Qo;
+  // obstacle 2d distance
+  if (!fixed_base_){
+    double obstacle_dist = (data_.oMf[arm_base_frame_id_].translation() - ref.segment<3>(7)).head<2>().norm();
+    if (obstacle_dist < param_.ro)
+      cost += param_.Qo;
+  }
 
   // reach
   double reach;

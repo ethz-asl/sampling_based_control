@@ -47,6 +47,10 @@
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
            height:=$(arg object_height)"/>
 
+    <param name="obstacle_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/box.urdf.xacro
+           obstacle_size:=0.5 obstacle_x:=1.0 obstacle_y:=1.0 obstacle_z:=0.5"/>
+
     <group if="$(arg debug)">
         <node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
             <remap from="robot_description" to="robot_description"/>

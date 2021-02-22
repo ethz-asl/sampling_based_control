@@ -35,6 +35,12 @@
         <remap from="joint_states" to="/object/joint_state"/>
     </node>
 
+    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="obstacle_description"/>
+        <remap from="joint_states" to="/fake_joint_state"/>
+    </node>
+
     <group if="$(arg fixed_base)">
         <param name="/config_file" value="$(find mppi_manipulation)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml" ns="manipulation_control"/>

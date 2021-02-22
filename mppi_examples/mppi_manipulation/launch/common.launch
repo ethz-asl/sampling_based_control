@@ -53,6 +53,7 @@
             <param name="marker_server_name" value="obstacle_marker_server"/>
             <param name="frame_id" value="world"/>
             <param name="target_pose_topic" value="/obstacle"/>
+            <param name="target_frame" value="obstacle"/>
         </node>
     </group>
 </launch>
