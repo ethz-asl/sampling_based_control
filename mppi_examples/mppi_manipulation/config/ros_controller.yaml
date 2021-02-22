@@ -44,7 +44,11 @@ manipulation_controller:
   obstacle_weight: 1000
   obstacle_radius: 0.15
 
-  contact_weight: 1000.0
+  contact_weight: 10.0
+
+  max_reach: 1.0
+  reach_weight: 100
+  reach_weight_slope: 10
 
   object_weight: 50
   object_tolerance: 0.01

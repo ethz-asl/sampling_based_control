@@ -29,6 +29,9 @@ struct PandaCostParam {
   double Qo;  // obstacle cost
   double Qc;  // contact cost
   double ro;  // obstacle radius
+  double max_reach;
+  double Q_reach;
+  double Q_reachs;
   double Q_obj;
   double Q_tol;
   pinocchio::SE3 grasp_offset;
@@ -64,6 +67,7 @@ class PandaCost : public mppi::CostBase {
   std::string handle_frame_ = "handle_link";
   std::string tracked_frame_ = "panda_grasp";
   int frame_id_;
+  int arm_base_frame_id_;
   pinocchio::Motion err_;
   pinocchio::SE3 pose_current_;
   pinocchio::SE3 pose_handle_;

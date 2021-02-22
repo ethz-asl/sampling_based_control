@@ -25,6 +25,7 @@ PandaCost::PandaCost(const std::string& robot_description, const std::string& ob
   pinocchio::urdf::buildModelFromXML(robot_description, model_);
   data_ = pinocchio::Data(model_);
   frame_id_ = model_.getFrameId(tracked_frame_);
+  arm_base_frame_id_ = model_.getFrameId("panda_link0");
 
   // object model
   pinocchio::urdf::buildModelFromXML(object_description, object_model_);
@@ -76,8 +77,21 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += object_error * object_error * param_.Q_obj;
   }
 
+  // obstacle
   double obstacle_dist = (pose_current_.translation() - ref.segment<3>(7)).norm();
   if (obstacle_dist < param_.ro) cost += param_.Qo;
+
+  // reach
+  double reach;
+  if (fixed_base_){
+    reach = data_.oMf[frame_id_].translation().head<2>().norm();
+  }
+  else{
+    reach = (data_.oMf[frame_id_].translation() - data_.oMf[arm_base_frame_id_].translation()).head<2>().norm();
+  }
+  if (reach > param_.max_reach){
+    cost += param_.Q_reach + param_.Q_reachs * (std::pow(reach-param_.max_reach, 2));
+  }
 
   // joint limits
   if (!fixed_base_) {
@@ -159,6 +173,21 @@ bool PandaCostParam::parse_from_ros(const ros::NodeHandle& nh){
     return false;
   }
 
+  if (!nh.getParam("max_reach", max_reach) || max_reach < 0){
+    ROS_ERROR("Filed to parse max_reach or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("reach_weight", Q_reach) || Q_reach < 0){
+    ROS_ERROR("Filed to parse reach_weight or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("reach_weight_slope", Q_reachs) || Q_reachs < 0){
+    ROS_ERROR("Filed to parse reach_weight_slope or invalid!");
+    return false;
+  }
+
   if (!nh.getParam("upper_joint_limits", upper_joint_limits) || upper_joint_limits.size() != 7){
     ROS_ERROR("Filed to parse upper_joint_limits or invalid!");
     return false;
@@ -215,6 +244,8 @@ std::ostream& operator<<(std::ostream& os, const manipulation::PandaCostParam& p
   os << " angular_weight: "          << param.Qr << std::endl;
   os << " angular_weight_opening: "  << param.Qr2 << std::endl;
   os << " contact_weight: "          << param.Qc << std::endl;
+  os << " reach weight: "            << param.Q_reach << std::endl;
+  os << " reach weight slope: "      << param.Q_reachs << std::endl;
   os << " object_weight: "           << param.Q_obj << std::endl;
   os << " object_weight_tolerance: " << param.Q_tol << std::endl;
   os << " grasp offset: "            << param.grasp_offset << std::endl;
