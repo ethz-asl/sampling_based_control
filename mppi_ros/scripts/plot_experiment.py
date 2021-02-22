@@ -155,6 +155,30 @@ class Plotter:
             ax = sns.lineplot(data=df_, x="time", y="effective_samples", ci="sd", hue="alpha", size="beta")
             ax.set_title("Effective Samples FD-MCTS ({} samples)".format(samples_size))
 
+    @staticmethod
+    def moving_average(x, w):
+        return np.convolve(x, np.ones(w), 'valid') / w
+
+    def plot_rate(self):
+        colors = ['g', 'b', 'r']
+        fig, ax = plt.subplots()
+        for experiment_id, color in zip(self.df['id'].unique(), colors):
+            df = self.df.loc[self.df['id'] == experiment_id]
+            #ax.plot(df['time'], df['rate'], linestyle="--", c=color)
+            
+            window = 100
+            average_rate = self.moving_average(df['rate'], window)
+            time_average_rate = df['time'][int(window/2): int(window/2) + len(average_rate)]
+            print("{id}, {min_rate}, {max_rate}, {average_rate}".format(id=experiment_id, 
+                min_rate=min(df['rate'][2:]), max_rate=max(df['rate']), average_rate=np.mean(df['rate'])))
+            ax.plot(time_average_rate, average_rate, linewidth=2, label = experiment_id.strip("manipulation"), c=color)
+            ax.set_yticklabels(ax.get_yticks(), size = 30)
+            ax.set_xticklabels(ax.get_xticks(), size = 30)
+            ax.set_xlabel("time [s]", fontsize=40)
+            ax.set_ylabel("rate [Hz]", fontsize=40)
+
+        plt.legend(fontsize=35)
+
 
 if __name__ == "__main__":
     import sys
@@ -171,5 +195,6 @@ if __name__ == "__main__":
     #plotter.plot_cost_momentum_comparison_tree()
     #plotter.plot_average_cost_samples_comparison()
     # plotter.plot_momentum_comparison()
-    plotter.plot_average_cost_with_without_momentum()
+    #plotter.plot_average_cost_with_without_momentum()
+    plotter.plot_rate()
     plt.show()

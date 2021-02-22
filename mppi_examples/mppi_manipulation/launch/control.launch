@@ -6,6 +6,9 @@
     <arg name="plot_input" default="true"/>
     <arg name="enable_obstacle" default="true"/>
 
+    <arg name="experiment" default="false"/>
+    <arg name="experiment_id" default="manipulation"/>
+
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
     <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
@@ -41,8 +44,7 @@
         <rosparam command="load" file="$(find mppi_manipulation)/params/params_mobile.yaml" ns="manipulation_control"/>
     </group>
 
-    <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen"
-          launch-prefix="gdb -ex run --args">
+    <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen">
         <param name="fixed_base" value="$(arg fixed_base)"/>
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
@@ -54,4 +56,11 @@
         <arg name="plot_input" value="$(arg plot_input)"/>
         <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
     </include>
+
+    <group if="$(arg experiment)">
+        <node pkg="mppi_ros" type="record_data.py" name="record_data">
+            <param name="experiment_id" value="$(arg experiment_id)"/>
+        </node>
+        <node pkg="mppi_manipulation" type="demo.py" name="demo" output="screen"/>
+    </group>
 </launch>

@@ -25,7 +25,8 @@ class DataRecorder:
                           "tree_search": [],
                           "stage_cost": [],
                           "effective_samples": [],
-                          "time": []}
+                          "time": [],
+                          "opt_time": []}
         self.first_call = True
         self.data_subscriber = rospy.Subscriber("/mppi_data", Data, self.data_callback, queue_size=10)
         self.initial_step_count = 0
@@ -56,6 +57,9 @@ class DataRecorder:
         self.data_dict["tree_search"].append(data.config.tree_search)
         self.data_dict["stage_cost"].append(data.stage_cost)
         self.data_dict["time"].append(current_time - self.initial_time)
+        self.data_dict["opt_time"].append(data.time.to_sec())
+
+
         self.idx += 1
 
         effective_samples = 1.0 / (len(data.weights.array) * np.square(np.asarray(data.weights.array)).sum())
@@ -73,6 +77,12 @@ class DataRecorder:
     def postprocess(self):
         # Filtering of effective samples
         self.data_dict['effective_samples'] = gaussian_filter1d(self.data_dict['effective_samples'], sigma=2)
+
+        # First save controller rate
+        rate = np.array(self.data_dict['opt_time'])
+        rate = 1. / (rate[1:] - rate[:-1])
+        rate = np.insert(rate, 0, 0)
+        self.data_dict["rate"] = rate
 
         # Resampling of cost and timestamps: data needs to be aligned for aggregation
         t_min = min(self.data_dict['time'])

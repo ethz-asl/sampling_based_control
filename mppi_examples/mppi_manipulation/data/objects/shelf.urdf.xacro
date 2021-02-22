@@ -11,7 +11,7 @@
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.27"/>
 
-    <xacro:property name="shelf_x" default="0.469"/>
+    <xacro:property name="shelf_x" default="1.469"/>
     <xacro:property name="shelf_y" default="-0.358"/>
     <xacro:property name="shelf_z" default="0.903"/>
     
