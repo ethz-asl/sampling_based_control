@@ -4,8 +4,11 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /World1/Panda1
+        - /TF1/Frames1
+        - /World1
+        - /Observer1
         - /Observer1/Vicon Odometry1/Shape1
+        - /Controller1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 455
   - Class: rviz/Selection
@@ -57,6 +60,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        axis_link:
+          Value: true
         axle_link:
           Value: false
         base_link:
@@ -74,7 +79,7 @@ Visualization Manager:
         front_lights_link:
           Value: false
         handle_link:
-          Value: false
+          Value: true
         handle_support_left:
           Value: false
         handle_support_right:
@@ -83,14 +88,22 @@ Visualization Manager:
           Value: false
         left_side_cover_link:
           Value: false
+        measured_joint_link:
+          Value: false
+        measured_joint_link_test:
+          Value: true
         mid_mount:
           Value: false
-        odom:
-          Value: false
         omni_base_root_link:
+          Value: true
+        panda_EE:
+          Value: false
+        panda_K:
+          Value: false
+        panda_base:
           Value: false
         panda_grasp:
-          Value: true
+          Value: false
         panda_hand:
           Value: false
         panda_leftfinger:
@@ -116,7 +129,7 @@ Visualization Manager:
         panda_rightfinger:
           Value: false
         pivot:
-          Value: false
+          Value: true
         rear_cover_link:
           Value: false
         rear_lights_link:
@@ -129,24 +142,26 @@ Visualization Manager:
           Value: false
         shelf:
           Value: false
+        shelf_door:
+          Value: true
         top_link:
+          Value: false
+        vicon:
           Value: false
         world:
           Value: false
         x_slider:
-          Value: false
+          Value: true
         y_slider:
-          Value: false
+          Value: true
       Marker Alpha: 1
-      Marker Scale: 0.699999988079071
+      Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
         world:
-          odom:
-            {}
           omni_base_root_link:
             x_slider:
               y_slider:
@@ -182,6 +197,9 @@ Visualization Manager:
                                     panda_link6:
                                       panda_link7:
                                         panda_link8:
+                                          panda_EE:
+                                            panda_K:
+                                              {}
                                           panda_hand:
                                             panda_grasp:
                                               {}
@@ -195,12 +213,21 @@ Visualization Manager:
                         {}
           shelf:
             door_hinge:
-              door:
-                handle_link:
-                  handle_support_left:
-                    {}
-                  handle_support_right:
-                    {}
+              axis_link:
+                measured_joint_link:
+                  door:
+                    handle_link:
+                      handle_support_left:
+                        {}
+                      handle_support_right:
+                        {}
+                      measured_joint_link_test:
+                        {}
+          vicon:
+            panda_base:
+              {}
+            shelf_door:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -208,7 +235,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: End Effector Pose
@@ -218,7 +245,7 @@ Visualization Manager:
       Shape: Axes
       Topic: /end_effector
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: true
@@ -230,13 +257,13 @@ Visualization Manager:
       Value: true
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
-      Enabled: true
+      Enabled: false
       Name: Interactive obstacle
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
       Update Topic: /obstacle_marker_server/update
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /obstacle_marker
@@ -257,6 +284,10 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            axis_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             door:
               Alpha: 1
               Show Axes: false
@@ -281,10 +312,19 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            measured_joint_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            measured_joint_link_test:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             shelf:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             world:
               Alpha: 1
               Show Axes: false
@@ -436,7 +476,6 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-              Value: true
             right_side_cover_link:
               Alpha: 1
               Show Axes: false
@@ -541,7 +580,7 @@ Visualization Manager:
             Shaft Length: 1
             Shaft Radius: 0.05000000074505806
             Value: Axes
-          Topic: /panda_base/vrpn_client/estimated_odometry
+          Topic: /shelf_door/vrpn_client/estimated_odometry
           Unreliable: false
           Value: true
       Enabled: true
@@ -658,7 +697,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.9135489463806152
+      Distance: 2.034209966659546
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -666,17 +705,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.25015977025032043
-        Y: 0.8005841970443726
-        Z: 0.899163007736206
+        X: -0.14739111065864563
+        Y: -0.4850168824195862
+        Z: 0.9096007943153381
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.626775324344635
+      Pitch: 0.7897975444793701
       Target Frame: <Fixed Frame>
-      Yaw: 1.5887264013290405
+      Yaw: 1.918707013130188
     Saved: ~
 Window Geometry:
   Displays:
@@ -695,4 +734,4 @@ Window Geometry:
     collapsed: true
   Width: 1386
   X: 2005
-  Y: 89
+  Y: 0

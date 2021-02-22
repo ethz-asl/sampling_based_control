@@ -110,6 +110,6 @@ install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
 
-catkin_install_python(PROGRAMS scripts/unpause_physics.py scripts/demo.py
+catkin_install_python(PROGRAMS scripts/unpause_physics.py scripts/demo.py scripts/evaluation.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )

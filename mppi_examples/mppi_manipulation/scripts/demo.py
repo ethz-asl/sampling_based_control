@@ -1,5 +1,6 @@
 #! /usr/bin/env  python
 
+import sys
 import rospy
 from std_msgs.msg import Int64
 
@@ -13,9 +14,9 @@ if __name__ == "__main__":
 	
 	ans = input("Have you selected the default pose from the marker [y/n]")
 	if ans != 'y':
-		rospy.loginfo("Exiting")
-		return
-
+	    rospy.loginfo("Exiting")
+	    sys.exit(0)
+	      
 	go_to_handle_mode = Int64()
 	go_to_handle_mode.data = 1
 
@@ -28,15 +29,15 @@ if __name__ == "__main__":
 
 	mode_publisher.publish(go_to_handle_mode)
 	rospy.loginfo("Reaching the handle!")
-	rospy.sleep(5.0)
+	rospy.sleep(15.0)
 
 	mode_publisher.publish(open_mode)
 	rospy.loginfo("Opening the door!")
-	rospy.sleep(5.0)
+	rospy.sleep(15.0)
 	
 	mode_publisher.publish(default_mode)
 	rospy.loginfo("Going back to default pose!")
-	rospy.sleep(5.0)
+	rospy.sleep(15.0)
 
 	rospy.loginfo("Done :)")
 	

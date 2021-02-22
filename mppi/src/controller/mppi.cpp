@@ -333,7 +333,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // store data
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
-      rollouts_[k].total_cost += cost_temp -
+      rollouts_[k].total_cost += cost_temp - // TODO(giuseppe) this should actually be a plus
                                  config_.lambda * opt_roll_.uu[t].transpose() *
                                  sampler_->sigma_inv() *
                                  rollouts_[k].nn[t] +
