@@ -23,6 +23,8 @@ int main(int argc, char** argv){
   ros::NodeHandle nh("~");
 
   auto sequential = nh.param<bool>("sequential", false);
+  auto max_sim_time = nh.param<double>("max_sim_time", 0.0);
+
   auto controller = PandaMobileControllerInterface(nh);
 
   std::string robot_description = nh.param<std::string>("/robot_description", "");
@@ -112,6 +114,13 @@ int main(int argc, char** argv){
     if (sim_dt - elapsed >0)
       ros::Duration(sim_dt - elapsed).sleep();
 
+    if (max_sim_time > 0 and sim_time > max_sim_time){
+      ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time << "s. Exiting.");
+      break;
+    }
+    ROS_INFO_STREAM_THROTTLE(2.0, "Current sim time: " << sim_time << "s.");
     ros::spinOnce();
   }
+
+  return 0;
 }

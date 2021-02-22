@@ -21,8 +21,11 @@ class Plotter:
         df = pd.read_csv(csv_file)
         df['tree_search'] = df['tree_search'].apply(lambda x : "Tree" if x else "Monte Carlo")
         df = df.rename(columns={'tree_search': 'Sampling Strategy'})
-        print(df['Sampling Strategy'])
-        return df[df['id'].str.contains(experiment_id)]
+
+        print("Looking for experiments with id: {}".format(experiment_id))
+        df = df[df['id'].str.contains(experiment_id)]
+        print("Found {}".format(len(df)))
+        return df
 
     def plot_average_cost_per_rollout(self, tree=False):
         # Mean and std
@@ -85,6 +88,32 @@ class Plotter:
                 axs[i].set_ybound(lower=-0.01, upper=1.2)
                 plt.legend(fontsize=18)
 
+    def plot_average_cost_samples_comparison(self):
+        different_samples = len(self.df["nr_rollouts"].unique())
+        ax = sns.lineplot(data=self.df, x="index", y="stage_cost", hue="nr_rollouts", legend=True, ci="sd", palette=sns.color_palette("tab10", n_colors=different_samples))
+        df = self.df.loc[self.df['index'] < 300]
+        #ax = sns.barplot(x="nr_rollouts", y="stage_cost", data=df, capsize=.2)
+        #ax.set_title("Whole Body Differential Base", fontsize=20)
+        #ax.set_xticklabels([5, 10, 50, 100, 200, 500, 1000, 2000], size = 30)
+        #ax.set
+        ax.set_yticklabels(ax.get_yticks(), size = 30)
+        ax.set_xlabel("samples", fontsize=40)
+        #ax.set_yscale("log")
+        ax.set_ylabel("average stage cost", fontsize=40)
+        # ax.set_ybound(lower=-0.01, upper=1.2)
+        #plt.legend(fontsize=18)
+
+    def plot_average_cost_with_without_momentum(self):
+        df = self.df.loc[self.df['index'] < 2600]
+        ax = sns.barplot(x="nr_rollouts", y="stage_cost", hue="beta", data=df, capsize=.2)
+        ax.legend_.remove()
+        h, l = ax.get_legend_handles_labels()
+        ax.legend(h, ["Without momentum", "With momentum"], fontsize=30)
+        ax.set_xticklabels([50, 100, 200], size = 30)
+        ax.set_yticklabels(ax.get_yticks(), size = 30)
+        ax.set_xlabel("samples", fontsize=40)
+        ax.set_ylabel("average stage cost", fontsize=40)
+
     def plot_cost_momentum_comparison_tree(self):
 
         df_tree = self.df.loc[self.df['Sampling Strategy'] == "Tree"]
@@ -138,8 +167,9 @@ if __name__ == "__main__":
     plotter = Plotter(args.experiment_id)
     #plotter.plot_average_cost_per_rollout()
     #plotter.plot_effective_samples_per_rollout()
-    plotter.plot_cost_comparison()
-    plotter.plot_cost_momentum_comparison_tree()
+    #plotter.plot_cost_comparison()
+    #plotter.plot_cost_momentum_comparison_tree()
+    #plotter.plot_average_cost_samples_comparison()
     # plotter.plot_momentum_comparison()
-    plt.legend()
+    plotter.plot_average_cost_with_without_momentum()
     plt.show()
