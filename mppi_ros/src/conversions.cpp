@@ -52,6 +52,7 @@ void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros) {
 }
 
 void to_msg(const mppi::data_t& data, Data& data_ros) {
+  data_ros.time = ros::Time::now();
   to_msg(data.config, data_ros.config);
 
   if (!data.weights.size()) return;
