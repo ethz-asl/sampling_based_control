@@ -9,6 +9,10 @@
 #include "mppi_manipulation/controller_interface.h"
 #include <ros/package.h>
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
+
 using namespace manipulation;
 
 bool PandaControllerInterface::init_ros() {
@@ -24,20 +28,41 @@ bool PandaControllerInterface::init_ros() {
   ee_pose_desired_subscriber_ = nh_.subscribe(
       "/end_effector_pose_desired", 10, &PandaControllerInterface::ee_pose_desired_callback, this);
 
-  obstacle_radius_ = param_io::param(nh_, "obstacle_radius", 0.2);
+  if (!nh_.param<double>("obstacle_radius", obstacle_radius_, 0.0)) {
+    ROS_ERROR("Could not parse obstacle_radius. Is the parameter set?");
+    return false;
+  }
+
+  // initialize obstacle
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+  geometry_msgs::TransformStamped transformStamped;
+  try{
+    transformStamped = tfBuffer.lookupTransform("world", "obstacle",
+                             ros::Time(0), ros::Duration(3.0));
+  }
+  catch (tf2::TransformException &ex) {
+    ROS_WARN("%s",ex.what());
+    return false;
+  }
+
   obstacle_marker_.header.frame_id = "world";
-  obstacle_marker_.type = visualization_msgs::Marker::SPHERE;
+  obstacle_marker_.type = visualization_msgs::Marker::CYLINDER;
   obstacle_marker_.color.r = 1.0;
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.color.a = 0.4;
   obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
   obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
-  obstacle_marker_.scale.z = 2.0 * obstacle_radius_;
-  obstacle_marker_.pose.orientation.x = 0.0;
-  obstacle_marker_.pose.orientation.y = 0.0;
-  obstacle_marker_.pose.orientation.z = 0.0;
-  obstacle_marker_.pose.orientation.w = 1.0;
+  obstacle_marker_.scale.z = 0.01;
+  obstacle_marker_.pose.orientation.x = transformStamped.transform.rotation.x;
+  obstacle_marker_.pose.orientation.y = transformStamped.transform.rotation.y;
+  obstacle_marker_.pose.orientation.z = transformStamped.transform.rotation.z;
+  obstacle_marker_.pose.orientation.w = transformStamped.transform.rotation.w;
+  obstacle_marker_.pose.position.x = transformStamped.transform.translation.x;
+  obstacle_marker_.pose.position.y = transformStamped.transform.translation.y;
+  obstacle_marker_.pose.position.z = transformStamped.transform.translation.z;
+
 
   last_ee_ref_id_ = 0;
   ee_desired_pose_.header.seq = last_ee_ref_id_;
@@ -135,7 +160,14 @@ bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral
   ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
   ref_.rr[0](PandaDim::REFERENCE_POSE_DIMENSION + PandaDim::REFERENCE_OBSTACLE) =
       object_reference_position;
+  
+  // TODO(giuseppe) hack just to make sure obst not initialized on the way
+  ref_.rr[0](7) = obstacle_marker_.pose.position.x;
+  ref_.rr[0](8) = obstacle_marker_.pose.position.y;
+  ref_.rr[0](9) = obstacle_marker_.pose.position.z;
   ref_.tt.resize(1, 0.0);
+
+  ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
   return true;
 }
 
@@ -155,12 +187,11 @@ void PandaControllerInterface::ee_pose_desired_callback(
 }
 
 void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg) {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
-  obstacle_pose_ = *msg;
-  ref_.rr[0](7) = obstacle_pose_.pose.position.x;
-  ref_.rr[0](8) = obstacle_pose_.pose.position.y;
-  ref_.rr[0](9) = obstacle_pose_.pose.position.z;
-  get_controller()->set_reference_trajectory(ref_);
+  // std::unique_lock<std::mutex> lock(reference_mutex_);
+  // obstacle_pose_ = *msg;
+  // ref_.rr[0](7) = obstacle_pose_.pose.position.x;
+  // ref_.rr[0](8) = obstacle_pose_.pose.position.y;
+  // ref_.rr[0](9) = obstacle_pose_.pose.position.z;
 }
 
 void PandaControllerInterface::mode_callback(const std_msgs::Int64ConstPtr& msg) {
@@ -231,11 +262,8 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(const E
 }
 
 void PandaControllerInterface::publish_ros() {
-  if (obstacle_pose_.header.seq != 0) {  // obstacle set at least once
-    obstacle_marker_.pose.position = obstacle_pose_.pose.position;
-    obstacle_marker_publisher_.publish(obstacle_marker_);
-  }
-
+  obstacle_marker_publisher_.publish(obstacle_marker_);
+  
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
 

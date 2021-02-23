@@ -48,7 +48,7 @@
             <parent link="panda_hand"/>
             <child link="panda_grasp"/>
             <axis xyz="0 1 0"/>
-            <origin xyz="0 0 0.098" rpy="0 0 0"/> <!-- 0.106-->
+            <origin xyz="0 0 0.095" rpy="0 0 0"/> <!-- 0.106-->
         </joint>
     </xacro:if>
 

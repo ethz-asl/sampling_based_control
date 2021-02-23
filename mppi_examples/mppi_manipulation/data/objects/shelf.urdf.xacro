@@ -11,8 +11,8 @@
     <xacro:property name="handle_length" default="0.16"/>
     <xacro:property name="handle_offset" default="0.27"/>
 
-    <xacro:property name="shelf_x" default="0.959"/>
-    <xacro:property name="shelf_y" default="-1.05"/>
+    <xacro:property name="shelf_x" default="0.943"/>
+    <xacro:property name="shelf_y" default="-0.952"/>
     <xacro:property name="shelf_z" default="0.903"/>
     
     <xacro:macro name="box_inertia" params="m x y z">
@@ -33,7 +33,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.019 0.002 -3.090"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.008 -0.001 -3.085"/>
         </joint>
     </xacro:if>
 

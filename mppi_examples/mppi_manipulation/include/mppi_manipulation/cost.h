@@ -27,6 +27,7 @@ struct PandaCostParam {
   double Qr;  // rotation cost
   double Qr2;
   double Qo;  // obstacle cost
+  double Qos; // obstacle cost slope
   double Qc;  // contact cost
   double ro;  // obstacle radius
   double max_reach;

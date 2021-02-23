@@ -37,6 +37,11 @@
         <remap from="joint_states" to="/observer/object/joint_state"/>
     </node>
 
+    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+        <remap from="robot_description" to="obstacle_description"/>
+        <remap from="joint_states" to="/fake_joint_state"/>
+    </node>
+
     <group if="$(arg test)">
         <node pkg="mppi_manipulation" type="base_odometry_dummy_node" name="base_odometry_dummy_node" output="screen">
             <remap from="/franka/state" to="/panda/joint_states"/>

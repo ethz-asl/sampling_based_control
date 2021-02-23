@@ -80,8 +80,9 @@ mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // obstacle 2d distance
   if (!fixed_base_){
     double obstacle_dist = (data_.oMf[arm_base_frame_id_].translation() - ref.segment<3>(7)).head<2>().norm();
-    if (obstacle_dist < param_.ro)
-      cost += param_.Qo;
+    if (obstacle_dist < param_.ro){
+      cost += param_.Qo + param_.Qos * (param_.ro - obstacle_dist);
+    }
   }
 
   // reach
@@ -138,6 +139,11 @@ pinocchio::SE3 PandaCost::get_pose_handle(const Eigen::VectorXd& x) {
 bool PandaCostParam::parse_from_ros(const ros::NodeHandle& nh){
   if (!nh.getParam("obstacle_weight", Qo) || Qo < 0){
     ROS_ERROR("Filed to parse obstacle_weight or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("obstacle_weight_slope", Qos) || Qos < 0){
+    ROS_ERROR("Filed to parse obstacle_weight_slope or invalid!");
     return false;
   }
 
@@ -242,6 +248,7 @@ std::ostream& operator<<(std::ostream& os, const manipulation::PandaCostParam& p
   os << "========================================" << std::endl;
   os << " obstacle_weight: "         << param.Qo << std::endl;
   os << " obstacle_radius: "         << param.ro << std::endl;
+  os << " obstacle_weight_slope: "   << param.Qos << std::endl;
   os << " linear_weight: "           << param.Qt << std::endl;
   os << " linear_weight_opening: "   << param.Qt2 << std::endl;
   os << " angular_weight: "          << param.Qr << std::endl;
