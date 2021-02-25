@@ -90,6 +90,7 @@ def data_callback(data: Data):
 
 if __name__ == "__main__":
     rospy.init_node("target_generator")
+    rospy.loginfo("\n\n\n Targtet generator \n\n\n")
     pose_publisher = rospy.Publisher("/end_effector_pose_desired", PoseStamped, queue_size=10)
     data_subscriber = rospy.Subscriber("/mppi_data", Data, data_callback, queue_size=10)
     

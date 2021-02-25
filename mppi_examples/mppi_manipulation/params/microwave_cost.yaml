@@ -9,6 +9,7 @@ reach_weight: 100
 reach_weight_slope: 10
 
 obstacle_weight: 1000
+obstacle_weight_slope: 0
 obstacle_radius: 0.15
 
 contact_weight: 10.0

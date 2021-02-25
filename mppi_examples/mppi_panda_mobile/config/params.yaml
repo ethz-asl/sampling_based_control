@@ -1,5 +1,5 @@
 solver:
-  rollouts: 200
+  rollouts: 20
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
@@ -10,8 +10,8 @@ solver:
   filtering: false
   substeps: 1
 
-  gradient_step_size: 0.25
-  momentum_step_size: 0.85
+  gradient_step_size: 1.0
+  momentum_step_size: 0.0
 
   filter_type: 1
   filter_order: 1
@@ -29,6 +29,10 @@ solver:
   pruning_threshold: 0.05
 
   logging: true
+
+  filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  filters_order: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 
 #  expert_types: {NORM, IMP}
   expert_weights: [0.0, 1.0]
@@ -50,4 +54,4 @@ ros_publish_rate: 10.0
 sequential: true
 static_optimization: false
 sim_dt: 0.01
-max_sim_time: 0
+max_sim_time: 30.0

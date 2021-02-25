@@ -3,7 +3,7 @@
 
     <arg name="plot_cost" default="true"/>
     <arg name="plot_input" default="true"/>
-    <arg name="plot_state" default="true"/>
+    <arg name="plot_state" default="false"/>
     <arg name="enable_obstacle" default="false"/>
 
     <!-- Open Rviz -->

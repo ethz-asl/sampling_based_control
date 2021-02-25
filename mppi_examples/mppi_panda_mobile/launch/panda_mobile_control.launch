@@ -7,7 +7,7 @@
     <arg name="debug" default="false"/>
 
     <arg name="experiment" default="false"/>
-    <arg name="experiment_id" default="panda_mobile_kin_single_target"/>
+    <arg name="experiment_id" default="manipulation_target_reaching"/>
 
     <arg name="description_file" default="$(find mppi_panda_mobile)/resources/panda/panda_mobile.urdf.xacro"/>
     <!-- TF prefix -->
@@ -77,7 +77,7 @@
             <param name="experiment_id" value="$(arg experiment_id)"/>
         </node>
         <node pkg="mppi_panda_mobile" type="target_generator.py" name="target_generator" output="screen">
-            <param name="experiment_id" value="$(arg experiment_id)"/>
+            <param name="experiment_id" value="panda_mobile_kin_multi_target"/>
         </node>
     </group>
 </launch>

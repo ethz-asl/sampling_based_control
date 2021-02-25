@@ -2,9 +2,9 @@
 <launch>
     <arg name="fixed_base" default="true"/>
     <arg name="object" default="door"/>
-    <arg name="plot_cost" default="true"/>
-    <arg name="plot_input" default="true"/>
-    <arg name="enable_obstacle" default="true"/>
+    <arg name="plot_cost" default="false"/>
+    <arg name="plot_input" default="false"/>
+    <arg name="enable_obstacle" default="false"/>
 
     <arg name="experiment" default="false"/>
     <arg name="experiment_id" default="manipulation"/>
@@ -12,7 +12,7 @@
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
     <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
-    <arg name="object_reference_position" default="0.20" if="$(eval arg('object') == 'drawer')"/>
+    <arg name="object_reference_position" default="0.50" if="$(eval arg('object') == 'drawer')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
 
     <include file="$(find mppi_manipulation)/launch/load.launch">

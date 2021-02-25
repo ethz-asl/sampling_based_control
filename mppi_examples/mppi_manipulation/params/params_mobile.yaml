@@ -10,8 +10,8 @@ solver:
   filtering: true
   substeps: 1
 
-  gradient_step_size: 0.1
-  momentum_step_size: 0.8
+  gradient_step_size: 1.0
+  momentum_step_size: 0.0
 
   filter_type: 1
   filter_order: 1
@@ -45,7 +45,7 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-sequential: false
+sequential: true
 static_optimization: false
 sim_dt: 0.015
 
