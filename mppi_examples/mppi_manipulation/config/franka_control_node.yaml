@@ -1,0 +1,29 @@
+joint_names:
+  - panda_joint1
+  - panda_joint2
+  - panda_joint3
+  - panda_joint4
+  - panda_joint5
+  - panda_joint6
+  - panda_joint7
+arm_id: panda
+# Configure the threshold angle for printing joint limit warnings.
+joint_limit_warning_threshold: 0.1 # [rad]
+# Activate rate limiter? [true|false]
+rate_limiting: true
+# Cutoff frequency of the low-pass filter. Set to >= 1000 to deactivate.
+cutoff_frequency: 100
+# Internal controller for motion generators [joint_impedance|cartesian_impedance]
+internal_controller: joint_impedance
+# Used to decide whether to enforce realtime mode [enforce|ignore]
+realtime_config: enforce
+# Configure the initial defaults for the collision behavior reflexes.
+collision_config:
+  lower_torque_thresholds_acceleration: [2000.0, 2000.0, 1800.0, 1800.0, 1600.0, 1400.0, 1200.0]  # [Nm]
+  upper_torque_thresholds_acceleration: [2000.0, 2000.0, 1800.0, 1800.0, 1600.0, 1400.0, 1200.0]  # [Nm]
+  lower_torque_thresholds_nominal: [200.0, 200.0, 180.0, 180.0, 160.0, 140.0, 120.0]  # [Nm]
+  upper_torque_thresholds_nominal: [200.0, 200.0, 180.0, 180.0, 160.0, 140.0, 120.0]  # [Nm]
+  lower_force_thresholds_acceleration: [2000.0, 2000.0, 2000.0, 2500.0, 2500.0, 2500.0]  # [N, N, N, Nm, Nm, Nm]
+  upper_force_thresholds_acceleration: [2000.0, 2000.0, 2000.0, 2500.0, 2500.0, 2500.0]  # [N, N, N, Nm, Nm, Nm]
+  lower_force_thresholds_nominal: [200.0, 200.0, 200.0, 250.0, 250.0, 250.0]  # [N, N, N, Nm, Nm, Nm]
+  upper_force_thresholds_nominal: [200.0, 200.0, 200.0, 250.0, 250.0, 250.0]  # [N, N, N, Nm, Nm, Nm]

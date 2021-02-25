@@ -6,25 +6,27 @@
  * @brief    description
  */
 
-#include "mppi/solver_config.h"
 #include <math.h>
 #include <iostream>
+#include "mppi/solver_config.h"
 
 using namespace mppi;
 
 bool SolverConfig::init_from_file(const std::string &file) {
   parsing_error = false;
   YAML::Node config;
-  try {
+  try{
     config = YAML::LoadFile(file);
-  } catch (const YAML::ParserException &ex) {
+  }
+  catch(const YAML::ParserException& ex) {
     std::cout << ex.what() << std::endl;
-  } catch (const YAML::BadFile &ex) {
+  }
+  catch(const YAML::BadFile& ex){
     std::cout << ex.what() << std::endl;
   }
 
   YAML::Node solver_options = config["solver"];
-  if (!solver_options) {
+  if (!solver_options){
     std::cout << "Failed to parse solver options." << std::endl;
     return false;
   }
@@ -53,12 +55,16 @@ bool SolverConfig::init_from_file(const std::string &file) {
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
+  filters_type    = parse_key_quiet<std::vector<int>>(solver_options, "filters_type").value_or(std::vector<int>{});
+  filters_window  = parse_key_quiet<std::vector<int>>(solver_options, "filters_window").value_or(std::vector<int>{});
+  filters_order   = parse_key_quiet<std::vector<uint>>(solver_options, "filters_order").value_or(std::vector<uint>{});
+  logging         = parse_key_quiet<bool>(solver_options, "logging").value_or(logging);
   use_tree_search = parse_key_quiet<bool>(solver_options, "use_tree_search").value_or(use_tree_search);
   pruning_threshold = parse_key_quiet<double>(solver_options, "pruning_threshold").value_or(pruning_threshold);
   expert_weights   = parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
   expert_types 	   = {NORM, IMP};
   display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
-//clang-format on
+  //clang-format on
 
   if (parsing_error) return false;
   std::cout << "Solver options correctly parsed from: " << file << std::endl;
@@ -94,6 +100,19 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " filter type:      " << config.filter_type << std::endl;
   os << " filter window:    " << config.filter_window << std::endl;
   os << " filter order:     " << config.filter_order << std::endl;
+
+  os << " filters type:    [";
+  for (const auto& type :  config.filters_type) os << type << " ";
+  os << "]" << std::endl;
+
+  os << " filters window:  [";
+  for (const auto& window :  config.filters_window) os << window << " ";
+  os << "]" << std::endl;
+
+  os << " filters order:   [";
+  for (const auto& order :  config.filters_order) os << order << " ";
+  os << "]" << std::endl;
+
   os << " filtering:        " << config.filtering << std::endl;
   os << " cost ratio:       " << config.cost_ratio << std::endl;
 
@@ -102,6 +121,7 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " verbose:          " << config.verbose << std::endl;
   os << " debug_print:      " << config.debug_print << std::endl;
   os << " threads:          " << config.threads << std::endl;
+  os << " logging:          " << config.logging << std::endl;
   os << "--------------------------------------------------" << std::endl;
   return os;
 }

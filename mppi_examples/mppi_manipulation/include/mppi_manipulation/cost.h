@@ -7,9 +7,9 @@
  */
 
 #pragma once
+#include <pinocchio/fwd.hpp>
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/model.hpp>
-#include <pinocchio/fwd.hpp>
 #include <pinocchio/multibody/data.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
@@ -23,11 +23,25 @@ namespace manipulation {
 
 struct PandaCostParam {
   double Qt;  // translation cost
+  double Qt2;
   double Qr;  // rotation cost
+  double Qr2;
   double Qo;  // obstacle cost
+  double Qos; // obstacle cost slope
   double Qc;  // contact cost
   double ro;  // obstacle radius
+  double max_reach;
+  double Q_reach;
+  double Q_reachs;
+  double Q_obj;
+  double Q_tol;
   pinocchio::SE3 grasp_offset;
+  double Q_joint_limit;
+  double Q_joint_limit_slope;
+  std::vector<double> upper_joint_limits;
+  std::vector<double> lower_joint_limits;
+
+  bool parse_from_ros(const ros::NodeHandle& nh);
 };
 
 class PandaCost : public mppi::CostBase {
@@ -54,14 +68,12 @@ class PandaCost : public mppi::CostBase {
   std::string handle_frame_ = "handle_link";
   std::string tracked_frame_ = "panda_grasp";
   int frame_id_;
+  int arm_base_frame_id_;
   pinocchio::Motion err_;
   pinocchio::SE3 pose_current_;
   pinocchio::SE3 pose_handle_;
   pinocchio::SE3 pose_reference_;
   pinocchio::SE3 pose_obstacle_;
-
-  Eigen::Matrix<double, 7, 1> joint_limits_lower_;
-  Eigen::Matrix<double, 7, 1> joint_limits_upper_;
 
  public:
   cost_ptr create() override {
@@ -80,3 +92,5 @@ class PandaCost : public mppi::CostBase {
   pinocchio::SE3 get_pose_handle(const Eigen::VectorXd& x);
 };
 }  // namespace manipulation
+
+std::ostream& operator<<(std::ostream& os, const manipulation::PandaCostParam& param);

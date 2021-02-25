@@ -23,17 +23,16 @@ class SingleMarkerBroadcaster:
         self.tf_buffer = tf2_ros.Buffer(rospy.Duration(2))
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
-        subscribe_initial_pose = rospy.get_param("~subscribe_initial_pose", False)
-        inital_pose_topic = rospy.get_param("~initial_pose_topic", "/init_pose_sub")
-
-        if subscribe_initial_pose:
-            self.pose_init_sub = rospy.Subscriber(inital_pose_topic, PoseStamped, self.init_pose_from_ros)
-        else:
+        self.frame_id = rospy.get_param('~frame_id', 'odom')
+        target_frame = rospy.get_param("~target_frame", "")
+        if not target_frame:
             self.init_pose()
-
+        elif not self.init_pose_from_ros(target_frame):
+            rospy.logerr("Failed to initialize interactive_marker from tf tree")
+        
+        
         target_pose_topic = rospy.get_param("~target_pose_topic", "/target_pose_marker")
         self.pose_pub = rospy.Publisher(target_pose_topic, PoseStamped, queue_size=1)
-        self.frame_id = rospy.get_param('~frame_id', 'odom')
 
     def init_pose(self):
         self.initial_pose = PoseStamped()
@@ -42,16 +41,34 @@ class SingleMarkerBroadcaster:
         self.initial_pose.pose.position.z = 0.5
         self.initialized = True
 
-    def init_pose_from_ros(self, msg):
-        try:
-            transform = self.tf_buffer.lookup_transform(self.frame_id, msg.header.frame_id,
-                                                        rospy.Time(0), rospy.Duration(2))
-            self.initial_pose = tf2_geometry_msgs.do_transform_pose(msg, transform)
-            self.initialized = True
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
-            rospy.logerr("Failed to lookup transform: {}".format(exc))
-            rospy.logwarn("Initializing marker in hard coded pose")
-            self.init_pose()
+    def init_pose_from_ros(self, frame_id):
+        max_attempts = 10
+        attempts = 0
+        while attempts < max_attempts:
+            try:
+                transform = self.tf_buffer.lookup_transform(self.frame_id, frame_id,
+                                                            rospy.Time(0), rospy.Duration(10))
+                self.initial_pose = PoseStamped()
+                self.initial_pose.header.frame_id = self.frame_id
+                self.initial_pose.header.stamp = rospy.Time.now()
+                self.initial_pose.pose.position.x = transform.transform.translation.x
+                self.initial_pose.pose.position.y = transform.transform.translation.y
+                self.initial_pose.pose.position.z = transform.transform.translation.z
+                self.initial_pose.pose.orientation.x = transform.transform.rotation.x
+                self.initial_pose.pose.orientation.y = transform.transform.rotation.y
+                self.initial_pose.pose.orientation.z = transform.transform.rotation.z
+                self.initial_pose.pose.orientation.w = transform.transform.rotation.w
+                self.initialized = True
+                return True
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
+                rospy.logwarn(exc)
+                rospy.logwarn("Attempting again")
+                attempts += 1
+                
+        rospy.logerr("Failed to lookup transform: {}".format(exc))
+        rospy.logwarn("Initializing marker in hard coded pose")
+        self.init_pose()        
+        return False
 
     def make_box_control(self, msg):
         control = InteractiveMarkerControl()
@@ -75,7 +92,7 @@ class SingleMarkerBroadcaster:
 
     def create_marker(self):
         while not self.initialized:
-            rospy.loginfo_throttle(1.0, "Waiting the first pose to initialize marker.")
+            rospy.loginfo_throttle(10.0, "Waiting the first pose to initialize marker.")
         rospy.loginfo("Initializing marker at {}".format(str(self.initial_pose)))
 
         self.int_marker = InteractiveMarker()

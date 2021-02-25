@@ -1,0 +1,2 @@
+manipulation_msgs/Input input
+manipulation_msgs/State state

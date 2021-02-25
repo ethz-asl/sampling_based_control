@@ -1,10 +1,13 @@
 <?xml version="1.0" ?>
-<robot name="door">
+<robot name="drawer"  xmlns:xacro="http://www.ros.org/wiki/xacro" >
+    <xacro:arg name="height" default="0.0"/>
+    <xacro:property name="height" default="$(arg height)"/>
+
     <link name="world"/>
     <joint name="fixed" type="fixed">
         <parent link="world"/>
         <child link="drawer_frame"/>
-        <origin xyz="0.65 0.3 0.01" rpy="0 0 3.14"/>
+        <origin xyz="1.5 0.3 ${height + 0.01}" rpy="0 0 3.14"/>
     </joint>
 
     <link name="drawer_frame">
@@ -80,7 +83,7 @@
         <dynamics damping="2.0" friction="4.0"/>
         <origin xyz="0.046 0 0"/>
         <axis xyz="1 0 0"/>
-        <limit effort="100" lower="0" upper="0.5" velocity="10.0"/>
+        <limit effort="100" lower="0" upper="0.55" velocity="10.0"/>
     </joint>
 
     <link name="handle_link">
@@ -103,6 +106,9 @@
             <geometry>
                 <cylinder radius="0.005" length="0.010"/>
             </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
         </collision>
     </link>
 

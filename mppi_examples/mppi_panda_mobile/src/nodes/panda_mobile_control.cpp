@@ -21,6 +21,10 @@ int main(int argc, char** argv){
   // ros interface
   ros::init(argc, argv, "panda_mobile_control_node");
   ros::NodeHandle nh("~");
+
+  auto sequential = nh.param<bool>("sequential", false);
+  auto max_sim_time = nh.param<double>("max_sim_time", 0.0);
+
   auto controller = PandaMobileControllerInterface(nh);
 
   std::string robot_description = nh.param<std::string>("/robot_description", "");
@@ -59,21 +63,26 @@ int main(int argc, char** argv){
 
   // init the controller
   bool ok = controller.init();
-  if (!ok){
+  if (!ok) {
     throw std::runtime_error("Failed to initialzied controller!");
   }
 
   // set the very first observation
   controller.set_observation(x, sim_time);
 
-  controller.start();
+  if (!sequential) controller.start();
+
   while(ros::ok()){
     auto start = std::chrono::steady_clock::now();
+
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
-    if (!static_optimization){
-      x = simulation.step(u, sim_dt);
-      sim_time += sim_dt;
+
+    if (sequential) {
+      controller.update_reference();
+      controller.publish_ros_default();
+      controller.publish_ros();
+      controller.update_policy();
     }
 
     // publish joint state
@@ -81,12 +90,16 @@ int main(int argc, char** argv){
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 
+    if (!static_optimization) {
+      x = simulation.step(u, sim_dt);
+      sim_time += sim_dt;
+    }
+
     // publish base transform
     world_base_tf.header.stamp = ros::Time::now();
     world_base_tf.transform.translation.x = x(7);
     world_base_tf.transform.translation.y = x(8);
-    tf2::Quaternion q;
-    q.setRPY(0, 0, x(9));
+    Eigen::Quaterniond q(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
     world_base_tf.transform.rotation.x = q.x();
     world_base_tf.transform.rotation.y = q.y();
     world_base_tf.transform.rotation.z = q.z();
@@ -101,6 +114,13 @@ int main(int argc, char** argv){
     if (sim_dt - elapsed >0)
       ros::Duration(sim_dt - elapsed).sleep();
 
+    if (max_sim_time > 0 and sim_time > max_sim_time){
+      ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time << "s. Exiting.");
+      break;
+    }
+    ROS_INFO_STREAM_THROTTLE(2.0, "Current sim time: " << sim_time << "s.");
     ros::spinOnce();
   }
+
+  return 0;
 }

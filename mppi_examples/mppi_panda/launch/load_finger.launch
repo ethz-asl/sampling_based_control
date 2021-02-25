@@ -1,0 +1,8 @@
+<launch>
+    <param name="robot_description" command="$(find xacro)/xacro $(find mppi_panda)/resources/panda/custom_finger.urdf"/>
+
+    <!-- Open Rviz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda)/config/finger.rviz" output="screen"/>
+
+    <node name="robot_state_publisher" type="robot_state_publisher" pkg="robot_state_publisher"/>
+</launch>

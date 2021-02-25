@@ -245,7 +245,7 @@ void TreeManager::transform_to_rollouts() {
       rollouts_[k].uu[horizon_step] = current_node->u_;
       rollouts_[k].nn[horizon_step] = current_node->u_ - opt_roll_.uu[horizon_step];
       rollouts_[k].cc(horizon_step) = current_node->c_;
-      rollouts_[k].total_cost += rollouts_[k].cc(horizon_step) -
+      rollouts_[k].total_cost += rollouts_[k].cc(horizon_step);// -
                                  config_.lambda * opt_roll_.uu[horizon_step].transpose() *
                                      sigma_inv * rollouts_[k].nn[horizon_step] +
                                  config_.lambda * opt_roll_.uu[horizon_step].transpose() *

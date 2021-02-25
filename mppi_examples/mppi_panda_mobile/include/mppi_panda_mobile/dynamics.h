@@ -31,14 +31,7 @@ enum PandaMobileDim {
 
 class PandaMobileDynamics : public mppi::DynamicsBase {
  public:
-  PandaMobileDynamics(const std::string& robot_description)
-      : robot_description_(robot_description) {
-    x_ = observation_t::Zero(PandaMobileDim::STATE_DIMENSION);
-
-    // init model
-    pinocchio::urdf::buildModelFromXML(robot_description_, model_);
-    data_ = pinocchio::Data(model_);
-  };
+  PandaMobileDynamics(const std::string& robot_description, bool holonomic=true);
   ~PandaMobileDynamics() = default;
 
  public:
@@ -46,7 +39,7 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
   size_t get_state_dimension() override { return PandaMobileDim::STATE_DIMENSION; }
 
   dynamics_ptr create() override {
-    return std::make_shared<PandaMobileDynamics>(robot_description_);
+    return std::make_shared<PandaMobileDynamics>(robot_description_, holonomic_);
   }
 
   dynamics_ptr clone() const override { return std::make_shared<PandaMobileDynamics>(*this); }
@@ -64,5 +57,8 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
   std::string robot_description_;
   pinocchio::Model model_;
   pinocchio::Data data_;
+
+  // holonomic vs non-holonimic base
+  bool holonomic_;
 };
 }  // namespace panda_mobile

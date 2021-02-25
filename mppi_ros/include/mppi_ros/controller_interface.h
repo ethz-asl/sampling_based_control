@@ -14,6 +14,9 @@
 
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
+#include <mppi_ros/Data.h>
+
+#include "mppi/filters/savgol_filter.h"
 
 using namespace mppi;
 namespace mppi_ros {
@@ -50,6 +53,11 @@ class ControllerRos {
    */
   bool start();
 
+  /**
+   * @brief Stop the running controller and associated threads
+   */
+  void stop();
+
   inline std::shared_ptr<PathIntegral>& get_controller() {
     return controller_;
   };
@@ -62,7 +70,7 @@ class ControllerRos {
    * Methods to use in a synchronous setup. In this case the call should follow
    * the pattern:
    * 1. set_observation: set last estimated state
-   * 2. update_policy: optimize from just set observation)
+   * 2. update_policy: optimize from just set observation
    * 3.
    *  a. get_input : only feedforward term required
    *  b. get_input_state: feedforward + nominal state
@@ -89,7 +97,9 @@ class ControllerRos {
   void publish_input();
 
  private:
+  bool started_;
   bool initialized_;
+  bool observation_set_;
 
   any_worker::WorkerManager worker_manager_;
 
@@ -104,6 +114,8 @@ class ControllerRos {
 
   bool publish_ros_ = false;
   double ros_publish_rate_ = 0.0;
+
+  mppi::SavGolFilter filter_;
 
  public:
   ros::NodeHandle nh_;
@@ -122,6 +134,10 @@ class ControllerRos {
   mppi::input_t input_ = mppi::input_t::Zero(1);
   std_msgs::Float32MultiArray input_ros_;
   std_msgs::Float32MultiArray var_ros_;
+
+  // logging
+  mppi_ros::Data data_ros_;
+  ros::Publisher data_publisher_;
   
 };
 

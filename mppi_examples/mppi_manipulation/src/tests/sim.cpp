@@ -55,7 +55,7 @@ void setupCallback() {
 }
 
 int main(int argc, char **argv) {
-  raisim::World::setActivationKey("/home/giuseppe/raisim_ws/raisimlib/rsc/activation.raisim");
+  raisim::World::setActivationKey("/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim");
 
   /// create raisim world
   raisim::World world;
@@ -74,8 +74,8 @@ int main(int argc, char **argv) {
   vis->initApp();
 
   /// create raisim objects
-  auto panda = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_based_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/panda.urdf", "/");
-  auto door = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_based_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/door.urdf");
+  auto panda = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/panda_mobile_fixed.urdf", "/");
+  auto door = world.addArticulatedSystem("/home/giuseppe/clion_ws/sampling_control_project/src/sampling_based_control/mppi_examples/mppi_manipulation/data/objects/shelf.urdf");
   auto ground = world.addGround(-1);
   //ground->setName("checkerboard"); /// not necessary here but once you set name, you can later retrieve it using raisim::World::getObject()
 
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
     static time_point<steady_clock> start, end;
 
     /// we cannot query door_frame_step since all fixed bodies are combined into one
-    static size_t doorStepIndex = door->getBodyIdx("door_frame");
+    static size_t doorStepIndex = door->getBodyIdx("door");
 
     time += world.getTimeStep();
     int curr_step = (int) (time/sleep_s);

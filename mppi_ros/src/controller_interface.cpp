@@ -7,12 +7,13 @@
  */
 
 #include "mppi_ros/controller_interface.h"
+#include "mppi_ros/conversions.h"
 
 using namespace mppi_ros;
 
 ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh) {}
 
-ControllerRos::~ControllerRos() { worker_manager_.stopWorkers(); }
+ControllerRos::~ControllerRos() { this->stop(); }
 
 bool ControllerRos::init_default_params() {
   policy_update_rate_ = param_io::param(nh_, "policy_update_rate", 0.0);
@@ -30,17 +31,30 @@ void ControllerRos::init_default_ros() {
       nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 10);
   max_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
+  data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
 }
 
 bool ControllerRos::init() {
   init_default_params();
   init_default_ros();
   init_ros();
-  
-  bool ok = set_controller(controller_);
-  if (controller_ == nullptr || !ok) return false;
 
+  bool ok;
+  try{
+    ok = set_controller(controller_);
+  } catch (std::runtime_error& err){
+    ROS_ERROR_STREAM(err.what());
+    ok = false;
+  } catch (...){
+    ROS_ERROR("Unknown exception caught while setting the controller.");
+    ok = false;
+  }
+  if (controller_ == nullptr || !ok) return false;
+  filter_ = SavGolFilter(controller_->steps_, controller_->config_.filters_window.size(), controller_->config_.filters_window,
+               controller_->config_.filters_order);
   initialized_ = true;
+  started_ = false;
+  ROS_INFO("Controller interface initialized.");
   return initialized_;
 }
 
@@ -50,6 +64,11 @@ bool ControllerRos::start() {
         "The controller is not initialized. Have you called the init() "
         "method?");
     return false;
+  }
+
+  if (started_){
+    ROS_WARN_STREAM("The controller has already been started.");
+    return true;
   }
 
   any_worker::WorkerOptions update_policy_opt;
@@ -76,16 +95,29 @@ bool ControllerRos::start() {
     worker_manager_.addWorker(publish_ros_opt, true);
   }
 
+  started_ = true;
   return true;
 }
 
-bool ControllerRos::update_policy() { 
-  controller_->update_policy(); 
+bool ControllerRos::update_policy() {
+  if (!observation_set_) return true;
+  controller_->update_policy();
+
+  if (controller_->config_.logging){
+    mppi_ros::to_msg(controller_->get_data(), data_ros_);
+    data_publisher_.publish(data_ros_);
+  }
   return true;
 }
 
 bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
+  if (!observation_set_) return true;
   controller_->update_policy();
+
+  if (controller_->config_.logging){
+    mppi_ros::to_msg(controller_->get_data(), data_ros_);
+    data_publisher_.publish(data_ros_);
+  }
   return true;
 }
 
@@ -147,11 +179,16 @@ void ControllerRos::publish_input() {
 void ControllerRos::set_observation(const mppi::observation_t &x,
                                     const mppi::time_t &t) {
   controller_->set_observation(x, t);
+  observation_set_ = true;
 }
 
 void ControllerRos::get_input(const mppi::observation_t &x, mppi::input_t &u,
                               const mppi::time_t &t) {
   controller_->get_input(x, u, t);
+//  filter_.reset(t);
+//  filter_.add_measurement(u, t);
+//  filter_.apply(u, t);
+
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;
@@ -162,8 +199,16 @@ void ControllerRos::get_input_state(const observation_t &x,
                                     observation_t &x_nom, input_t &u,
                                     const mppi::time_t &t) {
   controller_->get_input_state(x, x_nom, u, t);
+//  filter_.reset(t);
+//  filter_.add_measurement(u, t);
+//  filter_.apply(u, t);
+
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;
   }
+}
+
+void ControllerRos::stop() {
+  worker_manager_.stopWorkers();
 }

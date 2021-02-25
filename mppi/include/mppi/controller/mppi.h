@@ -26,9 +26,9 @@
 #include "mppi/solver_config.h"
 #include "mppi/utils/thread_pool.h"
 #include "mppi/visualization/rederer.h"
+#include "mppi/controller/data.h"
 #include "mppi/tree/tree_manager.h"
 #include "mppi/experts/expert.h"
-
 #include "mppi/utils/timer.h"
 
 namespace mppi {
@@ -275,6 +275,7 @@ class PathIntegral {
   inline const Rollout& get_optimal_rollout() { return opt_roll_; }
   inline const Rollout& get_optimal_rollout_cache() { return opt_roll_cache_; }
   inline observation_t get_current_observation() { return x0_internal_; }
+  inline data_t get_data() { return data_; }
 
  public:
   /**
@@ -339,12 +340,15 @@ class PathIntegral {
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 
+  data_t data_;
+
   Expert expert_;  // expert class gives access to all experts implemented
   TreeManager tree_manager_;  // tree_manager class controls the building of the tree
   std::vector<dynamics_ptr> tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts) for multithreading
   double stage_cost_ = 0;  // stage_cost used for logging
   std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
 
+  size_t step_count_;  // total amount of solver optimization steps
   std::vector<input_t> momentum_;
   Timer timer_;
 };

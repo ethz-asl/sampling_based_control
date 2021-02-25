@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ridgeback">
+    <xacro:macro name="ridgeback">
+
+        <xacro:include filename="$(find mppi_manipulation)/data/ridgeback.xacro"/>
+
+        <!-- Sensor mount -->
+        <link name="ridgeback_sensor_mount_link">
+<!--             <visual>
+                <geometry>
+                    <mesh filename="package://mppi_manipulation/data/meshes/ridgeback_sensor_mount.dae"/>
+                </geometry>
+            </visual> -->
+        </link>
+
+        <joint name="ridgeback_sensor_mount_joint" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 1.571"/>
+            <parent link="mid_mount"/>
+            <child link="ridgeback_sensor_mount_link"/>
+        </joint>
+
+        <link name="reference_link"/>
+        <joint name="reference_link_joint" type="fixed">
+            <origin xyz="-0.343 0 0.77" rpy="0 0 0"/>
+            <parent link="mid_mount"/>
+            <child link="reference_link"/>
+        </joint>
+
+
+    </xacro:macro>
+</robot>

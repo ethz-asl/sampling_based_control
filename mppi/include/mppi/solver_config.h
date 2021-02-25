@@ -54,7 +54,12 @@ struct SolverConfig {
   uint filter_window = 10;
   uint filter_order = 3;
 
+  std::vector<int> filters_type;
+  std::vector<int> filters_window;
+  std::vector<uint> filters_order;
+
   size_t threads = 1;
+  bool logging = false;
 
   bool use_tree_search = false;
   double pruning_threshold = 0.5;

@@ -1,10 +1,13 @@
 <?xml version="1.0" ?>
-<robot name="door">
+<robot name="door" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+    <xacro:arg name="height" default="0.0"/>
+    <xacro:property name="height" default="$(arg height)"/>
+
     <link name="world"/>
     <joint name="fixed" type="fixed">
         <parent link="world"/>
         <child link="door_frame"/>
-        <origin xyz="0.65 0.3 0.01" rpy="0 0 3.14"/>
+        <origin xyz="1.0 0.3 ${height + 0.01}" rpy="0 0 3.14"/>
     </joint>
 
     <link name="door_frame">

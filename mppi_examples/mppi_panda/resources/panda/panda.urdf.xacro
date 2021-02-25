@@ -7,7 +7,10 @@
     <xacro:arg name="collision_links" default="true"/>
     <xacro:arg name="collision_hand" default="true"/>
     <xacro:arg name="collision_finger" default="true"/>
+    <xacro:arg name="custom_fingers" default="false"/>
     <xacro:arg name="no_position_limits" default="true"/>
+    <xacro:arg name="friction" default="0.0"/>
+    <xacro:arg name="damping"  default="0.0"/>
 
     <xacro:arg name="add_finger" default="false"/>
 
@@ -19,8 +22,12 @@
     <xacro:property name="collision_finger" value="$(arg collision_finger)"/>
     <xacro:property name="no_position_limits" value="$(arg no_position_limits)"/>
     <xacro:property name="add_finger" value="$(arg add_finger)"/>
+    <xacro:property name="friction" default="$(arg friction)"/>
+    <xacro:property name="damping"  default="$(arg damping)"/>
 
-    <xacro:macro name="panda_robot" params="parent_link:='world'">
+    <xacro:include filename="$(find mppi_panda)/resources/panda/custom_fingers.urdf"/>
+
+    <xacro:macro name="panda_robot" params="parent_link:='world' robot_description:=''">
         <joint name="panda_joint_${parent_link}" type="fixed">
             <parent link="${parent_link}"/>
             <child link="panda_link0"/>
@@ -29,6 +36,7 @@
         <gazebo>
             <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
                 <robotNamespace>/</robotNamespace>
+                <robotParam>/${robot_description}</robotParam>
             </plugin>
         </gazebo>
         <gazebo reference="panda_link0"/>
@@ -166,6 +174,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link2">
             <inertial>
@@ -205,6 +214,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="87" lower="-1.7628" upper="1.7628" velocity="2.1750"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link3">
             <inertial>
@@ -244,6 +254,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link4">
             <inertial>
@@ -285,6 +296,7 @@
                 <limit effort="87" lower="-3.0718" upper="0.0698" velocity="2.1750"/>
                 <!-- upper should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link5">
             <inertial>
@@ -324,6 +336,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link6">
             <inertial>
@@ -363,6 +376,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="12" lower="-0.0175" upper="3.7525" velocity="2.6100"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link7">
             <inertial>
@@ -402,6 +416,7 @@
             <xacro:unless value="${no_position_limits}">
                 <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
             </xacro:unless>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
         <link name="panda_link8">
             <inertial>
@@ -470,71 +485,114 @@
                     <mechanicalReduction>1</mechanicalReduction>
                 </actuator>
             </transmission>
-            <link name="panda_leftfinger">
-                <inertial>
-                    <mass value="0.1"/>
-                    <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>
-                    <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0"
-                             izz="6.95125211657e-06"/>
-                </inertial>
-                <visual>
-                    <origin rpy="0 0 0" xyz="0 0 0"/>
-                    <geometry>
-                        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
-                    </geometry>
-                    <material name="">
-                        <color rgba="1 1 1 1"/>
-                    </material>
-                </visual>
-                <xacro:if value="${collision_finger}">
-                    <collision>
-                        <!--origin rpy="0 0 0" xyz="0 0 0"/-->
-                        <origin rpy="0 0 3.14159265359" xyz="0 0.01 0.028"/>
+            <xacro:if value="$(arg custom_fingers)">
+              <xacro:custom_fingers/>
+            </xacro:if>
+            <xacro:unless value="$(arg custom_fingers)">
+                <link name="panda_leftfinger">
+                    <inertial>
+                        <mass value="0.1"/>
+                        <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>
+                        <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0"
+                                 izz="6.95125211657e-06"/>
+                    </inertial>
+                    <visual>
+                        <origin rpy="0 0 0" xyz="0 0 0"/>
                         <geometry>
-                            <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/-->
-                            <box size="0.02 0.02 0.05"/>
+                            <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
                         </geometry>
-                    </collision>
-                </xacro:if>
-            </link>
-            <link name="panda_rightfinger">
-                <inertial>
-                    <mass value="0.1"/>
-                    <origin rpy="0 0 3.14159265359" xyz="0 0.0145644 0.0227941"/>
-                    <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0"
-                             izz="6.95125211657e-06"/>
-                </inertial>
-                <visual>
-                    <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
-                    <geometry>
-                        <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
-                    </geometry>
-                    <material name="">
-                        <color rgba="1 1 1 1"/>
-                    </material>
-                </visual>
-                <xacro:if value="${collision_finger}">
-                    <collision>
-                        <!-- origin rpy="0 0 3.14159265359" xyz="0 0 0"/ -->
-                        <origin rpy="0 0 3.14159265359" xyz="0 -0.01 0.028"/>
+                        <material name="">
+                            <color rgba="1 1 1 1"/>
+                        </material>
+                    </visual>
+                    <xacro:if value="${collision_finger}">
+                        <collision>
+                            <origin rpy="0.0 0 0.0" xyz="0 0.018 0.01"/>
+                            <geometry>
+                                <box size="0.0222 0.015 0.02"/>
+                            </geometry>
+                             <material name="">
+                                <contact name="steel"/>
+                            </material>
+                       </collision>
+                        <collision>
+                            <origin rpy="${3.14 * 30 / 180.0} 0 0.0" xyz="0 0.017 0.027"/>
+                            <geometry>
+                                <box size="0.0222 0.007 0.025"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>
+                        <collision>
+                            <origin rpy="0.0 0 0.0" xyz="0 0.007 0.045"/>
+                            <geometry>
+                                <box size="0.0222 0.0145 0.018"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>
+                    </xacro:if>
+                </link>
+                <link name="panda_rightfinger">
+                    <inertial>
+                        <mass value="0.1"/>
+                        <origin rpy="0 0 3.14159265359" xyz="0 0.0145644 0.0227941"/>
+                        <inertia ixx="3.01220925051e-05" ixy="0.0" ixz="0.0" iyy="2.95873808038e-05" iyz="0.0"
+                                 izz="6.95125211657e-06"/>
+                    </inertial>
+                    <visual>
+                        <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
                         <geometry>
-                            <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.${collision_format}"/-->
-                            <box size="0.02 0.02 0.05"/>
+                            <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/visual/finger.dae"/>
                         </geometry>
-                    </collision>
-                </xacro:if>
-            </link>
+                        <material name="">
+                            <color rgba="1 1 1 1"/>
+                        </material>
+                    </visual>
+                    <xacro:if value="${collision_finger}">
+                        <collision>
+                            <origin rpy="0.0 0 0.0" xyz="0 -0.018 0.01"/>
+                            <geometry>
+                                <box size="0.0222 0.015 0.02"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>
+                        <collision>
+                            <origin rpy="${-3.14 * 30 / 180.0} 0 0.0" xyz="0 -0.017 0.027"/>
+                            <geometry>
+                                <box size="0.0222 0.007 0.025"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>
+                        <collision>
+                            <origin rpy="0.0 0 0.0" xyz="0 -0.007 0.045"/>
+                            <geometry>
+                                <box size="0.0222 0.0145 0.018"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>    
+                    </xacro:if>
+                </link>
+            </xacro:unless>    
             <joint name="panda_finger_joint1" type="prismatic">
                 <parent link="panda_hand"/>
                 <child link="panda_leftfinger"/>
-                <origin rpy="0 0 0" xyz="0 0 0.0584"/>
+                <origin rpy="0 0 0" xyz="0 0 0.0584"/> <!-- 0.0584 -->
                 <axis xyz="0 1 0"/>
                 <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>
             </joint>
             <joint name="panda_finger_joint2" type="prismatic">
                 <parent link="panda_hand"/>
                 <child link="panda_rightfinger"/>
-                <origin rpy="0 0 0" xyz="0 0 0.0584"/>
+                <origin rpy="0 0 0" xyz="0 0 0.0584"/> <!-- 0.064 -->
                 <axis xyz="0 -1 0"/>
                 <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>
             </joint>

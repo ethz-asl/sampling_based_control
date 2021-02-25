@@ -1,0 +1,216 @@
+<?xml version="1.0" ?>
+<robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:arg name="fixed" default="true"/>
+    <xacro:arg name="height" default="0.0"/>
+    <xacro:property name="height" default="$(arg height)"/>
+
+    <xacro:property name="door_length" default="0.295"/>
+    <xacro:property name="door_height" default="0.90"/>
+    <xacro:property name="door_width" default="0.016"/>
+    <xacro:property name="handle_height" default="0.056"/> <!-- 0.026 -->
+    <xacro:property name="handle_length" default="0.16"/>
+    <xacro:property name="handle_offset" default="0.27"/>
+
+    <xacro:property name="shelf_x" default="0.943"/>
+    <xacro:property name="shelf_y" default="-0.952"/>
+    <xacro:property name="shelf_z" default="0.903"/>
+    
+    <xacro:macro name="box_inertia" params="m x y z">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="${m}"/>
+            <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
+                     ixy="0"
+                     ixz="0"
+                     iyy="${0.0833 * m * (x**2 + z**2)}"
+                     iyz="0"
+                     izz="${0.0833 * m * (z**2 + y**2)}"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:if value="$(arg fixed)">
+        <link name="world"/>
+        <joint name="fixed" type="fixed">
+            <parent link="world"/>
+            <child link="shelf"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.008 -0.001 -3.085"/>
+        </joint>
+    </xacro:if>
+
+    <link name="shelf">
+        <xacro:box_inertia m="5" x="${door_width}" y="${door_length}" z="${shelf_z}"/>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 -${door_length/2} ${-shelf_z/2}"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${shelf_z}"/>
+            </geometry>
+            <material name="shelf_material">
+                <color rgba="0.0 1.0 1.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 -${door_length/2} ${-shelf_z/2}"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${shelf_z}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="door">
+        <xacro:box_inertia m="5.8" x="${door_width}" y="${door_length}" z="${door_height}"/>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 ${door_length/2} 0"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${door_height}"/>
+            </geometry>
+            <material name="door_material">
+                <color rgba="1.0 1.0 1.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 ${door_length/2} 0"/>
+            <geometry>
+                <box size="${door_width} ${door_length} ${door_height}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="door_hinge"/>
+    <joint name="door_hinge_joint" type="fixed">
+        <parent link="shelf"/>
+        <child link="door_hinge"/>
+        <dynamics damping="2.0" friction="8.0"/>
+        <origin xyz="0 -${door_length} ${door_height/2}"/>
+    </joint>
+
+    <link name="axis_link"/>
+    <joint name="axis_joint" type="fixed">
+        <parent link="door_hinge"/>
+        <child link="axis_link"/>
+        <origin xyz="0.004 0.027 -0.150"/>
+    </joint>
+
+    <joint name="articulation_joint" type="revolute">
+        <parent link="axis_link"/>
+        <child link="measured_joint_link"/>
+        <dynamics damping="2.0" friction="4.0"/>
+        <origin xyz="0 0 0"/>
+        <axis xyz="0 0 -1"/>
+        <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
+    </joint>
+
+
+    <joint name="door_link" type="fixed">
+        <parent link="measured_joint_link"/>
+        <child link="door"/>
+        <origin xyz="-0.004 -0.027 0.150"/>
+    </joint>
+    
+    <link name="handle_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.01 ${handle_length+0.01}"/>
+            </geometry>
+            <material name="handle_material">
+                <color rgba="0.0 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.01 ${handle_length+0.01}"/>
+            </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
+        </collision>
+    </link>
+
+    <link name="handle_support_left">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+            <material name="handle_material">
+                <color rgba="0.0 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
+        </collision>
+    </link>
+
+    <link name="handle_support_right">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+            <material name="handle_material">
+                <color rgba="0.0 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${handle_height} 0.01 0.01"/>
+            </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
+        </collision>
+    </link>
+
+    <joint name="handle_joint" type="fixed">
+        <parent link="door"/>
+        <child link="handle_link"/>
+        <origin xyz="${handle_height + door_width/2} ${handle_offset} -0.15"
+                rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
+    </joint>
+
+    <joint name="handle_support_left_joint" type="fixed">
+        <parent link="handle_link"/>
+        <child link="handle_support_left"/>
+        <origin xyz="-${handle_height/2} 0 ${handle_length/2}" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="handle_support_right_joint" type="fixed">
+        <parent link="handle_link"/>
+        <child link="handle_support_right"/>
+        <origin xyz="-${handle_height/2} 0 -${handle_length/2}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="measured_joint_link"/>
+
+    <link name="measured_joint_link_test"/>
+    <joint name="measured_test_handle_joint" type="fixed">
+        <parent link="handle_link"/>
+        <child link="measured_joint_link_test"/>
+        <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
+    </joint>
+
+    
+</robot>

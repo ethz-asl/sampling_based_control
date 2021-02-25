@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<xacro:robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+    <!-- Utility macro to add a control interface (used by Gazebo Sim Plugin) -->
+    <xacro:macro name="add_transmission" params="joint_name">
+        <transmission name="transmision_${joint_name}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${joint_name}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${joint_name}_motor">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+
+
+    <xacro:macro name="planar_base" params="connect_to">
+        <link name="omni_base_root_link"/>
+        <link name="x_slider">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="0.01"/>
+                <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+            </inertial>
+        </link>
+        <link name="y_slider">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="0.01"/>
+                <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+            </inertial>
+        </link>
+        <link name="pivot">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="0.01"/>
+                <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+            </inertial>
+        </link>
+
+        <joint name="x_base_joint" type="prismatic">
+            <parent link="omni_base_root_link"/>
+            <child link="x_slider"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="1 0 0"/>
+            <limit effort="1000.0" lower="-10" upper="10" velocity="1.0"/>
+            <dynamics damping="0.0" friction="10"/>
+        </joint>
+        <xacro:add_transmission joint_name="x_base_joint"/>
+
+        <joint name="y_base_joint" type="prismatic">
+            <parent link="x_slider"/>
+            <child link="y_slider"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="0 1 0"/>
+            <limit effort="1000.0" lower="-10" upper="10" velocity="1.0"/>
+            <dynamics damping="0.0" friction="10"/>
+        </joint>
+        <xacro:add_transmission joint_name="y_base_joint"/>
+
+        <joint name="pivot_joint" type="revolute">
+            <parent link="y_slider"/>
+            <child link="pivot"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="0 0 1"/>
+            <limit effort="1000.0" velocity="1.0" upper="10.0" lower="-10.0"/>
+            <dynamics damping="0.0" friction="10"/>
+        </joint>
+        <xacro:add_transmission joint_name="pivot_joint"/>
+
+        <joint name="omni_base_flange" type="fixed">
+            <parent link="pivot"/>
+            <child link="${connect_to}"/>
+        </joint>
+    </xacro:macro>
+</xacro:robot>

@@ -97,7 +97,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link0.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link0.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -106,7 +106,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link0.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link0.obj"/>
             </geometry>
         </collision>
     </link>
@@ -120,7 +120,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link1.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link1.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -129,7 +129,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link1.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link1.obj"/>
             </geometry>
         </collision>
     </link>
@@ -151,7 +151,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link2.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link2.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -160,7 +160,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link2.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link2.obj"/>
             </geometry>
         </collision>
     </link>
@@ -182,7 +182,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link3.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link3.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -191,7 +191,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link3.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link3.obj"/>
             </geometry>
         </collision>
     </link>
@@ -213,7 +213,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link4.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link4.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -222,7 +222,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link4.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link4.obj"/>
             </geometry>
         </collision>
     </link>
@@ -245,7 +245,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link5.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link5.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -254,7 +254,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link5.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link5.obj"/>
             </geometry>
         </collision>
     </link>
@@ -276,7 +276,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link6.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link6.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -285,7 +285,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link6.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link6.obj"/>
             </geometry>
         </collision>
     </link>
@@ -307,7 +307,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link7.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link7.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -316,7 +316,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link7.obj"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link7.obj"/>
             </geometry>
         </collision>
     </link>
@@ -356,7 +356,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/hand.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/hand.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -402,7 +402,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -427,7 +427,7 @@
         <visual>
             <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/giuseppe/student_projects_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
+                <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>

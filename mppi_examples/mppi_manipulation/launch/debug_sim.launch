@@ -2,24 +2,37 @@
 <launch>
 
     <arg name="fixed_base" default="true"/>
-    <arg name="object"  default="door"/>
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_grasp.urdf.xacro"/>
+    <arg name="object" default="door"/>
     <arg name="tf_prefix" default=""/>
 
-    <param name="robot_description"
-           command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://' add_finger:=true fixed_base:=$(arg fixed_base)"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_standalone.urdf.xacro"
+         if="$(arg fixed_base)"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"
+         unless="$(arg fixed_base)"/>
+
+    <arg name="object_height" default="0.0" if="$(arg fixed_base)"/>
+    <arg name="object_height" default="0.45" unless="$(arg fixed_base)"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true"/>
+
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
-      collision_links:=true
+      collision_links:=false
       collision_hand:=true
       collision_finger:=true
       collision_format:='obj'
       add_finger:=true
-      no_position_limits:=true
-      fixed_base:=$(arg fixed_base)"/>
+      no_position_limits:=true"/>
 
-    <param name="object_description" command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro  resource_prefix:='file://'"/>
+    <param name="object_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           resource_prefix:='file://'
+           height:=$(arg object_height)"/>
     <param name="object_description_raisim"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro"/>
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro height:=$(arg object_height)"/>
 
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
@@ -40,13 +53,8 @@
     <node name="manipulation_raisim" type="manipulation_raisim" pkg="mppi_manipulation" output="screen"
           launch-prefix="gdb -ex run --args">
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
-        <param name="fixed_base"    value="$(arg fixed_base)"/>
+        <param name="fixed_base" value="$(arg fixed_base)"/>
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/config.rviz" output="screen"/>
-
-    <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot"
-          args="--multiplot-config $(find mppi_manipulation)/config/joint_velocity_tracking.xml"
-          output="screen"/>
-
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>
 </launch>

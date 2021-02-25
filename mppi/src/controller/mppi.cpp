@@ -78,6 +78,10 @@ void PathIntegral::init_data() {
     sampler_->set_covariance(config_.input_variance);
   }
 
+  if (config_.logging) {
+    data_.config = config_;
+  }
+
   if (config_.bound_input) {
     if (config_.u_min.size() != nu_) {
       std::stringstream error;
@@ -90,6 +94,7 @@ void PathIntegral::init_data() {
       throw std::runtime_error(error.str());
     }
   }
+  step_count_ = 0;
   observation_set_ = false;
   reference_set_ = false;
 }
@@ -100,7 +105,8 @@ void PathIntegral::init_filter() {
       break;
     }
     case InputFilterType::SAVITZKY_GOLEY: {
-      filter_ = SavGolFilter(steps_, nu_, config_.filter_window, config_.filter_order);
+      filter_ = SavGolFilter(steps_, nu_, config_.filters_window,
+                             config_.filters_order);
       break;
     }
     default: {
@@ -129,10 +135,6 @@ void PathIntegral::init_tree_manager_dynamics() {
 }
 
 void PathIntegral::update_policy() {
-  if (config_.display_update_freq) {
-    // time_it();
-  }
-
   if (!observation_set_) {
     log_warning_throttle(1.0, "Observation has never been set. Dropping update");
   } else if (!reference_set_) {
@@ -166,10 +168,22 @@ void PathIntegral::update_policy() {
       for (size_t t = 0; t < steps_; t++) {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
+      stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
     }
     swap_policies();
 
     if (renderer_) renderer_->render(rollouts_);
+    if (config_.logging) {
+      // data_.rollouts = rollouts_;
+      data_.step_count = step_count_;
+      data_.stage_cost = stage_cost_;
+      data_.rollouts_cost = rollouts_cost_;
+      data_.weights = omega;
+      data_.optimization_time = 0.0;
+      data_.reset_time = t0_internal_;
+      data_.optimal_rollout = opt_roll_;
+      step_count_++;
+    }
   }
 }
 
@@ -269,16 +283,20 @@ void PathIntegral::update_reference() {
 
   if (config_.threads > 1) {
     for (auto& cost : cost_v_) cost->set_reference_trajectory(rr_tt_ref_);
-    if (config_.use_tree_search) {
-      tree_manager_.set_reference_trajectory(rr_tt_ref_);
-    }
+  }
+
+  if (config_.use_tree_search) {
+    tree_manager_.set_reference_trajectory(rr_tt_ref_);
   }
 }
 
 void PathIntegral::sample_noise(input_t& noise) { sampler_->get_sample(noise); }
 
-void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
-                                             const size_t start_idx, const size_t end_idx) {
+void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
+                                             cost_ptr& cost,
+                                             const size_t start_idx,
+                                             const size_t end_idx) {
+  const int decimation_ = 3;
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
@@ -303,8 +321,11 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& c
       bound_input(rollouts_[k].uu[t]);
 
       // compute input-state stage cost
-      double cost_temp = std::pow(config_.discount_factor, t) *
-                         cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
+      double cost_temp = 0;
+      if (std::fmod(t, decimation_) == 0)
+          cost_temp = std::pow(config_.discount_factor, t) *
+          cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
+
       if (std::isnan(cost_temp)) {
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
       }
@@ -312,11 +333,12 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& c
       // store data
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
-      rollouts_[k].total_cost +=
-          cost_temp -
-          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-              rollouts_[k].nn[t] +
-          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() * opt_roll_.uu[t];
+      rollouts_[k].total_cost += cost_temp - // TODO(giuseppe) this should actually be a plus
+                                 config_.lambda * opt_roll_.uu[t].transpose() *
+                                 sampler_->sigma_inv() *
+                                 rollouts_[k].nn[t] +
+                                 config_.lambda * opt_roll_.uu[t].transpose() *
+                                 sampler_->sigma_inv() * opt_roll_.uu[t];
 
       // integrate dynamics
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
@@ -331,9 +353,11 @@ void PathIntegral::sample_trajectories() {
   } else {
     for (size_t i = 0; i < config_.threads; i++) {
       futures_[i] = pool_->enqueue(
-          std::bind(&PathIntegral::sample_trajectories_batch, this, std::placeholders::_1,
-                    std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-          dynamics_v_[i], cost_v_[i], (size_t)i * config_.rollouts / config_.threads,
+          std::bind(&PathIntegral::sample_trajectories_batch, this,
+                    std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3, std::placeholders::_4),
+          dynamics_v_[i], cost_v_[i],
+          (size_t)i * config_.rollouts / config_.threads,
           (size_t)(i + 1) * config_.rollouts / config_.threads);
     }
 
@@ -356,11 +380,12 @@ void PathIntegral::compute_exponential_cost() {
 
   if (config_.debug_print) print_cost_histogram();
 
-  exponential_cost_ =
-      Eigen::exp(-config_.h * (rollouts_cost_ - min_cost_) / (max_cost_ - min_cost_));
+  exponential_cost_ = Eigen::exp(-config_.h * (rollouts_cost_ - min_cost_) /
+                                 (max_cost_ - min_cost_));
   if (config_.filtering) {
     for (size_t k = 0; k < config_.rollouts; k++) {
-      if (rollouts_cost_(k) > (max_cost_ + (1 - config_.cost_ratio) * min_cost_))
+      if (rollouts_cost_(k) >
+          (max_cost_ + (1 - config_.cost_ratio) * min_cost_))
         exponential_cost_(k) = 0.0;
     }
   }
@@ -383,16 +408,15 @@ void PathIntegral::optimize() {
     opt_roll_.uu[t] += config_.alpha * momentum_[t];
   }
 
-
   // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
   if (config_.adaptive_sampling) {
     input_t delta = input_t::Zero(nu_);
     // TODO(giuseppe) remove the hardcoded baseline variance
     Eigen::MatrixXd new_covariance = Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
     for (size_t k = 0; k < config_.rollouts; k++) {
-      for (size_t i = 0; i < steps_; i++) {
+      for (size_t i = 0; i < steps_; i++){
         delta = rollouts_[k].uu[i] - opt_roll_.uu[i];
-        new_covariance += omega[k] * (delta * delta.transpose()) / steps_;
+        new_covariance += omega[k] * (delta * delta.transpose())/steps_;
       }
     }
     // I could filter the covariance update using a first order
@@ -434,7 +458,7 @@ void PathIntegral::get_input(const observation_t& x, input_t& u, const double t)
       warning << "Queried time " << t << " larger than last available time "
               << opt_roll_cache_.tt.back();
       log_warning_throttle(1.0, warning.str());
-      u = dynamics_->get_zero_input(x);
+      u = opt_roll_cache_.uu.back();
       return;
     }
 
@@ -455,7 +479,7 @@ void PathIntegral::get_input(const observation_t& x, input_t& u, const double t)
   }
 }
 
-void PathIntegral::get_diagonal_variance(Eigen::VectorXd& var) const {
+void PathIntegral::get_diagonal_variance(Eigen::VectorXd& var) const{
   var = sampler_->sigma().diagonal();
 }
 
@@ -473,7 +497,8 @@ void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
       return;
     }
 
-    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t);
+    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
+                                  opt_roll_cache_.tt.end(), t);
     if (lower == opt_roll_cache_.tt.end()) {
       std::stringstream warning;
       warning << "Queried time " << t << " larger than last available time "
@@ -498,32 +523,32 @@ void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
     // interpolate
     else {
       double coeff = (t - *(lower - 1)) / (*lower - *(lower - 1));
-      u_nom = (1 - coeff) * opt_roll_cache_.uu[idx - 1] + coeff * opt_roll_cache_.uu[idx];
-      x_nom = opt_roll_cache_.xx[idx - 1];  // TODO offer a way to also do
+      u_nom = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
+              coeff * opt_roll_cache_.uu[idx];
+      x_nom = opt_roll_cache_.xx[idx];  // TODO offer a way to also do
                                             // interpolation of the state
     }
   }
 }
 
-bool PathIntegral::get_optimal_rollout(observation_array_t& xx, input_array_t& uu) {
+bool PathIntegral::get_optimal_rollout(observation_array_t& xx,
+                                       input_array_t& uu) {
   std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-  auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), reset_time_);
+  auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
+                                opt_roll_cache_.tt.end(), reset_time_);
   if (lower == opt_roll_cache_.tt.end()) return false;
   size_t offset = std::distance(opt_roll_cache_.tt.begin(), lower);
 
   // fill with portion of vector starting from current time
-  xx = observation_array_t(opt_roll_cache_.xx.begin() + offset, opt_roll_cache_.xx.end());
-  uu = input_array_t(opt_roll_cache_.uu.begin() + offset, opt_roll_cache_.uu.end());
+  xx = observation_array_t(opt_roll_cache_.xx.begin() + offset,
+                           opt_roll_cache_.xx.end());
+  uu = input_array_t(opt_roll_cache_.uu.begin() + offset,
+                     opt_roll_cache_.uu.end());
   return true;
 }
 
 void PathIntegral::update_experts() {
   expert_.update_expert(1, opt_roll_.uu);
-  //	for (int i = 0; i < 100; ++i) {
-  //		std::cout << "h step: " << i << std::endl;
-  //		std::cout << opt_roll_.uu[i] << std::endl;
-  //		std::cout << std::endl;
-  //	}
 };
 
 void PathIntegral::swap_policies() {
@@ -531,41 +556,45 @@ void PathIntegral::swap_policies() {
   opt_roll_cache_ = opt_roll_;
 }
 
-PathIntegral::input_array_t PathIntegral::offline_control(const DynamicsBase::observation_t& x,
-                                                          const int subit, const double t) {
+PathIntegral::input_array_t PathIntegral::offline_control(
+    const DynamicsBase::observation_t& x, const int subit, const double t) {
   set_observation(x, t);
   for (size_t i = 0; i < subit; i++) update_policy();
 }
 
 template <typename T>
-void PathIntegral::shift_back(std::vector<T>& v_out, const T& fill, const int offset) {
+void PathIntegral::shift_back(std::vector<T>& v_out, const T& fill,
+                              const int offset) {
   std::rotate(v_out.begin(), v_out.begin() + offset, v_out.end());
   std::fill(v_out.end() - offset, v_out.end(), fill);
 }
 
 // explicit instantiation
-template void PathIntegral::shift_back<Eigen::VectorXd>(std::vector<Eigen::VectorXd>& v_out,
-                                                        const Eigen::VectorXd& fill,
-                                                        const int offset);
+template void PathIntegral::shift_back<Eigen::VectorXd>(
+    std::vector<Eigen::VectorXd>& v_out, const Eigen::VectorXd& fill,
+    const int offset);
 
 void PathIntegral::print_cost_histogram() const {
   constexpr int nbins = 10;
   double delta = (max_cost_ - min_cost_) / nbins;
 
   std::cout << "Rollouts cost histogram" << std::endl;
-  std::cout << "Max: " << max_cost_ << ", Min: " << min_cost_ << ", delta: " << delta << std::endl;
+  std::cout << "Max: " << max_cost_ << ", Min: " << min_cost_
+            << ", delta: " << delta << std::endl;
   std::map<int, int> hist{};
   for (size_t k = 0; k < config_.rollouts; k++) {
     ++hist[std::round((rollouts_cost_(k) - min_cost_) / delta)];
   }
   for (auto p : hist) {
-    std::cout << std::setw(2) << p.first << ' ' << std::string(p.second, '*') << '\n';
+    std::cout << std::setw(2) << p.first << ' ' << std::string(p.second, '*')
+              << '\n';
   }
   std::cout << std::endl << std::endl;
 }
 
 void PathIntegral::bound_input(input_t& u) {
-  if (config_.bound_input) u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
+  if (config_.bound_input) 
+    u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
 }
 
-}  // namespace mppi
+}

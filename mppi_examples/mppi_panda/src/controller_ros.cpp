@@ -155,7 +155,7 @@ void PandaControllerRosSim::update(const ros::Time& time,
   Eigen::VectorXd v = getJointVelocities();
   x_.head<7>() = q;
   x_.tail<7>() = v;
-  controller_->set_observation(x_, time.toSec());
+      controller_->set_observation(x_, time.toSec());
 
   robot_->updateState(q, v);
   robot_->computeAllTerms();

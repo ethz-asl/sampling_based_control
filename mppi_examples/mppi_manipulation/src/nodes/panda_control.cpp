@@ -8,6 +8,7 @@
 #include "mppi_manipulation/controller_interface.h"
 
 #include <mppi_manipulation/dynamics_ros.h>
+#include <manipulation_msgs/conversions.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
@@ -19,12 +20,6 @@ using namespace manipulation;
 int main(int argc, char** argv) {
   ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
-
-  // activate raisim
-  std::string activation_file;
-  nh.param<std::string>("activation_file", activation_file,
-                        "/home/giuseppe/git/raisimlib/rsc/activation.raisim");
-  raisim::World::setActivationKey(activation_file);
 
   // ros interface
   auto controller = PandaControllerInterface(nh);
@@ -40,13 +35,17 @@ int main(int argc, char** argv) {
     return -1;
   }
   auto simulation = std::make_shared<ManipulatorDynamicsRos>(
-      nh, robot_description_raisim, object_description_raisim, 0.01, fixed_base);
+      nh, robot_description_raisim, object_description_raisim, 0.015, fixed_base);
 
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0
   observation_t x = observation_t::Zero(simulation->get_state_dimension());
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < x0.size(); i++) x(i) = x0[i];
+
+  observation_t x_nom;
+  manipulation_msgs::State x_nom_ros;
+  ros::Publisher x_nom_publisher_ = nh.advertise<manipulation_msgs::State>("/observer/state", 10);
 
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);
@@ -71,8 +70,6 @@ int main(int argc, char** argv) {
   nh.param<bool>("sequential", sequential, false);
   if (!sequential) controller.start();
 
-  bool freeze_robot = false;  // hack to freeze the robot once task is done
-
   // do some timing
   double elapsed;
   time_point<steady_clock> start, end;
@@ -91,12 +88,15 @@ int main(int argc, char** argv) {
       controller.get_input(x, u, sim_time);
     }
 
-    if (freeze_robot) u.setZero();
-
     if (!static_optimization) {
       x = simulation->step(u, sim_dt);
       sim_time += sim_dt;
     }
+
+
+    controller.get_input_state(x, x_nom, u, sim_time);
+    manipulation::conversions::eigenToMsg(x_nom, x_nom_ros);
+    x_nom_publisher_.publish(x_nom_ros);
 
     end = steady_clock::now();
     elapsed = duration_cast<milliseconds>(end - start).count() / 1000.0;
@@ -110,11 +110,7 @@ int main(int argc, char** argv) {
     // TODO(giuseppe) read the actual reference position
     double object_displacement = simulation->get_object_displacement();
     double displacement_error = std::abs(object_displacement - M_PI / 2.0);
-    if (displacement_error < 1.0 * M_PI / 180.0) freeze_robot = true;
-
-    ROS_INFO_STREAM_THROTTLE(
-        1.0, "Object displacement: " << object_displacement
-                                     << ". Displacement error: " << displacement_error);
+    //if (displacement_error < 1.0 * M_PI / 180.0) freeze_robot = true;
 
     ros::spinOnce();
   }

@@ -2,38 +2,24 @@
 <launch>
     <arg name="fixed_base" default="true"/>
     <arg name="object" default="door"/>
-    <arg name="plot_cost" default="true"/>
-    <arg name="plot_input" default="true"/>
-    <arg name="enable_obstacle" default="true"/>
+    <arg name="plot_cost" default="false"/>
+    <arg name="plot_input" default="false"/>
+    <arg name="enable_obstacle" default="false"/>
+
+    <arg name="experiment" default="false"/>
+    <arg name="experiment_id" default="manipulation"/>
 
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
     <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
-    <arg name="object_reference_position" default="0.20" if="$(eval arg('object') == 'drawer')"/>
+    <arg name="object_reference_position" default="0.50" if="$(eval arg('object') == 'drawer')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
 
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_grasp.urdf.xacro"/>
-
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
-      resources_prefix:='file://'
-      collision_links:=false
-      collision_hand:=true
-      add_finger:=true
-      fixed_base:=$(arg fixed_base)"/>
-
-    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
-      collision_links:=false
-      collision_hand:=true
-      collision_finger:=true
-      collision_format:='obj'
-      add_finger:=true
-      no_position_limits:=true
-      fixed_base:=$(arg fixed_base)"/>
-
-    <param name="object_description"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro resource_prefix:='file://'"/>
-    <param name="object_description_raisim"
-           command="$(find xacro)/xacro $(find mppi_manipulation)/data/$(arg object).urdf.xacro"/>
-
+    <include file="$(find mppi_manipulation)/launch/load.launch">
+        <arg name="debug" value="false"/>
+        <arg name="object" value="$(arg object)"/>
+        <arg name="fixed_base" value="$(arg fixed_base)"/>
+    </include>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
@@ -49,6 +35,12 @@
         <remap from="joint_states" to="/object/joint_state"/>
     </node>
 
+    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="obstacle_description"/>
+        <remap from="joint_states" to="/fake_joint_state"/>
+    </node>
+
     <group if="$(arg fixed_base)">
         <param name="/config_file" value="$(find mppi_manipulation)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml" ns="manipulation_control"/>
@@ -58,8 +50,7 @@
         <rosparam command="load" file="$(find mppi_manipulation)/params/params_mobile.yaml" ns="manipulation_control"/>
     </group>
 
-    <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen"
-          launch-prefix="gdb -ex run --args">
+    <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen">
         <param name="fixed_base" value="$(arg fixed_base)"/>
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
@@ -71,4 +62,11 @@
         <arg name="plot_input" value="$(arg plot_input)"/>
         <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
     </include>
+
+    <group if="$(arg experiment)">
+        <node pkg="mppi_ros" type="record_data.py" name="record_data">
+            <param name="experiment_id" value="$(arg experiment_id)"/>
+        </node>
+        <node pkg="mppi_manipulation" type="demo.py" name="demo" output="screen"/>
+    </group>
 </launch>

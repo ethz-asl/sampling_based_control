@@ -1,31 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+    <arg name="debug" default="false"/>
+    <arg name="fixed_base" default="true"/>
+    <arg name="object" default="door"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
+    <arg name="object_height" default="1.0"/>
 
-    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_with_finger_ros.urdf"/>
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
+      resources_directory:='package://mppi_panda'
+      ridgeback_resources_prefix:='package://ridgeback_description'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true
+      custom_fingers:=true
+      fixed_base:=$(arg fixed_base)"/>
 
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen">
-        <rosparam param="zeros">
-            "panda_joint1": 0.0
-            "panda_joint2": -0.52
-            "panda_joint3": 0.0
-            "panda_joint4": -1.785
-            "panda_joint5": 0.0
-            "panda_joint6": 1.10
-            "panda_joint7": 0.69
-            "panda_finger_joint1": 0.04
-            "panda_finger_joint2": 0.04
-        </rosparam>
-        <remap from="joint_states" to="/joint_states"/>
-    </node>
+    <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
+    <param name="robot_description_fixed_base" command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
+      ridgeback_resources_prefix:='package://ridgeback_description'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true
+      custom_fingers:=true
+      fixed_base:=true"/>
 
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <param name="use_tf_static" value="true"/>
-        <param name="tf_prefix" value=""/>
-        <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states" to="/joint_states"/>
-    </node>
+    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
+      ridgeback_resources_prefix:='$(find ridgeback_description)'
+      collision_links:=false
+      collision_hand:=true
+      collision_finger:=true
+      collision_format:='obj'
+      add_finger:=true
+      custom_fingers:=true
+      no_position_limits:=false
+      friction:=0.0
+      damping:=10.0
+      fixed_base:=$(arg fixed_base)"/>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/urdf.rviz" output="screen"/>
+    <param name="object_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           resource_prefix:='file://'
+           height:=$(arg object_height)"/>
+
+    <param name="object_description_raisim"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           height:=$(arg object_height)"/>
+
+    <param name="obstacle_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/box.urdf.xacro
+           obstacle_x:=10.3 obstacle_y:=-0.25 obstacle_z:=0.17"/>
+
+    <group if="$(arg debug)">
+        <node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="robot_description"/>
+            <remap from="joint_states" to="/robot/joint_states"/>
+        </node>
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="robot_description"/>
+            <remap from="joint_states" to="/robot/joint_states"/>
+        </node>
+
+        <node name="object_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="object_description"/>
+            <remap from="joint_states" to="/object/joint_states"/>
+        </node>
+        <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="object_description"/>
+            <remap from="joint_states" to="/object/joint_states"/>
+        </node>
+        <node name="rviz" pkg="rviz" type="rviz" output="screen"
+              args="-d $(find mppi_manipulation)/config/rviz/debug_urdf.rviz"/>
+
+    </group>
 </launch>

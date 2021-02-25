@@ -15,8 +15,8 @@ namespace manipulation {
 
 PandaRaisimDynamics::PandaRaisimDynamics(const std::string& robot_description,
                                          const std::string& object_description, const double dt,
-                                         const bool fixed_base)
-    : fixed_base_(fixed_base), dt_(dt) {
+                                         const bool fixed_base, const PandaRaisimGains& gains)
+    : fixed_base_(fixed_base), dt_(dt), gains_(gains) {
   initialize_world(robot_description, object_description);
   initialize_pd();
   set_collision();
@@ -26,10 +26,10 @@ void PandaRaisimDynamics::initialize_world(const std::string& robot_description,
                                            const std::string& object_description) {
   sim_.setTimeStep(dt_);
   sim_.setERP(0., 0.);
+  sim_.setMaterialPairProp("steel", "steel", 0.01, 0.0, 0.0);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
-  for (const auto& joint_name : panda->getMovableJointNames()) std::cout << joint_name << std::endl;
 
   /// create raisim objects
   object_description_ = object_description;
@@ -62,17 +62,17 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_v_desired.setZero(robot_dof_);
 
   if (!fixed_base_) {
-    joint_p_gain.head(BASE_DIMENSION).setConstant(0);
-    joint_d_gain.head(BASE_DIMENSION).setConstant(10.0);
-    joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(0.0);
-    joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION).setConstant(10.0);
+    joint_p_gain.head(BASE_DIMENSION) = gains_.base_gains.Kp; //.setConstant(0);
+    joint_d_gain.head(BASE_DIMENSION) = gains_.base_gains.Kd; //.setConstant(1000.0);
+    joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = gains_.arm_gains.Kp; //.setConstant(0.0);
+    joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = gains_.arm_gains.Kd; //.setConstant(10.0);
   } else {
-    joint_p_gain.head(ARM_DIMENSION).setConstant(0);
-    joint_d_gain.head(ARM_DIMENSION).setConstant(10.0);
+    joint_p_gain.head(ARM_DIMENSION) = gains_.arm_gains.Kp; //.setConstant(0);
+    joint_d_gain.head(ARM_DIMENSION) = gains_.arm_gains.Kd; //.setConstant(10.0);
   }
 
-  joint_p_gain.tail(GRIPPER_DIMENSION).setConstant(200);
-  joint_d_gain.tail(GRIPPER_DIMENSION).setConstant(1.0);
+  joint_p_gain.tail(GRIPPER_DIMENSION) = gains_.gripper_gains.Kp; //.setConstant(100);
+  joint_d_gain.tail(GRIPPER_DIMENSION) = gains_.gripper_gains.Kd; //.setConstant(50.0);
 
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
@@ -88,14 +88,22 @@ void PandaRaisimDynamics::set_collision() {
 
 DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t& u,
                                                       const double dt) {
-  // no mimic support --> 1 input for gripper but 2 joints to control
-  // cmd(PandaDim::ARM_DIMENSION) = x_(PandaDim::ARM_DIMENSION) + u(PandaDim::INPUT_DIMENSION-1)*dt;
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>() << 0.04, 0.04;
+  // keep the gripper in the current position
+  if (fixed_base_){
+    cmd.tail<PandaDim::GRIPPER_DIMENSION>() << x_.head<ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
+  }
+  else{
+    cmd.tail<PandaDim::GRIPPER_DIMENSION>() << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();  
+  }
+
 
   if (fixed_base_) {
     cmdv.head<ARM_DIMENSION>() = u.head<ARM_DIMENSION>();
   } else {
-    cmdv.head<ARM_DIMENSION + BASE_DIMENSION>() = u.head<BASE_DIMENSION + ARM_DIMENSION>();
+    cmdv(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
+    cmdv(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
+    cmdv(2) = u(2);
+    cmdv.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);
   }
 
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();

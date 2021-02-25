@@ -14,7 +14,7 @@
     <depend>sensor_msgs</depend>
     <depend>any_worker</depend>
     <depend>param_io</depend>
+    <depend>message_generation</depend>
 
-    <build_depend>message_generation</build_depend>
     <exec_depend>message_runtime</exec_depend>
 </package>

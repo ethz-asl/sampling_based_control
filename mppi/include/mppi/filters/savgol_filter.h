@@ -24,8 +24,16 @@ namespace mppi {
 struct MovingExtendedWindow {
   MovingExtendedWindow(const int size, const int w) {
     window = w;
-    uu.resize(size + 2 * window, 0);
-    tt.resize(size + 2 * window, -1);
+    // the first and last input need half horizon in the past and in the future in order
+    // to be centered leaving with a total size equal to weigths size (2 * window) + 1 + horizon/2
+    // + horizon/2 = 2 * window + 1 + horizon
+    uu.resize(size + 2 * window + 1, 0);
+
+    // initialization to -1 makes sure everything starts correctly with a positive initial time
+    tt.resize(size + 2 * window + 1, -1);
+
+    start_idx = window;
+    last_trim_t = -1;
   }
 
   double last_trim_t;
@@ -35,20 +43,32 @@ struct MovingExtendedWindow {
   std::vector<double> tt;
 
   void trim(const double t) {
+    if (t < last_trim_t){
+      std::stringstream ss;
+      ss << "Resetting the window back in the past. Can reset only to larger times than last reset!!!"
+         << "last reset=" << last_trim_t << ", trying to reset to t=" << t;
+      throw std::runtime_error(ss.str());
+    }
     last_trim_t = t;
-    auto lower = std::upper_bound(tt.begin(), tt.end(),
-                                  t);  // index to time larger than this time
-    int offset = std::distance(tt.begin(), lower - 1);
-    offset = offset - window;
-    assert(offset >= 0);
+
+    // search in the last inserted times the closest smaller than the current
+    size_t trim_idx = start_idx;
+    for (size_t i=0; i<start_idx; i++){
+      if (tt[i] >= t){
+        trim_idx = i;
+        break;
+      }
+    }
+    size_t offset = trim_idx - window;
 
     std::rotate(tt.begin(), tt.begin() + offset, tt.end());
     std::rotate(uu.begin(), uu.begin() + offset, uu.end());
 
-    if (offset > 0)
-      std::fill(tt.end() - offset, tt.end(), *(tt.end() - offset - 1));
-    if (offset > 0)
-      std::fill(uu.end() - offset, uu.end(), *(uu.end() - offset - 1));
+    // extend the trimmed portion with the last elements in the vector
+    if (offset > 0){
+      std::fill(tt.end() - offset, tt.end(), tt.back());
+      std::fill(uu.end() - offset, uu.end(), uu.back());
+    }
 
     start_idx = window;
     tt[start_idx] = t;
@@ -73,15 +93,22 @@ struct MovingExtendedWindow {
     start_idx++;
   }
 
+  /**
+   * Extract a window centered at the query time
+   * @param t: query time
+   * @return
+   */
   std::vector<double> extract(const double t) {
-    auto lower = std::lower_bound(tt.begin(), tt.end(), t);
+    auto lower = std::lower_bound(tt.begin(), tt.end(), t); // index to the first element larger than t
     assert(lower != tt.end());
-    size_t idx = std::distance(tt.begin(), lower - 1);
+    size_t idx = std::distance(tt.begin(), lower);
 
-    return std::vector<double>(uu.begin() + idx - window - 1,
-                               uu.begin() + idx + window);
+    return std::vector<double>(uu.begin() + idx - window, uu.begin() + idx + window + 1);
   }
 
+  /**
+   * Extend the window until the end with the latest received measurement
+   */
   void extend() {
     std::fill(uu.begin() + start_idx + 1, uu.end(), uu[start_idx]);
     std::fill(tt.begin() + start_idx + 1, tt.end(), tt[start_idx]);
@@ -93,34 +120,28 @@ class SavGolFilter {
   SavGolFilter() = default;
   SavGolFilter(const int steps, const int nu, const int window,
                const uint poly_order, const uint der_order = 0,
-               const double time_step = 1.) {
-    filter = gram_sg::SavitzkyGolayFilter(window, 0, poly_order, der_order);
-    windows.resize(nu, MovingExtendedWindow(steps, window));
-  };
+               const double time_step = 1.);
+  /**
+  Filter with custom filtering per input channel
+  **/
+  SavGolFilter(const int steps, const int nu, const std::vector<int>& window,
+               const std::vector<uint>& poly_order, const uint der_order = 0,
+               const double time_step = 1.);
+
   ~SavGolFilter() = default;
 
  public:
-  void reset(const double t) {
-    for (auto& w : windows) w.trim(t);
-  }
-
-  void add_measurement(const Eigen::VectorXd& u, const double t) {
-    assert(u.size() == windows.size());
-    for (size_t i = 0; i < u.size(); i++) {
-      windows[i].add_point(u(i), t);
-    }
-  }
-
-  void apply(Eigen::VectorXd& u, const double t) {
-    for (size_t i = 0; i < u.size(); i++) {
-      u[i] = filter.filter(windows[i].extract(t));
-    }
-  }
+  void reset(const double t);
+  void add_measurement(const Eigen::VectorXd& u, const double t);
+  void apply(Eigen::VectorXd& u, const double t);
+  inline std::vector<MovingExtendedWindow>& get_windows() { return windows_; }
 
  private:
   int window_size_;
-  std::vector<MovingExtendedWindow> windows;
   gram_sg::SavitzkyGolayFilter filter;
+
+  std::vector<MovingExtendedWindow> windows_;
+  std::vector<gram_sg::SavitzkyGolayFilter> filters_;
 };
 
 }  // namespace mppi
