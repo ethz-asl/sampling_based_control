@@ -8,9 +8,9 @@ import pinocchio as pin
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
-import seaborn as sns
-sns.set_theme()
-sns.set_context("paper")
+#import seaborn as sns
+#sns.set_theme()
+#sns.set_context("paper")
 
 from manipulation_msgs.msg import State
 
@@ -38,7 +38,8 @@ def get_manipulator_model():
 
 
 # Open bag
-bag_file = os.path.join(pkg_dir, "data", "bags", "exp_mobile_3.bag")
+
+bag_file = os.path.join(pkg_dir, "data", "bags", "exp_mobile_10.bag")
 bag = rosbag.Bag(bag_file)
 
 time = []
@@ -46,21 +47,24 @@ time_data = []
 arm_joint_positions = []
 arm_joint_velocities = []
 base_twist = []
+switches = []
 
-for topic, msg, t in bag.read_messages(topics=['/x_nom', '/joint_states', '/cost', '/mode', '/mppi_data']):
-    if topic == '/x_nom':
+print("Reading bag.")
+for topic, msg, t in bag.read_messages(topics=['/observer/state', '/mode']):
+    if topic == '/observer/state':  #'/x_nom':
         time.append(t.to_sec())
         arm_joint_positions.append(np.array(msg.arm_state.position))
         arm_joint_velocities.append(np.array(msg.arm_state.velocity))
         base_twist.append(np.array([msg.base_twist.linear.x, msg.base_twist.linear.y, msg.base_twist.linear.z]))
+    
+    if topic == '/mode':
+        switches.append([t.to_sec() - time[0], msg.data])
+
     if topic == '/mppi_data':
         time_data.append(t.to_sec())
-
-time_data = np.array(time_data)
-rate = 1. / (time_data[1:] - time_data[:-1])
-
 bag.close()
-time = np.array(time) - time[0]
+print("Done")
+
 
 ee_velocity_norm = []
 base_velocity_norm = []
@@ -69,38 +73,50 @@ for aq, av, bt in zip(arm_joint_positions, arm_joint_velocities, base_twist):
     ee_vel : pin.Motion = manipulator.get_frame_velocity(aq, av, "panda_hand")
     ee_velocity_norm.append(np.linalg.norm(ee_vel.linear))
     base_velocity_norm.append(np.linalg.norm(bt))
-print(time[1:] - time[:-1])
 
-ee_velocity_norm_filt = savgol_filter(ee_velocity_norm, 2501, 1)
-base_velocity_norm_filt = savgol_filter(base_velocity_norm, 2501, 1)
+ee_velocity_norm_filt = savgol_filter(ee_velocity_norm, 101, 2)
+base_velocity_norm_filt = savgol_filter(base_velocity_norm, 101, 2)
 
 print("Plotting data")
 fig, ax = plt.subplots()
-steps = len(ee_velocity_norm_filt)
-t = np.array(range(0, steps-15000))/800.0
+
+# let the time start at 0
+time = np.array(time)
+time = time - time[0]
 ax.plot(time, ee_velocity_norm_filt, label="end effector", linewidth=2)
 ax.plot(time, base_velocity_norm_filt, label="base", linewidth=2)
 
+# Differentiate between modes
+modes_color = {0: 'r', 1: 'g', 2: 'b'}
+modes_id = {0: 'C', 1: 'A', 2: 'B'}
+for idx, switch in enumerate(switches):
+    if idx < len(switches) - 1:
+        ax.axvspan(switch[0], switches[idx+1][0], alpha=0.05, facecolor=modes_color[switch[1]])
+    else:
+        ax.axvspan(switch[0], time[-1], alpha=0.05, facecolor=modes_color[switch[1]])
+    ax.axvline(switch[0], linestyle="--", linewidth="2")
+
+ax.axvspan(switches[-1][0], time[-1], alpha=0.1, facecolor=modes_color[switch[1]])
+ax.set_xlim(left=time[0], right=time[-1])
+
 ax.set_xlabel("time [s]", fontsize=40)
-ax.set_ylabel("velocity norm", fontsize=40)
-from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
-ax.yaxis.set_minor_locator(AutoMinorLocator(10))
-ax.xaxis.set_minor_locator(AutoMinorLocator(10))
+ax.set_ylabel("velocity norm [m/s]", fontsize=40)
+ax.set_ybound(lower=-0.01, upper=0.25)
+#from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
+#ax.yaxis.set_minor_locator(AutoMinorLocator(10))
+#ax.xaxis.set_minor_locator(AutoMinorLocator(10))
 
 
-ax.set_ybound(lower=0, upper=0.15)
+#ax.set_ybound(lower=0, upper=0.15)
 #ax.set_xticks([])
 
-ax.grid(which='major')
-ax.grid(which='minor')
+#ax.grid(which='major')
+#ax.grid(which='minor')
 # plt.plot(ee_velocity_norm, linestyle="--", label="end effector velocity norm")
 # plt.plot(base_velocity_norm, linestyle="--", label="base velocity norm")
-
-fig, ax = plt.subplots()
-ax.plot(time_data[1:], rate)
 
 plt.grid()
 plt.yticks(fontsize=18)
 plt.xticks(fontsize=18)
-plt.legend(fontsize=30)
+plt.legend(fontsize=30, loc='upper left')
 plt.show()

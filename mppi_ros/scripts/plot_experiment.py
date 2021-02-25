@@ -9,6 +9,9 @@ from rospkg import RosPack
 sns.set_theme()
 sns.set_context("paper")
 
+# Avoid Type3 fonts (RA-L submission)
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 class Plotter:
     def __init__(self, experiment_id="mppi_panda"):
@@ -88,6 +91,10 @@ class Plotter:
                 axs[i].set_ybound(lower=-0.01, upper=1.2)
                 plt.legend(fontsize=18)
 
+    def plot_cost(self, aggregator):
+        fig, ax = plt.subplots()
+        sns.lineplot(data=self.df, x="index", y="stage_cost", hue=aggregator, legend=True, ci="sd")
+        
     def plot_average_cost_samples_comparison(self):
         different_samples = len(self.df["nr_rollouts"].unique())
         ax = sns.lineplot(data=self.df, x="index", y="stage_cost", hue="nr_rollouts", legend=True, ci="sd", palette=sns.color_palette("tab10", n_colors=different_samples))
@@ -104,15 +111,19 @@ class Plotter:
         #plt.legend(fontsize=18)
 
     def plot_average_cost_with_without_momentum(self):
-        df = self.df.loc[self.df['index'] < 2600]
-        ax = sns.barplot(x="nr_rollouts", y="stage_cost", hue="beta", data=df, capsize=.2)
+        fig, ax = plt.subplots()
+        df = self.df.loc[(self.df['beta'] < 1)]
+        ax = sns.barplot(x="id", y="stage_cost", hue="beta", data=df, capsize=.2)
+        # ax = sns.barplot(x="nr_rollouts", y="stage_cost", data=df, capsize=.2)
+        
         ax.legend_.remove()
         h, l = ax.get_legend_handles_labels()
         ax.legend(h, ["Without momentum", "With momentum"], fontsize=30)
-        ax.set_xticklabels([50, 100, 200], size = 30)
+        ax.set_xticklabels(["shelf", "dishwasher", "microwave", "drawer", "target reaching"], size = 30)
         ax.set_yticklabels(ax.get_yticks(), size = 30)
-        ax.set_xlabel("samples", fontsize=40)
+        #ax.set_xticklabels([20, 50, 100, 200, 500, 1000], size = 30)
         ax.set_ylabel("average stage cost", fontsize=40)
+        ax.set_xlabel("", fontsize=40)
 
     def plot_cost_momentum_comparison_tree(self):
 
@@ -179,7 +190,6 @@ class Plotter:
 
         plt.legend(fontsize=35)
 
-
 if __name__ == "__main__":
     import sys
     import argparse
@@ -194,7 +204,9 @@ if __name__ == "__main__":
     #plotter.plot_cost_comparison()
     #plotter.plot_cost_momentum_comparison_tree()
     #plotter.plot_average_cost_samples_comparison()
-    # plotter.plot_momentum_comparison()
+    #plotter.plot_momentum_comparison()
     #plotter.plot_average_cost_with_without_momentum()
-    plotter.plot_rate()
+    #plotter.plot_rate()
+    #plotter.plot_cost('beta')
+    plotter.plot_average_cost_with_without_momentum()
     plt.show()
