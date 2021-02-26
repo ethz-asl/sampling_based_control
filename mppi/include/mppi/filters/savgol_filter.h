@@ -66,8 +66,8 @@ struct MovingExtendedWindow {
 
     // extend the trimmed portion with the last elements in the vector
     if (offset > 0){
-      std::fill(tt.end() - offset, tt.end(), tt.back());
-      std::fill(uu.end() - offset, uu.end(), uu.back());
+      std::fill(tt.end() - offset, tt.end(), *(tt.end()-offset-1));
+      std::fill(uu.end() - offset, uu.end(), *(uu.end()-offset-1));
     }
 
     start_idx = window;
