@@ -6,6 +6,7 @@
  * @brief    description
  */
 
+#include "mppi_panda/dimensions.h"
 #include "mppi_panda/controller_ros.h"
 
 #include <controller_interface/controller_base.h>

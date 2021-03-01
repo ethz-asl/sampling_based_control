@@ -7,14 +7,11 @@
  */
 
 #pragma once
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/model.hpp>
-#include <pinocchio/fwd.hpp>
-#include <pinocchio/multibody/data.hpp>
-#include <pinocchio/parsers/urdf.hpp>
 
 #include <math.h>
 #include <mppi/cost/cost_base.h>
+#include <mppi_pinocchio/model.h>
+
 #include <ros/ros.h>
 
 #include <ros/package.h>
@@ -29,8 +26,7 @@ class PandaCost : public mppi::CostBase {
   ~PandaCost() = default;
 
  private:
-  pinocchio::Model model_;
-  pinocchio::Data data_;
+  mppi_pinocchio::RobotModel robot_model_;
 
   std::string robot_description_;
   double linear_weight_;
@@ -39,13 +35,10 @@ class PandaCost : public mppi::CostBase {
 
   std::string tracked_frame_ = "panda_hand";
   int frame_id_;
-  pinocchio::SE3 pose_current_;
-  pinocchio::SE3 pose_reference_;
   Eigen::Matrix<double, 3, 3> Q_linear_;
   Eigen::Matrix<double, 3, 3> Q_angular_;
 
   double Q_obst_ = 100000;
-  pinocchio::SE3 pose_obstacle_;
   double obstacle_radius_;
 
   Eigen::Matrix<double, 7, 1> joint_limits_lower_;
@@ -65,7 +58,5 @@ class PandaCost : public mppi::CostBase {
 
   cost_t compute_cost(const mppi::observation_t& x,
                       const mppi::reference_t& ref, const double t) override;
-
-  pinocchio::SE3 get_pose_end_effector(const Eigen::VectorXd& x);
 };
 }  // namespace panda

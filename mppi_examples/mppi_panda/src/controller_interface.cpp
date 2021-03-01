@@ -6,27 +6,28 @@
  * @brief    description
  */
 
-#include "mppi_panda/controller_interface.h"
+#include "mppi_panda/cost.h"
+#include "mppi_panda/dynamics.h"
+
 #include <ros/package.h>
+#include "mppi_panda/controller_interface.h"
 #include "mppi_panda/renderer.h"
 #include "mppi_ros/ros_params.h"
+
+#include <mppi_pinocchio/ros_conversions.h>
 
 using namespace panda;
 
 bool PandaControllerInterface::init_ros() {
-  optimal_trajectory_publisher_ =
-      nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
-  obstacle_marker_publisher_ =
-      nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
+  optimal_trajectory_publisher_ = nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
+  obstacle_marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
 
-  obstacle_subscriber_ = nh_.subscribe(
-      "/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
-  ee_pose_desired_subscriber_ =
-      nh_.subscribe("/end_effector_pose_desired", 10,
-                    &PandaControllerInterface::ee_pose_desired_callback, this);
+  obstacle_subscriber_ =
+      nh_.subscribe("/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
+  ee_pose_desired_subscriber_ = nh_.subscribe(
+      "/end_effector_pose_desired", 10, &PandaControllerInterface::ee_pose_desired_callback, this);
 
-  if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_))
-    return false;
+  if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_)) return false;
 
   obstacle_marker_.header.frame_id = "world";
   obstacle_marker_.type = visualization_msgs::Marker::SPHERE;
@@ -52,15 +53,11 @@ bool PandaControllerInterface::init_ros() {
   return true;
 }
 
-void PandaControllerInterface::init_model(
-    const std::string& robot_description) {
-  pinocchio::urdf::buildModelFromXML(robot_description, model_);
-  data_ = pinocchio::Data(model_);
+void PandaControllerInterface::init_model(const std::string& robot_description) {
+  robot_model_.init_from_xml(robot_description);
 }
 
-bool PandaControllerInterface::set_controller(
-    std::shared_ptr<mppi::PathIntegral>& controller) {
-
+bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral>& controller) {
   std::string robot_description;
   double linear_weight;
   double angular_weight;
@@ -72,7 +69,7 @@ bool PandaControllerInterface::set_controller(
   ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
   ok &= mppi_ros::getBool(nh_, "rendering", rendering);
 
-  if (!ok){
+  if (!ok) {
     ROS_ERROR("Failed to parse parameters and set the controller.");
     return false;
   }
@@ -90,19 +87,17 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // cost
   // -------------------------------
-  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight,
-                                          angular_weight, obstacle_radius_);
+  auto cost = std::make_shared<PandaCost>(robot_description, linear_weight, angular_weight,
+                                          obstacle_radius_);
 
   // rendering
   std::shared_ptr<mppi::Renderer> renderer = nullptr;
-  if (rendering)
-    renderer = std::make_shared<RendererPanda>(nh_, robot_description);
+  if (rendering) renderer = std::make_shared<RendererPanda>(nh_, robot_description);
 
   // -------------------------------
   // config
   // -------------------------------
-  std::string config_file =
-      ros::package::getPath("mppi_panda") + "/config/params.yaml";
+  std::string config_file = ros::package::getPath("mppi_panda") + "/config/params.yaml";
   if (!config_.init_from_file(config_file)) {
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
@@ -111,8 +106,7 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_,
-                                                    nullptr, renderer);
+  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_, nullptr, renderer);
 
   // -------------------------------
   // initialize reference
@@ -137,8 +131,7 @@ void PandaControllerInterface::ee_pose_desired_callback(
   ref_.rr[0].head<7>() = pr;
 }
 
-void PandaControllerInterface::obstacle_callback(
-    const geometry_msgs::PoseStampedConstPtr& msg) {
+void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   obstacle_pose_ = *msg;
   ref_.rr[0](7) = obstacle_pose_.pose.position.x;
@@ -149,8 +142,7 @@ void PandaControllerInterface::obstacle_callback(
 bool PandaControllerInterface::update_reference() {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   if (last_ee_ref_id_ != ee_desired_pose_.header.seq ||
-      (last_ob_ref_id_ != obstacle_pose_.header.seq &&
-       ee_desired_pose_.header.seq != 0)) {
+      (last_ob_ref_id_ != obstacle_pose_.header.seq && ee_desired_pose_.header.seq != 0)) {
     get_controller()->set_reference_trajectory(ref_);
   }
   last_ee_ref_id_ = ee_desired_pose_.header.seq;
@@ -158,27 +150,15 @@ bool PandaControllerInterface::update_reference() {
   return true;
 }
 
-pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(
-    const Eigen::VectorXd& x) {
-  pinocchio::forwardKinematics(model_, data_, x.head<7>());
-  pinocchio::updateFramePlacements(model_, data_);
-  return data_.oMf[model_.getFrameId("panda_hand")];
-}
-
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
     const Eigen::VectorXd& x) {
-  pinocchio::SE3 pose = get_pose_end_effector(x);
+
   geometry_msgs::PoseStamped pose_ros;
+  robot_model_.update_state(x.head<7>());
+  mppi_pinocchio::Pose pose = robot_model_.get_pose("panda_hand");
+  mppi_pinocchio::to_msg(pose, pose_ros.pose);
   pose_ros.header.stamp = ros::Time::now();
   pose_ros.header.frame_id = "world";
-  pose_ros.pose.position.x = pose.translation()(0);
-  pose_ros.pose.position.y = pose.translation()(1);
-  pose_ros.pose.position.z = pose.translation()(2);
-  Eigen::Quaterniond q(pose.rotation());
-  pose_ros.pose.orientation.x = q.x();
-  pose_ros.pose.orientation.y = q.y();
-  pose_ros.pose.orientation.z = q.z();
-  pose_ros.pose.orientation.w = q.w();
   return pose_ros;
 }
 
@@ -190,20 +170,13 @@ void PandaControllerInterface::publish_ros() {
 
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
-  pinocchio::SE3 pose_temp;
   geometry_msgs::PoseStamped pose_temp_ros;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_) {
-    pose_temp = get_pose_end_effector(x.head<7>());
-    pose_temp_ros.pose.position.x = pose_temp.translation()(0);
-    pose_temp_ros.pose.position.y = pose_temp.translation()(1);
-    pose_temp_ros.pose.position.z = pose_temp.translation()(2);
-    Eigen::Quaterniond q(pose_temp.rotation());
-    pose_temp_ros.pose.orientation.x = q.x();
-    pose_temp_ros.pose.orientation.y = q.y();
-    pose_temp_ros.pose.orientation.z = q.z();
-    pose_temp_ros.pose.orientation.w = q.w();
+    robot_model_.update_state(x.head<7>());
+    mppi_pinocchio::Pose pose = robot_model_.get_pose("panda_hand");
+    mppi_pinocchio::to_msg(pose, pose_temp_ros.pose);
     optimal_path_.poses.push_back(pose_temp_ros);
   }
   optimal_trajectory_publisher_.publish(optimal_path_);

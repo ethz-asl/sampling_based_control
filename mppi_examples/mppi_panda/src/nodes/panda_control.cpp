@@ -5,6 +5,7 @@
  * @version  1.0
  * @brief    description
  */
+#include "mppi_panda/dynamics.h"
 #include "mppi_panda/controller_interface.h"
 
 #include <ros/ros.h>

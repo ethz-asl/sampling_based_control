@@ -6,8 +6,7 @@
  * @brief    description
  */
 #pragma once
-#include "mppi_panda/cost.h"
-#include "mppi_panda/dynamics.h"
+#include <mppi_pinocchio/model.h>
 #include <mppi_ros/controller_interface.h>
 
 #include <nav_msgs/Path.h>
@@ -25,7 +24,6 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void publish_ros() override;
   bool update_reference() override;
 
-  pinocchio::SE3 get_pose_end_effector(const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
 
  private:
@@ -48,8 +46,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi::reference_trajectory_t ref_;
 
   double obstacle_radius_;
-  pinocchio::Data data_;
-  pinocchio::Model model_;
+  mppi_pinocchio::RobotModel robot_model_;
 
   // ros
   ros::Publisher optimal_trajectory_publisher_;

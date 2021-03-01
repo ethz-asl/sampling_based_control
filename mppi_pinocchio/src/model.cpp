@@ -13,11 +13,22 @@ using namespace pinocchio;
 
 namespace mppi_pinocchio {
 
+RobotModel::~RobotModel(){
+  delete model_;
+  delete data_;
+};
+
+// deep copy
+RobotModel::RobotModel(const RobotModel& rhs) {
+  model_ = new pinocchio::Model(*rhs.model_);
+  data_ = new pinocchio::Data(*rhs.data_);
+}
+
 bool RobotModel::init_from_xml(const std::string& robot_description) {
   try {
-    model_ = std::make_unique<pinocchio::Model>();
+    model_ = new Model();
     pinocchio::urdf::buildModelFromXML(robot_description, *model_);
-    data_ = std::make_unique<pinocchio::Data>(*model_);
+    data_ = new Data(*model_);
   } catch (std::runtime_error& exc) {
     std::cout << exc.what();
     return false;

@@ -18,13 +18,12 @@ struct Pose {
 
 class RobotModel {
  public:
-  using model_t = std::unique_ptr<pinocchio::Model>;
-  using data_t = std::unique_ptr<pinocchio::Data>;
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
   RobotModel() = default;
-  ~RobotModel() = default;
+  ~RobotModel();
 
+  RobotModel( const RobotModel& rhs);
   /**
    *
    * @param robot_description
@@ -69,7 +68,7 @@ class RobotModel {
   Pose get_pose(const std::string& frame) const;
 
  private:
-  model_t model_;
-  data_t data_;
+  pinocchio::Model* model_;
+  pinocchio::Data* data_;
 };
 }  // namespace mppi_pinocchio

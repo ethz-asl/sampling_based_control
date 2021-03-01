@@ -13,10 +13,7 @@ namespace panda {
 
 DynamicsBase::observation_t PandaDynamics::step(const DynamicsBase::input_t &u,
                                                 const double dt) {
-  double dt_internal = dt / config_.substeps;
-  for (size_t i = 0; i < config_.substeps; i++) {
-    x_.head<7>() += u * dt_internal;
-  }
+  x_.head<7>() += u * dt;
   return x_;
 }
 

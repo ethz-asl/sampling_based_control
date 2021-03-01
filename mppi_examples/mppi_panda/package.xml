@@ -12,6 +12,7 @@
     <depend>roscpp</depend>
     <depend>mppi</depend>
     <depend>mppi_ros</depend>
+    <depend>mppi_pinocchio</depend>
     <depend>eigen</depend>
     <depend>roslib</depend>
 
