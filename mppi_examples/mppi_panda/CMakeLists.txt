@@ -5,22 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED 3.3)
 
 set(PACKAGE_DEPENDENCIES
-        sensor_msgs
-        std_msgs
-        roscpp
-        mppi
-        mppi_ros
-        mppi_pinocchio
-        roslib
-        robot_control
-        robot_control_assets
-        controller_interface
-        franka_hw
-        hardware_interface
-        pluginlib
-        roscpp
-        realtime_tools
-        )
+    sensor_msgs
+    std_msgs
+    roscpp
+    mppi
+    mppi_ros
+    mppi_pinocchio
+    roslib
+    roscpp
+)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 catkin_package(
@@ -38,10 +31,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
 
 add_executable(panda_control src/nodes/panda_control.cpp)
 target_link_libraries(panda_control ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_control ${PROJECT_NAME})
-
-add_library(panda_stocopt_control src/controller_ros.cpp)
-target_link_libraries(panda_stocopt_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_control ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
