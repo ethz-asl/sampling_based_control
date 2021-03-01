@@ -175,13 +175,13 @@ void ControllerRos::publish_input() {
 }
 
 void ControllerRos::set_observation(const mppi::observation_t &x,
-                                    const mppi::time_t &t) {
+                                    const double &t) {
   controller_->set_observation(x, t);
   observation_set_ = true;
 }
 
 void ControllerRos::get_input(const mppi::observation_t &x, mppi::input_t &u,
-                              const mppi::time_t &t) {
+                              const double &t) {
   controller_->get_input(x, u, t);
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
@@ -191,7 +191,7 @@ void ControllerRos::get_input(const mppi::observation_t &x, mppi::input_t &u,
 
 void ControllerRos::get_input_state(const observation_t &x,
                                     observation_t &x_nom, input_t &u,
-                                    const mppi::time_t &t) {
+                                    const double &t) {
   controller_->get_input_state(x, x_nom, u, t);
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);

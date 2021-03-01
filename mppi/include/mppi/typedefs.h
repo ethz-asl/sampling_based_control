@@ -15,8 +15,7 @@ typedef std::vector<input_t>input_array_t;
 typedef Eigen::VectorXd observation_t;
 typedef std::vector<observation_t> observation_array_t;
 
-typedef double time_t;
-typedef std::vector<time_t> time_array_t;
+typedef std::vector<double> time_array_t;
 
 typedef Eigen::VectorXd reference_t;
 typedef std::vector<reference_t> reference_array_t;

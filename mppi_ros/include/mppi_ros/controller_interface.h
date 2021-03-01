@@ -74,11 +74,11 @@ class ControllerRos {
    * 4. (optional) publish_ros_default: run default publishing behavior
    * 5. (optional) publish_ros: run custom ros publishing
    */
-  void set_observation(const observation_t& x, const mppi::time_t& t);
+  void set_observation(const observation_t& x, const double& t);
   bool update_policy();
-  void get_input(const observation_t& x, input_t& u, const mppi::time_t& t);
+  void get_input(const observation_t& x, input_t& u, const double& t);
   void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u,
-                       const mppi::time_t& t);
+                       const double& t);
   bool publish_ros_default();
 
  private:
