@@ -9,6 +9,7 @@
 #include "mppi_panda/controller_interface.h"
 #include <ros/package.h>
 #include "mppi_panda/renderer.h"
+#include "mppi_ros/ros_params.h"
 
 using namespace panda;
 
@@ -24,7 +25,9 @@ bool PandaControllerInterface::init_ros() {
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaControllerInterface::ee_pose_desired_callback, this);
 
-  obstacle_radius_ = param_io::param(nh_, "obstacle_radius", 0.4);
+  if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_))
+    return false;
+
   obstacle_marker_.header.frame_id = "world";
   obstacle_marker_.type = visualization_msgs::Marker::SPHERE;
   obstacle_marker_.color.r = 1.0;
@@ -57,11 +60,22 @@ void PandaControllerInterface::init_model(
 
 bool PandaControllerInterface::set_controller(
     std::shared_ptr<mppi::PathIntegral>& controller) {
+
   std::string robot_description;
-  if (!nh_.param<std::string>("/robot_description", robot_description, "")) {
-    throw std::runtime_error(
-        "Could not parse robot description. Is the parameter set?");
-  };
+  double linear_weight;
+  double angular_weight;
+  bool rendering;
+
+  bool ok = true;
+  ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
+  ok &= mppi_ros::getNonNegative(nh_, "linear_weight", linear_weight);
+  ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
+  ok &= mppi_ros::getBool(nh_, "rendering", rendering);
+
+  if (!ok){
+    ROS_ERROR("Failed to parse parameters and set the controller.");
+    return false;
+  }
 
   // -------------------------------
   // internal model
@@ -76,13 +90,10 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // cost
   // -------------------------------
-  double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
-  double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
   auto cost = std::make_shared<PandaCost>(robot_description, linear_weight,
                                           angular_weight, obstacle_radius_);
 
   // rendering
-  bool rendering = param_io::param(nh_, "rendering", false);
   std::shared_ptr<mppi::Renderer> renderer = nullptr;
   if (rendering)
     renderer = std::make_shared<RendererPanda>(nh_, robot_description);

@@ -10,13 +10,10 @@
 
 #include <ros/node_handle.h>
 #include <any_worker/WorkerManager.hpp>
-#include <param_io/get_param.hpp>
 
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
 #include <mppi_ros/Data.h>
-
-#include "mppi/filters/savgol_filter.h"
 
 using namespace mppi;
 namespace mppi_ros {
@@ -115,8 +112,6 @@ class ControllerRos {
   bool publish_ros_ = false;
   double ros_publish_rate_ = 0.0;
 
-  mppi::SavGolFilter filter_;
-
  public:
   ros::NodeHandle nh_;
 
@@ -124,7 +119,6 @@ class ControllerRos {
   ros::Publisher min_rollout_cost_publisher_;
   ros::Publisher max_rollout_cost_publisher_;
   ros::Publisher input_publisher_;
-  ros::Publisher variance_publisher_;
 
   std_msgs::Float64 stage_cost_;
   std_msgs::Float64 min_rollout_cost_;
@@ -133,7 +127,6 @@ class ControllerRos {
   std::shared_mutex input_mutex_;
   mppi::input_t input_ = mppi::input_t::Zero(1);
   std_msgs::Float32MultiArray input_ros_;
-  std_msgs::Float32MultiArray var_ros_;
 
   // logging
   mppi_ros::Data data_ros_;

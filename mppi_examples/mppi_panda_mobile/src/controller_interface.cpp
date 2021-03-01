@@ -8,6 +8,7 @@
 
 #include "mppi_panda_mobile/controller_interface.h"
 #include <ros/package.h>
+#include <mppi_ros/ros_params.h>
 
 using namespace panda_mobile;
 
@@ -24,16 +25,17 @@ bool PandaMobileControllerInterface::init_ros() {
       "/end_effector_pose_desired", 10,
       &PandaMobileControllerInterface::ee_pose_desired_callback, this);
 
-  obstacle_radius_ = param_io::param(nh_, "obstacle_radius", 0.2);
+  if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_)) return false;
+
   obstacle_marker_.header.frame_id = "world";
   obstacle_marker_.type = visualization_msgs::Marker::SPHERE;
   obstacle_marker_.color.r = 1.0;
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.color.a = 0.4;
-  obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
-  obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
-  obstacle_marker_.scale.z = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.x = 2.0 * 0.01;
+  obstacle_marker_.scale.y = 2.0 * 0.01;
+  obstacle_marker_.scale.z = 2.0 * 0.01;
   obstacle_marker_.pose.orientation.x = 0.0;
   obstacle_marker_.pose.orientation.y = 0.0;
   obstacle_marker_.pose.orientation.z = 0.0;
@@ -57,28 +59,39 @@ void PandaMobileControllerInterface::init_model(
 
 bool PandaMobileControllerInterface::set_controller(
     std::shared_ptr<mppi::PathIntegral>& controller) {
+
+  // Params
+  std::string robot_description;
+  double linear_weight;
+  double angular_weight;
+  bool holonomic;
+  bool joint_limits;
+
+  bool ok = true;
+  ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
+  ok &= mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_);
+  ok &= mppi_ros::getNonNegative(nh_, "linear_weight", linear_weight);
+  ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
+  ok &= mppi_ros::getBool(nh_, "holonomic", holonomic);
+  ok &= mppi_ros::getBool(nh_, "joint_limits", joint_limits);
+  if (!ok){
+    ROS_ERROR("Failed to parse parameters and set controller.");
+    return false;
+  }
+
   // -------------------------------
   // internal model
   // -------------------------------
-  std::string robot_description;
-  if (!nh_.param<std::string>("/robot_description", robot_description, "")) {
-    throw std::runtime_error("robot_description has not been set!");
-  }
-
   init_model(robot_description);
 
   // -------------------------------
   // dynamics
   // -------------------------------
-  double holonomic = param_io::param(nh_, "holonomic", true);
   auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description, holonomic);
 
   // -------------------------------
   // cost
   // -------------------------------
-  double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
-  double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
-  bool joint_limits = param_io::param(nh_, "joint_limits", false);
   auto cost = std::make_shared<PandaMobileCost>(
       robot_description, linear_weight, angular_weight, obstacle_radius_, joint_limits);
 
@@ -103,6 +116,13 @@ bool PandaMobileControllerInterface::set_controller(
   ref_.rr.resize(
       1, mppi::observation_t::Zero(PandaMobileDim::REFERENCE_DIMENSION));
   ref_.tt.resize(1, 0.0);
+
+  // -------------------------------
+  // obstacle marker
+  // -------------------------------
+  obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.z = 2.0 * obstacle_radius_;
   return true;
 }
 

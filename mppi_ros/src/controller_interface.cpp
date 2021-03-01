@@ -8,6 +8,7 @@
 
 #include "mppi_ros/controller_interface.h"
 #include "mppi_ros/conversions.h"
+#include "mppi_ros/ros_params.h"
 
 using namespace mppi_ros;
 
@@ -16,17 +17,23 @@ ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh) {}
 ControllerRos::~ControllerRos() { this->stop(); }
 
 bool ControllerRos::init_default_params() {
-  policy_update_rate_ = param_io::param(nh_, "policy_update_rate", 0.0);
-  reference_update_rate_ = param_io::param(nh_, "reference_update_rate", 0.0);
-  publish_ros_ = param_io::param(nh_, "publish_ros", false);
-  ros_publish_rate_ = param_io::param(nh_, "ros_publish_rate", 0.0);
+  bool ok = true;
+
+  ok &= mppi_ros::getNonNegative(nh_, "policy_update_rate", policy_update_rate_);
+  ok &= mppi_ros::getNonNegative(nh_, "reference_update_rate", reference_update_rate_);
+  ok &= mppi_ros::getNonNegative(nh_, "ros_publish_rate", ros_publish_rate_);
+  ok &= mppi_ros::getBool(nh_, "publish_ros", publish_ros_);
+
+  if (!ok){
+    ROS_ERROR("Failed to parse default parameters.");
+    return false;
+  }
   return true;
 }
 
 void ControllerRos::init_default_ros() {
   cost_publisher_ = nh_.advertise<std_msgs::Float64>("/cost", 10);
   input_publisher_ = nh_.advertise<std_msgs::Float32MultiArray>("/input", 10);
-  variance_publisher_ = nh_.advertise<std_msgs::Float32MultiArray>("/variance", 10);
   min_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 10);
   max_rollout_cost_publisher_ =
@@ -35,7 +42,7 @@ void ControllerRos::init_default_ros() {
 }
 
 bool ControllerRos::init() {
-  init_default_params();
+  if (!init_default_params()) return false;
   init_default_ros();
   init_ros();
 
@@ -50,12 +57,11 @@ bool ControllerRos::init() {
     ok = false;
   }
   if (controller_ == nullptr || !ok) return false;
-  filter_ = SavGolFilter(controller_->steps_, controller_->config_.filters_window.size(), controller_->config_.filters_window,
-               controller_->config_.filters_order);
+
   initialized_ = true;
   started_ = false;
   ROS_INFO("Controller interface initialized.");
-  return initialized_;
+  return true;
 }
 
 bool ControllerRos::start() {
@@ -166,14 +172,6 @@ void ControllerRos::publish_input() {
     input_ros_.data[i] = input_copy_(i);
   }
   input_publisher_.publish(input_ros_);
-
-  Eigen::VectorXd var(input_copy_.size());
-  controller_->get_diagonal_variance(var);
-  var_ros_.data.resize(var.size());
-  for (size_t i = 0; i < var.size(); i++) {
-    var_ros_.data[i] = var(i);
-  }
-  variance_publisher_.publish(var_ros_);
 }
 
 void ControllerRos::set_observation(const mppi::observation_t &x,
@@ -185,10 +183,6 @@ void ControllerRos::set_observation(const mppi::observation_t &x,
 void ControllerRos::get_input(const mppi::observation_t &x, mppi::input_t &u,
                               const mppi::time_t &t) {
   controller_->get_input(x, u, t);
-//  filter_.reset(t);
-//  filter_.add_measurement(u, t);
-//  filter_.apply(u, t);
-
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;
@@ -199,10 +193,6 @@ void ControllerRos::get_input_state(const observation_t &x,
                                     observation_t &x_nom, input_t &u,
                                     const mppi::time_t &t) {
   controller_->get_input_state(x, x_nom, u, t);
-//  filter_.reset(t);
-//  filter_.add_measurement(u, t);
-//  filter_.apply(u, t);
-
   if (publish_ros_) {
     std::unique_lock<std::shared_mutex> lock_input(input_mutex_);
     input_ = u;

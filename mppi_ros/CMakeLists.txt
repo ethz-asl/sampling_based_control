@@ -11,11 +11,9 @@ set(PACKAGE_DEPENDENCIES
         std_msgs
         roscpp
         any_worker
-        param_io
         message_generation)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
-find_package(gram_savitzky_golay)
 
 # Messages
 add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg
@@ -35,7 +33,7 @@ include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Libraries
 add_library(${PROJECT_NAME}
-        src/controller_interface.cpp src/conversions.cpp)
+        src/controller_interface.cpp src/conversions.cpp include/mppi_ros/ros_params.h)
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
 
