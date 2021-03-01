@@ -1,3 +1,0 @@
-[submodule "mppi/submodules/gram_savitzky_golay"]
-	path = mppi/submodules/gram_savitzky_golay
-	url = git@github.com:grizzi/gram_savitzky_golay.git
