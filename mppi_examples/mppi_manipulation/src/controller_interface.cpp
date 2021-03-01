@@ -6,9 +6,13 @@
  * @brief    description
  */
 
+#include "mppi_manipulation/cost.h"
+#include "mppi_manipulation/dynamics.h"
 #include "mppi_manipulation/controller_interface.h"
-#include <ros/package.h>
 
+#include <mppi_pinocchio/ros_conversions.h>
+
+#include <ros/package.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -24,15 +28,8 @@ bool PandaControllerInterface::init_ros() {
   pose_handle_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/handle_from_model", 10);
   
   mode_subscriber_ = nh_.subscribe("/mode", 10, &PandaControllerInterface::mode_callback, this);
-  obstacle_subscriber_ =
-      nh_.subscribe("/obstacle", 10, &PandaControllerInterface::obstacle_callback, this);
   ee_pose_desired_subscriber_ = nh_.subscribe(
       "/end_effector_pose_desired", 10, &PandaControllerInterface::ee_pose_desired_callback, this);
-
-  if (!nh_.param<double>("obstacle_radius", obstacle_radius_, 0.0)) {
-    ROS_ERROR("Could not parse obstacle_radius. Is the parameter set?");
-    return false;
-  }
 
   // initialize obstacle
   tf2_ros::Buffer tfBuffer;
@@ -53,8 +50,8 @@ bool PandaControllerInterface::init_ros() {
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.color.a = 0.4;
-  obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
-  obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.x = 2.0 * 0.01;
+  obstacle_marker_.scale.y = 2.0 * 0.01;
   obstacle_marker_.scale.z = 0.01;
   obstacle_marker_.pose.orientation.x = transformStamped.transform.rotation.x;
   obstacle_marker_.pose.orientation.y = transformStamped.transform.rotation.y;
@@ -78,12 +75,9 @@ bool PandaControllerInterface::init_ros() {
 
 void PandaControllerInterface::init_model(const std::string& robot_description,
                                           const std::string& object_description) {
-  pinocchio::urdf::buildModelFromXML(robot_description, model_);
-  data_ = pinocchio::Data(model_);
 
-  pinocchio::urdf::buildModelFromXML(object_description, object_model_);
-  object_data_ = pinocchio::Data(object_model_);
-  handle_idx_ = object_model_.getFrameId("handle_link");
+  robot_model_.init_from_xml(robot_description);
+  object_model_.init_from_xml(object_description);
 }
 
 bool PandaControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral>& controller) {
@@ -187,14 +181,6 @@ void PandaControllerInterface::ee_pose_desired_callback(
   get_controller()->set_reference_trajectory(ref_);
 }
 
-void PandaControllerInterface::obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg) {
-  // std::unique_lock<std::mutex> lock(reference_mutex_);
-  // obstacle_pose_ = *msg;
-  // ref_.rr[0](7) = obstacle_pose_.pose.position.x;
-  // ref_.rr[0](8) = obstacle_pose_.pose.position.y;
-  // ref_.rr[0](9) = obstacle_pose_.pose.position.z;
-}
-
 void PandaControllerInterface::mode_callback(const std_msgs::Int64ConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](11) = msg->data;
@@ -204,37 +190,18 @@ void PandaControllerInterface::mode_callback(const std_msgs::Int64ConstPtr& msg)
 
 bool PandaControllerInterface::update_reference() { return true; }
 
-pinocchio::SE3 PandaControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x) {
+mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(const Eigen::VectorXd& x) {
   if (fixed_base_) {
-    pinocchio::forwardKinematics(model_, data_, x.head<ARM_GRIPPER_DIM>());
+    robot_model_.update_state(x.head<ARM_GRIPPER_DIM>());
   } else {
-    pinocchio::forwardKinematics(model_, data_, x.head<BASE_ARM_GRIPPER_DIM>());
+    robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   }
-  pinocchio::updateFramePlacements(model_, data_);
-  return data_.oMf[model_.getFrameId("panda_grasp")];
+  return robot_model_.get_pose("panda_grasp");
 }
 
-pinocchio::SE3 PandaControllerInterface::get_pose_handle(const Eigen::VectorXd& x) {
-  pinocchio::forwardKinematics(object_model_, object_data_,
-                               x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
-  pinocchio::updateFramePlacements(object_model_, object_data_);
-  return object_data_.oMf[handle_idx_];
-}
-
-geometry_msgs::PoseStamped PandaControllerInterface::pose_pinocchio_to_ros(
-    const pinocchio::SE3& pose) {
-  geometry_msgs::PoseStamped pose_ros;
-  pose_ros.header.stamp = ros::Time::now();
-  pose_ros.header.frame_id = "world";
-  pose_ros.pose.position.x = pose.translation()(0);
-  pose_ros.pose.position.y = pose.translation()(1);
-  pose_ros.pose.position.z = pose.translation()(2);
-  Eigen::Quaterniond q(pose.rotation());
-  pose_ros.pose.orientation.x = q.x();
-  pose_ros.pose.orientation.y = q.y();
-  pose_ros.pose.orientation.z = q.z();
-  pose_ros.pose.orientation.w = q.w();
-  return pose_ros;
+mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(const Eigen::VectorXd& x) {
+  object_model_.update_state(x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
+  return object_model_.get_pose("handle_link");
 }
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_base(const mppi::observation_t& x){
@@ -253,13 +220,21 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_base(const mppi::o
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
     const Eigen::VectorXd& x) {
-  pinocchio::SE3 pose = get_pose_end_effector(x);
-  return pose_pinocchio_to_ros(pose);
+  geometry_msgs::PoseStamped pose_ros;
+  pose_ros.header.frame_id = "world";
+  pose_ros.header.stamp = ros::Time::now();
+  mppi_pinocchio::Pose pose = get_pose_end_effector(x);
+  mppi_pinocchio::to_msg(pose, pose_ros.pose);
+  return pose_ros;
 }
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(const Eigen::VectorXd& x) {
-  pinocchio::SE3 pose = get_pose_handle(x);
-  return pose_pinocchio_to_ros(pose);
+  geometry_msgs::PoseStamped pose_ros;
+  pose_ros.header.frame_id = "world";
+  pose_ros.header.stamp = ros::Time::now();
+  mppi_pinocchio::Pose pose = get_pose_handle(x);
+  mppi_pinocchio::to_msg(pose, pose_ros.pose);
+  return pose_ros;
 }
 
 void PandaControllerInterface::publish_ros() {
@@ -271,11 +246,11 @@ void PandaControllerInterface::publish_ros() {
   optimal_base_path_.header.stamp = ros::Time::now();
   optimal_base_path_.poses.clear();
 
-  pinocchio::SE3 pose_temp;
+  mppi_pinocchio::Pose pose_temp;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_) {
-    optimal_path_.poses.push_back(pose_pinocchio_to_ros(get_pose_end_effector(x)));
+    optimal_path_.poses.push_back(get_pose_end_effector_ros(x));
     if (!fixed_base_)
       optimal_base_path_.poses.push_back(get_pose_base(x));
   }

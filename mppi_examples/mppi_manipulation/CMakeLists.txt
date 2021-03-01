@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 17)
 option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." OFF)
 
 find_package(Eigen3 REQUIRED 3.3)
-find_package(pinocchio REQUIRED)
 find_package(raisim CONFIG REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
@@ -16,6 +15,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         mppi
         mppi_ros
+        mppi_pinocchio
         roslib
         roscpp
         manipulation_msgs
@@ -27,7 +27,7 @@ catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-        DEPENDS pinocchio raisim)
+        DEPENDS raisim)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
@@ -36,7 +36,7 @@ add_library(${PROJECT_NAME}
         src/cost.cpp
         src/controller_interface.cpp
         src/dynamics_ros.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} ${PINOCCHIO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
 target_link_libraries(manipulation_control ${PROJECT_NAME} ${catkin_LIBRARIES} )

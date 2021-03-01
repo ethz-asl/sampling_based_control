@@ -9,8 +9,6 @@
 #include "mppi_manipulation/dynamics.h"
 #include <ros/package.h>
 
-using namespace std::chrono;
-using namespace mppi;
 namespace manipulation {
 
 PandaRaisimDynamics::PandaRaisimDynamics(const std::string& robot_description,
@@ -86,7 +84,7 @@ void PandaRaisimDynamics::set_collision() {
     for (const auto body_idx2 : pandaBodyIdxs) panda->ignoreCollisionBetween(body_idx1, body_idx2);
 }
 
-DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t& u,
+mppi::DynamicsBase::observation_t PandaRaisimDynamics::step(const DynamicsBase::input_t& u,
                                                       const double dt) {
   // keep the gripper in the current position
   if (fixed_base_){
@@ -160,7 +158,7 @@ void PandaRaisimDynamics::reset(const DynamicsBase::observation_t& x) {
   }
 }
 
-DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {
+mppi::DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(const observation_t& x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
 }
 
