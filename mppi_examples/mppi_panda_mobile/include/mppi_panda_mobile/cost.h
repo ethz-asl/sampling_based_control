@@ -7,11 +7,8 @@
  */
 
 #pragma once
-#include <pinocchio/fwd.hpp>
-#include <pinocchio/algorithm/model.hpp>
-#include <pinocchio/multibody/data.hpp>
+#include <mppi_pinocchio/model.h>
 
-#include <math.h>
 #include <mppi/cost/cost_base.h>
 #include <ros/ros.h>
 
@@ -34,19 +31,14 @@ class PandaMobileCost : public mppi::CostBase {
   double obstacle_radius_;
 
   std::string robot_description_;
-  pinocchio::Model model_;
-  pinocchio::Data data_;
-
+  mppi_pinocchio::RobotModel robot_model_;
   std::string tracked_frame_ = "panda_hand";
-  int frame_id_;
-  pinocchio::SE3 pose_current_;
-  pinocchio::SE3 pose_reference_;
+
   Eigen::Matrix<double, 3, 3> Q_linear_;
   Eigen::Matrix<double, 3, 3> Q_angular_;
 
   double Q_obst_ = 100000;
   double Q_reach_ = 100000;
-  pinocchio::SE3 pose_obstacle_;
   bool obstacle_set_ = false;
 
   Eigen::Matrix<double, 7, 1> joint_limits_lower_;
@@ -59,7 +51,7 @@ class PandaMobileCost : public mppi::CostBase {
   void set_linear_weight(const double k);
   void set_angular_weight(const double k);
   void set_obstacle_radius(const double r);
-  pinocchio::SE3 get_current_pose(const Eigen::VectorXd& x) ;
+  mppi_pinocchio::Pose get_current_pose(const Eigen::VectorXd& x) ;
   cost_t compute_cost(const mppi::observation_t& x, const mppi::reference_t& ref,
                       const double t) override ;
 };

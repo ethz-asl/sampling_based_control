@@ -7,13 +7,6 @@
  */
 
 #pragma once
-#include <pinocchio/fwd.hpp>
-#include <pinocchio/algorithm/aba.hpp>
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/model.hpp>
-#include <pinocchio/multibody/data.hpp>
-#include <pinocchio/parsers/urdf.hpp>
-
 #include <math.h>
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
@@ -55,8 +48,6 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
   observation_t x_;
 
   std::string robot_description_;
-  pinocchio::Model model_;
-  pinocchio::Data data_;
 
   // holonomic vs non-holonimic base
   bool holonomic_;

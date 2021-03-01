@@ -118,7 +118,6 @@ int main(int argc, char** argv){
       ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time << "s. Exiting.");
       break;
     }
-    ROS_INFO_STREAM_THROTTLE(2.0, "Current sim time: " << sim_time << "s.");
     ros::spinOnce();
   }
 

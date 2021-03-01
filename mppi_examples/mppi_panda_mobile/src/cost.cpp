@@ -6,9 +6,6 @@
  * @brief    description
  */
 
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/parsers/urdf.hpp>
-
 #include "mppi_panda_mobile/cost.h"
 
 #include <math.h>
@@ -29,9 +26,8 @@ PandaMobileCost::PandaMobileCost(const std::string& robot_description, const dou
       angular_weight_(angular_weight),
       obstacle_radius_(obstacle_radius),
       joint_limits_(joint_limits) {
-  pinocchio::urdf::buildModelFromXML(robot_description_, model_);
-  data_ = pinocchio::Data(model_);
-  frame_id_ = model_.getFrameId(tracked_frame_);
+
+  robot_model_.init_from_xml(robot_description);
 
   Q_linear_ = Eigen::Matrix3d::Identity() * linear_weight;
   Q_angular_ = Eigen::Matrix3d::Identity() * angular_weight;
@@ -56,13 +52,12 @@ void PandaMobileCost::set_angular_weight(const double k) { Q_angular_ *= k; }
 
 void PandaMobileCost::set_obstacle_radius(const double r) { obstacle_radius_ = r; }
 
-pinocchio::SE3 PandaMobileCost::get_current_pose(const Eigen::VectorXd& x) {
-  pinocchio::forwardKinematics(model_, data_, x.head<7>());
-  pinocchio::updateFramePlacements(model_, data_);
-  Eigen::Matrix3d base_rotation(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  Eigen::Vector3d base_translation(x(7), x(8), 0.0);
-  pinocchio::SE3 base_tf = pinocchio::SE3(base_rotation, base_translation);
-  return base_tf.act(data_.oMf[frame_id_]);
+mppi_pinocchio::Pose PandaMobileCost::get_current_pose(const Eigen::VectorXd& x) {
+  mppi_pinocchio::Pose base_pose;
+  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
+  base_pose.rotation = Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
+  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose(tracked_frame_);
+  return base_pose * arm_pose;
 }
 
 PandaMobileCost::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
@@ -70,22 +65,28 @@ PandaMobileCost::cost_t PandaMobileCost::compute_cost(const mppi::observation_t&
                                                       const double t) {
   cost_t cost;
 
+  // update model
+  robot_model_.update_state(x.head<7>());
+
   // target reaching cost
-  pose_current_ = get_current_pose(x);
+
   Eigen::Vector3d ref_t = ref.head<3>();
   Eigen::Quaterniond ref_q(ref.segment<4>(3));
-  pose_reference_ = pinocchio::SE3(ref_q, ref_t);
-  pinocchio::Motion err = pinocchio::log6(pose_current_.actInv(pose_reference_));
-  cost += err.linear().transpose() * Q_linear_ * err.linear();
-  cost += err.angular().transpose() * Q_angular_ * err.angular();
+  Eigen::Matrix<double, 6, 1> error;
+
+  mppi_pinocchio::Pose current_pose = get_current_pose(x);
+  mppi_pinocchio::Pose reference_pose(ref_t, ref_q);
+  error = mppi_pinocchio::diff(current_pose, reference_pose);
+  cost += error.head<3>().transpose() * Q_linear_ * error.head<3>();
+  cost += error.tail<3>().transpose() * Q_angular_ * error.tail<3>();
 
   // obstacle avoidance cost
-  double obstacle_dist = (pose_current_.translation() - ref.tail<3>()).norm();
+  double obstacle_dist = (current_pose.translation - ref.tail<3>()).norm();
   if (obstacle_dist < obstacle_radius_)
     cost += Q_obst_;
 
   // reach cost
-  if (data_.oMf[frame_id_].translation().head<2>().norm() > 1.0)
+  if (robot_model_.get_pose(tracked_frame_).translation.head<2>().norm() > 1.0)
     cost += Q_reach_;
 
   // joint limits cost

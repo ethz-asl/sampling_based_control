@@ -17,8 +17,6 @@ PandaMobileDynamics::PandaMobileDynamics(const std::string& robot_description, b
 
   // init model
   x_ = observation_t::Zero(PandaMobileDim::STATE_DIMENSION);
-  pinocchio::urdf::buildModelFromXML(robot_description_, model_);
-  data_ = pinocchio::Data(model_);
 }
 
 DynamicsBase::observation_t PandaMobileDynamics::step(const DynamicsBase::input_t &u, const double dt) {
