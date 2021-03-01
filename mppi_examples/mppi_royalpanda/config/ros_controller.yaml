@@ -2,12 +2,8 @@ joint_publisher:
   type: "joint_state_controller/JointStateController"
   publish_rate: 50
 
-controller_test:
-  type: manipulation/ControllerTest
-  fixed_base: false
-
 manipulation_controller:
-  type: manipulation/RoyalPandaControllerRos
+  type: royalpanda/RoyalPandaControllerRos
   simulation: false
   fixed_base: $(arg fixed_base)
 
@@ -76,7 +72,7 @@ manipulation_controller:
     kd: [50.0, 50.0]
 
 manipulation_controller_sim:
-  type: manipulation/RoyalPandaControllerRos
+  type: royalpanda/RoyalPandaControllerRos
   simulation: true
   fixed_base: $(arg fixed_base)
   linear_weight: 10.0

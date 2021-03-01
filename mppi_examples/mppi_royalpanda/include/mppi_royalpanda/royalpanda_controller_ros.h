@@ -31,7 +31,7 @@
 #include <manipulation_msgs/State.h>
 #include <geometry_msgs/TwistStamped.h>
 
-namespace manipulation {
+namespace royalpanda {
 
 class RoyalPandaControllerRos
     : public controller_interface::MultiInterfaceController<
@@ -141,4 +141,4 @@ class RoyalPandaControllerRos
   double arm_I_max_;
 };
 
-}  // namespace manipulation
+}  // namespace royalpanda

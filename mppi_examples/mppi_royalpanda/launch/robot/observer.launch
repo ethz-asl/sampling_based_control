@@ -12,8 +12,8 @@
     </include>
 
     <!-- Start the robot state controller publisher -->
-    <include file="$(find mppi_manipulation)/launch/robot/bringup.launch" unless="$(arg simulation)"/>
-    <include file="$(find mppi_manipulation)/launch/sim/gazebo.launch" if="$(arg simulation)"/>
+    <include file="$(find mppi_royalpanda)/launch/robot/bringup.launch" unless="$(arg simulation)"/>
+    <include file="$(find mppi_royalpanda)/launch/sim/gazebo.launch" if="$(arg simulation)"/>
 
     <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state
             (published either from gazebo or franka state publisher) -->

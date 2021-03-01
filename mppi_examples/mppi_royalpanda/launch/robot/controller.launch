@@ -16,5 +16,5 @@
     </group>
 
      <!--  Controller -->
-    <rosparam file="$(find mppi_manipulation)/config/ros_controller.yaml" command="load" subst_value="true"/>
+    <rosparam file="$(find mppi_royalpanda)/config/ros_controller.yaml" command="load" subst_value="true"/>
 </launch>

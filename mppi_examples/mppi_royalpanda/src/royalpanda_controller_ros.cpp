@@ -2,7 +2,7 @@
 // Created by giuseppe on 22.01.21.
 //
 
-#include <mppi_manipulation/ros/royal_panda_controller_ros.h>
+#include <mppi_royalpanda/royalpanda_controller_ros.h>
 
 #include <cmath>
 #include <memory>
@@ -15,7 +15,7 @@
 
 #include <manipulation_msgs/conversions.h>
 
-namespace manipulation {
+namespace royalpanda {
 
 bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
                                    ros::NodeHandle& node_handle) {
@@ -410,7 +410,7 @@ void RoyalPandaControllerRos::update(const ros::Time& time, const ros::Duration&
     man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
   }
 
-  conversions::eigenToMsg(x_nom_, x_nom_ros_);
+  manipulation::conversions::eigenToMsg(x_nom_, x_nom_ros_);
 
   send_command_arm(period);
   if (!fixed_base_) send_command_base(period);
@@ -434,6 +434,6 @@ std::array<double, 7> RoyalPandaControllerRos::saturateTorqueRate(
   return tau_d_saturated;
 }
 
-}  // namespace manipulation
+}  // namespace royalpanda
 
-PLUGINLIB_EXPORT_CLASS(manipulation::RoyalPandaControllerRos, controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS(royalpanda::RoyalPandaControllerRos, controller_interface::ControllerBase)

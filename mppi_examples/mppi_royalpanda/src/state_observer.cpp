@@ -2,7 +2,7 @@
 // Created by giuseppe on 25.01.21.
 //
 
-#include "mppi_manipulation/ros/state_observer.h"
+#include "mppi_royalpanda/state_observer.h"
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -23,7 +23,7 @@
 
 #include <manipulation_msgs/conversions.h>
 
-namespace manipulation {
+namespace royalpanda {
 
 StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   std::string base_pose_topic;
@@ -138,11 +138,11 @@ bool StateObserver::initialize() {
 
 void StateObserver::update() {
   if (!fixed_base_) {
-    conversions::toMsg(base_state_, base_twist_, q_, dq_, object_state_.position[0],
+    manipulation::conversions::toMsg(base_state_, base_twist_, q_, dq_, object_state_.position[0],
                        object_state_.velocity[0], false, state_ros_);
     state_ros_.header.stamp = ros::Time::now();
   } else {
-    conversions::toMsg(q_, dq_, object_state_.position[0], object_state_.velocity[0], false,
+    manipulation::conversions::toMsg(q_, dq_, object_state_.position[0], object_state_.velocity[0], false,
                        state_ros_);
     state_ros_.header.stamp = ros::Time::now();
   }
@@ -247,4 +247,4 @@ void StateObserver::publish() {
   state_publisher_.publish(state_ros_);
 }
 
-}  // namespace manipulation
+}  // namespace royalpanda

@@ -33,7 +33,7 @@ include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Libraries
 add_library(${PROJECT_NAME}
-        src/controller_interface.cpp src/conversions.cpp include/mppi_ros/ros_params.h)
+        src/controller_interface.cpp src/conversions.cpp)
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
 

@@ -24,7 +24,7 @@
       collision_hand:=true
       add_finger:=true"/>
 
-    <include file="$(find mppi_manipulation)/launch/sim/control_sim.launch"/>
+    <include file="$(find mppi_royalpanda)/launch/sim/control_sim.launch"/>
 
     <rosparam param="/gazebo_ros_control/pid_gains">
         front_left_wheel:

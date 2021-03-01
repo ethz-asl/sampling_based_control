@@ -17,7 +17,7 @@
 
 #include <manipulation_msgs/State.h>
 
-namespace manipulation {
+namespace royalpanda {
 
 /// The scope of this class is to collect info and return the complete mobile robot state
 
@@ -100,23 +100,4 @@ class StateObserver {
   double base_alpha_;
 
 };
-}  // namespace manipulation
-
-//std::ostream& operator<<(std::ostream& os, const manipulation::StateObserver& obs);
-
-//std::ostream& operator<<(std::ostream& os, const manipulation::StateObserver& obs){
-//  os << "\n";
-//  os << "=========================================================\n";
-//  os << "                        State                            \n";
-//  os << "=========================================================\n";
-//  if (!obs.fixed_base_) {
-//    os << "Base position:  " << obs.base_state_.transpose() << std::endl;
-//    os << "Base twist:     " << obs.base_twist_.transpose() << std::endl;
-//  }
-//  os << "Joint position: " << obs.q_.transpose() << std::endl;
-//  os << "Joint velocity: " << obs.dq_.transpose() << std::endl;
-//  os << "Theta:          " << obs.object_state_.position[0] << std::endl;
-//  os << "Theta dot:      " << obs.object_state_.velocity[0] << std::endl;
-//  os << "x: " << std::setprecision(2) << obs.state_.transpose() << std::endl;
-//  return os;
-//};
+}  // namespace royalpanda

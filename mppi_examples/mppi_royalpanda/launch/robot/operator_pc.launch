@@ -8,7 +8,7 @@
     <arg name="fixed_base" default="false"/>
 
 
-	<include file="$(find mppi_manipulation)/launch/robot/vicon.launch"/>
+	<include file="$(find mppi_royalpanda)/launch/robot/vicon.launch"/>
 
 	<include file="$(find mppi_manipulation)/launch/common.launch">
 	    <arg name="plot_cost" default="$(arg plot_cost)"/>
