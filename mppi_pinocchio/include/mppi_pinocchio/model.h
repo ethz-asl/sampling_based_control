@@ -14,7 +14,13 @@ namespace mppi_pinocchio {
 struct Pose {
   Eigen::Vector3d translation;
   Eigen::Quaterniond rotation;
+
+  Pose() = default;
+  Pose(Eigen::Vector3d t, Eigen::Quaterniond r) : translation(t), rotation(r){};
 };
+
+Pose operator*(const Pose&, const Pose&);
+Eigen::Matrix<double, 6, 1> diff(const Pose&, const Pose&);
 
 class RobotModel {
  public:
