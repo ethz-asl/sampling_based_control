@@ -8,8 +8,8 @@ from geometry_msgs.msg import PoseStamped
 
 if __name__ == "__main__":
     rospy.init_node("demo_node")
-    rospy.loginfo("Starting the demo in 6 seconds.")
-    rospy.sleep(15.0)
+    rospy.loginfo("Starting the demo in 3 seconds.")
+    rospy.sleep(3.0)
 
     tfBuffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tfBuffer)

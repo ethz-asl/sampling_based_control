@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <arg name="fixed_base" default="true"/>
-    <arg name="object" default="door"/>
+    <arg name="object" default="shelf"/>
     <arg name="plot_cost" default="false"/>
     <arg name="plot_input" default="false"/>
     <arg name="enable_obstacle" default="false"/>

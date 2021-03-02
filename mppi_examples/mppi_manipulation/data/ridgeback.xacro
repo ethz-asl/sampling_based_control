@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="ridgeback" xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:arg name='ridgeback_resources_prefix' default='package://ridgeback_description'/>
+    <xacro:arg name='ridgeback_resources_prefix' default='package://mppi_manipulation/data/meshes/ridgeback'/>
     <xacro:property name='ridgeback_resources_prefix' default="$(arg ridgeback_resources_prefix)"/>
     
     <xacro:property name="PI" value="3.1415926535897931" />
