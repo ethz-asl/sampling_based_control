@@ -77,7 +77,7 @@ bool ControllerRos::start() {
     return true;
   }
 
-  any_worker::WorkerOptions update_policy_opt;
+  mppi::threading::WorkerOptions update_policy_opt;
   update_policy_opt.name_ = "update_policy_thread";
   update_policy_opt.timeStep_ =
       (policy_update_rate_ == 0) ? 0 : 1.0 / policy_update_rate_;
@@ -85,7 +85,7 @@ bool ControllerRos::start() {
                                           this, std::placeholders::_1);
   worker_manager_.addWorker(update_policy_opt, true);
 
-  any_worker::WorkerOptions update_reference_opt;
+  mppi::threading::WorkerOptions update_reference_opt;
   update_reference_opt.name_ = "update_reference_thread";
   update_reference_opt.timeStep_ = 1.0 / reference_update_rate_;
   update_reference_opt.callback_ = std::bind(
@@ -93,7 +93,7 @@ bool ControllerRos::start() {
   worker_manager_.addWorker(update_reference_opt, true);
 
   if (publish_ros_) {
-    any_worker::WorkerOptions publish_ros_opt;
+    mppi::threading::WorkerOptions publish_ros_opt;
     publish_ros_opt.name_ = "publish_ros_thread";
     publish_ros_opt.timeStep_ = 1.0 / ros_publish_rate_;
     publish_ros_opt.callback_ = std::bind(&ControllerRos::publish_ros_thread,
@@ -116,7 +116,7 @@ bool ControllerRos::update_policy() {
   return true;
 }
 
-bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
+bool ControllerRos::update_policy_thread(const mppi::threading::WorkerEvent &event) {
   if (!observation_set_) return true;
   controller_->update_policy();
 
@@ -129,8 +129,7 @@ bool ControllerRos::update_policy_thread(const any_worker::WorkerEvent &event) {
 
 bool ControllerRos::update_reference() { return true; }
 
-bool ControllerRos::update_reference_thread(
-    const any_worker::WorkerEvent &event) {
+bool ControllerRos::update_reference_thread(const mppi::threading::WorkerEvent &event) {
   return update_reference();
 }
 
@@ -141,7 +140,7 @@ bool ControllerRos::publish_ros_default() {
   return true;
 };
 
-bool ControllerRos::publish_ros_thread(const any_worker::WorkerEvent &event) {
+bool ControllerRos::publish_ros_thread(const mppi::threading::WorkerEvent &event) {
   publish_ros_default();
   publish_ros();
   return true;

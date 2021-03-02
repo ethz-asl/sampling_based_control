@@ -2,7 +2,7 @@
 <package format="2">
     <name>mppi_ros</name>
     <version>0.1.0</version>
-    <description>mppi_ros package extension</description>
+    <description>mppi_ros package</description>
     <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
     <license>BSD</license>
 
@@ -12,7 +12,6 @@
     <depend>rosbag</depend>
     <depend>std_msgs</depend>
     <depend>sensor_msgs</depend>
-    <depend>any_worker</depend>
     <depend>message_generation</depend>
 
     <exec_depend>message_runtime</exec_depend>

@@ -9,7 +9,7 @@
 #include <mppi/controller/mppi.h>
 
 #include <ros/node_handle.h>
-#include <any_worker/WorkerManager.hpp>
+#include <mppi_ros/threading/WorkerManager.hpp>
 
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
@@ -85,9 +85,9 @@ class ControllerRos {
   void init_default_ros();
   bool init_default_params();
 
-  bool update_policy_thread(const any_worker::WorkerEvent& event);
-  bool update_reference_thread(const any_worker::WorkerEvent& event);
-  bool publish_ros_thread(const any_worker::WorkerEvent& event);
+  bool update_policy_thread(const mppi::threading::WorkerEvent& event);
+  bool update_reference_thread(const mppi::threading::WorkerEvent& event);
+  bool publish_ros_thread(const mppi::threading::WorkerEvent& event);
 
   void publish_stage_cost();
   void publish_rollout_cost();
@@ -98,7 +98,7 @@ class ControllerRos {
   bool initialized_;
   bool observation_set_;
 
-  any_worker::WorkerManager worker_manager_;
+  mppi::threading::WorkerManager worker_manager_;
 
   mppi::CostBase::cost_ptr cost_;
   mppi::DynamicsBase::dynamics_ptr dynamics_;
