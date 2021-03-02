@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   nh.param<double>("observer_update_frequency", frequency, 200);
 
   royalpanda::StateObserver observer(nh);
-  if (!observer.initialize()){
+  if (!observer.initialize()) {
     ROS_ERROR("Failed to initialize the state observer.");
     return 0;
   }

@@ -41,16 +41,15 @@
 
 // modified by: Giuseppe Rizzi
 
-#include "mppi_ros/threading/log_messages.hpp"
 #include "mppi_ros/threading/Rate.hpp"
+#include "mppi_ros/threading/log_messages.hpp"
 
 namespace mppi::threading {
 
-Rate::Rate(const std::string& name, const double timeStep) : Rate(RateOptions(name, timeStep)) {}
+Rate::Rate(const std::string& name, const double timeStep)
+    : Rate(RateOptions(name, timeStep)) {}
 
-Rate::Rate(RateOptions options) : options_(std::move(options)) {
-  reset();
-}
+Rate::Rate(RateOptions options) : options_(std::move(options)) { reset(); }
 
 Rate::Rate(Rate&& other)
     : options_(std::move(other.options_)),
@@ -111,17 +110,20 @@ void Rate::sleep() {
       numErrors_++;
       if (GetDuration(lastErrorPrintTime_, sleepStartTime_) > 1.0) {
         LOG_ERROR("Rate '" << options_.name_ << "': "
-                           << "Processing took too long (" << awakeTime_ << " s > " << options_.timeStep_.load() << " s). "
+                           << "Processing took too long (" << awakeTime_
+                           << " s > " << options_.timeStep_.load() << " s). "
                            << "Number of errors: " << numErrors_ << ".");
         lastErrorPrintTime_ = sleepStartTime_;
       }
-    } else if (awakeTime_ > options_.maxTimeStepFactorWarning_ * options_.timeStep_) {
+    } else if (awakeTime_ >
+               options_.maxTimeStepFactorWarning_ * options_.timeStep_) {
       // Print and count the warning (only if no error).
       numWarnings_++;
       if (GetDuration(lastWarningPrintTime_, sleepStartTime_) > 1.0) {
         LOG_WARN("Rate '" << options_.name_ << "': "
-                  << "Processing took too long (" << awakeTime_ << " s > " << options_.timeStep_.load() << " s). "
-                  << "Number of warnings: " << numWarnings_ << ".");
+                          << "Processing took too long (" << awakeTime_
+                          << " s > " << options_.timeStep_.load() << " s). "
+                          << "Number of warnings: " << numWarnings_ << ".");
         lastWarningPrintTime_ = sleepStartTime_;
       }
     }
@@ -134,8 +136,9 @@ void Rate::sleep() {
     const bool isBehind = (GetDuration(sleepEndTime_, stepTime_) < 0.0);
     if (isBehind) {
       if (!options_.enforceRate_) {
-        // We are behind schedule but do not enforce the rate, so we increase the length of
-        // the current time step by setting the desired step time to when sleep() ends.
+        // We are behind schedule but do not enforce the rate, so we increase
+        // the length of the current time step by setting the desired step time
+        // to when sleep() ends.
         stepTime_ = sleepEndTime_;
       }
     } else {
@@ -144,9 +147,11 @@ void Rate::sleep() {
       sleepEndTime_ = stepTime_;
 
       // Sleep until the step time is reached.
-      clock_nanosleep(options_.clockId_, TIMER_ABSTIME, &stepTime_, NULL);  // NOLINT
+      clock_nanosleep(options_.clockId_, TIMER_ABSTIME, &stepTime_,
+                      NULL);  // NOLINT
 
-      // Do nothing here to ensure sleep() does not consume time after clock_nanosleep(..).
+      // Do nothing here to ensure sleep() does not consume time after
+      // clock_nanosleep(..).
     }
   }
 }
@@ -175,15 +180,18 @@ double Rate::getAwakeTimeVar() const {
   }
 }
 
-double Rate::getAwakeTimeStdDev() const {
-  return std::sqrt(getAwakeTimeVar());
+double Rate::getAwakeTimeStdDev() const { return std::sqrt(getAwakeTimeVar()); }
+
+double Rate::GetDuration(
+    const timespec& start,
+    const timespec& end) {  // NOLINT(readability-identifier-naming)
+  return (end.tv_sec - start.tv_sec) +
+         (end.tv_nsec - start.tv_nsec) * SecPerNSec_;
 }
 
-double Rate::GetDuration(const timespec& start, const timespec& end) {  // NOLINT(readability-identifier-naming)
-  return (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * SecPerNSec_;
-}
-
-void Rate::AddDuration(timespec& time, const double duration) {  // NOLINT(readability-identifier-naming)
+void Rate::AddDuration(
+    timespec& time,
+    const double duration) {  // NOLINT(readability-identifier-naming)
   time.tv_nsec += static_cast<long int>(duration * NSecPerSec_);
   time.tv_sec += time.tv_nsec / NSecPerSec_;
   time.tv_nsec = time.tv_nsec % NSecPerSec_;

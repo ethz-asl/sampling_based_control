@@ -6,6 +6,7 @@
  * @brief    description
  */
 #pragma once
+#include <vector>
 #include "mppi/controller/mppi.h"
 
 namespace mppi {
@@ -23,7 +24,7 @@ class PathIntegralVisualizer : public PathIntegral {
                          CostBase::cost_ptr cost,
                          GaussianSampler::sampler_ptr sampler,
                          const SolverConfig& config)
-      : PathIntegral(dynamics, cost, config, sampler){};
+      : PathIntegral(dynamics, cost, config, sampler) {}
   ~PathIntegralVisualizer() = default;
 
  public:
@@ -48,7 +49,7 @@ class PathIntegralVisualizer : public PathIntegral {
    */
   virtual void visualize_all_trajectories() {
     std::cout << "Not implemented." << std::endl;
-  };
+  }
 
   /**
    * @brief Print to console the rollouts info such as histogram, cost, min and

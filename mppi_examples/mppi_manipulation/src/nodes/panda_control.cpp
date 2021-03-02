@@ -7,8 +7,8 @@
  */
 #include "mppi_manipulation/controller_interface.h"
 
-#include <mppi_manipulation/dynamics_ros.h>
 #include <manipulation_msgs/conversions.h>
+#include <mppi_manipulation/dynamics_ros.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
@@ -23,8 +23,10 @@ int main(int argc, char** argv) {
   auto controller = PandaControllerInterface(nh);
 
   auto robot_description = nh.param<std::string>("/robot_description", "");
-  auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
-  auto object_description_raisim = nh.param<std::string>("/object_description_raisim", "");
+  auto robot_description_raisim =
+      nh.param<std::string>("/robot_description_raisim", "");
+  auto object_description_raisim =
+      nh.param<std::string>("/object_description_raisim", "");
 
   // Fixed base option
   bool fixed_base;
@@ -33,7 +35,8 @@ int main(int argc, char** argv) {
     return -1;
   }
   auto simulation = std::make_shared<ManipulatorDynamicsRos>(
-      nh, robot_description_raisim, object_description_raisim, 0.015, fixed_base);
+      nh, robot_description_raisim, object_description_raisim, 0.015,
+      fixed_base);
 
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0
@@ -43,7 +46,8 @@ int main(int argc, char** argv) {
 
   observation_t x_nom;
   manipulation_msgs::State x_nom_ros;
-  ros::Publisher x_nom_publisher_ = nh.advertise<manipulation_msgs::State>("/observer/state", 10);
+  ros::Publisher x_nom_publisher_ =
+      nh.advertise<manipulation_msgs::State>("/observer/state", 10);
 
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);
@@ -91,17 +95,19 @@ int main(int argc, char** argv) {
       sim_time += sim_dt;
     }
 
-
     controller.get_input_state(x, x_nom, u, sim_time);
     manipulation::conversions::eigenToMsg(x_nom, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
 
     end = std::chrono::steady_clock::now();
-    elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0;
+    elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                  .count() /
+              1000.0;
     if (sim_dt - elapsed > 0)
       ros::Duration(sim_dt - elapsed).sleep();
     else
-      ROS_INFO_STREAM_THROTTLE(3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
+      ROS_INFO_STREAM_THROTTLE(
+          3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
 
     simulation->publish_ros();
     ros::spinOnce();

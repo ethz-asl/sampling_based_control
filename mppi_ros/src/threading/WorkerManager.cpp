@@ -13,11 +13,10 @@ namespace mppi::threading {
 
 WorkerManager::WorkerManager() : workers_(), mutexWorkers_() {}
 
-WorkerManager::~WorkerManager() {
-  cancelWorkers();
-}
+WorkerManager::~WorkerManager() { cancelWorkers(); }
 
-bool WorkerManager::addWorker(const WorkerOptions& options, const bool autostart) {
+bool WorkerManager::addWorker(const WorkerOptions& options,
+                              const bool autostart) {
   std::lock_guard<std::mutex> lock(mutexWorkers_);
   auto insertedElement = workers_.emplace(options.name_, Worker(options));
   if (!insertedElement.second) {
@@ -32,8 +31,8 @@ bool WorkerManager::addWorker(const WorkerOptions& options, const bool autostart
 
 // bool WorkerManager::addWorker(Worker&& worker) {
 //    std::lock_guard<std::mutex> lock(mutexWorkers_);
-//    auto insertedElement = workers_.emplace( worker.getName(), std::move(worker) );
-//    if(!insertedElement.second) {
+//    auto insertedElement = workers_.emplace( worker.getName(),
+//    std::move(worker) ); if(!insertedElement.second) {
 //        MELO_ERROR("Failed to move worker [%s]", worker.getName().c_str());
 //        return false;
 //    }
@@ -83,7 +82,7 @@ void WorkerManager::cancelWorker(const std::string& name, const bool wait) {
   std::lock_guard<std::mutex> lock(mutexWorkers_);
   auto worker = workers_.find(name);
   if (worker == workers_.end()) {
-    LOG_ERROR("Cannot stop worker ["<< name << "], worker not found");
+    LOG_ERROR("Cannot stop worker [" << name << "], worker not found");
     return;
   }
   worker->second.stop(wait);
@@ -102,11 +101,13 @@ void WorkerManager::cancelWorkers(const bool wait) {
   workers_.clear();
 }
 
-void WorkerManager::setWorkerTimestep(const std::string& name, const double timeStep) {
+void WorkerManager::setWorkerTimestep(const std::string& name,
+                                      const double timeStep) {
   std::lock_guard<std::mutex> lock(mutexWorkers_);
   auto worker = workers_.find(name);
   if (worker == workers_.end()) {
-    LOG_ERROR("Cannot change timestep of worker ["<< name << "], worker not found");
+    LOG_ERROR("Cannot change timestep of worker [" << name
+                                                   << "], worker not found");
     return;
   }
   worker->second.setTimestep(timeStep);

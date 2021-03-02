@@ -11,8 +11,8 @@
 
 using namespace pole_cart;
 
-bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathIntegral> &controller) {
-  
+bool PoleCartControllerInterface::set_controller(
+    std::shared_ptr<mppi::PathIntegral> &controller) {
   // -------------------------------
   // dynamics
   // -------------------------------
@@ -22,7 +22,8 @@ bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathInteg
   dynamics_config.l = nh_.param<double>("dynamics/length", 1.0);
   dynamics_config.mux = nh_.param<double>("dynamics/linear_friction", 10.0);
   dynamics_config.mutheta = nh_.param<double>("dynamics/angular_friction", 0.7);
-  dynamics_config.dt_internal = nh_.param<double>("dynamics/substep_size", 0.001);
+  dynamics_config.dt_internal =
+      nh_.param<double>("dynamics/substep_size", 0.001);
 
   auto dynamics = std::make_shared<PoleCartDynamics>(dynamics_config);
 
@@ -34,8 +35,9 @@ bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathInteg
   // -------------------------------
   // config
   // -------------------------------
-  std::string config_file = ros::package::getPath("mppi_pole_cart") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)){
+  std::string config_file =
+      ros::package::getPath("mppi_pole_cart") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
     ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
   }
@@ -49,7 +51,8 @@ bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathInteg
   // initialize reference
   // -------------------------------
   // cart at the origin, pole up
-  ref_.rr.resize(1, mppi::observation_t::Zero(PoleCartDim::REFERENCE_DIMENSION));
+  ref_.rr.resize(1,
+                 mppi::observation_t::Zero(PoleCartDim::REFERENCE_DIMENSION));
   ref_.rr[0](0) = 0.0;
   ref_.rr[0](1) = M_PI;
   ref_.tt.resize(1, 0.0);
@@ -57,8 +60,7 @@ bool PoleCartControllerInterface::set_controller(std::shared_ptr<mppi::PathInteg
 }
 
 bool PoleCartControllerInterface::update_reference() {
-  if (!reference_set_)
-    get_controller()->set_reference_trajectory(ref_);
+  if (!reference_set_) get_controller()->set_reference_trajectory(ref_);
   reference_set_ = true;
   return true;
 }

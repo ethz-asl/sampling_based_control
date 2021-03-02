@@ -52,15 +52,16 @@ namespace mppi::threading {
 
 /*!
  * Rate class for repeated processing at a certain rate.
- * The processing time is defined as the "awake" time, the time between the "sleep"
- * time. This class implements a sleep() method for sleeping for the remaining time
- * of the time step. Also statistics about the awake time are taken.
+ * The processing time is defined as the "awake" time, the time between the
+ * "sleep" time. This class implements a sleep() method for sleeping for the
+ * remaining time of the time step. Also statistics about the awake time are
+ * taken.
  *
  * If the awake time is bigger than the time step (timing is violated),
  * there are two behaviors implemented:
  *
- * Enforce the rate: Try to keep the rate constant by compensating with shorter time steps.
- * |       |       |       |       |       |       |
+ * Enforce the rate: Try to keep the rate constant by compensating with shorter
+ * time steps. |       |       |       |       |       |       |
  * |===--->|===--->|============|===|===-->|===--->|
  * |       |       |       |       |       |       |
  *
@@ -74,8 +75,8 @@ namespace mppi::threading {
  * === Awake time
  * --> Sleep time
  *
- * The time step, the time step thresholds for warnings and errors and the setting to
- * enforce the rate can be changed during run-time of this class.
+ * The time step, the time step thresholds for warnings and errors and the
+ * setting to enforce the rate can be changed during run-time of this class.
  */
 class Rate {
  protected:
@@ -96,9 +97,11 @@ class Rate {
   timespec stepTime_{};
   //! Counter storing how many times sleep has been called.
   unsigned int numTimeSteps_ = 0;
-  //! Counter storing how many times a time step took longer than the warning threshold.
+  //! Counter storing how many times a time step took longer than the warning
+  //! threshold.
   unsigned int numWarnings_ = 0;
-  //! Counter storing how many times a time step took longer than the error threshold, not considering warnings.
+  //! Counter storing how many times a time step took longer than the error
+  //! threshold, not considering warnings.
   unsigned int numErrors_ = 0;
   //! Point in time when the last warning message was printed.
   timespec lastWarningPrintTime_{};
@@ -108,13 +111,15 @@ class Rate {
   double awakeTime_ = 0.0;
   //! Mean of the time which elapsed between subsequent calls of sleep().
   double awakeTimeMean_ = 0.0;
-  //! Helper variable to compute the variance of the time step which elapsed between subsequent calls of sleep().
+  //! Helper variable to compute the variance of the time step which elapsed
+  //! between subsequent calls of sleep().
   double awakeTimeM2_ = 0.0;
 
  public:
   /*!
    * Simple constructor.
-   * Starts the clock. Call reset() to restart it if you do not intend to call sleep() immediately.
+   * Starts the clock. Call reset() to restart it if you do not intend to call
+   * sleep() immediately.
    * @param name     Name for printing.
    * @param timeStep Time step in seconds.
    */
@@ -122,7 +127,8 @@ class Rate {
 
   /*!
    * Advanced constructor.
-   * Starts the clock. Call reset() to restart it if you do not intend to call sleep() immediately.
+   * Starts the clock. Call reset() to restart it if you do not intend to call
+   * sleep() immediately.
    * @param options Rate options.
    */
   explicit Rate(RateOptions options);
@@ -204,13 +210,15 @@ class Rate {
   double getAwakeTimeMean() const;
 
   /*!
-   * Get the variance of the time which elapsed between subsequent calls of sleep().
+   * Get the variance of the time which elapsed between subsequent calls of
+   * sleep().
    * @return Variance in seconds^2.
    */
   double getAwakeTimeVar() const;
 
   /*!
-   * Get the standard deviation of the time which elapsed between subsequent calls of sleep().
+   * Get the standard deviation of the time which elapsed between subsequent
+   * calls of sleep().
    * @return Standard deviation in seconds.
    */
   double getAwakeTimeStdDev() const;
@@ -221,14 +229,18 @@ class Rate {
    * @param end   End time point.
    * @return Duration in seconds.
    */
-  static double GetDuration(const timespec& start, const timespec& end);  // NOLINT(readability-identifier-naming)
+  static double GetDuration(
+      const timespec& start,
+      const timespec& end);  // NOLINT(readability-identifier-naming)
 
   /*!
    * Add a duration to a time point.
    * @param time     Time point.
    * @param duration Duration to add in seconds.
    */
-  static void AddDuration(timespec& time, const double duration);  // NOLINT(readability-identifier-naming)
+  static void AddDuration(
+      timespec& time,
+      const double duration);  // NOLINT(readability-identifier-naming)
 };
 
 }  // namespace mppi::threading

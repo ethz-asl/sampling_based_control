@@ -9,9 +9,9 @@
 #include <Eigen/Core>
 #include <vector>
 
-namespace mppi{
+namespace mppi {
 
-struct Rollout{
+struct Rollout {
   Rollout();
   explicit Rollout(size_t steps, size_t input_dim, size_t state_dim);
 
@@ -31,10 +31,9 @@ struct Rollout{
   void clear_input();
   void clear_observation();
 
-  bool operator < (const Rollout& roll) const;
-
+  bool operator<(const Rollout& roll) const;
 };
 
-}
+}  // namespace mppi
 
 std::ostream& operator<<(std::ostream& os, const mppi::Rollout& r);

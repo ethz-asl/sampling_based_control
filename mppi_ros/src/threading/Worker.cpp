@@ -52,12 +52,15 @@
 
 namespace mppi::threading {
 
-Worker::Worker(const std::string& name, const double timestep, const WorkerCallback& callback)
+Worker::Worker(const std::string& name, const double timestep,
+               const WorkerCallback& callback)
     : Worker(WorkerOptions(name, timestep, callback)) {}
 
-Worker::Worker(const std::string& name, const double timestep, const WorkerCallback& callback,
+Worker::Worker(const std::string& name, const double timestep,
+               const WorkerCallback& callback,
                const WorkerCallbackFailureReaction& callbackFailureReaction)
-    : Worker(WorkerOptions(name, timestep, callback, callbackFailureReaction)) {}
+    : Worker(WorkerOptions(name, timestep, callback, callbackFailureReaction)) {
+}
 
 Worker::Worker(const WorkerOptions& options)
     : options_(options),
@@ -74,18 +77,19 @@ Worker::Worker(Worker&& other)
       thread_(std::move(other.thread_)),
       rate_(std::move(other.rate_)) {}
 
-Worker::~Worker() {
-  stop(true);
-}
+Worker::~Worker() { stop(true); }
 
 bool Worker::start(const int priority) {
   if (running_) {
-    LOG_ERROR("Worker [" << options_.name_ << "] cannot be started, already/still running.");
+    LOG_ERROR("Worker [" << options_.name_
+                         << "] cannot be started, already/still running.");
     done_ = true;
     return false;
   }
   if (options_.timeStep_ < 0.0) {
-    LOG_ERROR("Worker [" << options_.name_ << "] cannot be started, invalid timestep: "  << options_.timeStep_.load());
+    LOG_ERROR("Worker [" << options_.name_
+                         << "] cannot be started, invalid timestep: "
+                         << options_.timeStep_.load());
     done_ = true;
     return false;
   }
@@ -104,8 +108,10 @@ bool Worker::start(const int priority) {
   }
 
   if (sched.sched_priority != 0) {
-    if (pthread_setschedparam(thread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-      LOG_WARN("Failed to set thread priority for worker [" <<  options_.name_ <<"]: " <<  strerror(errno));
+    if (pthread_setschedparam(thread_.native_handle(), SCHED_FIFO, &sched) !=
+        0) {
+      LOG_WARN("Failed to set thread priority for worker ["
+               << options_.name_ << "]: " << strerror(errno));
     }
   }
 
@@ -122,7 +128,8 @@ void Worker::stop(const bool wait) {
 
 void Worker::setTimestep(const double timeStep) {
   if (timeStep <= 0.0) {
-    LOG_ERROR("Cannot change timestep of Worker [" << options_.name_ << "] to " << timeStep << ", invalid value.");
+    LOG_ERROR("Cannot change timestep of Worker ["
+              << options_.name_ << "] to " << timeStep << ", invalid value.");
     return;
   }
   options_.timeStep_ = timeStep;
@@ -143,7 +150,9 @@ void Worker::run() {
     static timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     if (!options_.callback_(WorkerEvent(options_.timeStep_, now))) {
-      LOG_WARN("Worker [" << options_.name_ << "] callback returned false. Calling failure reaction.");
+      LOG_WARN(
+          "Worker [" << options_.name_
+                     << "] callback returned false. Calling failure reaction.");
       options_.callbackFailureReaction_();
     }
   } else {
@@ -152,8 +161,11 @@ void Worker::run() {
 
     // Run the callback repeatedly.
     do {
-      if (!options_.callback_(WorkerEvent(options_.timeStep_, rate_.getSleepEndTime()))) {
-        LOG_WARN("Worker [" << options_.name_ << "] callback returned false. Calling failure reaction.");
+      if (!options_.callback_(
+              WorkerEvent(options_.timeStep_, rate_.getSleepEndTime()))) {
+        LOG_WARN("Worker ["
+                 << options_.name_
+                 << "] callback returned false. Calling failure reaction.");
         options_.callbackFailureReaction_();
       }
 

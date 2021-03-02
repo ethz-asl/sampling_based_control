@@ -64,4 +64,4 @@ class PandaMobileControllerInterface : public mppi_ros::ControllerRos {
   visualization_msgs::Marker obstacle_marker_;
 };
 
-}
+}  // namespace panda_mobile

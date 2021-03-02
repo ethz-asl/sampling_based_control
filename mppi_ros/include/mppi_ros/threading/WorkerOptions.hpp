@@ -55,17 +55,25 @@ using WorkerCallback = std::function<bool(const WorkerEvent&)>;
 using WorkerCallbackFailureReaction = std::function<void(void)>;
 
 struct WorkerOptions : public RateOptions {
-  WorkerOptions() : RateOptions(), callback_(), callbackFailureReaction_([]() {}), defaultPriority_(0), destructWhenDone_(false) {}
+  WorkerOptions()
+      : RateOptions(),
+        callback_(),
+        callbackFailureReaction_([]() {}),
+        defaultPriority_(0),
+        destructWhenDone_(false) {}
 
-  WorkerOptions(const std::string& name, const double timestep, WorkerCallback callback, const int priority = 0)
+  WorkerOptions(const std::string& name, const double timestep,
+                WorkerCallback callback, const int priority = 0)
       : RateOptions(name, timestep),
         callback_(std::move(callback)),
         callbackFailureReaction_([]() {}),
         defaultPriority_(priority),
         destructWhenDone_(false) {}
 
-  WorkerOptions(const std::string& name, const double timestep, WorkerCallback callback,
-                WorkerCallbackFailureReaction callbackFailureReaction, const int priority = 0)
+  WorkerOptions(const std::string& name, const double timestep,
+                WorkerCallback callback,
+                WorkerCallbackFailureReaction callbackFailureReaction,
+                const int priority = 0)
       : RateOptions(name, timestep),
         callback_(std::move(callback)),
         callbackFailureReaction_(std::move(callbackFailureReaction)),
@@ -87,17 +95,20 @@ struct WorkerOptions : public RateOptions {
   WorkerCallback callback_;
 
   /*!
-   * The reaction callback to be called when the primary indicates error (returns false)
+   * The reaction callback to be called when the primary indicates error
+   * (returns false)
    */
   WorkerCallbackFailureReaction callbackFailureReaction_;
 
   /*!
-   * priority of the underlying thread, integer between 0 and 99 with 0 beeing the lowest priority.
+   * priority of the underlying thread, integer between 0 and 99 with 0 beeing
+   * the lowest priority.
    */
   int defaultPriority_;
 
   /*!
-   * if set to true and timestep=0 (run callback only once), the worker will be destructed by the WorkerManager
+   * if set to true and timestep=0 (run callback only once), the worker will be
+   * destructed by the WorkerManager
    */
   bool destructWhenDone_;
 };

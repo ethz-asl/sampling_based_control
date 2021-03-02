@@ -10,9 +10,9 @@
 
 using namespace mppi;
 
-Rollout::Rollout(){}
+Rollout::Rollout() {}
 
-Rollout::Rollout(size_t steps, size_t input_dim, size_t state_dim){
+Rollout::Rollout(size_t steps, size_t input_dim, size_t state_dim) {
   steps_ = steps;
   input_dim_ = input_dim;
   state_dim_ = state_dim;
@@ -35,40 +35,40 @@ void Rollout::clear() {
   xx.resize(steps_, Eigen::VectorXd::Zero(state_dim_));
 }
 
-void Rollout::clear_cost(){
+void Rollout::clear_cost() {
   total_cost = 0.0;
   cc.setZero();
 }
 
-void Rollout::clear_input(){
+void Rollout::clear_input() {
   uu.clear();
   uu.resize(steps_, Eigen::VectorXd::Zero(input_dim_));
 }
 
-void Rollout::clear_observation(){
+void Rollout::clear_observation() {
   xx.clear();
   xx.resize(steps_, Eigen::VectorXd::Zero(state_dim_));
 }
 
-bool Rollout::operator < (const Rollout& roll) const{
+bool Rollout::operator<(const Rollout& roll) const {
   return (total_cost < roll.total_cost);
 }
 
-std::ostream& operator<<(std::ostream& os, const mppi::Rollout& r){
+std::ostream& operator<<(std::ostream& os, const mppi::Rollout& r) {
   os << "[t]: ";
   for (const auto& t : r.tt) os << t << ", ";
-  os <<  std::endl;
+  os << std::endl;
 
   os << "[x]: ";
   for (const auto& x : r.xx) os << "(" << x.transpose() << ") ";
-  os <<  std::endl;
+  os << std::endl;
 
   os << "[u]: ";
-  for (const auto& u: r.uu) os << "(" << u.transpose() << ") ";
-  os <<  std::endl;
+  for (const auto& u : r.uu) os << "(" << u.transpose() << ") ";
+  os << std::endl;
 
   os << "[e]: ";
   for (const auto& e : r.nn) os << "(" << e.transpose() << ") ";
-  os <<  std::endl;
+  os << std::endl;
   os << "Total cost: " << r.total_cost << std::endl;
 }

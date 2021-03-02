@@ -29,11 +29,13 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
 
   geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
-  geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_pose_end_effector_ros(
+      const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
 
  private:
-  void init_model(const std::string& robot_description, const std::string& object_description);
+  void init_model(const std::string& robot_description,
+                  const std::string& object_description);
   bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
@@ -72,4 +74,4 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   visualization_msgs::Marker obstacle_marker_;
 };
 
-}
+}  // namespace manipulation

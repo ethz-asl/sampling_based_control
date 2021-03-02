@@ -14,27 +14,33 @@ from scipy.interpolate import interp1d
 
 
 class DataRecorder:
-    def __init__(self, experiment_id = "exp"):
-        self.data_dict = {"id": [],
-                          "index": [],
-                          "horizon": [],
-                          "nr_rollouts": [],
-                          "alpha": [],
-                          "beta": [],
-                          "filter_window": [],
-                          "tree_search": [],
-                          "stage_cost": [],
-                          "effective_samples": [],
-                          "time": [],
-                          "opt_time": []}
+    def __init__(self, experiment_id="exp"):
+        self.data_dict = {
+            "id": [],
+            "index": [],
+            "horizon": [],
+            "nr_rollouts": [],
+            "alpha": [],
+            "beta": [],
+            "filter_window": [],
+            "tree_search": [],
+            "stage_cost": [],
+            "effective_samples": [],
+            "time": [],
+            "opt_time": []
+        }
         self.first_call = True
-        self.data_subscriber = rospy.Subscriber("/mppi_data", Data, self.data_callback, queue_size=10)
+        self.data_subscriber = rospy.Subscriber("/mppi_data",
+                                                Data,
+                                                self.data_callback,
+                                                queue_size=10)
         self.initial_step_count = 0
         self.initial_time = 0
         self.idx = 0
-        self.experiment_id = experiment_id  + str(uuid.uuid4())
+        self.experiment_id = experiment_id + str(uuid.uuid4())
 
-        self.csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log", "record.csv")
+        self.csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log",
+                                     "record.csv")
         rospy.loginfo("Writing to {}".format(self.csv_file))
 
     def data_callback(self, data: Data):
@@ -59,10 +65,10 @@ class DataRecorder:
         self.data_dict["time"].append(current_time - self.initial_time)
         self.data_dict["opt_time"].append(data.time.to_sec())
 
-
         self.idx += 1
 
-        effective_samples = 1.0 / (len(data.weights.array) * np.square(np.asarray(data.weights.array)).sum())
+        effective_samples = 1.0 / (len(data.weights.array) * np.square(
+            np.asarray(data.weights.array)).sum())
         self.data_dict["effective_samples"].append(effective_samples)
 
     @staticmethod
@@ -76,7 +82,8 @@ class DataRecorder:
 
     def postprocess(self):
         # Filtering of effective samples
-        self.data_dict['effective_samples'] = gaussian_filter1d(self.data_dict['effective_samples'], sigma=2)
+        self.data_dict['effective_samples'] = gaussian_filter1d(
+            self.data_dict['effective_samples'], sigma=2)
 
         # First save controller rate
         rate = np.array(self.data_dict['opt_time'])
@@ -88,13 +95,19 @@ class DataRecorder:
         t_min = min(self.data_dict['time'])
         t_max = max(self.data_dict['time'])
         t_old = self.data_dict['time']
-        t_new = np.round(np.linspace(t_min, t_max, len(self.data_dict["index"])), decimals=3)
+        t_new = np.round(np.linspace(t_min, t_max,
+                                     len(self.data_dict["index"])),
+                         decimals=3)
         self.data_dict['time'] = t_new
 
-        cost_int_fun = interp1d(t_old, self.data_dict['stage_cost'], fill_value='extrapolate')
+        cost_int_fun = interp1d(t_old,
+                                self.data_dict['stage_cost'],
+                                fill_value='extrapolate')
         self.data_dict['stage_cost'] = cost_int_fun(t_new)
 
-        samples_int_fun = interp1d(t_old, self.data_dict['effective_samples'], fill_value='extrapolate')
+        samples_int_fun = interp1d(t_old,
+                                   self.data_dict['effective_samples'],
+                                   fill_value='extrapolate')
         self.data_dict['effective_samples'] = samples_int_fun(t_new)
 
     def save(self):

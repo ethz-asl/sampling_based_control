@@ -24,18 +24,26 @@ enum PandaMobileDim {
 
 class PandaMobileDynamics : public mppi::DynamicsBase {
  public:
-  PandaMobileDynamics(const std::string& robot_description, bool holonomic=true);
+  PandaMobileDynamics(const std::string& robot_description,
+                      bool holonomic = true);
   ~PandaMobileDynamics() = default;
 
  public:
-  size_t get_input_dimension() override { return PandaMobileDim::INPUT_DIMENSION; }
-  size_t get_state_dimension() override { return PandaMobileDim::STATE_DIMENSION; }
-
-  dynamics_ptr create() override {
-    return std::make_shared<PandaMobileDynamics>(robot_description_, holonomic_);
+  size_t get_input_dimension() override {
+    return PandaMobileDim::INPUT_DIMENSION;
+  }
+  size_t get_state_dimension() override {
+    return PandaMobileDim::STATE_DIMENSION;
   }
 
-  dynamics_ptr clone() const override { return std::make_shared<PandaMobileDynamics>(*this); }
+  dynamics_ptr create() override {
+    return std::make_shared<PandaMobileDynamics>(robot_description_,
+                                                 holonomic_);
+  }
+
+  dynamics_ptr clone() const override {
+    return std::make_shared<PandaMobileDynamics>(*this);
+  }
 
   void reset(const observation_t& x) override;
 

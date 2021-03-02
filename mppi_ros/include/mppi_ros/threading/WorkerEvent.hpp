@@ -48,15 +48,18 @@
 namespace mppi::threading {
 
 /*!
- * Todo: not every member of this struct is guaranteed to hold an appropriate value. Check the values for your use case!
+ * Todo: not every member of this struct is guaranteed to hold an appropriate
+ * value. Check the values for your use case!
  */
 struct WorkerEvent {
   WorkerEvent() : timeStep(0.0), timeStamp{0, 0} {}
-  WorkerEvent(const double dt, const timespec& time) : timeStep(dt), timeStamp(time) {}
+  WorkerEvent(const double dt, const timespec& time)
+      : timeStep(dt), timeStamp(time) {}
   virtual ~WorkerEvent() = default;
 
   /*!
-   * The timestep between consecutive calls of the callback function. 0 if run only once.
+   * The timestep between consecutive calls of the callback function. 0 if run
+   * only once.
    */
   double timeStep;  // NOLINT(readability-identifier-naming)
 

@@ -7,6 +7,7 @@
  */
 #pragma once
 #include <algorithm>
+#include <boost/filesystem.hpp>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -14,22 +15,21 @@
 #include <random>
 #include <shared_mutex>
 #include <vector>
-#include <boost/filesystem.hpp>
 
 #include <Eigen/Core>
 
+#include "mppi/controller/data.h"
 #include "mppi/controller/rollout.h"
 #include "mppi/cost/cost_base.h"
 #include "mppi/dynamics/dynamics_base.h"
+#include "mppi/experts/expert.h"
 #include "mppi/filters/savgol_filter.h"
 #include "mppi/sampler/gaussian_sampler.h"
 #include "mppi/solver_config.h"
-#include "mppi/utils/thread_pool.h"
-#include "mppi/visualization/rederer.h"
-#include "mppi/controller/data.h"
 #include "mppi/tree/tree_manager.h"
-#include "mppi/experts/expert.h"
+#include "mppi/utils/thread_pool.h"
 #include "mppi/utils/timer.h"
+#include "mppi/visualization/rederer.h"
 
 namespace mppi {
 
@@ -78,7 +78,7 @@ class PathIntegral {
    */
   void init_threading();
 
-	/**
+  /**
    * @brief Initializes the variables for the tree manager
    */
   void init_tree_manager_dynamics();
@@ -145,7 +145,6 @@ class PathIntegral {
    */
   void overwrite_rollouts();
 
-
   /**
    * @brief Use the data collected from rollouts and return the optimal input
    */
@@ -193,10 +192,10 @@ class PathIntegral {
    */
   void initialize_rollouts();
 
-	/**
-	 * @brief Update the experts based on data from last iteration
-	 */
-	void update_experts();
+  /**
+   * @brief Update the experts based on data from last iteration
+   */
+  void update_experts();
 
   /**
    * @brief Fill the optimized policy cache with the latest policy and set flags
@@ -238,7 +237,7 @@ class PathIntegral {
   void get_diagonal_variance(Eigen::VectorXd& var) const;
 
   /**
-   * @brief Bounds the input (if specified in the params) 
+   * @brief Bounds the input (if specified in the params)
    * @param u[in/out]: the input to bound
    */
   void bound_input(input_t& u);
@@ -297,7 +296,6 @@ class PathIntegral {
   SavGolFilter filter_;
   sampler_ptr sampler_;
 
-
   dynamics_ptr dynamics_;
   size_t cached_rollouts_;
 
@@ -329,24 +327,33 @@ class PathIntegral {
   std::shared_mutex rollout_cache_mutex_;  // protects access to the solution
   std::shared_mutex state_mutex_;          // protects access to the state
 
-  std::atomic_bool reference_set_;  // flag to check that reference has ever been set
-  std::shared_mutex reference_mutex_;  // protects access to the reference trajectory
+  std::atomic_bool
+      reference_set_;  // flag to check that reference has ever been set
+  std::shared_mutex
+      reference_mutex_;  // protects access to the reference trajectory
   reference_trajectory_t rr_tt_ref_;  // reference used during optimization
 
   std::unique_ptr<ThreadPool> pool_;  // thread pool
-  std::vector<std::future<void>>futures_;  // futures results from the thread pool
-  std::vector<dynamics_ptr> dynamics_v_;  // vector of dynamics functions used per each thread
-  std::vector<cost_ptr> cost_v_;  // vector of cost functions used per each thread
+  std::vector<std::future<void>>
+      futures_;  // futures results from the thread pool
+  std::vector<dynamics_ptr>
+      dynamics_v_;  // vector of dynamics functions used per each thread
+  std::vector<cost_ptr>
+      cost_v_;  // vector of cost functions used per each thread
 
   renderer_ptr renderer_;  // adds optional visualization of rollouts
 
   data_t data_;
 
   Expert expert_;  // expert class gives access to all experts implemented
-  TreeManager tree_manager_;  // tree_manager class controls the building of the tree
-  std::vector<dynamics_ptr> tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts) for multithreading
+  TreeManager
+      tree_manager_;  // tree_manager class controls the building of the tree
+  std::vector<dynamics_ptr>
+      tree_dynamics_v_;  // vector of dynamics functions (dim = n_rollouts) for
+                         // multithreading
   double stage_cost_ = 0;  // stage_cost used for logging
-  std::chrono::high_resolution_clock::time_point start_time_;  // time to measure the frequency of the control loop
+  std::chrono::high_resolution_clock::time_point
+      start_time_;  // time to measure the frequency of the control loop
 
   size_t step_count_;  // total amount of solver optimization steps
   std::vector<input_t> momentum_;

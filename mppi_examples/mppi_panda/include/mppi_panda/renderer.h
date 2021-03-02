@@ -19,8 +19,10 @@
 namespace panda {
 class RendererPanda : public mppi::Renderer {
  public:
-  RendererPanda(ros::NodeHandle& nh, const std::string& robot_description) : nh_(nh) {
-    rollouts_publisher_ = nh_.advertise<visualization_msgs::MarkerArray>("/rollouts_paths", 10);
+  RendererPanda(ros::NodeHandle& nh, const std::string& robot_description)
+      : nh_(nh) {
+    rollouts_publisher_ =
+        nh_.advertise<visualization_msgs::MarkerArray>("/rollouts_paths", 10);
     path_point_.header.frame_id = "world";
     path_point_.type = visualization_msgs::Marker::ARROW;
     path_point_.scale.x = 0.001;

@@ -13,22 +13,23 @@
 #include <sensor_msgs/JointState.h>
 #include <visualization_msgs/Marker.h>
 
-namespace panda{
+namespace panda {
 
 class PandaControllerInterface : public mppi_ros::ControllerRos {
  public:
-  explicit PandaControllerInterface(ros::NodeHandle& nh): ControllerRos(nh){};
+  explicit PandaControllerInterface(ros::NodeHandle& nh) : ControllerRos(nh){};
   ~PandaControllerInterface() = default;
 
   bool init_ros() override;
   void publish_ros() override;
   bool update_reference() override;
 
-  geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_pose_end_effector_ros(
+      const mppi::observation_t& x);
 
  private:
   void init_model(const std::string& robot_description);
-  bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
+  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg);
@@ -61,4 +62,4 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   visualization_msgs::Marker obstacle_marker_;
 };
 
-}
+}  // namespace panda

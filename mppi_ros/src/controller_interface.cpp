@@ -19,12 +19,14 @@ ControllerRos::~ControllerRos() { this->stop(); }
 bool ControllerRos::init_default_params() {
   bool ok = true;
 
-  ok &= mppi_ros::getNonNegative(nh_, "policy_update_rate", policy_update_rate_);
-  ok &= mppi_ros::getNonNegative(nh_, "reference_update_rate", reference_update_rate_);
+  ok &=
+      mppi_ros::getNonNegative(nh_, "policy_update_rate", policy_update_rate_);
+  ok &= mppi_ros::getNonNegative(nh_, "reference_update_rate",
+                                 reference_update_rate_);
   ok &= mppi_ros::getNonNegative(nh_, "ros_publish_rate", ros_publish_rate_);
   ok &= mppi_ros::getBool(nh_, "publish_ros", publish_ros_);
 
-  if (!ok){
+  if (!ok) {
     ROS_ERROR("Failed to parse default parameters.");
     return false;
   }
@@ -47,12 +49,12 @@ bool ControllerRos::init() {
   init_ros();
 
   bool ok;
-  try{
+  try {
     ok = set_controller(controller_);
-  } catch (std::runtime_error& err){
+  } catch (std::runtime_error &err) {
     ROS_ERROR_STREAM(err.what());
     ok = false;
-  } catch (...){
+  } catch (...) {
     ROS_ERROR("Unknown exception caught while setting the controller.");
     ok = false;
   }
@@ -72,7 +74,7 @@ bool ControllerRos::start() {
     return false;
   }
 
-  if (started_){
+  if (started_) {
     ROS_WARN_STREAM("The controller has already been started.");
     return true;
   }
@@ -109,18 +111,19 @@ bool ControllerRos::update_policy() {
   if (!observation_set_) return true;
   controller_->update_policy();
 
-  if (controller_->config_.logging){
+  if (controller_->config_.logging) {
     mppi_ros::to_msg(controller_->get_data(), data_ros_);
     data_publisher_.publish(data_ros_);
   }
   return true;
 }
 
-bool ControllerRos::update_policy_thread(const mppi::threading::WorkerEvent &event) {
+bool ControllerRos::update_policy_thread(
+    const mppi::threading::WorkerEvent &event) {
   if (!observation_set_) return true;
   controller_->update_policy();
 
-  if (controller_->config_.logging){
+  if (controller_->config_.logging) {
     mppi_ros::to_msg(controller_->get_data(), data_ros_);
     data_publisher_.publish(data_ros_);
   }
@@ -129,7 +132,8 @@ bool ControllerRos::update_policy_thread(const mppi::threading::WorkerEvent &eve
 
 bool ControllerRos::update_reference() { return true; }
 
-bool ControllerRos::update_reference_thread(const mppi::threading::WorkerEvent &event) {
+bool ControllerRos::update_reference_thread(
+    const mppi::threading::WorkerEvent &event) {
   return update_reference();
 }
 
@@ -140,14 +144,16 @@ bool ControllerRos::publish_ros_default() {
   return true;
 };
 
-bool ControllerRos::publish_ros_thread(const mppi::threading::WorkerEvent &event) {
+bool ControllerRos::publish_ros_thread(
+    const mppi::threading::WorkerEvent &event) {
   publish_ros_default();
   publish_ros();
   return true;
 }
 
 void ControllerRos::publish_stage_cost() {
-  stage_cost_.data = controller_->get_stage_cost();  // TODO(giuseppe) see how to do this
+  stage_cost_.data =
+      controller_->get_stage_cost();  // TODO(giuseppe) see how to do this
   cost_publisher_.publish(stage_cost_);
 }
 
@@ -198,6 +204,4 @@ void ControllerRos::get_input_state(const observation_t &x,
   }
 }
 
-void ControllerRos::stop() {
-  worker_manager_.stopWorkers();
-}
+void ControllerRos::stop() { worker_manager_.stopWorkers(); }

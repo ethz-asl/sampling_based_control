@@ -14,19 +14,23 @@
 
 #include <ros/package.h>
 
-#define PANDA_UPPER_LIMITS 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
-#define PANDA_LOWER_LIMITS -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
+#define PANDA_UPPER_LIMITS \
+  2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
+#define PANDA_LOWER_LIMITS \
+  -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
 
 namespace panda_mobile {
 
-PandaMobileCost::PandaMobileCost(const std::string& robot_description, const double linear_weight,
-                                 const double angular_weight, const double obstacle_radius, bool joint_limits)
+PandaMobileCost::PandaMobileCost(const std::string& robot_description,
+                                 const double linear_weight,
+                                 const double angular_weight,
+                                 const double obstacle_radius,
+                                 bool joint_limits)
     : robot_description_(robot_description),
       linear_weight_(linear_weight),
       angular_weight_(angular_weight),
       obstacle_radius_(obstacle_radius),
       joint_limits_(joint_limits) {
-
   robot_model_.init_from_xml(robot_description);
 
   Q_linear_ = Eigen::Matrix3d::Identity() * linear_weight;
@@ -38,8 +42,9 @@ PandaMobileCost::PandaMobileCost(const std::string& robot_description, const dou
 }
 
 PandaMobileCost::cost_ptr PandaMobileCost::create() {
-  return std::make_shared<PandaMobileCost>(robot_description_, linear_weight_, angular_weight_,
-                                           obstacle_radius_, joint_limits_);
+  return std::make_shared<PandaMobileCost>(robot_description_, linear_weight_,
+                                           angular_weight_, obstacle_radius_,
+                                           joint_limits_);
 }
 
 PandaMobileCost::cost_ptr PandaMobileCost::clone() const {
@@ -50,19 +55,23 @@ void PandaMobileCost::set_linear_weight(const double k) { Q_linear_ *= k; }
 
 void PandaMobileCost::set_angular_weight(const double k) { Q_angular_ *= k; }
 
-void PandaMobileCost::set_obstacle_radius(const double r) { obstacle_radius_ = r; }
+void PandaMobileCost::set_obstacle_radius(const double r) {
+  obstacle_radius_ = r;
+}
 
-mppi_pinocchio::Pose PandaMobileCost::get_current_pose(const Eigen::VectorXd& x) {
+mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
+    const Eigen::VectorXd& x) {
   mppi_pinocchio::Pose base_pose;
   base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation = Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
+  base_pose.rotation =
+      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
   mppi_pinocchio::Pose arm_pose = robot_model_.get_pose(tracked_frame_);
   return base_pose * arm_pose;
 }
 
-PandaMobileCost::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
-                                                      const mppi::reference_t& ref,
-                                                      const double t) {
+PandaMobileCost::cost_t PandaMobileCost::compute_cost(
+    const mppi::observation_t& x, const mppi::reference_t& ref,
+    const double t) {
   cost_t cost;
 
   // update model
@@ -82,16 +91,15 @@ PandaMobileCost::cost_t PandaMobileCost::compute_cost(const mppi::observation_t&
 
   // obstacle avoidance cost
   double obstacle_dist = (current_pose.translation - ref.tail<3>()).norm();
-  if (obstacle_dist < obstacle_radius_)
-    cost += Q_obst_;
+  if (obstacle_dist < obstacle_radius_) cost += Q_obst_;
 
   // reach cost
   if (robot_model_.get_pose(tracked_frame_).translation.head<2>().norm() > 1.0)
     cost += Q_reach_;
 
   // joint limits cost
-  if (joint_limits_){
-    for(size_t i=0; i<7; i++){
+  if (joint_limits_) {
+    for (size_t i = 0; i < 7; i++) {
       if (x(i) < joint_limits_lower_(i))
         cost += 100 + 10 * std::pow(joint_limits_lower_(i) - x(i), 2);
       if (x(i) > joint_limits_upper_(i))

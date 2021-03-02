@@ -11,9 +11,9 @@
 #include <ros/node_handle.h>
 #include <mppi_ros/threading/WorkerManager.hpp>
 
+#include <mppi_ros/Data.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
-#include <mppi_ros/Data.h>
 
 using namespace mppi;
 namespace mppi_ros {
@@ -35,7 +35,7 @@ class ControllerRos {
    * @return
    */
   virtual bool update_reference();
-  virtual bool init_ros(){ return true; };
+  virtual bool init_ros() { return true; };
   virtual void publish_ros(){};
 
   /**
@@ -131,7 +131,6 @@ class ControllerRos {
   // logging
   mppi_ros::Data data_ros_;
   ros::Publisher data_publisher_;
-  
 };
 
 }  // namespace mppi_ros

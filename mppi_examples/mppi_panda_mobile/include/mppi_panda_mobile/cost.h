@@ -20,8 +20,9 @@ class PandaMobileCost : public mppi::CostBase {
  public:
   using cost_ptr = mppi::CostBase::cost_ptr;
 
-  PandaMobileCost(const std::string& robot_description, const double linear_weight,
-                  const double angular_weight, const double obstacle_radius, bool joint_limits=false);
+  PandaMobileCost(const std::string& robot_description,
+                  const double linear_weight, const double angular_weight,
+                  const double obstacle_radius, bool joint_limits = false);
   ~PandaMobileCost() = default;
 
  private:
@@ -51,8 +52,8 @@ class PandaMobileCost : public mppi::CostBase {
   void set_linear_weight(const double k);
   void set_angular_weight(const double k);
   void set_obstacle_radius(const double r);
-  mppi_pinocchio::Pose get_current_pose(const Eigen::VectorXd& x) ;
-  cost_t compute_cost(const mppi::observation_t& x, const mppi::reference_t& ref,
-                      const double t) override ;
+  mppi_pinocchio::Pose get_current_pose(const Eigen::VectorXd& x);
+  cost_t compute_cost(const mppi::observation_t& x,
+                      const mppi::reference_t& ref, const double t) override;
 };
 }  // namespace panda_mobile

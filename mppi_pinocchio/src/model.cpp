@@ -14,18 +14,21 @@ using namespace pinocchio;
 namespace mppi_pinocchio {
 
 Eigen::Matrix<double, 6, 1> diff(const Pose& p1, const Pose& p2) {
-  return log6(SE3(p1.rotation, p1.translation).actInv(SE3(p2.rotation, p2.translation))).toVector();
+  return log6(SE3(p1.rotation, p1.translation)
+                  .actInv(SE3(p2.rotation, p2.translation)))
+      .toVector();
 }
 
-Pose operator*(const Pose& p1, const Pose& p2){
+Pose operator*(const Pose& p1, const Pose& p2) {
   Pose res;
-  SE3 temp(SE3(p1.rotation, p1.translation).act(SE3(p2.rotation, p2.translation)));
+  SE3 temp(
+      SE3(p1.rotation, p1.translation).act(SE3(p2.rotation, p2.translation)));
   res.translation = temp.translation();
   res.rotation = temp.rotation();
   return res;
 }
 
-RobotModel::~RobotModel(){
+RobotModel::~RobotModel() {
   delete model_;
   delete data_;
 };
@@ -60,16 +63,19 @@ void RobotModel::update_state(const Eigen::VectorXd& q, Eigen::VectorXd& qd) {
   forwardKinematics(*model_, *data_, q, qd);
   updateFramePlacements(*model_, *data_);
 }
-void RobotModel::get_error(const std::string& from_frame, const std::string& to_frame,
-                           Vector6d& error) const {
-  error =
-      log6(data_->oMf[model_->getFrameId(to_frame)].actInv(data_->oMf[model_->getFrameId(from_frame)]))
-          .toVector();
+void RobotModel::get_error(const std::string& from_frame,
+                           const std::string& to_frame, Vector6d& error) const {
+  error = log6(data_->oMf[model_->getFrameId(to_frame)].actInv(
+                   data_->oMf[model_->getFrameId(from_frame)]))
+              .toVector();
 }
 
-void RobotModel::get_error(const std::string& frame, const Eigen::Quaterniond& rot,
-                           const Eigen::Vector3d& trans, Vector6d& error) const {
-  error = log6(data_->oMf[model_->getFrameId(frame)].actInv(SE3(rot, trans))).toVector();
+void RobotModel::get_error(const std::string& frame,
+                           const Eigen::Quaterniond& rot,
+                           const Eigen::Vector3d& trans,
+                           Vector6d& error) const {
+  error = log6(data_->oMf[model_->getFrameId(frame)].actInv(SE3(rot, trans)))
+              .toVector();
 }
 
 Pose RobotModel::get_pose(const std::string& frame) const {

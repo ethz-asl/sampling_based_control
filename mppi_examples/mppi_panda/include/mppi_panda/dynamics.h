@@ -8,21 +8,20 @@
 
 #pragma once
 #include <math.h>
-#include <iostream>
-#include <stdexcept>
-#include <Eigen/Core>
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
+#include <Eigen/Core>
+#include <iostream>
+#include <stdexcept>
 
 #include "mppi_panda/dimensions.h"
 
-namespace panda{
-
+namespace panda {
 
 class PandaDynamics : public mppi::DynamicsBase {
  public:
-  PandaDynamics(const std::string& robot_description=""): robot_description_(robot_description){
-
+  PandaDynamics(const std::string& robot_description = "")
+      : robot_description_(robot_description) {
     x_ = observation_t::Zero(PandaDim::STATE_DIMENSION);
   };
   ~PandaDynamics() = default;
@@ -39,9 +38,9 @@ class PandaDynamics : public mppi::DynamicsBase {
     return std::make_shared<PandaDynamics>(*this);
   }
 
-  void reset(const observation_t &x) override;
+  void reset(const observation_t& x) override;
 
-  observation_t step(const input_t &u, const double dt) override;
+  observation_t step(const input_t& u, const double dt) override;
   const observation_t get_state() const override;
   input_t get_zero_input(const observation_t& x) override;
 
@@ -49,6 +48,4 @@ class PandaDynamics : public mppi::DynamicsBase {
   observation_t x_;
   std::string robot_description_;
 };
-}
-
-
+}  // namespace panda

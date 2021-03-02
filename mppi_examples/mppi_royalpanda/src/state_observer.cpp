@@ -28,31 +28,36 @@ namespace royalpanda {
 StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   std::string base_pose_topic;
   nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
-  base_pose_subscriber_ =
-      nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback, this);
+  base_pose_subscriber_ = nh_.subscribe(
+      base_pose_topic, 1, &StateObserver::base_pose_callback, this);
 
   std::string base_twist_topic;
   nh_.param<std::string>("base_twist_topic", base_twist_topic, "/base_twist");
-  base_twist_subscriber_ =
-      nh_.subscribe(base_twist_topic, 1, &StateObserver::base_twist_callback, this);
+  base_twist_subscriber_ = nh_.subscribe(
+      base_twist_topic, 1, &StateObserver::base_twist_callback, this);
 
   std::string arm_state_topic;
   nh_.param<std::string>("arm_state_topic", arm_state_topic, "/arm_state");
-  arm_state_subscriber_ =
-      nh_.subscribe(arm_state_topic, 1, &StateObserver::arm_state_callback, this);
+  arm_state_subscriber_ = nh_.subscribe(
+      arm_state_topic, 1, &StateObserver::arm_state_callback, this);
 
   std::string object_pose_topic;
-  nh_.param<std::string>("object_pose_topic", object_pose_topic, "/object_pose");
-  object_pose_subscriber_ =
-      nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
+  nh_.param<std::string>("object_pose_topic", object_pose_topic,
+                         "/object_pose");
+  object_pose_subscriber_ = nh_.subscribe(
+      object_pose_topic, 1, &StateObserver::object_pose_callback, this);
 
   // ros publishing
-  state_publisher_ = nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
-  base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
-  base_twist_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
+  state_publisher_ =
+      nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
+  base_pose_publisher_ =
+      nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
+  base_twist_publisher_ =
+      nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
-  robot_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
+  robot_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
 
   object_state_.name.push_back("articulation_joint");
   object_state_.position.push_back(0.0);
@@ -71,11 +76,11 @@ bool StateObserver::initialize() {
     return false;
   }
 
-  if (!nh_.getParam("base_alpha", base_alpha_) || base_alpha_ < 0 || base_alpha_ > 1) {
+  if (!nh_.getParam("base_alpha", base_alpha_) || base_alpha_ < 0 ||
+      base_alpha_ > 1) {
     ROS_ERROR("Failed to parse base_alpha param or invalid.");
     return false;
   }
-
 
   KDL::Tree object_kinematics;
   if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
@@ -129,21 +134,26 @@ bool StateObserver::initialize() {
 
   ROS_INFO_STREAM("Static transformations summary: "
                   << std::endl
-                  << " T_shelf_handle:\n " << T_handle0_shelf_.inverse().matrix() << std::endl
-                  << " T_hinge_handle:\n " << T_handle0_hinge_.inverse().matrix() << std::endl
-                  << " T_base_reference:\n " << T_reference_base_.inverse().matrix() << std::endl);
+                  << " T_shelf_handle:\n "
+                  << T_handle0_shelf_.inverse().matrix() << std::endl
+                  << " T_hinge_handle:\n "
+                  << T_handle0_hinge_.inverse().matrix() << std::endl
+                  << " T_base_reference:\n "
+                  << T_reference_base_.inverse().matrix() << std::endl);
   ROS_INFO("Robot observer correctly initialized.");
   return true;
 }
 
 void StateObserver::update() {
   if (!fixed_base_) {
-    manipulation::conversions::toMsg(base_state_, base_twist_, q_, dq_, object_state_.position[0],
-                       object_state_.velocity[0], false, state_ros_);
+    manipulation::conversions::toMsg(
+        base_state_, base_twist_, q_, dq_, object_state_.position[0],
+        object_state_.velocity[0], false, state_ros_);
     state_ros_.header.stamp = ros::Time::now();
   } else {
-    manipulation::conversions::toMsg(q_, dq_, object_state_.position[0], object_state_.velocity[0], false,
-                       state_ros_);
+    manipulation::conversions::toMsg(q_, dq_, object_state_.position[0],
+                                     object_state_.velocity[0], false,
+                                     state_ros_);
     state_ros_.header.stamp = ros::Time::now();
   }
 }
@@ -155,26 +165,33 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   base_state_.x() = T_world_base_.translation().x();
   base_state_.y() = T_world_base_.translation().y();
 
-  Eigen::Vector3d ix = T_world_base_.rotation().col(0);  // 2d projection of forward motion axis
+  Eigen::Vector3d ix =
+      T_world_base_.rotation().col(0);  // 2d projection of forward motion axis
   base_state_.z() = std::atan2(ix.y(), ix.x());
 }
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
-  Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x, msg->twist.twist.linear.y, 0.0);
-  odom_base_twist = Eigen::AngleAxis(base_state_.z(), Eigen::Vector3d::UnitZ()) * odom_base_twist;
+  Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x,
+                                  msg->twist.twist.linear.y, 0.0);
+  odom_base_twist =
+      Eigen::AngleAxis(base_state_.z(), Eigen::Vector3d::UnitZ()) *
+      odom_base_twist;
   base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
 }
 
-void StateObserver::arm_state_callback(const sensor_msgs::JointStateConstPtr& msg) {
-  if (msg->name.size() != 9){
-    ROS_WARN_STREAM_THROTTLE(2.0, "Joint state has the wrong size: " << msg->name.size());
+void StateObserver::arm_state_callback(
+    const sensor_msgs::JointStateConstPtr& msg) {
+  if (msg->name.size() != 9) {
+    ROS_WARN_STREAM_THROTTLE(
+        2.0, "Joint state has the wrong size: " << msg->name.size());
     return;
   }
   for (size_t i = 0; i < 9; i++) q_(i) = msg->position[i];
   for (size_t i = 0; i < 9; i++) dq_(i) = msg->velocity[i];
 }
 
-void StateObserver::object_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
+void StateObserver::object_pose_callback(
+    const nav_msgs::OdometryConstPtr& msg) {
   tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
   if (articulation_first_computation_) {
     ROS_INFO("First computation of the shelf pose.");
@@ -182,8 +199,8 @@ void StateObserver::object_pose_callback(const nav_msgs::OdometryConstPtr& msg) 
     T_hinge_world_ = (T_world_handle_ * T_handle0_hinge_).inverse();
     T_hinge_handle_init_ = T_hinge_world_ * T_world_handle_;
 
-    start_relative_angle_ =
-        std::atan2(T_hinge_handle_init_.translation().x(), T_hinge_handle_init_.translation().y());
+    start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
+                                       T_hinge_handle_init_.translation().y());
     articulation_first_computation_ = false;
     previous_time_ = ros::Time::now().toSec();
 
@@ -199,8 +216,8 @@ void StateObserver::object_pose_callback(const nav_msgs::OdometryConstPtr& msg) 
   }
 
   T_hinge_handle_ = T_hinge_world_ * T_world_handle_;
-  current_relative_angle_ =
-      std::atan2(T_hinge_handle_.translation().x(), T_hinge_handle_.translation().y());
+  current_relative_angle_ = std::atan2(T_hinge_handle_.translation().x(),
+                                       T_hinge_handle_.translation().y());
 
   double theta_new = current_relative_angle_ - start_relative_angle_;
   double current_time = ros::Time::now().toSec();
@@ -219,7 +236,8 @@ void StateObserver::publish() {
     base_pose.pose.position.x = base_state_.x();
     base_pose.pose.position.y = base_state_.y();
     base_pose.pose.position.z = 0.0;
-    Eigen::Quaterniond q(Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
+    Eigen::Quaterniond q(
+        Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
     base_pose.pose.orientation.x = q.x();
     base_pose.pose.orientation.y = q.y();
     base_pose.pose.orientation.z = q.z();

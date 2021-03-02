@@ -58,9 +58,11 @@ struct RateOptions {
   std::string name_{};
   //! Time step in seconds.
   std::atomic<double> timeStep_{0.0};
-  //! If the awake time is bigger than the time step multiplied by this factor, it counts as an warning.
+  //! If the awake time is bigger than the time step multiplied by this factor,
+  //! it counts as an warning.
   std::atomic<double> maxTimeStepFactorWarning_{1.0};
-  //! If the awake time is bigger than the time step multiplied by this factor, it counts as an error.
+  //! If the awake time is bigger than the time step multiplied by this factor,
+  //! it counts as an error.
   std::atomic<double> maxTimeStepFactorError_{10.0};
   //! Boolean indicating whether the rate should be enforced.
   std::atomic<bool> enforceRate_{true};
@@ -69,7 +71,8 @@ struct RateOptions {
 
   /*!
    * Constructor.
-   * Starts the clock. Call reset() to restart it if you do not intend to call sleep() immediately.
+   * Starts the clock. Call reset() to restart it if you do not intend to call
+   * sleep() immediately.
    * @param name                     Name for printing.
    * @param timeStep                 Time step in seconds.
    * @param maxTimeStepFactorWarning Max time step factor for warnings.
@@ -77,8 +80,11 @@ struct RateOptions {
    * @param enforceRate              Enforce the rate.
    * @param clockId                  Linux clock ID.
    */
-  explicit RateOptions(std::string name = "", const double timeStep = 0.0, const double maxTimeStepFactorWarning = 1.0,
-                       const double maxTimeStepFactorError = 10.0, const bool enforceRate = true, const clockid_t clockId = CLOCK_MONOTONIC)
+  explicit RateOptions(std::string name = "", const double timeStep = 0.0,
+                       const double maxTimeStepFactorWarning = 1.0,
+                       const double maxTimeStepFactorError = 10.0,
+                       const bool enforceRate = true,
+                       const clockid_t clockId = CLOCK_MONOTONIC)
       : name_(std::move(name)),
         timeStep_(timeStep),
         maxTimeStepFactorWarning_(maxTimeStepFactorWarning),
@@ -128,8 +134,11 @@ struct RateOptions {
    * @return True if rate options are valid.
    */
   virtual bool isValid() const {
-    return (timeStep_ >= 0.0 && !std::isinf(timeStep_) && !std::isnan(timeStep_) && maxTimeStepFactorWarning_ >= 0.0 &&
-            !std::isnan(maxTimeStepFactorWarning_) && maxTimeStepFactorError_ >= 0.0 && !std::isnan(maxTimeStepFactorError_));
+    return (timeStep_ >= 0.0 && !std::isinf(timeStep_) &&
+            !std::isnan(timeStep_) && maxTimeStepFactorWarning_ >= 0.0 &&
+            !std::isnan(maxTimeStepFactorWarning_) &&
+            maxTimeStepFactorError_ >= 0.0 &&
+            !std::isnan(maxTimeStepFactorError_));
   }
 };
 

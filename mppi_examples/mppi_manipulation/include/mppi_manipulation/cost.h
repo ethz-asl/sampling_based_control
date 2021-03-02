@@ -22,10 +22,10 @@ struct PandaCostParam {
   double Qt2;
   double Qr;  // rotation cost
   double Qr2;
-  double Qo;  // obstacle cost
-  double Qos; // obstacle cost slope
-  double Qc;  // contact cost
-  double ro;  // obstacle radius
+  double Qo;   // obstacle cost
+  double Qos;  // obstacle cost slope
+  double Qc;   // contact cost
+  double ro;   // obstacle radius
   double max_reach;
   double Q_reach;
   double Q_reachs;
@@ -43,8 +43,9 @@ struct PandaCostParam {
 class PandaCost : public mppi::CostBase {
  public:
   PandaCost() : PandaCost("", "", PandaCostParam()){};
-  PandaCost(const std::string& robot_description, const std::string& object_description,
-            const PandaCostParam& param, bool fixed_base=true);
+  PandaCost(const std::string& robot_description,
+            const std::string& object_description, const PandaCostParam& param,
+            bool fixed_base = true);
   ~PandaCost() = default;
 
  private:
@@ -65,7 +66,8 @@ class PandaCost : public mppi::CostBase {
 
  public:
   cost_ptr create() override {
-    return std::make_shared<PandaCost>(robot_description_, object_description_, param_, fixed_base_);
+    return std::make_shared<PandaCost>(robot_description_, object_description_,
+                                       param_, fixed_base_);
   }
   cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
 
@@ -73,9 +75,10 @@ class PandaCost : public mppi::CostBase {
   void set_angular_weight(const double k) { param_.Qr = k; }
   void set_obstacle_radius(const double r) { param_.ro = r; }
 
-  cost_t compute_cost(const mppi::observation_t& x, const mppi::reference_t& ref,
-                      const double t) override;
+  cost_t compute_cost(const mppi::observation_t& x,
+                      const mppi::reference_t& ref, const double t) override;
 };
 }  // namespace manipulation
 
-std::ostream& operator<<(std::ostream& os, const manipulation::PandaCostParam& param);
+std::ostream& operator<<(std::ostream& os,
+                         const manipulation::PandaCostParam& param);

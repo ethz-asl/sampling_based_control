@@ -2,21 +2,25 @@
 // Created by giuseppe on 23.01.21.
 //
 
-#include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
+#include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 
 #include <Eigen/Geometry>
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
   ros::init(argc, argv, "base_twist_publisher");
   ros::NodeHandle nh("~");
 
-  ros::Publisher twist_talker = nh.advertise<nav_msgs::Odometry>("/ridgeback_velocity_controller/odom", 1);
-  ros::Publisher base_tf_publisher = nh.advertise<nav_msgs::Odometry>("/panda_base/vrpn_client/estimated_odometry", 1);
-  ros::Publisher handle_tf_publisher = nh.advertise<nav_msgs::Odometry>("/shelf_door/vrpn_client/estimated_odometry", 1);
-  ros::Publisher arm_state_publisher = nh.advertise<sensor_msgs::JointState>("/franka/state", 1);
+  ros::Publisher twist_talker = nh.advertise<nav_msgs::Odometry>(
+      "/ridgeback_velocity_controller/odom", 1);
+  ros::Publisher base_tf_publisher = nh.advertise<nav_msgs::Odometry>(
+      "/panda_base/vrpn_client/estimated_odometry", 1);
+  ros::Publisher handle_tf_publisher = nh.advertise<nav_msgs::Odometry>(
+      "/shelf_door/vrpn_client/estimated_odometry", 1);
+  ros::Publisher arm_state_publisher =
+      nh.advertise<sensor_msgs::JointState>("/franka/state", 1);
 
   nav_msgs::Odometry twist;
   twist.twist.twist.linear.x = 0.01;
@@ -48,8 +52,8 @@ int main(int argc, char** argv){
 
   sensor_msgs::JointState arm_state;
   arm_state.header.frame_id = "world";
-  for(size_t i=0; i<7; i++){
-    arm_state.name.push_back("panda_joint" + std::to_string(i+1));
+  for (size_t i = 0; i < 7; i++) {
+    arm_state.name.push_back("panda_joint" + std::to_string(i + 1));
     arm_state.position.push_back(0.0);
     arm_state.velocity.push_back(0.0);
     arm_state.effort.push_back(0.0);
@@ -64,9 +68,8 @@ int main(int argc, char** argv){
   arm_state.velocity.push_back(0.0);
   arm_state.effort.push_back(0.0);
 
-
   ros::Rate rate(100);
-  while (ros::ok()){
+  while (ros::ok()) {
     twist_talker.publish(twist);
 
     base_pose.header.stamp = ros::Time::now();

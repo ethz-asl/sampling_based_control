@@ -5,9 +5,9 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <map>
-#include <cmath>
 
 class Timer {
  public:
@@ -19,15 +19,16 @@ class Timer {
   }
 
   void add_interval(const std::string& name) {
-    if (!intervals_.count( name )){
+    if (!intervals_.count(name)) {
       intervals_count_[name] = 0;
       intervals_cumulated_[name] = 0.0;
     }
 
     time_t now = std::chrono::steady_clock::now();
-    intervals_[name] =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(now - since_last_interval_).count() /
-        1e6;
+    intervals_[name] = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           now - since_last_interval_)
+                           .count() /
+                       1e6;
     since_last_interval_ = now;
 
     intervals_count_[name]++;
@@ -39,8 +40,10 @@ class Timer {
     counter++;
     if (std::fmod(counter, decimation) == 0) {
       for (const auto& interval : intervals_) {
-        std::cout << "Interval [" << interval.first << "] took: " << interval.second
-                  << " ms, average: " << intervals_cumulated_[interval.first] / intervals_count_[interval.first]
+        std::cout << "Interval [" << interval.first
+                  << "] took: " << interval.second << " ms, average: "
+                  << intervals_cumulated_[interval.first] /
+                         intervals_count_[interval.first]
                   << " ms." << std::endl;
       }
       counter = 0;

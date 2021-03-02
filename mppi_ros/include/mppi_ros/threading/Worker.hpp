@@ -60,16 +60,18 @@ class Worker {
 
   /*!
    * @param name      name of the worker
-   * @param timestep  with a timestep of 0, the callback will be executed as fast as possible, with std::numeric_limits<double>::infinity()
-   * only once.
+   * @param timestep  with a timestep of 0, the callback will be executed as
+   * fast as possible, with std::numeric_limits<double>::infinity() only once.
    * @param callback  std::function pointing to the callback
    */
-  Worker(const std::string& name, const double timestep, const WorkerCallback& callback);
-  Worker(const std::string& name, const double timestep, const WorkerCallback& callback,
+  Worker(const std::string& name, const double timestep,
+         const WorkerCallback& callback);
+  Worker(const std::string& name, const double timestep,
+         const WorkerCallback& callback,
          const WorkerCallbackFailureReaction& callbackFailureReaction);
   explicit Worker(const WorkerOptions& options);
   Worker(const Worker&) = delete;  // atomics and threads are non-copyable
-  Worker(Worker&&);                // declare custom move constructor to move atomics
+  Worker(Worker&&);  // declare custom move constructor to move atomics
 
   virtual ~Worker();
 
@@ -86,9 +88,12 @@ class Worker {
   bool isRunning() const { return running_; }
 
   /*!
-   * @return true if underlying thread has terminated and deleteWhenDone_ option is set.
+   * @return true if underlying thread has terminated and deleteWhenDone_ option
+   * is set.
    */
-  bool isDestructible() const { return done_.load() && options_.destructWhenDone_; }
+  bool isDestructible() const {
+    return done_.load() && options_.destructWhenDone_;
+  }
 
  private:
   void run();

@@ -8,9 +8,9 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <std_msgs/Float64MultiArray.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
+#include <std_msgs/Float64MultiArray.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -19,7 +19,8 @@
 
 namespace royalpanda {
 
-/// The scope of this class is to collect info and return the complete mobile robot state
+/// The scope of this class is to collect info and return the complete mobile
+/// robot state
 
 class StateObserver {
  public:
@@ -38,8 +39,8 @@ class StateObserver {
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
 
-
-//  friend std::ostream& operator<<(std::ostream& os, const StateObserver& obs);
+  //  friend std::ostream& operator<<(std::ostream& os, const StateObserver&
+  //  obs);
 
  private:
   bool fixed_base_;
@@ -98,6 +99,5 @@ class StateObserver {
 
   // filter base odometry
   double base_alpha_;
-
 };
 }  // namespace royalpanda

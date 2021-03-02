@@ -3,10 +3,11 @@
 //
 
 #pragma once
-#include <Eigen/Core>
-#include <Eigen/Geometry>
 #include <pinocchio/fwd.hpp>
 #include <pinocchio/multibody/fwd.hpp>
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <memory>
 
 namespace mppi_pinocchio {
@@ -29,7 +30,7 @@ class RobotModel {
   RobotModel() = default;
   ~RobotModel();
 
-  RobotModel( const RobotModel& rhs);
+  RobotModel(const RobotModel& rhs);
   /**
    *
    * @param robot_description
@@ -56,7 +57,8 @@ class RobotModel {
    * @param to_frame
    * @param error
    */
-  void get_error(const std::string& from_frame, const std::string& to_frame, Vector6d& error) const;
+  void get_error(const std::string& from_frame, const std::string& to_frame,
+                 Vector6d& error) const;
   /**
    *
    * @param frame

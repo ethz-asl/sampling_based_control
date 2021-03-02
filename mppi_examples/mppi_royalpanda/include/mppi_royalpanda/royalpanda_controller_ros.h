@@ -8,12 +8,12 @@
 #include <string>
 #include <vector>
 
-#include "mppi_manipulation/controller_interface.h"
 #include <robot_control/modeling/robot_wrapper.h>
+#include "mppi_manipulation/controller_interface.h"
 
-#include "mppi_manipulation/dynamics_ros.h"
-#include <manipulation_msgs/State.h>
 #include <manipulation_msgs/InputState.h>
+#include <manipulation_msgs/State.h>
+#include "mppi_manipulation/dynamics_ros.h"
 
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/Twist.h>
@@ -28,14 +28,15 @@
 #include <franka_hw/franka_model_interface.h>
 #include <franka_hw/trigger_rate.h>
 
-#include <manipulation_msgs/State.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <manipulation_msgs/State.h>
 
 namespace royalpanda {
 
 class RoyalPandaControllerRos
     : public controller_interface::MultiInterfaceController<
-          franka_hw::FrankaModelInterface, hardware_interface::EffortJointInterface,
+          franka_hw::FrankaModelInterface,
+          hardware_interface::EffortJointInterface,
           franka_hw::FrankaStateInterface> {
  public:
   // explicit controller to allow for a missing hardware interface
@@ -44,7 +45,8 @@ class RoyalPandaControllerRos
       franka_hw::FrankaStateInterface>;
   RoyalPandaControllerRos() : BASE(true){};
 
-  bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& node_handle) override;
+  bool init(hardware_interface::RobotHW* robot_hw,
+            ros::NodeHandle& node_handle) override;
   void starting(const ros::Time&) override;
   void update(const ros::Time&, const ros::Duration& period) override;
   void stopping(const ros::Time& time) override;
@@ -65,7 +67,8 @@ class RoyalPandaControllerRos
   // Saturation
   std::array<double, 7> saturateTorqueRate(
       const std::array<double, 7>& tau_d_calculated,
-      const std::array<double, 7>& tau_J_d);  // NOLINT (readability-identifier-naming)
+      const std::array<double, 7>&
+          tau_J_d);  // NOLINT (readability-identifier-naming)
 
   // simulation subscribers to external controller
   void input_state_callback(const manipulation_msgs::InputStateConstPtr& msg);
@@ -90,12 +93,14 @@ class RoyalPandaControllerRos
   franka_hw::TriggerRate base_trigger_{50.0};
   franka_hw::TriggerRate rate_trigger_{1.0};
   std::array<double, 7> last_tau_d_{};
-  realtime_tools::RealtimePublisher<franka_example_controllers::JointTorqueComparison>
+  realtime_tools::RealtimePublisher<
+      franka_example_controllers::JointTorqueComparison>
       torques_publisher_;
 
   std::string base_twist_topic_;
   realtime_tools::RealtimePublisher<geometry_msgs::Twist> base_twist_publisher_;
-  realtime_tools::RealtimePublisher<manipulation_msgs::State> nominal_state_publisher_;
+  realtime_tools::RealtimePublisher<manipulation_msgs::State>
+      nominal_state_publisher_;
 
   bool started_;
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;

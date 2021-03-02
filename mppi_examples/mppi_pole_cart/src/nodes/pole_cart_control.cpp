@@ -7,13 +7,13 @@
  */
 #include "mppi_pole_cart/controller_interface.h"
 
-#include <chrono>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <chrono>
 
 using namespace pole_cart;
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
   // ros interface
   ros::init(argc, argv, "panda_control_node");
   ros::NodeHandle nh("~");
@@ -25,7 +25,8 @@ int main(int argc, char** argv){
   dynamics_config.l = nh.param<double>("dynamics/length", 1.0);
   dynamics_config.mux = nh.param<double>("dynamics/linear_friction", 10.0);
   dynamics_config.mutheta = nh.param<double>("dynamics/angular_friction", 0.7);
-  dynamics_config.dt_internal = nh.param<double>("dynamics/substep_size", 0.001);
+  dynamics_config.dt_internal =
+      nh.param<double>("dynamics/substep_size", 0.001);
   PoleCartDynamics simulation(dynamics_config);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PoleCartDim::STATE_DIMENSION);
@@ -38,7 +39,8 @@ int main(int argc, char** argv){
   u = simulation.get_zero_input(x);
   std::cout << "First input: " << u.transpose() << std::endl;
 
-  ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  ros::Publisher state_publisher =
+      nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
   joint_state.name.push_back("cart");
   joint_state.name.push_back("pendulum");
@@ -52,7 +54,7 @@ int main(int argc, char** argv){
 
   // init the controller
   bool ok = controller.init();
-  if (!ok){
+  if (!ok) {
     throw std::runtime_error("Failed to initialzied controller!");
   }
 
@@ -61,23 +63,25 @@ int main(int argc, char** argv){
 
   // sim loop
   controller.start();
-  while(ros::ok()){
+  while (ros::ok()) {
     auto start = std::chrono::steady_clock::now();
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
-    if (!static_optimization){
+    if (!static_optimization) {
       x = simulation.step(u, sim_dt);
       sim_time += sim_dt;
     }
 
-    for(size_t i=0; i<2; i++) joint_state.position[i] = x(i);
+    for (size_t i = 0; i < 2; i++) joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 
     auto end = std::chrono::steady_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;
-    if (sim_dt - elapsed >0)
-      ros::Duration(sim_dt - elapsed).sleep();
+    double elapsed =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+            .count() *
+        1000;
+    if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 
     ros::spinOnce();
   }
