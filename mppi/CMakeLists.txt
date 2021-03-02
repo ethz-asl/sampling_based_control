@@ -47,13 +47,6 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-## Test Visual debugger
-#add_executable(mppi_visualizer_double_integrator
-#        unittest/double_integrator.cpp
-#        unittest/mppi_visualizer.cpp)
-#target_link_libraries(mppi_visualizer_double_integrator ${PROJECT_NAME} ${COMMON_LIBRARIES})
-#add_dependencies(mppi_visualizer_double_integrator ${PROJECT_NAME})
-
 if (CATKIN_ENABLE_TESTING)
     find_package(PythonLibs 2.7 REQUIRED)
     catkin_add_gtest(filter_test unittest/filter_test.cpp)
@@ -62,28 +55,4 @@ if (CATKIN_ENABLE_TESTING)
 
 endif ()
 
-## Testing
-#if (CATKIN_ENABLE_TESTING)
-#    catkin_add_gtest(mppi_methods_test unittest/mppi_methods.cpp)
-#    target_link_libraries(mppi_methods_test ${PROJECT_NAME} ${catkin_LIBRARIES})
-#
-#    catkin_add_gtest(multivariate_test unittest/multivariate_normal_eigen_test.cpp)
-#    target_link_libraries(multivariate_test ${PROJECT_NAME})
-#
-#    catkin_add_gtest(solver_config unittest/solver_config.cpp)
-#    target_link_libraries(solver_config ${PROJECT_NAME} ${COMMON_LIBRARIES})
-#
-#    catkin_add_gtest(thread_pool unittest/thread_pool.cpp)
-#    target_link_libraries(solver_config ${PROJECT_NAME} ${COMMON_LIBRARIES})
-#
-#    catkin_add_gtest(logging unittest/logging.cpp)
-#    target_link_libraries(logging ${PROJECT_NAME} ${COMMON_LIBRARIES})
-#endif()
-
-### Test the filter
-#find_package(gram_savitzky_golay REQUIRED)
-#find_package(rosbag REQUIRED)
-#find_package(std_msgs REQUIRED)
-#add_executable(savgol_filter unittest/savgol_filter.cpp)
-#target_link_libraries(savgol_filter PUBLIC gram_savitzky_golay::gram_savitzky_golay)
 
