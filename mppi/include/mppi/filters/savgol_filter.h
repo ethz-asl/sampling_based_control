@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <gram_savitzky_golay/gram_savitzky_golay.h>
+#include <mppi/filters/gram_savitzky_golay.h>
 #include <boost/circular_buffer.hpp>
 #include <deque>
 #include <iomanip>
