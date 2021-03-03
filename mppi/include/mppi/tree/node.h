@@ -21,8 +21,8 @@ class Node {
   using node_handle = tree<Node>::iterator;
 
   Node() = default;
-  Node(node_handle parent_node_handle, double t, double cost, const Eigen::VectorXd& u,
-       const Eigen::VectorXd& x, size_t expert_type);
+  Node(node_handle parent_node_handle, double t, double cost,
+       const Eigen::VectorXd& u, const Eigen::VectorXd& x, size_t expert_type);
   ~Node() = default;
 
   double t_;

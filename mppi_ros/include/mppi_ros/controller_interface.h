@@ -9,14 +9,11 @@
 #include <mppi/controller/mppi.h>
 
 #include <ros/node_handle.h>
-#include <any_worker/WorkerManager.hpp>
-#include <param_io/get_param.hpp>
+#include <mppi_ros/threading/WorkerManager.hpp>
 
+#include <mppi_ros/Data.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
-#include <mppi_ros/Data.h>
-
-#include "mppi/filters/savgol_filter.h"
 
 using namespace mppi;
 namespace mppi_ros {
@@ -38,7 +35,7 @@ class ControllerRos {
    * @return
    */
   virtual bool update_reference();
-  virtual bool init_ros(){ return true; };
+  virtual bool init_ros() { return true; };
   virtual void publish_ros(){};
 
   /**
@@ -77,20 +74,20 @@ class ControllerRos {
    * 4. (optional) publish_ros_default: run default publishing behavior
    * 5. (optional) publish_ros: run custom ros publishing
    */
-  void set_observation(const observation_t& x, const mppi::time_t& t);
+  void set_observation(const observation_t& x, const double& t);
   bool update_policy();
-  void get_input(const observation_t& x, input_t& u, const mppi::time_t& t);
+  void get_input(const observation_t& x, input_t& u, const double& t);
   void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u,
-                       const mppi::time_t& t);
+                       const double& t);
   bool publish_ros_default();
 
  private:
   void init_default_ros();
   bool init_default_params();
 
-  bool update_policy_thread(const any_worker::WorkerEvent& event);
-  bool update_reference_thread(const any_worker::WorkerEvent& event);
-  bool publish_ros_thread(const any_worker::WorkerEvent& event);
+  bool update_policy_thread(const mppi::threading::WorkerEvent& event);
+  bool update_reference_thread(const mppi::threading::WorkerEvent& event);
+  bool publish_ros_thread(const mppi::threading::WorkerEvent& event);
 
   void publish_stage_cost();
   void publish_rollout_cost();
@@ -101,7 +98,7 @@ class ControllerRos {
   bool initialized_;
   bool observation_set_;
 
-  any_worker::WorkerManager worker_manager_;
+  mppi::threading::WorkerManager worker_manager_;
 
   mppi::CostBase::cost_ptr cost_;
   mppi::DynamicsBase::dynamics_ptr dynamics_;
@@ -115,8 +112,6 @@ class ControllerRos {
   bool publish_ros_ = false;
   double ros_publish_rate_ = 0.0;
 
-  mppi::SavGolFilter filter_;
-
  public:
   ros::NodeHandle nh_;
 
@@ -124,7 +119,6 @@ class ControllerRos {
   ros::Publisher min_rollout_cost_publisher_;
   ros::Publisher max_rollout_cost_publisher_;
   ros::Publisher input_publisher_;
-  ros::Publisher variance_publisher_;
 
   std_msgs::Float64 stage_cost_;
   std_msgs::Float64 min_rollout_cost_;
@@ -133,12 +127,10 @@ class ControllerRos {
   std::shared_mutex input_mutex_;
   mppi::input_t input_ = mppi::input_t::Zero(1);
   std_msgs::Float32MultiArray input_ros_;
-  std_msgs::Float32MultiArray var_ros_;
 
   // logging
   mppi_ros::Data data_ros_;
   ros::Publisher data_publisher_;
-  
 };
 
 }  // namespace mppi_ros

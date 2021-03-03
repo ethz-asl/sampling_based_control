@@ -6,10 +6,10 @@
  * @brief    description
  */
 #pragma once
-#include <optional>
-#include <iostream>
 #include <yaml-cpp/yaml.h>
 #include <Eigen/Core>
+#include <iostream>
+#include <optional>
 #include <string>
 
 namespace mppi {
@@ -20,12 +20,11 @@ enum InputFilterType : char {
 };
 
 enum ExpertTypes {
-	NORM = 0,
-	IMP = 1,
+  NORM = 0,
+  IMP = 1,
 };
 
 struct SolverConfig {
-
   size_t rollouts = 1;
   double lambda = 1.0;
   double h = 1.0;
@@ -65,23 +64,27 @@ struct SolverConfig {
   double pruning_threshold = 0.5;
 
   std::vector<ExpertTypes> expert_types = {ExpertTypes::NORM, ExpertTypes::IMP};
-	Eigen::VectorXd expert_weights;
+  Eigen::VectorXd expert_weights;
 
-	bool display_update_freq = false;
+  bool display_update_freq = false;
 
   bool init_from_file(const std::string& file);
+
  private:
   bool parsing_error = false;
-  template<typename T>
-  std::optional<T> parse_key(const YAML::Node& node, const std::string& key, bool quiet=false);
+  template <typename T>
+  std::optional<T> parse_key(const YAML::Node& node, const std::string& key,
+                             bool quiet = false);
 
-  template<typename T>
-  std::optional<T> parse_key_quiet(const YAML::Node& node, const std::string &key);
+  template <typename T>
+  std::optional<T> parse_key_quiet(const YAML::Node& node,
+                                   const std::string& key);
 };
 
-template<typename T>
-std::optional<T> SolverConfig::parse_key(const YAML::Node& node, const std::string &key, bool quiet) {
-  if (!node[key]){
+template <typename T>
+std::optional<T> SolverConfig::parse_key(const YAML::Node& node,
+                                         const std::string& key, bool quiet) {
+  if (!node[key]) {
     std::cout << "Could not find entry: " << key << std::endl;
     if (!quiet) parsing_error = true;
     return {};
@@ -89,29 +92,28 @@ std::optional<T> SolverConfig::parse_key(const YAML::Node& node, const std::stri
   return node[key].as<T>();
 };
 
-template<> inline
-std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(const YAML::Node& node,
-                                                                        const std::string &key, bool quiet) {
-  if (!node[key]){
+template <>
+inline std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(
+    const YAML::Node& node, const std::string& key, bool quiet) {
+  if (!node[key]) {
     std::cout << "Could not find entry: " << key << std::endl;
     if (!quiet) parsing_error = true;
     return {};
   }
   auto v = node[key].as<std::vector<double>>();
   Eigen::VectorXd v_eigen(v.size());
-  for (size_t i=0; i<v.size(); i++)
-    v_eigen(i) = v[i];
+  for (size_t i = 0; i < v.size(); i++) v_eigen(i) = v[i];
 
   return v_eigen;
 };
 //
-//template<> inline
-//std::optional<std::vector<std::string>> SolverConfig::parse_key<std::vector<std::string>>(const YAML::Node& node,
-//																																				const std::string &key, bool quiet) {
-//	if (!node[key]){
-//		std::cout << "Could not find entry: " << key << std::endl;
-//		if (!quiet) parsing_error = true;
-//		return {};
+// template<> inline
+// std::optional<std::vector<std::string>>
+// SolverConfig::parse_key<std::vector<std::string>>(const YAML::Node& node,
+// const std::string &key, bool quiet) { 	if (!node[key]){
+// std::cout << "Could not find entry: " << key << std::endl; 		if
+// (!quiet) parsing_error = true; return
+// {};
 //	}
 //	auto v = node[key].as<std::vector<std::string>>();
 //	std::vector<size_t> v_expert_types;
@@ -129,11 +131,12 @@ std::optional<Eigen::VectorXd> SolverConfig::parse_key<Eigen::VectorXd>(const YA
 //	return v_eigen;
 //};
 
-template<typename T>
-std::optional<T> SolverConfig::parse_key_quiet(const YAML::Node& node, const std::string &key) {
+template <typename T>
+std::optional<T> SolverConfig::parse_key_quiet(const YAML::Node& node,
+                                               const std::string& key) {
   return parse_key<T>(node, key, true);
 };
 
-}
+}  // namespace mppi
 
-std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config);
+std::ostream& operator<<(std::ostream& os, const mppi::SolverConfig& config);

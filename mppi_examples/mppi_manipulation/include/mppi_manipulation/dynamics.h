@@ -10,10 +10,10 @@
 #include <raisim/World.hpp>
 #include <raisim/configure.hpp>
 
-#include <cmath>
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
 #include <Eigen/Core>
+#include <cmath>
 #include <iostream>
 #include <numeric>
 #include <stdexcept>
@@ -29,8 +29,10 @@ struct force_t {
 
 class PandaRaisimDynamics : public mppi::DynamicsBase {
  public:
-  PandaRaisimDynamics(const std::string& robot_description, const std::string& object_description,
-                      const double dt, const bool fixed_base = true, const PandaRaisimGains& = PandaRaisimGains());
+  PandaRaisimDynamics(const std::string& robot_description,
+                      const std::string& object_description, const double dt,
+                      const bool fixed_base = true,
+                      const PandaRaisimGains& = PandaRaisimGains());
   ~PandaRaisimDynamics() = default;
 
  private:
@@ -40,16 +42,17 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   void set_collision();
 
  public:
-  double get_dt() {return dt_; }
+  double get_dt() { return dt_; }
   size_t get_input_dimension() override { return input_dimension_; }
   size_t get_state_dimension() override { return state_dimension_; }
   dynamics_ptr create() override {
-    return std::make_shared<PandaRaisimDynamics>(robot_description_, object_description_, dt_,
-                                                 fixed_base_);
+    return std::make_shared<PandaRaisimDynamics>(
+        robot_description_, object_description_, dt_, fixed_base_);
   }
 
   dynamics_ptr clone() const override {
-    std::cout << "cannot clone, raisim world copy constructor is deleted. Returning empty pointer"
+    std::cout << "cannot clone, raisim world copy constructor is deleted. "
+                 "Returning empty pointer"
               << std::endl;
     return dynamics_ptr();
   }
@@ -58,15 +61,17 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
 
   observation_t step(const input_t& u, const double dt) override;
   input_t get_zero_input(const observation_t& x) override;
-  const observation_t get_state() const override {return x_;}
+  const observation_t get_state() const override { return x_; }
 
   raisim::World* get_world() { return &sim_; }
   raisim::ArticulatedSystem* get_panda() { return panda; }
   raisim::ArticulatedSystem* get_object() { return object; }
 
   std::vector<force_t> get_contact_forces();
-  void get_end_effector_pose(Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
-  void get_handle_pose(Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
+  void get_end_effector_pose(Eigen::Vector3d& position,
+                             Eigen::Quaterniond& orientation);
+  void get_handle_pose(Eigen::Vector3d& position,
+                       Eigen::Quaterniond& orientation);
   double get_object_displacement() const;
 
  protected:

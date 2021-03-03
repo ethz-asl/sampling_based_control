@@ -9,15 +9,15 @@
 #include "mppi_panda_mobile/controller_interface.h"
 #include "mppi_panda_mobile/dynamics.h"
 
+#include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
-#include <chrono>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/TransformStamped.h>
+#include <chrono>
 
 using namespace panda_mobile;
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
   // ros interface
   ros::init(argc, argv, "panda_mobile_control_node");
   ros::NodeHandle nh("~");
@@ -27,12 +27,14 @@ int main(int argc, char** argv){
 
   auto controller = PandaMobileControllerInterface(nh);
 
-  std::string robot_description = nh.param<std::string>("/robot_description", "");
+  std::string robot_description =
+      nh.param<std::string>("/robot_description", "");
   auto simulation = PandaMobileDynamics(robot_description);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
-  auto initial_configuration = nh.param<std::vector<double>>("initial_configuration", {});
-  for(size_t i=0; i<initial_configuration.size(); i++)
+  auto initial_configuration =
+      nh.param<std::vector<double>>("initial_configuration", {});
+  for (size_t i = 0; i < initial_configuration.size(); i++)
     x(i) = initial_configuration[i];
   simulation.reset(x);
 
@@ -40,10 +42,12 @@ int main(int argc, char** argv){
   u = simulation.get_zero_input(x);
 
   // joint state publisher
-  ros::Publisher state_publisher = nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  ros::Publisher state_publisher =
+      nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5",
-                      "panda_joint6", "panda_joint7"};
+  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
+                      "panda_joint4", "panda_joint5", "panda_joint6",
+                      "panda_joint7"};
   joint_state.position.resize(7);
   joint_state.header.frame_id = "base";
 
@@ -53,7 +57,8 @@ int main(int argc, char** argv){
   world_base_tf.header.frame_id = "world";
   world_base_tf.child_frame_id = "base";
 
-  ros::Publisher ee_publisher = nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
+  ros::Publisher ee_publisher =
+      nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   geometry_msgs::PoseStamped ee_pose;
 
   bool static_optimization = nh.param<bool>("static_optimization", false);
@@ -72,7 +77,7 @@ int main(int argc, char** argv){
 
   if (!sequential) controller.start();
 
-  while(ros::ok()){
+  while (ros::ok()) {
     auto start = std::chrono::steady_clock::now();
 
     controller.set_observation(x, sim_time);
@@ -86,7 +91,7 @@ int main(int argc, char** argv){
     }
 
     // publish joint state
-    for(size_t i=0; i<7; i++) joint_state.position[i] = x(i);
+    for (size_t i = 0; i < 7; i++) joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 
@@ -110,15 +115,17 @@ int main(int argc, char** argv){
     ee_publisher.publish(ee_pose);
 
     auto end = std::chrono::steady_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
-    if (sim_dt - elapsed >0)
-      ros::Duration(sim_dt - elapsed).sleep();
+    double elapsed =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+            .count() /
+        1000.0;
+    if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 
-    if (max_sim_time > 0 and sim_time > max_sim_time){
-      ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time << "s. Exiting.");
+    if (max_sim_time > 0 and sim_time > max_sim_time) {
+      ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time
+                                                   << "s. Exiting.");
       break;
     }
-    ROS_INFO_STREAM_THROTTLE(2.0, "Current sim time: " << sim_time << "s.");
     ros::spinOnce();
   }
 

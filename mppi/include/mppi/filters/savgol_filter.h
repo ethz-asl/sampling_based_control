@@ -7,11 +7,12 @@
  */
 #pragma once
 
-#include <gram_savitzky_golay/gram_savitzky_golay.h>
+#include <mppi/filters/gram_savitzky_golay.h>
 #include <boost/circular_buffer.hpp>
 #include <deque>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 namespace mppi {
 struct MovingExtendedWindow;
@@ -24,12 +25,14 @@ namespace mppi {
 struct MovingExtendedWindow {
   MovingExtendedWindow(const int size, const int w) {
     window = w;
-    // the first and last input need half horizon in the past and in the future in order
-    // to be centered leaving with a total size equal to weigths size (2 * window) + 1 + horizon/2
+    // the first and last input need half horizon in the past and in the future
+    // in order to be centered leaving with a total size equal to weigths size
+    // (2 * window) + 1 + horizon/2
     // + horizon/2 = 2 * window + 1 + horizon
     uu.resize(size + 2 * window + 1, 0);
 
-    // initialization to -1 makes sure everything starts correctly with a positive initial time
+    // initialization to -1 makes sure everything starts correctly with a
+    // positive initial time
     tt.resize(size + 2 * window + 1, -1);
 
     start_idx = window;
@@ -43,9 +46,11 @@ struct MovingExtendedWindow {
   std::vector<double> tt;
 
   void trim(const double t) {
-    if (t < last_trim_t){
+    if (t < last_trim_t) {
       std::stringstream ss;
-      ss << "Resetting the window back in the past. Can reset only to larger times than last reset!!!"
+      ss << "Resetting the window back in the past. Can reset only to larger "
+            "times than last "
+            "reset!!!"
          << "last reset=" << last_trim_t << ", trying to reset to t=" << t;
       throw std::runtime_error(ss.str());
     }
@@ -53,8 +58,8 @@ struct MovingExtendedWindow {
 
     // search in the last inserted times the closest smaller than the current
     size_t trim_idx = start_idx;
-    for (size_t i=0; i<start_idx; i++){
-      if (tt[i] >= t){
+    for (size_t i = 0; i < start_idx; i++) {
+      if (tt[i] >= t) {
         trim_idx = i;
         break;
       }
@@ -65,9 +70,9 @@ struct MovingExtendedWindow {
     std::rotate(uu.begin(), uu.begin() + offset, uu.end());
 
     // extend the trimmed portion with the last elements in the vector
-    if (offset > 0){
-      std::fill(tt.end() - offset, tt.end(), tt.back());
-      std::fill(uu.end() - offset, uu.end(), uu.back());
+    if (offset > 0) {
+      std::fill(tt.end() - offset, tt.end(), *(tt.end() - offset - 1));
+      std::fill(uu.end() - offset, uu.end(), *(uu.end() - offset - 1));
     }
 
     start_idx = window;
@@ -99,11 +104,13 @@ struct MovingExtendedWindow {
    * @return
    */
   std::vector<double> extract(const double t) {
-    auto lower = std::lower_bound(tt.begin(), tt.end(), t); // index to the first element larger than t
+    auto lower = std::lower_bound(
+        tt.begin(), tt.end(), t);  // index to the first element larger than t
     assert(lower != tt.end());
     size_t idx = std::distance(tt.begin(), lower);
 
-    return std::vector<double>(uu.begin() + idx - window, uu.begin() + idx + window + 1);
+    return std::vector<double>(uu.begin() + idx - window,
+                               uu.begin() + idx + window + 1);
   }
 
   /**

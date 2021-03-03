@@ -6,8 +6,7 @@
  * @brief    description
  */
 #pragma once
-#include "mppi_manipulation/cost.h"
-#include "mppi_manipulation/dynamics.h"
+#include <mppi_pinocchio/model.h>
 #include <mppi_ros/controller_interface.h>
 
 #include <nav_msgs/Path.h>
@@ -26,20 +25,20 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void publish_ros() override;
   bool update_reference() override;
 
-  pinocchio::SE3 get_pose_handle(const mppi::observation_t& x);
-  pinocchio::SE3 get_pose_end_effector(const mppi::observation_t& x);
+  mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
+  mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
 
-  geometry_msgs::PoseStamped pose_pinocchio_to_ros(const pinocchio::SE3& pose);
   geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
-  geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_pose_end_effector_ros(
+      const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
 
  private:
-  void init_model(const std::string& robot_description, const std::string& object_description);
+  void init_model(const std::string& robot_description,
+                  const std::string& object_description);
   bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
-  void obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
 
  public:
@@ -55,15 +54,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
 
-  // arm
-  double obstacle_radius_;
-  pinocchio::Data data_;
-  pinocchio::Model model_;
-
-  // door
-  pinocchio::Model object_model_;
-  pinocchio::Data object_data_;
-  int handle_idx_;
+  mppi_pinocchio::RobotModel robot_model_;
+  mppi_pinocchio::RobotModel object_model_;
 
   // ros
   ros::Publisher optimal_trajectory_publisher_;
@@ -73,7 +65,6 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   ros::Publisher pose_handle_publisher_;
 
   ros::Subscriber mode_subscriber_;
-  ros::Subscriber obstacle_subscriber_;
   ros::Subscriber ee_pose_desired_subscriber_;
 
   nav_msgs::Path optimal_path_;
@@ -83,4 +74,4 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   visualization_msgs::Marker obstacle_marker_;
 };
 
-}
+}  // namespace manipulation

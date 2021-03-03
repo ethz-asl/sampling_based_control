@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="plot_cost" default="true"/>
-
+    <arg name="plot_cost" default="false"/>
     <arg name="description_file" default="$(find mppi_pole_cart)/resources/pendulum_cart.urdf"/>
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
@@ -10,8 +9,7 @@
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
 
     <!--  Run the test node-->
-    <node name="pole_cart_control" type="pole_cart_control" pkg="mppi_pole_cart" output="screen"
-          launch-prefix="gdb -ex run --args">
+    <node name="pole_cart_control" type="pole_cart_control" pkg="mppi_pole_cart" output="screen">
         <rosparam command="load" file="$(find mppi_pole_cart)/config/params.yaml"/>
         <param name="config_file" value="$(find mppi_pole_cart)/config/params.yaml"/>
     </node>

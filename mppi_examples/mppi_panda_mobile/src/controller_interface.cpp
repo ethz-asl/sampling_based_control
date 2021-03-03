@@ -7,6 +7,11 @@
  */
 
 #include "mppi_panda_mobile/controller_interface.h"
+#include "mppi_panda_mobile/cost.h"
+#include "mppi_panda_mobile/dynamics.h"
+
+#include <mppi_pinocchio/ros_conversions.h>
+#include <mppi_ros/ros_params.h>
 #include <ros/package.h>
 
 using namespace panda_mobile;
@@ -24,16 +29,18 @@ bool PandaMobileControllerInterface::init_ros() {
       "/end_effector_pose_desired", 10,
       &PandaMobileControllerInterface::ee_pose_desired_callback, this);
 
-  obstacle_radius_ = param_io::param(nh_, "obstacle_radius", 0.2);
+  if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_))
+    return false;
+
   obstacle_marker_.header.frame_id = "world";
   obstacle_marker_.type = visualization_msgs::Marker::SPHERE;
   obstacle_marker_.color.r = 1.0;
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.color.a = 0.4;
-  obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
-  obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
-  obstacle_marker_.scale.z = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.x = 2.0 * 0.01;
+  obstacle_marker_.scale.y = 2.0 * 0.01;
+  obstacle_marker_.scale.z = 2.0 * 0.01;
   obstacle_marker_.pose.orientation.x = 0.0;
   obstacle_marker_.pose.orientation.y = 0.0;
   obstacle_marker_.pose.orientation.z = 0.0;
@@ -51,36 +58,47 @@ bool PandaMobileControllerInterface::init_ros() {
 
 void PandaMobileControllerInterface::init_model(
     const std::string& robot_description) {
-  pinocchio::urdf::buildModelFromXML(robot_description, model_);
-  data_ = pinocchio::Data(model_);
+  robot_model_.init_from_xml(robot_description);
 }
 
 bool PandaMobileControllerInterface::set_controller(
     std::shared_ptr<mppi::PathIntegral>& controller) {
+  // Params
+  std::string robot_description;
+  double linear_weight;
+  double angular_weight;
+  bool holonomic;
+  bool joint_limits;
+
+  bool ok = true;
+  ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
+  ok &= mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_);
+  ok &= mppi_ros::getNonNegative(nh_, "linear_weight", linear_weight);
+  ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
+  ok &= mppi_ros::getBool(nh_, "holonomic", holonomic);
+  ok &= mppi_ros::getBool(nh_, "joint_limits", joint_limits);
+  if (!ok) {
+    ROS_ERROR("Failed to parse parameters and set controller.");
+    return false;
+  }
+
   // -------------------------------
   // internal model
   // -------------------------------
-  std::string robot_description;
-  if (!nh_.param<std::string>("/robot_description", robot_description, "")) {
-    throw std::runtime_error("robot_description has not been set!");
-  }
-
   init_model(robot_description);
 
   // -------------------------------
   // dynamics
   // -------------------------------
-  double holonomic = param_io::param(nh_, "holonomic", true);
-  auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description, holonomic);
+  auto dynamics =
+      std::make_shared<PandaMobileDynamics>(robot_description, holonomic);
 
   // -------------------------------
   // cost
   // -------------------------------
-  double linear_weight = param_io::param(nh_, "linear_weight", 10.0);
-  double angular_weight = param_io::param(nh_, "angular_weight", 10.0);
-  bool joint_limits = param_io::param(nh_, "joint_limits", false);
-  auto cost = std::make_shared<PandaMobileCost>(
-      robot_description, linear_weight, angular_weight, obstacle_radius_, joint_limits);
+  auto cost = std::make_shared<PandaMobileCost>(robot_description,
+                                                linear_weight, angular_weight,
+                                                obstacle_radius_, joint_limits);
 
   // -------------------------------
   // config
@@ -103,6 +121,13 @@ bool PandaMobileControllerInterface::set_controller(
   ref_.rr.resize(
       1, mppi::observation_t::Zero(PandaMobileDim::REFERENCE_DIMENSION));
   ref_.tt.resize(1, 0.0);
+
+  // -------------------------------
+  // obstacle marker
+  // -------------------------------
+  obstacle_marker_.scale.x = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.y = 2.0 * obstacle_radius_;
+  obstacle_marker_.scale.z = 2.0 * obstacle_radius_;
   return true;
 }
 
@@ -142,32 +167,25 @@ bool PandaMobileControllerInterface::update_reference() {
   return true;
 }
 
-pinocchio::SE3 PandaMobileControllerInterface::get_pose_end_effector(
+mppi_pinocchio::Pose PandaMobileControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-  pinocchio::forwardKinematics(model_, data_, x.head<7>());
-  pinocchio::updateFramePlacements(model_, data_);
-  Eigen::Matrix3d base_rotation(
-      Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  Eigen::Vector3d base_translation(x(7), x(8), 0.0);
-  pinocchio::SE3 base_tf = pinocchio::SE3(base_rotation, base_translation);
-  return base_tf.act(data_.oMf[model_.getFrameId("panda_hand")]);
+  robot_model_.update_state(x.head<7>());
+  mppi_pinocchio::Pose base_pose;
+  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
+  base_pose.rotation =
+      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
+  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose("panda_hand");
+  return base_pose * arm_pose;
 }
 
 geometry_msgs::PoseStamped
 PandaMobileControllerInterface::get_pose_end_effector_ros(
     const Eigen::VectorXd& x) {
-  pinocchio::SE3 pose = get_pose_end_effector(x);
+  mppi_pinocchio::Pose pose = get_pose_end_effector(x);
   geometry_msgs::PoseStamped pose_ros;
   pose_ros.header.stamp = ros::Time::now();
   pose_ros.header.frame_id = "world";
-  pose_ros.pose.position.x = pose.translation()(0);
-  pose_ros.pose.position.y = pose.translation()(1);
-  pose_ros.pose.position.z = pose.translation()(2);
-  Eigen::Quaterniond q(pose.rotation());
-  pose_ros.pose.orientation.x = q.x();
-  pose_ros.pose.orientation.y = q.y();
-  pose_ros.pose.orientation.z = q.z();
-  pose_ros.pose.orientation.w = q.w();
+  mppi_pinocchio::to_msg(pose, pose_ros.pose);
   return pose_ros;
 }
 
@@ -179,20 +197,13 @@ void PandaMobileControllerInterface::publish_ros() {
 
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
-  pinocchio::SE3 pose_temp;
+  mppi_pinocchio::Pose pose_temp;
   geometry_msgs::PoseStamped pose_temp_ros;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_) {
     pose_temp = get_pose_end_effector(x);
-    pose_temp_ros.pose.position.x = pose_temp.translation()(0);
-    pose_temp_ros.pose.position.y = pose_temp.translation()(1);
-    pose_temp_ros.pose.position.z = pose_temp.translation()(2);
-    Eigen::Quaterniond q(pose_temp.rotation());
-    pose_temp_ros.pose.orientation.x = q.x();
-    pose_temp_ros.pose.orientation.y = q.y();
-    pose_temp_ros.pose.orientation.z = q.z();
-    pose_temp_ros.pose.orientation.w = q.w();
+    mppi_pinocchio::to_msg(pose_temp, pose_temp_ros.pose);
     optimal_path_.poses.push_back(pose_temp_ros);
   }
   optimal_trajectory_publisher_.publish(optimal_path_);

@@ -2,7 +2,8 @@
 
 using namespace manipulation;
 
-std::ostream& operator<<(std::ostream& os, const manipulation::PandaRaisimGains& gains){
+std::ostream& operator<<(std::ostream& os,
+                         const manipulation::PandaRaisimGains& gains) {
   std::cout << "=================================" << std::endl;
   std::cout << "       Panda Raisim Gains" << std::endl;
   std::cout << "=================================" << std::endl;
@@ -16,5 +17,5 @@ std::ostream& operator<<(std::ostream& os, const manipulation::PandaRaisimGains&
   std::cout << " Kp: " << gains.gripper_gains.Kp.transpose() << std::endl;
   std::cout << " Kd: " << gains.gripper_gains.Kd.transpose() << std::endl;
   std::cout << "=================================" << std::endl;
-  return os; 
+  return os;
 }

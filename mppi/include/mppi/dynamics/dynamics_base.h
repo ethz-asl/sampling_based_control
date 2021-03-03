@@ -29,14 +29,14 @@ class DynamicsBase {
   virtual dynamics_ptr clone() const = 0;  // virtual copy constructor
 
   virtual void reset(const observation_t& x) = 0;
-  virtual void render(){};
+  virtual void render() {}
   virtual observation_t step(const input_t& u, const double dt) = 0;
   virtual const observation_t get_state() const = 0;
 
-  // TODO: param x is never used!
+  // TODO(giuseppe): param x is never used!
   virtual input_t get_zero_input(const observation_t& x) {
     return input_t::Zero(this->get_input_dimension());
-  };
+  }
 };
 
 }  // end of namespace mppi

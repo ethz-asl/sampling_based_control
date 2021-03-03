@@ -7,12 +7,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include "mppi/utils/logging.h"
 
-TEST(TestLogging, Logging){
+TEST(TestLogging, Logging) {
   mppi::log_info("This is and info.");
   mppi::log_warning("This is a warning.");
   mppi::log_error("This is an error.");

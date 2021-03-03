@@ -30,6 +30,10 @@ solver:
   filter_order: 1               # polynomial used to approximate the input sequence #5
   filter_window: 5              # window length #30
 
+  filters_type: [ 1, 1, 1, 1, 1, 1, 1 ]
+  filters_order: [ 1, 1, 1, 1, 1, 1, 1 ]
+  filters_window: [ 5, 5, 5, 5, 5, 5, 5 ]
+
   adaptive_sampling: false      # untested -- leave false
   input_variance: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]  # additive noise variance per input channel
 
@@ -43,7 +47,7 @@ solver:
   debug_print: false            # debug print
   display_update_freq: true     # displays the frequency of the control loop
 
-  use_tree_search: true         # if true tree structure is used
+  use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.04       # controls the structure of the tree
   # expert_types: {NORM, IMP}
   expert_weights: [ 0.0, 1.0 ]  # controls the weights of the different experts

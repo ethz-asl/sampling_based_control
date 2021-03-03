@@ -29,8 +29,9 @@
 
 namespace mppi {
 
-PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost, const SolverConfig& config,
-                           sampler_ptr sampler, renderer_ptr renderer)
+PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
+                           const SolverConfig& config, sampler_ptr sampler,
+                           renderer_ptr renderer)
     : cost_(std::move(cost)),
       dynamics_(std::move(dynamics)),
       config_(config),
@@ -72,7 +73,8 @@ void PathIntegral::init_data() {
   if (sampler_ == nullptr) {
     log_info("No sampler provided, using gaussian sampler");
     if (config_.input_variance.size() != nu_)
-      throw std::runtime_error("The input variance size is different from the input size");
+      throw std::runtime_error(
+          "The input variance size is different from the input size");
 
     sampler_ = std::make_shared<mppi::GaussianSampler>(nu_);
     sampler_->set_covariance(config_.input_variance);
@@ -85,12 +87,14 @@ void PathIntegral::init_data() {
   if (config_.bound_input) {
     if (config_.u_min.size() != nu_) {
       std::stringstream error;
-      error << "Bounding input and min constraint size " << config_.u_min.size() << " != " << nu_;
+      error << "Bounding input and min constraint size " << config_.u_min.size()
+            << " != " << nu_;
       throw std::runtime_error(error.str());
     }
     if (config_.u_max.size() != nu_) {
       std::stringstream error;
-      error << "Bounding input and max constraint size " << config_.u_max.size() << " != " << nu_;
+      error << "Bounding input and max constraint size " << config_.u_max.size()
+            << " != " << nu_;
       throw std::runtime_error(error.str());
     }
   }
@@ -117,7 +121,8 @@ void PathIntegral::init_filter() {
 
 void PathIntegral::init_threading() {
   if (config_.threads > 1) {
-    std::cout << "Using multithreading. Number of threads: " << config_.threads << std::endl;
+    std::cout << "Using multithreading. Number of threads: " << config_.threads
+              << std::endl;
     pool_ = std::make_unique<ThreadPool>(config_.threads);
     futures_.resize(config_.threads);
 
@@ -136,7 +141,8 @@ void PathIntegral::init_tree_manager_dynamics() {
 
 void PathIntegral::update_policy() {
   if (!observation_set_) {
-    log_warning_throttle(1.0, "Observation has never been set. Dropping update");
+    log_warning_throttle(1.0,
+                         "Observation has never been set. Dropping update");
   } else if (!reference_set_) {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
@@ -189,10 +195,13 @@ void PathIntegral::update_policy() {
 
 void PathIntegral::time_it() {
   auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start_time_).count();
-  auto timing_string = "Time since optimization start: " + std::to_string(duration) + "[μs], " +
-                       std::to_string(duration / 1000000.0) + "[s], " +
-                       std::to_string(1 / (duration / 1000000.0)) + "[Hz]";
+  auto duration =
+      std::chrono::duration_cast<std::chrono::microseconds>(stop - start_time_)
+          .count();
+  auto timing_string =
+      "Time since optimization start: " + std::to_string(duration) + "[μs], " +
+      std::to_string(duration / 1000000.0) + "[s], " +
+      std::to_string(1 / (duration / 1000000.0)) + "[Hz]";
   log_info(timing_string);
   start_time_ = std::chrono::high_resolution_clock::now();
 }
@@ -223,7 +232,8 @@ void PathIntegral::copy_observation() {
 void PathIntegral::initialize_rollouts() {
   std::shared_lock<std::shared_mutex> lock_state(state_mutex_);
   opt_roll_.clear();
-  std::fill(opt_roll_.uu.begin(), opt_roll_.uu.end(), dynamics_->get_zero_input(x0_internal_));
+  std::fill(opt_roll_.uu.begin(), opt_roll_.uu.end(),
+            dynamics_->get_zero_input(x0_internal_));
 
   std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
   std::fill(opt_roll_cache_.xx.begin(), opt_roll_cache_.xx.end(), x0_internal_);
@@ -239,12 +249,13 @@ void PathIntegral::prepare_rollouts() {
   size_t offset;
   {
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-    auto lower =
-        std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t0_internal_);
+    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
+                                  opt_roll_cache_.tt.end(), t0_internal_);
     if (lower == opt_roll_cache_.tt.end()) {
       std::stringstream warning;
       warning << "Resetting to time " << t0_internal_
-              << ", greater than the last available time: " << opt_roll_cache_.tt.back();
+              << ", greater than the last available time: "
+              << opt_roll_cache_.tt.back();
       log_warning(warning.str());
     }
     offset = std::distance(opt_roll_cache_.tt.begin(), lower);
@@ -261,15 +272,16 @@ void PathIntegral::prepare_rollouts() {
   }
 
   // shift and trim the previously optimized trajectory
-  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()), offset);
+  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
+             offset);
   shift_back(momentum_, momentum_.back(), offset);
 }
 
 void PathIntegral::set_reference_trajectory(mppi::reference_trajectory_t& ref) {
   if (ref.rr.size() != ref.tt.size()) {
     std::stringstream error;
-    error << "The reference trajectory state and time dimensions do not match: " << ref.rr.size()
-          << " != " << ref.tt.size();
+    error << "The reference trajectory state and time dimensions do not match: "
+          << ref.rr.size() << " != " << ref.tt.size();
     throw std::runtime_error(error.str());
   }
   std::unique_lock<std::shared_mutex> lock(reference_mutex_);
@@ -296,7 +308,6 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              cost_ptr& cost,
                                              const size_t start_idx,
                                              const size_t end_idx) {
-  const int decimation_ = 3;
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
@@ -322,9 +333,8 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
 
       // compute input-state stage cost
       double cost_temp = 0;
-      if (std::fmod(t, decimation_) == 0)
-          cost_temp = std::pow(config_.discount_factor, t) *
-          cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
+      cost_temp = std::pow(config_.discount_factor, t) *
+                  cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
 
       if (std::isnan(cost_temp)) {
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
@@ -333,12 +343,12 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // store data
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
-      rollouts_[k].total_cost += cost_temp - // TODO(giuseppe) this should actually be a plus
-                                 config_.lambda * opt_roll_.uu[t].transpose() *
-                                 sampler_->sigma_inv() *
-                                 rollouts_[k].nn[t] +
-                                 config_.lambda * opt_roll_.uu[t].transpose() *
-                                 sampler_->sigma_inv() * opt_roll_.uu[t];
+      rollouts_[k].total_cost +=
+          cost_temp -  // TODO(giuseppe) this should actually be a plus
+          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
+              rollouts_[k].nn[t] +
+          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
+              opt_roll_.uu[t];
 
       // integrate dynamics
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
@@ -403,7 +413,7 @@ void PathIntegral::optimize() {
     }
   }
 
-  for (size_t t=0; t<steps_; t++){
+  for (size_t t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
     opt_roll_.uu[t] += config_.alpha * momentum_[t];
   }
@@ -412,11 +422,12 @@ void PathIntegral::optimize() {
   if (config_.adaptive_sampling) {
     input_t delta = input_t::Zero(nu_);
     // TODO(giuseppe) remove the hardcoded baseline variance
-    Eigen::MatrixXd new_covariance = Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
+    Eigen::MatrixXd new_covariance =
+        Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
     for (size_t k = 0; k < config_.rollouts; k++) {
-      for (size_t i = 0; i < steps_; i++){
+      for (size_t i = 0; i < steps_; i++) {
         delta = rollouts_[k].uu[i] - opt_roll_.uu[i];
-        new_covariance += omega[k] * (delta * delta.transpose())/steps_;
+        new_covariance += omega[k] * (delta * delta.transpose()) / steps_;
       }
     }
     // I could filter the covariance update using a first order
@@ -439,7 +450,8 @@ void PathIntegral::filter_input() {
   }
 }
 
-void PathIntegral::get_input(const observation_t& x, input_t& u, const double t) {
+void PathIntegral::get_input(const observation_t& x, input_t& u,
+                             const double t) {
   static double coeff;
   static size_t idx;
   {
@@ -452,7 +464,8 @@ void PathIntegral::get_input(const observation_t& x, input_t& u, const double t)
       u = dynamics_->get_zero_input(x);
     }
 
-    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(), opt_roll_cache_.tt.end(), t);
+    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
+                                  opt_roll_cache_.tt.end(), t);
     if (lower == opt_roll_cache_.tt.end()) {
       std::stringstream warning;
       warning << "Queried time " << t << " larger than last available time "
@@ -474,17 +487,18 @@ void PathIntegral::get_input(const observation_t& x, input_t& u, const double t)
     // interpolate
     else {
       coeff = (t - *(lower - 1)) / (*lower - *(lower - 1));
-      u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] + coeff * opt_roll_cache_.uu[idx];
+      u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
+          coeff * opt_roll_cache_.uu[idx];
     }
   }
 }
 
-void PathIntegral::get_diagonal_variance(Eigen::VectorXd& var) const{
+void PathIntegral::get_diagonal_variance(Eigen::VectorXd& var) const {
   var = sampler_->sigma().diagonal();
 }
 
-void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom, input_t& u_nom,
-                                   const double t) {
+void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
+                                   input_t& u_nom, const double t) {
   {
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
     if (t < opt_roll_cache_.tt.front()) {
@@ -526,7 +540,7 @@ void PathIntegral::get_input_state(const observation_t& x, observation_t& x_nom,
       u_nom = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
               coeff * opt_roll_cache_.uu[idx];
       x_nom = opt_roll_cache_.xx[idx];  // TODO offer a way to also do
-                                            // interpolation of the state
+                                        // interpolation of the state
     }
   }
 }
@@ -547,9 +561,7 @@ bool PathIntegral::get_optimal_rollout(observation_array_t& xx,
   return true;
 }
 
-void PathIntegral::update_experts() {
-  expert_.update_expert(1, opt_roll_.uu);
-};
+void PathIntegral::update_experts() { expert_.update_expert(1, opt_roll_.uu); };
 
 void PathIntegral::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);
@@ -593,8 +605,8 @@ void PathIntegral::print_cost_histogram() const {
 }
 
 void PathIntegral::bound_input(input_t& u) {
-  if (config_.bound_input) 
+  if (config_.bound_input)
     u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
 }
 
-}
+}  // namespace mppi

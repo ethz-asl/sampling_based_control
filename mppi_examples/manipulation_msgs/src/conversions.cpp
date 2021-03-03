@@ -6,7 +6,8 @@
 
 namespace manipulation::conversions {
 
-void msgToEigen(const manipulation_msgs::State &stateRos, Eigen::VectorXd &state) {
+void msgToEigen(const manipulation_msgs::State &stateRos,
+                Eigen::VectorXd &state) {
   if (stateRos.mode == manipulation_msgs::State::FIXED_BASE) {
     state.resize(manipulation_msgs::State::FIXED_BASE_SIZE);
 
@@ -38,7 +39,8 @@ void msgToEigen(const manipulation_msgs::State &stateRos, Eigen::VectorXd &state
   }
 }
 
-void eigenToMsg(const Eigen::VectorXd &state, manipulation_msgs::State &stateRos) {
+void eigenToMsg(const Eigen::VectorXd &state,
+                manipulation_msgs::State &stateRos) {
   if (state.size() == manipulation_msgs::State::FIXED_BASE_SIZE) {
     stateRos.mode = manipulation_msgs::State::FIXED_BASE;
 
@@ -76,45 +78,44 @@ void eigenToMsg(const Eigen::VectorXd &state, manipulation_msgs::State &stateRos
   }
 }
 
-void msgToEigen(const manipulation_msgs::Input& inputRos, Eigen::VectorXd& input){
-  if (inputRos.mode == manipulation_msgs::Input::FIXED_BASE){
+void msgToEigen(const manipulation_msgs::Input &inputRos,
+                Eigen::VectorXd &input) {
+  if (inputRos.mode == manipulation_msgs::Input::FIXED_BASE) {
     input = Eigen::VectorXd::Zero(manipulation_msgs::Input::FIXED_BASE_SIZE);
-    for (size_t i=0; i<7; i++)
+    for (size_t i = 0; i < 7; i++)
       input(i) = inputRos.joint_velocities[i];  // gripper stays at zero
-  }
-  else{
+  } else {
     input = Eigen::VectorXd::Zero(manipulation_msgs::Input::MOVING_BASE_SIZE);
     input(0) = inputRos.base_twist.linear.x;
     input(1) = inputRos.base_twist.linear.y;
     input(2) = inputRos.base_twist.angular.z;
-    for (size_t i=0; i<7; i++)
-      input(3+i) = inputRos.joint_velocities[i]; // gripper stays at zero
+    for (size_t i = 0; i < 7; i++)
+      input(3 + i) = inputRos.joint_velocities[i];  // gripper stays at zero
   }
 }
 
-void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input& inputRos){
-  if (input.size() == manipulation_msgs::Input::FIXED_BASE_SIZE){
+void eigenToMsg(const Eigen::VectorXd &input,
+                manipulation_msgs::Input &inputRos) {
+  if (input.size() == manipulation_msgs::Input::FIXED_BASE_SIZE) {
     inputRos.joint_velocities.resize(manipulation_msgs::Input::FIXED_BASE_SIZE);
-    for (size_t i=0; i<8; i++)
-      inputRos.joint_velocities[i] = input(i);
-  }
-  else if (input.size() == manipulation_msgs::Input::MOVING_BASE_SIZE){
+    for (size_t i = 0; i < 8; i++) inputRos.joint_velocities[i] = input(i);
+  } else if (input.size() == manipulation_msgs::Input::MOVING_BASE_SIZE) {
     inputRos.base_twist.linear.x = input(0);
     inputRos.base_twist.linear.x = input(1);
     inputRos.base_twist.linear.x = input(2);
-    inputRos.joint_velocities.resize(manipulation_msgs::Input::MOVING_BASE_SIZE);
-    for (size_t i=0; i<8; i++)
-      inputRos.joint_velocities[i] = input(3+i);
+    inputRos.joint_velocities.resize(
+        manipulation_msgs::Input::MOVING_BASE_SIZE);
+    for (size_t i = 0; i < 8; i++) inputRos.joint_velocities[i] = input(3 + i);
   }
 }
 
+void eigenToMsg(const Eigen::VectorXd &inputState,
+                manipulation_msgs::InputState &);
 
-void eigenToMsg(const Eigen::VectorXd& inputState, manipulation_msgs::InputState&);
-
-
-
-void toEigenState(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
-                  const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
+void toEigenState(const Eigen::Vector3d &base_pose,
+                  const Eigen::Vector3d &base_twist,
+                  const Eigen::VectorXd &arm_position,
+                  const Eigen::VectorXd &arm_velocity,
                   const double &object_position, const double &object_velocity,
                   const bool &contact_state, Eigen::VectorXd &state) {
   state.resize(manipulation_msgs::State::MOVING_BASE_SIZE);
@@ -137,9 +138,10 @@ void toEigenState(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_
 }
 
 void toMsg(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
-           const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
-           const double &object_position, const double &object_velocity, const bool &contact_state,
-           manipulation_msgs::State& stateRos) {
+           const Eigen::VectorXd &arm_position,
+           const Eigen::VectorXd &arm_velocity, const double &object_position,
+           const double &object_velocity, const bool &contact_state,
+           manipulation_msgs::State &stateRos) {
   stateRos.mode = manipulation_msgs::State::MOVING_BASE;
 
   stateRos.base_pose.x = base_pose.x();
@@ -160,7 +162,8 @@ void toMsg(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
   stateRos.in_contact = contact_state;
 }
 
-void toEigenState(const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
+void toEigenState(const Eigen::VectorXd &arm_position,
+                  const Eigen::VectorXd &arm_velocity,
                   const double &object_position, const double &object_velocity,
                   const bool &contact_state, Eigen::VectorXd &state) {
   state.resize(manipulation_msgs::State::FIXED_BASE_SIZE);
@@ -175,9 +178,10 @@ void toEigenState(const Eigen::VectorXd &arm_position, const Eigen::VectorXd &ar
   state(20) = contact_state;
 }
 
-void toMsg(const Eigen::VectorXd &arm_position, const Eigen::VectorXd &arm_velocity,
-           const double &object_position, const double &object_velocity, const bool &contact_state,
-           manipulation_msgs::State& stateRos) {
+void toMsg(const Eigen::VectorXd &arm_position,
+           const Eigen::VectorXd &arm_velocity, const double &object_position,
+           const double &object_velocity, const bool &contact_state,
+           manipulation_msgs::State &stateRos) {
   stateRos.mode = manipulation_msgs::State::FIXED_BASE;
 
   stateRos.arm_state.position.resize(9);

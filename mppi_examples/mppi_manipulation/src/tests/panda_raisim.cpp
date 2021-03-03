@@ -36,10 +36,13 @@ int main(int argc, char** argv) {
   }
 
   // Instantiate the simulation world
-  auto robot_description_raisim = nh.param<std::string>("/robot_description_raisim", "");
-  auto object_description_raisim = nh.param<std::string>("/object_description_raisim", "");
-  ManipulatorDynamicsRos simulation(nh, robot_description_raisim, object_description_raisim,
-                                    TIMESTEP, fixed_base);
+  auto robot_description_raisim =
+      nh.param<std::string>("/robot_description_raisim", "");
+  auto object_description_raisim =
+      nh.param<std::string>("/object_description_raisim", "");
+  ManipulatorDynamicsRos simulation(nh, robot_description_raisim,
+                                    object_description_raisim, TIMESTEP,
+                                    fixed_base);
 
   // Reset the state to a default configuration
   Eigen::VectorXd x, x_snapshot;
@@ -47,7 +50,8 @@ int main(int argc, char** argv) {
 
   // Instantiate the input vector to hit the object and slowly close gripper
   Eigen::VectorXd u = Eigen::VectorXd::Zero(simulation.get_input_dimension());
-  Eigen::VectorXd u_snapshot = Eigen::VectorXd::Zero(simulation.get_input_dimension());
+  Eigen::VectorXd u_snapshot =
+      Eigen::VectorXd::Zero(simulation.get_input_dimension());
   u(1) = 0.2;
   u(2) = 0.1;
   u(4) = 0.1;
@@ -82,11 +86,13 @@ int main(int argc, char** argv) {
     }
 
     simulation.publish_ros();
-    ROS_INFO_STREAM_THROTTLE(1.0, "Object displacement is: " << simulation.get_object_displacement());
+    ROS_INFO_STREAM_THROTTLE(1.0, "Object displacement is: "
+                                      << simulation.get_object_displacement());
 
     raisim::MSLEEP(10);
     ROS_INFO_STREAM_THROTTLE(
-        1.0, "Sim time: " << i * TIMESTEP << " s, elapsed sim dt: " << elapsed << " ms.");
+        1.0, "Sim time: " << i * TIMESTEP << " s, elapsed sim dt: " << elapsed
+                          << " ms.");
   }
 
   std::cout << "Average sim time: " << total_time / loopN << std::endl;

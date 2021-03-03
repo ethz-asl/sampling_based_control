@@ -48,9 +48,9 @@ class GaussianSampler {
     dist_->set_covariance(sigma_);
   }
 
-  void get_sample(DynamicsBase::input_t& sample) {sample = (*dist_)(); }
+  void get_sample(DynamicsBase::input_t& sample) { sample = (*dist_)(); }
 
-  Eigen::VectorXd get_sample() {return (*dist_)(); }
+  Eigen::VectorXd get_sample() { return (*dist_)(); }
 
   Eigen::MatrixXd stable_inverse(const Eigen::MatrixXd& A) {
     solver_.compute(A, Eigen::ComputeEigenvectors);
@@ -64,8 +64,8 @@ class GaussianSampler {
     Eigen::VectorXd sigma = solver_.eigenvalues().cwiseSqrt();
     Eigen::VectorXd sigma_inverse = sigma;
     double sigma_min = sigma(0);
-    //std::cout << "sigma" << sigma.transpose() << std::endl;
-    //std::cout << "sigma min" << sigma_min << std::endl;
+    // std::cout << "sigma" << sigma.transpose() << std::endl;
+    // std::cout << "sigma min" << sigma_min << std::endl;
 
     // TODO this fails to stabilize the inverse
     for (int k = 0; k < A.rows(); ++k) {

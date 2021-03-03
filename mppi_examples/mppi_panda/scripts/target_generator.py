@@ -6,7 +6,6 @@ from geometry_msgs.msg import PoseStamped
 # - Translation: [0.547, 0.023, 0.575]
 # - Rotation: in Quaternion [0.995, 0.046, -0.085, -0.003]
 
-
 pose0 = PoseStamped()
 pose0.header.frame_id = "world"
 pose0.pose.position.x = 0.547
@@ -16,7 +15,6 @@ pose0.pose.orientation.x = 0.995
 pose0.pose.orientation.y = 0.046
 pose0.pose.orientation.z = -0.085
 pose0.pose.orientation.w = -0.003
-
 
 # - Translation: [0.506, 0.028, 0.334]
 # - Rotation: in Quaternion [0.939, 0.036, 0.343, -0.005]
@@ -33,7 +31,6 @@ pose1.pose.orientation.w = -0.005
 
 # - Translation: [0.241, -0.001, 0.267]
 # - Rotation: in Quaternion [0.993, 0.051, -0.107, -0.006]
-
 
 pose2 = PoseStamped()
 pose2.header.frame_id = "world"
@@ -72,13 +69,14 @@ pose4.pose.orientation.y = 0.048
 pose4.pose.orientation.z = -0.082
 pose4.pose.orientation.w = -0.004
 
-
 #poses = [pose0, pose1, pose2, pose3, pose4]
 poses = [pose0]
 
 if __name__ == "__main__":
     rospy.init_node("target_generator")
-    pose_publisher = rospy.Publisher("/end_effector_pose_desired", PoseStamped, queue_size=10)
+    pose_publisher = rospy.Publisher("/end_effector_pose_desired",
+                                     PoseStamped,
+                                     queue_size=10)
 
     rospy.loginfo("Sleeping for 5 seconds before sending first target.")
     rospy.sleep(5.0)

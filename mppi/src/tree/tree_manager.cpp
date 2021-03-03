@@ -9,8 +9,9 @@
 #include "mppi/tree/tree_manager.h"
 // #include <omp.h>
 
-TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler,
-                         config_t config, mppi::Expert* expert)
+TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost,
+                         sampler_ptr sampler, config_t config,
+                         mppi::Expert* expert)
     : sampling_tree_() {
   cost_ = std::move(cost);
   dynamics_ = dynamics;
@@ -36,9 +37,10 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_pt
   }
 
   rollouts_cost_ = Eigen::ArrayXd::Zero(config_.rollouts);
-  rollouts_.resize(config_.rollouts,
-                   mppi::Rollout(tree_target_depth_, dynamics_->get_input_dimension(),
-                                 dynamics_->get_state_dimension()));
+  rollouts_.resize(
+      config_.rollouts,
+      mppi::Rollout(tree_target_depth_, dynamics_->get_input_dimension(),
+                    dynamics_->get_state_dimension()));
 
   gen_rollout_expert_mapping(0);
   init_threading();
@@ -48,16 +50,19 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_pt
 }
 
 void TreeManager::init_threading() {
-  std::cout << "Using multithreading. Number of threads: " << config_.threads << std::endl;
+  std::cout << "Using multithreading. Number of threads: " << config_.threads
+            << std::endl;
   pool_ = std::make_unique<ThreadPool>(config_.threads);
   futures_.resize(tree_width_);
 }
 
-void TreeManager::set_reference_trajectory(const mppi::reference_trajectory_t& traj) {
+void TreeManager::set_reference_trajectory(
+    const mppi::reference_trajectory_t& traj) {
   for (auto& cost : cost_v_) cost->set_reference_trajectory(traj);
 }
 
-void TreeManager::build_new_tree(const observation_t& x0_internal, double t0_internal,
+void TreeManager::build_new_tree(const observation_t& x0_internal,
+                                 double t0_internal,
                                  const mppi::Rollout& opt_roll) {
   x0_internal_ = x0_internal;
   t0_internal_ = t0_internal;
@@ -82,11 +87,13 @@ void TreeManager::init_tree() {
 
   node_iterator_t root = sampling_tree_.insert(
       sampling_tree_.begin(),
-      node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_), x0_internal_, 0));
+      node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_),
+             x0_internal_, 0));
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     leaf_handles_[leaf_pos] = sampling_tree_.append_child(
-        root, node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_), x0_internal_, 0));
+        root, node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_),
+                     x0_internal_, 0));
   }
 
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
@@ -101,7 +108,8 @@ void TreeManager::grow_tree() {
     leaves_state_[i] = x0_internal_;
   }
 
-  for (int horizon_step = 1; horizon_step <= tree_target_depth_; ++horizon_step) {
+  for (int horizon_step = 1; horizon_step <= tree_target_depth_;
+       ++horizon_step) {
     add_depth_level(horizon_step);
     eval_depth_level();
   }
@@ -111,10 +119,12 @@ void TreeManager::add_depth_level(size_t horizon_step) {
   t_ = t0_internal_ + (horizon_step * config_.step_size);
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    futures_[leaf_pos] = pool_->enqueue(
-        bind(&TreeManager::add_node, this, std::placeholders::_1, std::placeholders::_2,
-             std::placeholders::_3, std::placeholders::_4),
-        horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
+    futures_[leaf_pos] =
+        pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1,
+                            std::placeholders::_2, std::placeholders::_3,
+                            std::placeholders::_4),
+                       horizon_step, leaf_pos,
+                       tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
   }
 
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
@@ -122,22 +132,26 @@ void TreeManager::add_depth_level(size_t horizon_step) {
   }
   // TODO(giuseppe) understand what makes omp so slow
   //  {
-  //#pragma omp parallel for default(none) shared(horizon_step, tree_dynamics_v_shared_, experts_v_)
+  //#pragma omp parallel for default(none) shared(horizon_step,
+  // tree_dynamics_v_shared_, experts_v_)
   // ordered schedule(dynamic)
   //    for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos){
-  //      add_node(horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos], experts_v_[leaf_pos]);
+  //      add_node(horizon_step, leaf_pos, tree_dynamics_v_shared_[leaf_pos],
+  //      experts_v_[leaf_pos]);
   //    }
   //  }
 
-  // tree is not thread-safe. Create new level after all nodes have been appended
+  // tree is not thread-safe. Create new level after all nodes have been
+  // appended
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
-    leaf_handles_[leaf_pos] =
-        sampling_tree_.append_child(extensions_[leaf_pos].first, extensions_[leaf_pos].second);
+    leaf_handles_[leaf_pos] = sampling_tree_.append_child(
+        extensions_[leaf_pos].first, extensions_[leaf_pos].second);
     leaves_state_[leaf_pos] = tree_dynamics_v_shared_[leaf_pos]->get_state();
   }
 }
 
-bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_ptr& node_dynamics,
+bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
+                           const dynamics_ptr& node_dynamics,
                            const expert_ptr& node_expert) {
   size_t expert_type;
   size_t extending_leaf_pos;
@@ -145,14 +159,14 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
 
   expert_type = rollout_expert_map_[leaf_pos];
 
-  if (leaf_pos == 0 ||
-      std::count(extendable_leaf_pos_.begin(), extendable_leaf_pos_.end(), leaf_pos)) {
+  if (leaf_pos == 0 || std::count(extendable_leaf_pos_.begin(),
+                                  extendable_leaf_pos_.end(), leaf_pos)) {
     extending_leaf_pos = leaf_pos;
     extending_leaf = leaf_handles_[extending_leaf_pos];
 
   } else {
-    extending_leaf_pos =
-        extendable_leaf_pos_[random_uniform_int(0, extendable_leaf_pos_.size() - 1)];
+    extending_leaf_pos = extendable_leaf_pos_[random_uniform_int(
+        0, extendable_leaf_pos_.size() - 1)];
     extending_leaf = leaf_handles_[extending_leaf_pos];
 
     node_dynamics->reset(leaves_state_[extending_leaf_pos]);
@@ -172,10 +186,10 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos, const dynamics_
 
   tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 
-  double cost =
-      cost_v_[leaf_pos]->get_stage_cost(x, t_) * std::pow(config_.discount_factor, horizon_step);
-  extensions_[leaf_pos] =
-      std::make_pair(extending_leaf, node_t(extending_leaf, t_, cost, u, x, expert_type));
+  double cost = cost_v_[leaf_pos]->get_stage_cost(x, t_) *
+                std::pow(config_.discount_factor, horizon_step);
+  extensions_[leaf_pos] = std::make_pair(
+      extending_leaf, node_t(extending_leaf, t_, cost, u, x, expert_type));
 
   return true;
 }
@@ -192,7 +206,8 @@ void TreeManager::eval_depth_level() {
 
   for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     auto& active_leaf = leaf_handles_[leaf_pos];
-    if (active_leaf->c_cum_ <= depth_min_cost + (config_.pruning_threshold * depth_min_cost)) {
+    if (active_leaf->c_cum_ <=
+        depth_min_cost + (config_.pruning_threshold * depth_min_cost)) {
       extendable_leaf_pos_.push_back(leaf_pos);
     }
   }
@@ -224,14 +239,16 @@ void TreeManager::transform_to_rollouts() {
   // TODO(giuseppe) this can also be parallelized easily with omp
   for (size_t k = 0; k < tree_width_; ++k) {
     // extract path K of depth T (size path_to_leaf = T)
-    auto path_to_leaf = sampling_tree_.path_from_iterator(leaf_handles_[k], sampling_tree_.begin());
+    auto path_to_leaf = sampling_tree_.path_from_iterator(
+        leaf_handles_[k], sampling_tree_.begin());
 
-    for (size_t horizon_step = 0; horizon_step < tree_target_depth_; ++horizon_step) {
-      std::vector<int> path_to_leaf_cut_current(path_to_leaf.begin(),
-                                                path_to_leaf.begin() + horizon_step + 3);
+    for (size_t horizon_step = 0; horizon_step < tree_target_depth_;
+         ++horizon_step) {
+      std::vector<int> path_to_leaf_cut_current(
+          path_to_leaf.begin(), path_to_leaf.begin() + horizon_step + 3);
 
-      auto current_node =
-          sampling_tree_.iterator_from_path(path_to_leaf_cut_current, sampling_tree_.begin());
+      auto current_node = sampling_tree_.iterator_from_path(
+          path_to_leaf_cut_current, sampling_tree_.begin());
 
       if (std::isnan(current_node->c_)) {
         std::cout << "COST IS NAN!" << std::endl;
@@ -243,13 +260,14 @@ void TreeManager::transform_to_rollouts() {
       rollouts_[k].tt[horizon_step] = current_node->t_;
       rollouts_[k].xx[horizon_step] = current_node->x_;
       rollouts_[k].uu[horizon_step] = current_node->u_;
-      rollouts_[k].nn[horizon_step] = current_node->u_ - opt_roll_.uu[horizon_step];
+      rollouts_[k].nn[horizon_step] =
+          current_node->u_ - opt_roll_.uu[horizon_step];
       rollouts_[k].cc(horizon_step) = current_node->c_;
-      rollouts_[k].total_cost += rollouts_[k].cc(horizon_step);// -
-                                 config_.lambda * opt_roll_.uu[horizon_step].transpose() *
-                                     sigma_inv * rollouts_[k].nn[horizon_step] +
-                                 config_.lambda * opt_roll_.uu[horizon_step].transpose() *
-                                     sigma_inv * opt_roll_.uu[horizon_step];
+      rollouts_[k].total_cost += rollouts_[k].cc(horizon_step);  // -
+      config_.lambda* opt_roll_.uu[horizon_step].transpose() *
+              sigma_inv* rollouts_[k].nn[horizon_step] +
+          config_.lambda* opt_roll_.uu[horizon_step].transpose() *
+              sigma_inv* opt_roll_.uu[horizon_step];
     }
 
     rollouts_cost_[k] = rollouts_[k].total_cost;
@@ -290,7 +308,8 @@ void TreeManager::gen_rollout_expert_mapping(size_t mapping_type_input) {
   for (size_t rollout = 0; rollout < config_.rollouts; ++rollout) {
     if (rollout == 0) {
       // TODO(giuseppe) use enums for this experts
-      rollout_expert_map_[rollout] = 1;  // first rollout always with Importance Sampling
+      rollout_expert_map_[rollout] =
+          1;  // first rollout always with Importance Sampling
       continue;
     }
     size_t expert_type;

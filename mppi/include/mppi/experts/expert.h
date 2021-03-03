@@ -30,7 +30,8 @@ class Expert {
 
   Eigen::MatrixXd get_sigma_inv(size_t expert_type, size_t step);
 
-  void update_expert(size_t expert_type, const std::vector<Eigen::VectorXd>& mean);
+  void update_expert(size_t expert_type,
+                     const std::vector<Eigen::VectorXd>& mean);
 
   expert_ptr clone() const { return std::make_shared<Expert>(*this); }
 

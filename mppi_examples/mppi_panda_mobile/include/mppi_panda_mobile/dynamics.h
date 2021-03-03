@@ -7,13 +7,6 @@
  */
 
 #pragma once
-#include <pinocchio/fwd.hpp>
-#include <pinocchio/algorithm/aba.hpp>
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/model.hpp>
-#include <pinocchio/multibody/data.hpp>
-#include <pinocchio/parsers/urdf.hpp>
-
 #include <math.h>
 #include <mppi/dynamics/dynamics_base.h>
 #include <ros/package.h>
@@ -31,18 +24,26 @@ enum PandaMobileDim {
 
 class PandaMobileDynamics : public mppi::DynamicsBase {
  public:
-  PandaMobileDynamics(const std::string& robot_description, bool holonomic=true);
+  PandaMobileDynamics(const std::string& robot_description,
+                      bool holonomic = true);
   ~PandaMobileDynamics() = default;
 
  public:
-  size_t get_input_dimension() override { return PandaMobileDim::INPUT_DIMENSION; }
-  size_t get_state_dimension() override { return PandaMobileDim::STATE_DIMENSION; }
-
-  dynamics_ptr create() override {
-    return std::make_shared<PandaMobileDynamics>(robot_description_, holonomic_);
+  size_t get_input_dimension() override {
+    return PandaMobileDim::INPUT_DIMENSION;
+  }
+  size_t get_state_dimension() override {
+    return PandaMobileDim::STATE_DIMENSION;
   }
 
-  dynamics_ptr clone() const override { return std::make_shared<PandaMobileDynamics>(*this); }
+  dynamics_ptr create() override {
+    return std::make_shared<PandaMobileDynamics>(robot_description_,
+                                                 holonomic_);
+  }
+
+  dynamics_ptr clone() const override {
+    return std::make_shared<PandaMobileDynamics>(*this);
+  }
 
   void reset(const observation_t& x) override;
 
@@ -55,8 +56,6 @@ class PandaMobileDynamics : public mppi::DynamicsBase {
   observation_t x_;
 
   std::string robot_description_;
-  pinocchio::Model model_;
-  pinocchio::Data data_;
 
   // holonomic vs non-holonimic base
   bool holonomic_;

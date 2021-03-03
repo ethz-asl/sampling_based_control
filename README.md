@@ -1,32 +1,47 @@
-## Install Instructions
+## sampling_based_control
 
-Create a ROS workspace and install the following dependencies. 
-### Dependencies
-- Install the `pinocchio` library following the instructions from the [ufficial documentation](https://stack-of-tasks.github.io/pinocchio/download.html). This is the Rigid Body Dynamics (RBD) modeling library we use. 
-- Clone and install the _Savitzky-Golay filetr_ **from source**, following the instructions in [the repo](https://github.com/arntanguy/gram_savitzky_golay).
-- Clone the following repos in the src folder of your catkin workspace:
-    - Dependency of `any_worker`: `git clone git@github.com:ANYbotics/message_logger.git`
-    - Required for multi-threading: `git clone git@github.com:ANYbotics/any_node.git`
-    - Robot control utilities: `git clone git@github.com:ethz-asl/robot_control.git`
-    - This repo: `git clone git@github.com:ethz-asl/sampling_based_control.git`
-- Install additional dependencies script which is in the `sampling_based_control` repo:  `sudo ./install_dependencies.sh`
+
+### Install instructions
+Clone this repo in the `src` directory of your catkin workspace. Install all dependencies first and then build the desired packages. We manage rosdependecies using [`rosdep`](http://wiki.ros.org/rosdep). 
+
+### System dependencies
+- `yamlcpp`: `$ sudo apt-get install libyaml-cpp-dev`
+
+### ROS dependencies
+- `<catkin_workspace>$ rosdep install --from-paths src/sampling_based_control --ignore-src -y`  
+- [`rqt_multiplot`](https://github.com/anybotics/rqt_multiplot_plugin) (Optional)
     
-## Build
+### Build
 
-- Configure the workspace to compile in Release mode: `catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo`
+`catkin config --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo`
 
-- Build the stack **and** the examples: `catkin build mppi_control`. This will build three examples: 
-    - `mppi_panda`: controller for the 7-DOF arm _panda_ with a fixed base
-    - `mppi_panda_mobile`: controller for 7-DOF arm _panda_ with a omni-directional mobile base
-    - `mppi_pole_cart`: controller for the pole-cart example
+__Kinematic planning__
 
-## Run the examples
+This package uses a kinematic model to track the end effector of a mobile manipulator. The base can be made either _holonomic_ or _non-holonomic_.
 
-- `roslaunch mppi_panda panda_control.launch`
-- `roslaunch mppi_panda_mobile panda_mobile_control.launch`
-- `roslaunch mppi_pole_cart pole_cart_control.launch`
+Build the package with `catkin build mppi_panda_mobile`
 
-### References
-- [Information Theoretic Model Predictive Control: Theory and Applications to Autonomous Driving](https://arxiv.org/abs/1707.02342), _Willias at al._
+__Manipulation control__
 
+The `mppi_manipulation` package requires the `raisim` physical simulator. This can be installed following the instructions reported [here](https://raisim.com/sections/Installation.html). As raisim examples and python pindings are not needed you can disable them setting `DRAISIM_EXAMPLE=OFF` and  `-DRAISIM_PY=OFF`. Note that an academic licence can be obtained contacting the developers. Make sure to add the following lines to your `~/.bashrc` in order to find `raisim` when building with catkin:
 
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<where-you-installed-raisim>/lib
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:<where-you-installed-raisim>
+```
+
+Build the package with `catkin build mppi_manipulation`
+
+### Run the manipulation demo
+
+Terminal #1
+
+`roslaunch mppi_manipulation control.launch fixed_base:=false`
+
+Terminal #2
+
+`rosrun mppi_manipulation demo.py`
+
+__Royalpanda controller__
+
+The implementation of the _Royalpanda_ controller used for testing whole-body motion and manipulation control can be found [here](https://github.com/grizzi/mppi_royalpanda)

@@ -14,13 +14,17 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <map>
+#include <memory>
 #include <shared_mutex>
 #include <thread>
+#include <utility>
+#include <vector>
 
-#include "mppi/typedefs.h"
-#include "mppi/solver_config.h"
 #include "mppi/cost/cost_base.h"
 #include "mppi/dynamics/dynamics_base.h"
+#include "mppi/solver_config.h"
+#include "mppi/typedefs.h"
 
 #include "mppi/controller/rollout.h"
 #include "mppi/experts/expert.h"
@@ -52,13 +56,14 @@ class TreeManager {
    * @param expert: used to make expert samples available to the tree manager
    */
 
-  TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler, config_t config,
-              mppi::Expert* expert);
+  TreeManager(const dynamics_ptr& dynamics, cost_ptr cost, sampler_ptr sampler,
+              config_t config, mppi::Expert* expert);
   ~TreeManager() = default;
 
  public:
   /**
-   * @brief Builds new tree structure. Called at the beginning of every policy update.
+   * @brief Builds new tree structure. Called at the beginning of every policy
+   * update.
    * @param x0_internal: internal x0
    * @param t0_internal: internal t0
    * @param opt_roll: optimal rollout calculated from importance sampling
@@ -73,7 +78,8 @@ class TreeManager {
   std::vector<mppi::Rollout> get_rollouts();
 
   /**
-   * @brief Returns the rollouts cost related to the rollouts sampled by the tree
+   * @brief Returns the rollouts cost related to the rollouts sampled by the
+   * tree
    * @return vector of costs for rollouts
    */
   Eigen::ArrayXd get_rollouts_cost();
@@ -82,7 +88,6 @@ class TreeManager {
    * @brief Helper function to print the tree structure
    */
   void print_tree();
-
 
   void set_reference_trajectory(const mppi::reference_trajectory_t& traj);
 
@@ -93,8 +98,9 @@ class TreeManager {
   sampler_ptr sampler_;
   expert_ptr expert_;
 
-  tree<node_t> sampling_tree_;                   // The tree object
-  std::unique_ptr<ThreadPool> pool_;           // The thread pool for sampling the control inputs
+  tree<node_t> sampling_tree_;  // The tree object
+  std::unique_ptr<ThreadPool>
+      pool_;  // The thread pool for sampling the control inputs
 
   /**
    * @brief Initialization of a variables related to a new tree
@@ -129,29 +135,34 @@ class TreeManager {
 
   /**
    * @brief Creates the mapping between the rollout index and the expert type
-   * @param mapping_type_input: specifies what type of mapping should be used. Currently only
-   * mapping_type_input=0 is supported.
+   * @param mapping_type_input: specifies what type of mapping should be used.
+   * Currently only mapping_type_input=0 is supported.
    */
   void gen_rollout_expert_mapping(size_t mapping_type_input);
 
   /**
-   * @brief Samples a control input from an expert and steps the dynamics for one rollout.
-   * Internally manages from which branch it should be forked. Thread-Safe. Calls
-   * append_child_to_tree_via_pool to add new leaf to the tree
-   * @param horizon_step: specifies on what horizonstep the process is (saved in Node)
+   * @brief Samples a control input from an expert and steps the dynamics for
+   * one rollout. Internally manages from which branch it should be forked.
+   * Thread-Safe. Calls append_child_to_tree_via_pool to add new leaf to the
+   * tree
+   * @param horizon_step: specifies on what horizonstep the process is (saved in
+   * Node)
    * @param leaf_pos: specifies the rollout index
-   * @param node_dynamics: one dynamics instance from the dynamics vector used for multithreading is
-   * assigned to a node
+   * @param node_dynamics: one dynamics instance from the dynamics vector used
+   * for multithreading is assigned to a node
    * @return Returns an iterator which points to the position in the tree
    */
-  bool add_node(size_t horizon_step, size_t leaf_pos, const dynamics_ptr& node_dynamics,
+  bool add_node(size_t horizon_step, size_t leaf_pos,
+                const dynamics_ptr& node_dynamics,
                 const expert_ptr& node_expert);
 
   /**
-   * @brief Helper function to sample from the uniform distribution in the range [v_min, v_max]
+   * @brief Helper function to sample from the uniform distribution in the range
+   * [v_min, v_max]
    * @param v_min: lower bound
    * @param v_max: upper bound
-   * @return Returns a sample from the uniform distribution in the range [v_min, v_max]
+   * @return Returns a sample from the uniform distribution in the range [v_min,
+   * v_max]
    */
   static int random_uniform_int(int v_min, int v_max);
 
@@ -160,7 +171,7 @@ class TreeManager {
    * @param u: input
    * @return trimmed input u
    */
-  void bound_input(input_t& u) const ;
+  void bound_input(input_t& u) const;
 
  private:
   double t0_internal_;         // copy of internal time from PathIntegral
@@ -171,15 +182,16 @@ class TreeManager {
   std::size_t tree_width_;         // target tree witdth
   std::size_t tree_target_depth_;  // target tree depth
 
-  std::map<size_t, size_t> rollout_expert_map_;  // Mapping of rollout indexes to experts
+  std::map<size_t, size_t>
+      rollout_expert_map_;  // Mapping of rollout indexes to experts
 
   std::vector<size_t> extendable_leaf_pos_;  // Set of extendable leafs
 
   std::vector<node_iterator_t> leaf_handles_;  // Vector of leaf handles
   std::vector<std::pair<node_iterator_t, node_t>> extensions_;
 
-  // futures vector of booleans. Every thread returns true when control input sampled
-  // and applied to the dynamics
+  // futures vector of booleans. Every thread returns true when control input
+  // sampled and applied to the dynamics
   std::vector<std::future<bool>> futures_;
 
   std::vector<mppi::Rollout> rollouts_;  // internal tree rollouts

@@ -14,7 +14,8 @@ from visualization_msgs.msg import *
 
 class SingleMarkerBroadcaster:
     def __init__(self):
-        server_name = rospy.get_param("~marker_server_name", "interactive_marker")
+        server_name = rospy.get_param("~marker_server_name",
+                                      "interactive_marker")
         self.server = InteractiveMarkerServer(server_name)
         self.initial_pose = PoseStamped()
         self.pose = PoseStamped()
@@ -28,11 +29,14 @@ class SingleMarkerBroadcaster:
         if not target_frame:
             self.init_pose()
         elif not self.init_pose_from_ros(target_frame):
-            rospy.logerr("Failed to initialize interactive_marker from tf tree")
-        
-        
-        target_pose_topic = rospy.get_param("~target_pose_topic", "/target_pose_marker")
-        self.pose_pub = rospy.Publisher(target_pose_topic, PoseStamped, queue_size=1)
+            rospy.logerr(
+                "Failed to initialize interactive_marker from tf tree")
+
+        target_pose_topic = rospy.get_param("~target_pose_topic",
+                                            "/target_pose_marker")
+        self.pose_pub = rospy.Publisher(target_pose_topic,
+                                        PoseStamped,
+                                        queue_size=1)
 
     def init_pose(self):
         self.initial_pose = PoseStamped()
@@ -46,8 +50,8 @@ class SingleMarkerBroadcaster:
         attempts = 0
         while attempts < max_attempts:
             try:
-                transform = self.tf_buffer.lookup_transform(self.frame_id, frame_id,
-                                                            rospy.Time(0), rospy.Duration(10))
+                transform = self.tf_buffer.lookup_transform(
+                    self.frame_id, frame_id, rospy.Time(0), rospy.Duration(10))
                 self.initial_pose = PoseStamped()
                 self.initial_pose.header.frame_id = self.frame_id
                 self.initial_pose.header.stamp = rospy.Time.now()
@@ -60,14 +64,15 @@ class SingleMarkerBroadcaster:
                 self.initial_pose.pose.orientation.w = transform.transform.rotation.w
                 self.initialized = True
                 return True
-            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException)  as exc:
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException,
+                    tf2_ros.ExtrapolationException) as exc:
                 rospy.logwarn(exc)
                 rospy.logwarn("Attempting again")
                 attempts += 1
-                
+
         rospy.logerr("Failed to lookup transform: {}".format(exc))
         rospy.logwarn("Initializing marker in hard coded pose")
-        self.init_pose()        
+        self.init_pose()
         return False
 
     def make_box_control(self, msg):
@@ -92,8 +97,10 @@ class SingleMarkerBroadcaster:
 
     def create_marker(self):
         while not self.initialized:
-            rospy.loginfo_throttle(10.0, "Waiting the first pose to initialize marker.")
-        rospy.loginfo("Initializing marker at {}".format(str(self.initial_pose)))
+            rospy.loginfo_throttle(
+                10.0, "Waiting the first pose to initialize marker.")
+        rospy.loginfo("Initializing marker at {}".format(str(
+            self.initial_pose)))
 
         self.int_marker = InteractiveMarker()
         int_marker = self.int_marker

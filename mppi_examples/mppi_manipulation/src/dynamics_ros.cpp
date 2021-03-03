@@ -7,27 +7,34 @@
 
 namespace manipulation {
 
-ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
-                                               const std::string& robot_description,
-                                               const std::string& object_description,
-                                               const double dt, const bool fixed_base)
-    : nh_(nh), PandaRaisimDynamics(robot_description, object_description, dt, fixed_base) {
-
-  state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  object_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
-  contact_forces_publisher_ = nh_.advertise<visualization_msgs::MarkerArray>("/contact_forces", 10);
-  ee_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
+ManipulatorDynamicsRos::ManipulatorDynamicsRos(
+    const ros::NodeHandle& nh, const std::string& robot_description,
+    const std::string& object_description, const double dt,
+    const bool fixed_base)
+    : nh_(nh),
+      PandaRaisimDynamics(robot_description, object_description, dt,
+                          fixed_base) {
+  state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  object_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+  contact_forces_publisher_ =
+      nh_.advertise<visualization_msgs::MarkerArray>("/contact_forces", 10);
+  ee_publisher_ =
+      nh_.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   handle_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/handle", 10);
 
   if (fixed_base) {
-    joint_state_.name = {"panda_joint1", "panda_joint2",        "panda_joint3",
-                         "panda_joint4", "panda_joint5",        "panda_joint6",
-                         "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
+    joint_state_.name = {
+        "panda_joint1", "panda_joint2",        "panda_joint3",
+        "panda_joint4", "panda_joint5",        "panda_joint6",
+        "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
   } else {
-    joint_state_.name = {"x_base_joint", "y_base_joint",        "pivot_joint",
-                         "panda_joint1", "panda_joint2",        "panda_joint3",
-                         "panda_joint4", "panda_joint5",        "panda_joint6",
-                         "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
+    joint_state_.name = {
+        "x_base_joint", "y_base_joint",        "pivot_joint",
+        "panda_joint1", "panda_joint2",        "panda_joint3",
+        "panda_joint4", "panda_joint5",        "panda_joint6",
+        "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
   }
   joint_state_.position.resize(joint_state_.name.size());
   joint_state_.velocity.resize(joint_state_.name.size());
@@ -51,10 +58,11 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
 void ManipulatorDynamicsRos::reset_to_default() {
   x_.setZero();
   if (fixed_base_)
-    x_.head<ARM_GRIPPER_DIM>() << 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04;
-  else
-    x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69,
+    x_.head<ARM_GRIPPER_DIM>() << 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69,
         0.04, 0.04;
+  else
+    x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
+        0.0, 1.10, 0.69, 0.04, 0.04;
   reset(x_);
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
 }

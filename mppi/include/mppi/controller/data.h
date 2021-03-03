@@ -5,6 +5,8 @@
 #pragma once
 
 #include <Eigen/Core>
+
+#include "mppi/controller/rollout.h"
 #include "mppi/solver_config.h"
 
 namespace mppi {

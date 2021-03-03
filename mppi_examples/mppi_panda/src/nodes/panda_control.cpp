@@ -6,6 +6,7 @@
  * @brief    description
  */
 #include "mppi_panda/controller_interface.h"
+#include "mppi_panda/dynamics.h"
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
@@ -63,7 +64,7 @@ int main(int argc, char** argv) {
   // init the controller
   bool ok = controller.init();
   if (!ok) {
-   throw std::runtime_error("Failed to initialzied controller!");
+    throw std::runtime_error("Failed to initialzied controller!");
   }
 
   // set the very first observation

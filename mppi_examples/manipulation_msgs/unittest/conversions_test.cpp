@@ -16,8 +16,9 @@ TEST(ConversionsTest, eigenToMsg) {
   double object_position = 0;
   double object_velocity = 0;
   bool contact_state = false;
-  manipulation::conversions::toMsg(base_pose, base_twist, arm_position, arm_velocity,
-                                   object_position, object_velocity, contact_state, stateRos);
+  manipulation::conversions::toMsg(base_pose, base_twist, arm_position,
+                                   arm_velocity, object_position,
+                                   object_velocity, contact_state, stateRos);
 }
 
 int main(int argc, char **argv) {

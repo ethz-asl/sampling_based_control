@@ -10,9 +10,9 @@
 #include <raisim/OgreVis.hpp>
 #include <raisim/World.hpp>
 
-#include <mppi_manipulation/dynamics.h>
 #include <manipulation_msgs/State.h>
 #include <manipulation_msgs/conversions.h>
+#include <mppi_manipulation/dynamics.h>
 
 #include <ros/ros.h>
 
@@ -47,7 +47,8 @@ void setupCallback() {
   /// skybox
   Ogre::Quaternion quat;
   quat.FromAngleAxis(Ogre::Radian(M_PI_2), {1., 0, 0});
-  vis->getSceneManager()->setSkyBox(true, "Examples/StormySkyBox", 500, true, quat);
+  vis->getSceneManager()->setSkyBox(true, "Examples/StormySkyBox", 500, true,
+                                    quat);
 }
 
 int main(int argc, char** argv) {
@@ -57,13 +58,15 @@ int main(int argc, char** argv) {
   /// Initialize the dynamics
   std::string robot_description_raisim;
   if (!nh.getParam("/robot_description_ogre", robot_description_raisim)) {
-    ROS_ERROR("Could not parse robot_description_raisim. Is the parameter set?");
+    ROS_ERROR(
+        "Could not parse robot_description_raisim. Is the parameter set?");
     return 0;
   }
 
   std::string object_description_raisim;
   if (!nh.getParam("/object_description_raisim", object_description_raisim)) {
-    ROS_ERROR("Could not parse object_description_raisim. Is the parameter set?");
+    ROS_ERROR(
+        "Could not parse object_description_raisim. Is the parameter set?");
     return 0;
   }
 
@@ -91,39 +94,43 @@ int main(int argc, char** argv) {
 
   /// create additional raisim objects
   auto ground = dynamics.get_world()->addGround(-0.2);
-  ground->setName("checkerboard"); /// not necessary here but once you set name, you can later retrieve it using raisim::World::getObject()
+  ground->setName(
+      "checkerboard");  /// not necessary here but once you set name, you can
+                        /// later retrieve it using raisim::World::getObject()
 
   /// create visualizer objects
-  auto ground_graphics = vis->createGraphicalObject(ground, 20, "floor", "checkerboard_green");
-  auto object_graphics = vis->createGraphicalObject(dynamics.get_object(), "object");
-  auto panda_graphics = vis->createGraphicalObject(dynamics.get_panda(), "panda");
+  auto ground_graphics =
+      vis->createGraphicalObject(ground, 20, "floor", "checkerboard_green");
+  auto object_graphics =
+      vis->createGraphicalObject(dynamics.get_object(), "object");
+  auto panda_graphics =
+      vis->createGraphicalObject(dynamics.get_panda(), "panda");
 
   mppi::DynamicsBase::observation_t current_state;
 
-  auto cb = [&](const manipulation_msgs::StateConstPtr& msg){
+  auto cb = [&](const manipulation_msgs::StateConstPtr& msg) {
     manipulation::conversions::msgToEigen(*msg, current_state);
     dynamics.reset(current_state);
   };
 
-  ros::Subscriber current_state_subscriber = nh.subscribe<manipulation_msgs::State>("/observer/state", 1, cb);
+  ros::Subscriber current_state_subscriber =
+      nh.subscribe<manipulation_msgs::State>("/observer/state", 1, cb);
 
   /// lambda function for the controller
-  auto controller = [](){
-    ros::spinOnce();
-  };
+  auto controller = []() { ros::spinOnce(); };
 
   /// sim callback
   vis->setControlCallback(controller);
 
   /// set camera
   vis->select(panda_graphics->at(0), false);
-  vis->getCameraMan()->setYawPitchDist(Ogre::Radian(0), -Ogre::Radian(M_PI_4), 2);
+  vis->getCameraMan()->setYawPitchDist(Ogre::Radian(0), -Ogre::Radian(M_PI_4),
+                                       2);
 
   /// run the app
-  try{
+  try {
     vis->run();
-  }
-  catch (const ros::Exception& exc){
+  } catch (const ros::Exception& exc) {
     ROS_INFO_STREAM(exc.what());
   }
 

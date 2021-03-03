@@ -25,7 +25,8 @@ class Manipulator:
     def get_frame_velocity(self, q, v, frame_id) -> pin.Motion:
         pin.forwardKinematics(self.model, self.data, q, v)
 
-        return pin.getFrameVelocity(self.model, self.data, self.model.getFrameId(frame_id),
+        return pin.getFrameVelocity(self.model, self.data,
+                                    self.model.getFrameId(frame_id),
                                     pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
 
 
@@ -33,7 +34,8 @@ def get_manipulator_model():
     urdf_filename = pkg_dir + '/data/panda.urdf'
     model = pin.buildModelFromUrdf(urdf_filename)
     data = model.createData()
-    print("Created manipulator model: nq={nq}, nv={nv}".format(nq=model.nq, nv=model.nv))
+    print("Created manipulator model: nq={nq}, nv={nv}".format(nq=model.nq,
+                                                               nv=model.nv))
     return Manipulator(model, data)
 
 
@@ -55,8 +57,12 @@ for topic, msg, t in bag.read_messages(topics=['/observer/state', '/mode']):
         time.append(t.to_sec())
         arm_joint_positions.append(np.array(msg.arm_state.position))
         arm_joint_velocities.append(np.array(msg.arm_state.velocity))
-        base_twist.append(np.array([msg.base_twist.linear.x, msg.base_twist.linear.y, msg.base_twist.linear.z]))
-    
+        base_twist.append(
+            np.array([
+                msg.base_twist.linear.x, msg.base_twist.linear.y,
+                msg.base_twist.linear.z
+            ]))
+
     if topic == '/mode':
         switches.append([t.to_sec() - time[0], msg.data])
 
@@ -65,12 +71,11 @@ for topic, msg, t in bag.read_messages(topics=['/observer/state', '/mode']):
 bag.close()
 print("Done")
 
-
 ee_velocity_norm = []
 base_velocity_norm = []
 manipulator: Manipulator = get_manipulator_model()
 for aq, av, bt in zip(arm_joint_positions, arm_joint_velocities, base_twist):
-    ee_vel : pin.Motion = manipulator.get_frame_velocity(aq, av, "panda_hand")
+    ee_vel: pin.Motion = manipulator.get_frame_velocity(aq, av, "panda_hand")
     ee_velocity_norm.append(np.linalg.norm(ee_vel.linear))
     base_velocity_norm.append(np.linalg.norm(bt))
 
@@ -91,12 +96,21 @@ modes_color = {0: 'r', 1: 'g', 2: 'b'}
 modes_id = {0: 'C', 1: 'A', 2: 'B'}
 for idx, switch in enumerate(switches):
     if idx < len(switches) - 1:
-        ax.axvspan(switch[0], switches[idx+1][0], alpha=0.05, facecolor=modes_color[switch[1]])
+        ax.axvspan(switch[0],
+                   switches[idx + 1][0],
+                   alpha=0.05,
+                   facecolor=modes_color[switch[1]])
     else:
-        ax.axvspan(switch[0], time[-1], alpha=0.05, facecolor=modes_color[switch[1]])
+        ax.axvspan(switch[0],
+                   time[-1],
+                   alpha=0.05,
+                   facecolor=modes_color[switch[1]])
     ax.axvline(switch[0], linestyle="--", linewidth="2")
 
-ax.axvspan(switches[-1][0], time[-1], alpha=0.1, facecolor=modes_color[switch[1]])
+ax.axvspan(switches[-1][0],
+           time[-1],
+           alpha=0.1,
+           facecolor=modes_color[switch[1]])
 ax.set_xlim(left=time[0], right=time[-1])
 
 ax.set_xlabel("time [s]", fontsize=40)
@@ -105,7 +119,6 @@ ax.set_ybound(lower=-0.01, upper=0.25)
 #from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
 #ax.yaxis.set_minor_locator(AutoMinorLocator(10))
 #ax.xaxis.set_minor_locator(AutoMinorLocator(10))
-
 
 #ax.set_ybound(lower=0, upper=0.15)
 #ax.set_xticks([])

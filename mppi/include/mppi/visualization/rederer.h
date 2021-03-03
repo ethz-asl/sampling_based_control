@@ -7,10 +7,11 @@
  */
 #pragma once
 
+#include <vector>
 #include "mppi/controller/rollout.h"
 
 namespace mppi {
-class Renderer{
+class Renderer {
  public:
   Renderer() = default;
   ~Renderer() = default;
@@ -18,4 +19,4 @@ class Renderer{
   virtual void render(const std::vector<Rollout>&) = 0;
 };
 
-}
+}  // namespace mppi
