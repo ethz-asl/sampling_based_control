@@ -15,13 +15,13 @@ Clone this repo in the `src` directory of your catkin workspace. Install all dep
 
 `catkin config --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo`
 
-Kinematic planning
+__Kinematic planning__
 
 This package uses a kinematic model to track the end effector of a mobile manipulator. The base can be made either _holonomic_ or _non-holonomic_.
 
 Build the package with `catkin build mppi_panda_mobile`
 
-Manipulation control
+__Manipulation control__
 
 The `mppi_manipulation` package requires the `raisim` physical simulator. This can be installed following the instructions reported [here](https://raisim.com/sections/Installation.html). As raisim examples and python pindings are not needed you can disable them setting `DRAISIM_EXAMPLE=OFF` and  `-DRAISIM_PY=OFF`. Note that an academic licence can be obtained contacting the developers. Make sure to add the following lines to your `~/.bashrc` in order to find `raisim` when building with catkin:
 
@@ -41,3 +41,7 @@ Terminal #1
 Terminal #2
 
 `rosrun mppi_manipulation demo.py`
+
+__Royalpanda controller__
+
+The implementation of the _Royalpanda_ controller used for testing whole-body motion and manipulation control can be found [here](https://github.com/grizzi/mppi_royalpanda)
