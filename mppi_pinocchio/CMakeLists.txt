@@ -5,16 +5,15 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Eigen3 REQUIRED 3.3)
-find_package(pinocchio REQUIRED)
 
-set(PACKAGE_DEPENDENCIES geometry_msgs)
+set(PACKAGE_DEPENDENCIES pinocchio geometry_msgs)
 find_package(catkin REQUIRED ${PACKAGE_DEPENDENCIES})
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-  DEPENDS pinocchio
+  DEPENDS
 )
 
 include_directories(
@@ -23,4 +22,4 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME} src/model.cpp src/ros_conversions.cpp src/ros_conversions.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PINOCCHIO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

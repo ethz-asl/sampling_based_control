@@ -9,4 +9,5 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>eigen</depend>
   <depend>geometry_msgs</depend>
+  <depend>pinocchio</depend>
 </package>
