@@ -44,4 +44,4 @@ Terminal #2
 
 __Royalpanda controller__
 
-The implementation of the _Royalpanda_ controller used for testing whole-body motion and manipulation control can be found [here](https://github.com/grizzi/mppi_royalpanda)
+The implementation of the _Royalpanda_ controller used for testing whole-body motion and manipulation control can be found [here](https://github.com/grizzi/mppi_royalpanda). A video of the real robot experiments can be watched [here](https://www.youtube.com/watch?v=4mTHYehNMCc&feature=youtu.be).
