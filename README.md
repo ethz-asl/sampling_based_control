@@ -2,7 +2,7 @@
 
 
 ### Install instructions
-Clone this repo in the `src` directory of your catkin workspace. Install all dependencies first and then build the desired packages. 
+Clone this repo in the `src` directory of your catkin workspace. Install all dependencies first and then build the desired packages. We manage rosdependecies using [`rosdep`](http://wiki.ros.org/rosdep). 
 
 ### System dependencies
 - `yamlcpp`: `$ sudo apt-get install libyaml-cpp-dev`
