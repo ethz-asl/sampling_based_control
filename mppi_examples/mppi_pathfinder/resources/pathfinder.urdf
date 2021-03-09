@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="pathfinder">
+    <!-- Inertia box Ixx = 1/12 * (ly*2 + lh*2)-->
+
+    <link name="odom"/>
+
+    <joint name="cart" type="prismatic">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="odom"/>
+        <child link="cart_link"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="1000" lower="-30.14" upper="30.14" velocity="1.0"/>
+    </joint>
+
+    <link name="cart_link">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 0.3 0.3"/>
+            </geometry>
+        </visual>
+    </link>
+</robot>
