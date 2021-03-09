@@ -74,11 +74,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        pendulum_link_ghost:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: Ghost Robot
       Robot Description: ghost_description
       TF Prefix: ""
@@ -97,8 +92,6 @@ Visualization Manager:
         odom:
           Value: true
         pendulum_link:
-          Value: true
-        pendulum_link_ghost:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -134,11 +127,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        pendulum_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""

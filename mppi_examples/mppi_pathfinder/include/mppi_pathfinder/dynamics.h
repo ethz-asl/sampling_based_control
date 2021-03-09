@@ -17,8 +17,8 @@
 namespace pathfinder {
 
 enum PathfinderDim {
-  STATE_DIMENSION = 3,     // x, y, theta
-  INPUT_DIMENSION = 2,     // v, theta_ref
+  STATE_DIMENSION = 4,     // x, y, theta, v
+  INPUT_DIMENSION = 2,     // v_ref, theta_ref
   REFERENCE_DIMENSION = 3  // x, y, theta
 };
 

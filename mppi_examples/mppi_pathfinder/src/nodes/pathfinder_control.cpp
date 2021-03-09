@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
   x(0) = 0.0;
   x(1) = 0.0;
   x(2) = 0.1;
+  x(3) = 0.0;
   simulation.reset(x);
 
   mppi::DynamicsBase::input_t u;
@@ -64,6 +65,7 @@ int main(int argc, char** argv) {
     auto start = std::chrono::steady_clock::now();
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
+    std::cout << "New Input: " << u.transpose() << std::endl;
     if (!static_optimization) {
       x = simulation.step(u, sim_dt);
       sim_time += sim_dt;

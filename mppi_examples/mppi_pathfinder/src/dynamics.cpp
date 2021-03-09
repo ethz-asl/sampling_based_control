@@ -11,13 +11,14 @@
 using namespace mppi;
 namespace pathfinder {
 
-void PathfinderDynamics::compute_velocities(double v, double theta_ref) {
-  xd_(0) = v*std::cos(x_(2));
-  xd_(1) = v*std::sin(x_(2));
+void PathfinderDynamics::compute_velocities(double v_ref, double theta_ref) {
+  xd_(0) = x_(3)*std::cos(x_(2));
+  xd_(1) = x_(3)*std::sin(x_(2));
   xd_(2) = (theta_ref - x_(2))/config_.tau_theta;
+  xd_(3) = (v_ref - x_(3))/0.5;
 }
 
-void PathfinderDynamics::integrate_internal(double v, double theta_ref, double dt) {
+void PathfinderDynamics::integrate_internal(double v_ref, double theta_ref, double dt) {
   if (dt > config_.dt_internal) {
     std::stringstream ss;
     ss << "Integrate internal called with dt larger that internal dt: " << dt
@@ -25,7 +26,7 @@ void PathfinderDynamics::integrate_internal(double v, double theta_ref, double d
     throw std::runtime_error(ss.str());
   }
 
-  compute_velocities(v, theta_ref);
+  compute_velocities(v_ref, theta_ref);
   x_ += xd_ * dt;
 }
 
@@ -46,4 +47,4 @@ const DynamicsBase::observation_t PathfinderDynamics::get_state() const {
 }
 
 void PathfinderDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
-}  // namespace pole_cart
+}  // namespace pathfinder

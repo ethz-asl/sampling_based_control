@@ -19,8 +19,8 @@ class PathfinderCost : public mppi::CostBase {
 
  private:
   double w_x = 10;
-  double w_y = 1;
-  double w_theta = 10;
+  double w_y = 10;
+  double w_theta = 0;
   double c_leafing_field = 10000;
   double x_fieldlimitpositive = 25.0;
   double x_fieldlimitnegative = -5.0;
