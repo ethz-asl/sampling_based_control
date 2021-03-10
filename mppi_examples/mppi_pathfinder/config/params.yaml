@@ -22,7 +22,7 @@ solver:
   filter_window: 10
 
   adaptive_sampling: false
-  input_variance: [1.0, 1.0 ]
+  input_variance: [3.0, 3.0 ]
 
   discount_factor: 1.0
   verbose: false

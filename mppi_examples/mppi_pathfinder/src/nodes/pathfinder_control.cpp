@@ -40,8 +40,8 @@ int main(int argc, char** argv) {
   ros::Publisher state_publisher =
       nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
-  joint_state.name.push_back("cart");
-  joint_state.name.push_back("pendulum");
+  joint_state.name.push_back("cart_x");
+  joint_state.name.push_back("cart_y");
   joint_state.position.resize(2);
   joint_state.header.frame_id = "world";
 
@@ -65,7 +65,6 @@ int main(int argc, char** argv) {
     auto start = std::chrono::steady_clock::now();
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
-    std::cout << "New Input: " << u.transpose() << std::endl;
     if (!static_optimization) {
       x = simulation.step(u, sim_dt);
       sim_time += sim_dt;

@@ -19,12 +19,13 @@ class PathfinderCost : public mppi::CostBase {
 
  private:
   double w_x = 10;
-  double w_y = 10;
+  double w_y = 5;
   double w_theta = 0;
-  double c_leafing_field = 10000;
+  double c_leafing_field = 0;
   double x_fieldlimitpositive = 25.0;
   double x_fieldlimitnegative = -5.0;
   double y_fieldlimit = 5;
+  double c_obstacle = 10000;
 
  public:
   cost_ptr create() override { return std::make_shared<PathfinderCost>(); }
@@ -44,6 +45,15 @@ class PathfinderCost : public mppi::CostBase {
     if (x(1) > y_fieldlimit || x(1) < -y_fieldlimit)
       cost += c_leafing_field * (1 + w_y * ((std::abs(x(1)) - y_fieldlimit) *
                                            (std::abs(x(1)) - y_fieldlimit)));
+    if (x(0) > 13){
+      if (x(0) < 15){
+        if (x(1) > 1){
+          if (x(1) < 3){
+              cost += c_obstacle;
+            }
+        }
+      }
+    }
 
     double theta = std::fmod(x(1), 2 * M_PI);
     double delta = (theta < 0) ? ref(2) + theta : ref(2) - theta;

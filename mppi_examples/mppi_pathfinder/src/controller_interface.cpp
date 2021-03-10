@@ -47,10 +47,10 @@ bool PathfinderControllerInterface::set_controller(
   // -------------------------------
   // initialize reference
   // -------------------------------
-  // cart at the origin, pole up
+  // cart at the goal position
   ref_.rr.resize(1,
                  mppi::observation_t::Zero(PathfinderDim::REFERENCE_DIMENSION));
-  ref_.rr[0](0) = 5.0;
+  ref_.rr[0](0) = 20.0;
   ref_.rr[0](1) = 3.0;
   ref_.rr[0](2) = 0.0;
   ref_.tt.resize(1, 0.0);
