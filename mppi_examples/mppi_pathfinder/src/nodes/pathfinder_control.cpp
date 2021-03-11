@@ -42,7 +42,8 @@ int main(int argc, char** argv) {
   sensor_msgs::JointState joint_state;
   joint_state.name.push_back("cart_x");
   joint_state.name.push_back("cart_y");
-  joint_state.position.resize(2);
+  joint_state.name.push_back("cart_theta");
+  joint_state.position.resize(3);
   joint_state.header.frame_id = "world";
 
   bool static_optimization = nh.param<bool>("static_optimization", false);
@@ -70,7 +71,7 @@ int main(int argc, char** argv) {
       sim_time += sim_dt;
     }
 
-    for (size_t i = 0; i < 2; i++) joint_state.position[i] = x(i);
+    for (size_t i = 0; i < 3; i++) joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 

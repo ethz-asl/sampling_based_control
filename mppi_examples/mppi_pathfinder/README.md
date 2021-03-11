@@ -1,7 +1,7 @@
 ### Build
 
-`catkin build mppi`
+`catkin build mppi_pathfinder
 
 ### Run example
 
-`roslaunch mppi pendulum_cart_control.launch`
+`roslaunch mppi_pathfinder pathfinder_control.launch

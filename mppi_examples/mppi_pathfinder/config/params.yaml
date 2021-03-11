@@ -22,7 +22,7 @@ solver:
   filter_window: 10
 
   adaptive_sampling: false
-  input_variance: [3.0, 3.0 ]
+  input_variance: [3.0, 1.0 ]
 
   discount_factor: 1.0
   verbose: false
@@ -35,8 +35,8 @@ solver:
   expert_weights: [ 0.5, 0.5 ]
   log_data: true
   bound_input: true
-  u_min: [ -2.0, -2.0 ]
-  u_max: [ 2.0, 2.0 ]
+  u_min: [ 0, -7.0 ]
+  u_max: [ 4.0, 7.0 ]
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
