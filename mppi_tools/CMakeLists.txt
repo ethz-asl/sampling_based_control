@@ -21,8 +21,17 @@ catkin_package(
 ###  Build 
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
-add_library(${PROJECT_NAME} src/visual_debugger.cpp)
+set(IMGUI_DIR submodules/imgui)
+set(IMGUI_SRC ${IMGUI_DIR}/imgui.cpp
+              ${IMGUI_DIR}/imgui_demo.cpp
+              ${IMGUI_DIR}/imgui_draw.cpp
+              ${IMGUI_DIR}/imgui_tables.cpp
+              ${IMGUI_DIR}/imgui_widgets.cpp
+              ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+              ${IMGUI_DIR}/backends/imgui_impl_opengl2.cpp)
+add_library(${PROJECT_NAME} src/visual_debugger.cpp ${IMGUI_SRC})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} glfw OpenGL::GL)
+target_include_directories(${PROJECT_NAME} PRIVATE submodules/imgui submodules/imgui/backends)
 
 ###  Build
 if (CATKIN_ENABLE_TESTING)
