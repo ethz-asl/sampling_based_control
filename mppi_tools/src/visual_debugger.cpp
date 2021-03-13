@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
+#include "implot.h"
 
 static void error_callback(int error, const char* description) {
   fputs(description, stderr);
@@ -16,6 +17,7 @@ VisualDebugger::~VisualDebugger() {
   // Cleanup
   ImGui_ImplOpenGL2_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  ImPlot::DestroyContext();
   ImGui::DestroyContext();
 
   glfwDestroyWindow(window_ptr_);
@@ -46,6 +48,7 @@ bool VisualDebugger::setup_glfw() {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  ImPlot::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
   (void)io;
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
@@ -67,10 +70,6 @@ bool VisualDebugger::init() { return setup_glfw(); }
 
 bool VisualDebugger::render() {
   while (!glfwWindowShouldClose(window_ptr_)) {
-    // Check for the user pressed escape
-    if (glfwGetKey(window_ptr_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-      glfwSetWindowShouldClose(window_ptr_, true);
-
     glfwPollEvents();
 
     // call the update and draw function
@@ -89,7 +88,8 @@ void VisualDebugger::draw() {
   ImGui::NewFrame();
 
   bool show_demo_window = true;
-  ImGui::ShowDemoWindow(&show_demo_window);
+  // ImGui::ShowDemoWindow(&show_demo_window);
+  ImPlot::ShowDemoWindow(&show_demo_window);
 
   ImGui::Render();
   int display_w, display_h;

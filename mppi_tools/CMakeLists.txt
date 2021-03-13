@@ -21,6 +21,7 @@ catkin_package(
 ###  Build 
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
+# Imgui
 set(IMGUI_DIR submodules/imgui)
 set(IMGUI_SRC ${IMGUI_DIR}/imgui.cpp
               ${IMGUI_DIR}/imgui_demo.cpp
@@ -29,11 +30,24 @@ set(IMGUI_SRC ${IMGUI_DIR}/imgui.cpp
               ${IMGUI_DIR}/imgui_widgets.cpp
               ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
               ${IMGUI_DIR}/backends/imgui_impl_opengl2.cpp)
-add_library(${PROJECT_NAME} src/visual_debugger.cpp ${IMGUI_SRC})
+set(IMGUI_INCLUDE_DIRS ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+
+# Implot
+set(IMPLOT_DIR submodules/implot)
+set(IMPLOT_SRC ${IMPLOT_DIR}/implot.cpp
+               ${IMPLOT_DIR}/implot_demo.cpp
+               ${IMPLOT_DIR}/implot_items.cpp)
+set(IMPLOT_INCLUDE_DIRS ${IMPLOT_DIR})
+
+add_library(${PROJECT_NAME} src/visual_debugger.cpp ${IMGUI_SRC} ${IMPLOT_SRC})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} glfw OpenGL::GL)
-target_include_directories(${PROJECT_NAME} PRIVATE submodules/imgui submodules/imgui/backends)
+target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS} ${IMPLOT_INCLUDE_DIRS})
 
 ###  Build
+#add_executable(vtest unittest/visual_debugger_test.cpp)
+#target_link_libraries(vtest ${PROJECT_NAME} ${catkin_LIBRARIES})
+#add_dependencies(vtest ${PROJECT_NAME})
+
 if (CATKIN_ENABLE_TESTING)
     catkin_add_gtest(visual_debugger_test unittest/visual_debugger_test.cpp)
     target_link_libraries(visual_debugger_test ${PROJECT_NAME} ${catkin_LIBRARIES})
