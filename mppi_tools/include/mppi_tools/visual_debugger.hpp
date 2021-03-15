@@ -18,7 +18,7 @@ class VisualDebugger {
   void draw();
   bool close();
 
-  bool setup_glfw();
+  void window_resize(int width, int height);
 
   void create_config(const mppi::SolverConfig* config);
   void reset_policy(const mppi::input_t& u);
@@ -27,6 +27,16 @@ class VisualDebugger {
   void reset_weights(const Eigen::ArrayXd& weights);
 
  private:
+  bool setup_glfw();
+
+ private:
   GLFWwindow* window_ptr_;
+
+  // mppi data
+  mppi::SolverConfig config_;
+  std::vector<mppi::Rollout> rollouts_;
+  mppi::input_t u_;
+  mppi::input_t u_filt_;
+  Eigen::ArrayXd weights_;
 };
 }  // namespace mppi_tools

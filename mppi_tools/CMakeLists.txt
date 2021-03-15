@@ -44,15 +44,15 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} glfw OpenGL::GL
 target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS} ${IMPLOT_INCLUDE_DIRS})
 
 ###  Build
-#add_executable(vtest unittest/visual_debugger_test.cpp)
-#target_link_libraries(vtest ${PROJECT_NAME} ${catkin_LIBRARIES})
-#add_dependencies(vtest ${PROJECT_NAME})
+add_executable(vtest unittest/visual_debugger_test.cpp)
+target_link_libraries(vtest ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(vtest ${PROJECT_NAME})
 
-if (CATKIN_ENABLE_TESTING)
-    catkin_add_gtest(visual_debugger_test unittest/visual_debugger_test.cpp)
-    target_link_libraries(visual_debugger_test ${PROJECT_NAME} ${catkin_LIBRARIES})
-    add_dependencies(visual_debugger_test ${PROJECT_NAME})
-endif ()
+#if (CATKIN_ENABLE_TESTING)
+#    catkin_add_gtest(visual_debugger_test unittest/visual_debugger_test.cpp)
+#    target_link_libraries(visual_debugger_test ${PROJECT_NAME} ${catkin_LIBRARIES})
+#    add_dependencies(visual_debugger_test ${PROJECT_NAME})
+#endif ()
 
 ###  Install 
 install(TARGETS ${PROJECT_NAME}
