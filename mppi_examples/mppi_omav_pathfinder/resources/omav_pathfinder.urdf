@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="omav_pathfinder">
+    <!-- Inertia box Ixx = 1/12 * (ly*2 + lh*2)-->
+    <link name="odom"/>
+
+    <joint name="pos_x" type="prismatic">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="odom"/>
+        <child link="omav_x"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="1000" lower="-30.14" upper="30.14" velocity="2.0"/>
+    </joint>
+
+    <link name="omav_x">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.03 0.03 0.03"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="pos_y" type="prismatic">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="omav_x"/>
+        <child link="omav_y"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="1000" lower="-30.14" upper="30.14" velocity="2.0"/>
+    </joint>
+    <link name="omav_y">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.03 0.03 0.03"/>
+            </geometry>
+        </visual>
+    </link>
+    <joint name="pos_z" type="prismatic">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="omav_y"/>
+        <child link="omav_z"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="1000" lower="-30.14" upper="30.14" velocity="2.0"/>
+    </joint>
+    <link name="omav_z">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 0.3 0.3"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="fixed" type="fixed">
+        <parent link="odom"/>
+        <child link="obstacle"/>
+        <origin xyz="14.0 2.0 0.0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="obstacle">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+       </inertial>
+       <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="10" radius="2"/>
+            </geometry>
+       </visual>
+    </link>
+</robot>
