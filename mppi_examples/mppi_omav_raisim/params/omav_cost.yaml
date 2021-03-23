@@ -1,0 +1,16 @@
+
+  x_distance_weight: 10.0
+  y_distance_weight: 10.0
+  z_distance_weight: 10.0
+
+  leafing_field_cost: 10000.0
+  field_limit_x: 30.0
+  field_limit_y: 30.0
+  field_limit_z: 30.0
+
+  maximum_velocity: 2.0
+  velocity_cost: 10000.0
+
+  maximum_thrust: 200.0
+  thrust_cost: 10000.0
+

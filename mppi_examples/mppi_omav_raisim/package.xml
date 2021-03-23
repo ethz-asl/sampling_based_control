@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>mppi_omav_raisim</name>
+    <version>0.1.0</version>
+    <description>mppi package</description>
+    <maintainer email="studigem@student.ethz.ch">Matthias Studiger</maintainer>
+    <license>BSD</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <depend>eigen</depend>
+    <depend>mppi</depend>
+    <depend>mppi_ros</depend>
+    <depend>roscpp</depend>
+    <depend>roslib</depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>tf2_ros</depend>
+    <depend>mav_msgs</depend>
+</package>
