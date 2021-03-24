@@ -11,6 +11,7 @@
 #pragma once
 
 #include "mppi/learned_sampler/learned_sampler.h"
+#include <fstream>
 
 class OfflinePytorchLearner: public mppi::LearnedSampler{
   public:
@@ -23,4 +24,9 @@ class OfflinePytorchLearner: public mppi::LearnedSampler{
 
     input_t const get_action(const observation_t& x) override;
     void save_state_action(const observation_t& x, const input_t& u) override;
+  
+  private:
+    std::ofstream output_file_;
+    int output_precision_ = 6;
+    Eigen::IOFormat cvs_format_;
 };

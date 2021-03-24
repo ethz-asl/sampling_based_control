@@ -26,7 +26,6 @@ add_library(${PROJECT_NAME}
         src/offline_pytorch_learner.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
-message("COMMON LIBRARIES", ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 
 
