@@ -30,6 +30,7 @@
 #include "mppi/utils/thread_pool.h"
 #include "mppi/utils/timer.h"
 #include "mppi/visualization/rederer.h"
+#include "mppi/learned_sampler/learned_sampler.h"
 
 namespace mppi {
 
@@ -39,6 +40,7 @@ class PathIntegral {
   using dynamics_ptr = DynamicsBase::dynamics_ptr;
   using cost_ptr = CostBase::cost_ptr;
   using sampler_ptr = GaussianSampler::sampler_ptr;
+  using learned_sampler_ptr = LearnedSampler::learned_sampler_ptr;
   using config_t = SolverConfig;
   using input_t = DynamicsBase::input_t;
   using input_array_t = std::vector<input_t>;
@@ -57,7 +59,8 @@ class PathIntegral {
    */
   PathIntegral(DynamicsBase::dynamics_ptr dynamics, CostBase::cost_ptr cost,
                const SolverConfig& config, sampler_ptr sampler = nullptr,
-               renderer_ptr rendere = nullptr);
+               renderer_ptr rendere = nullptr, 
+               learned_sampler_ptr lerned_sampler = nullptr);
   PathIntegral() = default;
   ~PathIntegral() = default;
 
@@ -358,6 +361,8 @@ class PathIntegral {
   size_t step_count_;  // total amount of solver optimization steps
   std::vector<input_t> momentum_;
   Timer timer_;
+
+  learned_sampler_ptr learned_sampler_; 
 };
 
 }  // namespace mppi

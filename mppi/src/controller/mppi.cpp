@@ -31,14 +31,16 @@ namespace mppi {
 
 PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
                            const SolverConfig& config, sampler_ptr sampler,
-                           renderer_ptr renderer)
+                           renderer_ptr renderer,
+                           learned_sampler_ptr learned_sampler)
     : cost_(std::move(cost)),
       dynamics_(std::move(dynamics)),
       config_(config),
       sampler_(std::move(sampler)),
       renderer_(std::move(renderer)),
       expert_(config_, dynamics_),
-      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_) {
+      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_),
+      learned_sampler_(learned_sampler) {
   init_data();
   init_filter();
   if (!config_.use_tree_search) {
@@ -177,6 +179,7 @@ void PathIntegral::update_policy() {
       stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
     }
     swap_policies();
+    if(learned_sampler_) learned_sampler_->save_rollout(opt_roll_);
 
     if (renderer_) renderer_->render(rollouts_);
     if (config_.logging) {
@@ -309,6 +312,8 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              const size_t start_idx,
                                              const size_t end_idx) {
   observation_t x;
+  // TODO(ANDY): currently only checks if call works. Need to use sampled action.
+  if(learned_sampler_) learned_sampler_->get_action(x); 
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     x = x0_internal_;
@@ -566,6 +571,7 @@ void PathIntegral::update_experts() { expert_.update_expert(1, opt_roll_.uu); };
 void PathIntegral::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);
   opt_roll_cache_ = opt_roll_;
+  
 }
 
 PathIntegral::input_array_t PathIntegral::offline_control(

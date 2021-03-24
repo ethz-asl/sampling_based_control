@@ -20,6 +20,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         manipulation_msgs
         tf2_ros
+        policy_learning
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
