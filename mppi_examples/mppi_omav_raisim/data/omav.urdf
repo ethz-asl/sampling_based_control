@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <robot name="omav">
+        <material name="green">
+            <color rgba="0 1 0 1"/>
+        </material>
         <link name="odom"/>
 
         <joint name="omav_pos_x" type="prismatic">
@@ -7,7 +10,7 @@
             <parent link="odom"/>
             <child link="omav_x"/>
             <axis xyz="1 0 0"/>
-            <limit effort="1000" lower="-30.14" upper="30.14" velocity="2.0"/>
+            <limit effort="1000" lower="-1000.0" upper="1000.0" velocity="1000.0"/>
         </joint>
 
         <link name="omav_x">
@@ -29,7 +32,7 @@
             <parent link="omav_x"/>
             <child link="omav_y"/>
             <axis xyz="0 1 0"/>
-            <limit effort="1000" lower="-30.14" upper="30.14" velocity="2.0"/>
+            <limit effort="1000" lower="-1000.0" upper="1000.0" velocity="1000.0"/>
         </joint>
         <link name="omav_y">
             <inertial>
@@ -49,9 +52,69 @@
             <parent link="omav_y"/>
             <child link="omav_z"/>
             <axis xyz="0 0 1"/>
-            <limit effort="1000" lower="-30.14" upper="30.14" velocity="2.0"/>
+            <limit effort="1000" lower="-1000.0" upper="1000.0" velocity="1000.0"/>
         </joint>
         <link name="omav_z">
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                <mass value="1.0"/>
+                <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+            </inertial>
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.03 0.03 0.03"/>
+                </geometry>
+            </visual>
+        </link>
+        <joint name="omav_rot_x" type="continuous">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <parent link="omav_z"/>
+            <child link="omav_rotation_x"/>
+            <axis xyz="1 0 0"/>
+            <limit effort="1000"  velocity="1000.0"/>
+        </joint>
+        <link name="omav_rotation_x">
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                <mass value="1.0"/>
+                <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+            </inertial>
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.03 0.03 0.03"/>
+                </geometry>
+            </visual>
+        </link>
+        <joint name="omav_rot_y" type="continuous">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <parent link="omav_rotation_x"/>
+            <child link="omav_rotation_y"/>
+            <axis xyz="0 1 0"/>
+            <limit effort="1000"  velocity="1000.0"/>
+        </joint>
+        <link name="omav_rotation_y">
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                <mass value="1.0"/>
+                <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+            </inertial>
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.03 0.03 0.03"/>
+                </geometry>
+            </visual>
+        </link>
+        <joint name="omav_rot_z" type="continuous">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <parent link="omav_rotation_y"/>
+            <child link="omav_rotation_z"/>
+            <axis xyz="0 0 1"/>
+            <limit effort="1000"  velocity="1000.0"/>
+        </joint>
+        <link name="omav_rotation_z">
             <inertial>
                 <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
                 <mass value="1.0"/>
@@ -63,6 +126,27 @@
                     <box size="0.3 0.3 0.3"/>
                 </geometry>
             </visual>
+        </link>
+
+        <joint name="fixed" type="fixed">
+            <parent link="odom"/>
+            <child link="goal"/>
+            <origin xyz="5.0 5.0 5.0" rpy="0 0 0"/>
+        </joint>
+
+        <link name="goal">
+                <inertial>
+                    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                    <mass value="1.0"/>
+                    <inertia ixx="0.001667" ixy="0.0" ixz="0.0" iyy="0.0841667" iyz="0.0" izz="0.084167"/>
+                </inertial>
+                <visual>
+                    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+                    <material name="green"/>
+                    <geometry>
+                        <box size="0.2 0.2 0.2" />
+                    </geometry>
+                </visual>
         </link>
 
 </robot>

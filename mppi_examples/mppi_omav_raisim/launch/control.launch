@@ -3,8 +3,8 @@
 
     <arg name="description_file" default="$(find mppi_omav_raisim)/data/omav.urdf"/>
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
-    <arg name="plot_cost" default="false"/>
-    <arg name="plot_input" default="false"/>
+    <arg name="plot_cost" default="true"/>
+    <arg name="plot_input" default="true"/>
 
     <arg name="experiment" default="false"/>
     <arg name="experiment_id" default="omav_raisim"/>
@@ -37,4 +37,12 @@
         <param name="/config_file" value="$(find mppi_omav_raisim)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_omav_raisim)/params/params.yaml" ns="omav_control"/>
     </group>
+    <group if="$(arg plot_cost)">
+        <arg name="mp_config" default="$(find mppi_omav_raisim)/resources/rqt_multiplot.xml"/>
+        <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config)"
+              output="screen"/>
+    </group>
+
+
+
 </launch>

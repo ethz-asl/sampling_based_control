@@ -14,6 +14,7 @@
 
 using namespace omav_raisim;
 
+
 int main(int argc, char** argv){
     // Initialize Ros Node
     ros::init(argc, argv, "omav_raisim_control_node");
@@ -32,8 +33,16 @@ int main(int argc, char** argv){
     observation_t x = observation_t::Zero(simulation->get_state_dimension());
     auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
     for (size_t i = 0; i < x0.size(); i++) x(i) = x0[i];
-
+    // Set nominal state
     observation_t x_nom = observation_t::Zero(simulation->get_state_dimension());
+    // Implement all the publishers
+    geometry_msgs::Vector3 ThrustRate;
+    ros::Publisher ThrustRate_publisher_ =
+            nh.advertise<geometry_msgs::Vector3>("/ThrustRate", 10);
+
+    geometry_msgs::Vector3 TorqueRate;
+    ros::Publisher TorqueRate_publisher_ =
+            nh.advertise<geometry_msgs::Vector3>("/TorqueRate", 10);
 
     // Thrust Message
     geometry_msgs::Vector3 thrust_command_ros;
@@ -52,7 +61,7 @@ int main(int argc, char** argv){
     u = simulation->get_zero_input(x);
 
     bool static_optimization = nh.param<bool>("static_optimization", false);
-    auto sim_dt = nh.param<double>("sim_dt", 0.01);
+    auto sim_dt = nh.param<double>("sim_dt", 0.015);
     double sim_time = 0.0;
 
     //init the controller
@@ -74,16 +83,10 @@ int main(int argc, char** argv){
     while (ros::ok()) {
         start = std::chrono::steady_clock::now();
         if (sequential) {
-            std::cout << "Works 2" << std::endl;
             controller.update_reference();
             controller.set_observation(x, sim_time);
             controller.update_policy();
             controller.get_input_state(x, x_nom, u, sim_time);
-            std::cout << x << std::endl;
-            std::cout << "--------------------------------" << std::endl;
-            std::cout << x_nom << std::endl;
-            std::cout << "--------------------------------" << std::endl;
-            std::cout << u << std::endl;
             controller.publish_ros_default();
             controller.publish_ros();
         }
@@ -97,7 +100,7 @@ int main(int argc, char** argv){
             sim_time += sim_dt;
         }
 
-        controller.get_input_state(x, x_nom, u, sim_time);
+
         // Assemble wrench command and publish it
         thrust_command_ros.x = x_nom(0);
         thrust_command_ros.y = x_nom(1);
@@ -109,6 +112,17 @@ int main(int argc, char** argv){
         TorqueThrust_command_ros.torque = torque_command_ros;
 
         TorqueThrust_command_publisher_.publish(TorqueThrust_command_ros);
+
+        // Publish Rates
+        ThrustRate.x = u(0);
+        ThrustRate.y = u(1);
+        ThrustRate.z = u(2);
+        ThrustRate_publisher_.publish(ThrustRate);
+
+        TorqueRate.x = u(3);
+        TorqueRate.y = u(4);
+        TorqueRate.z = u(5);
+        TorqueRate_publisher_.publish(TorqueRate);
 
 
         end = std::chrono::steady_clock::now();

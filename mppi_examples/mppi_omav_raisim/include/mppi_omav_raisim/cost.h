@@ -21,6 +21,8 @@ namespace omav_raisim {
         double Q_distance_y;
         double Q_distance_z;
 
+        double Q_orientation; // Orientation Cost
+
         double Q_leafing_field; // Leafing Field Costs
         double x_limit;
         double y_limit;
@@ -36,6 +38,9 @@ namespace omav_raisim {
 
         double Q_thrust_max; // Maximum thrust cost
         double max_thrust;
+
+        double Q_omega;
+        double max_omega;
 
         bool parse_from_ros(const ros::NodeHandle &nh);
     };

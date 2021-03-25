@@ -31,7 +31,7 @@ namespace omav_raisim {
         ~OMAVRaisimDynamics() = default;
 
     private:
-        void initialize_world(const std::string& robot_description);
+        void initialize_world();
 
     public:
         double get_dt() { return dt_; }
@@ -72,8 +72,14 @@ namespace omav_raisim {
 
         raisim::World sim_;
 
-        raisim::Vec<3> new_thrust;
-        raisim::Vec<3> new_torque;
+        Eigen::Vector3d new_thrust_body_frame;
+        Eigen::Vector3d new_torque_body_frame;
+
+        Eigen::Matrix3d current_rotation_matrix;
+        Eigen::Vector3d new_thrust_world_frame;
+        Eigen::Vector3d thrust_body_frame;
+        Eigen::Vector3d new_torque_world_frame;
+        Eigen::Vector3d torque_body_frame;
 
         raisim::Vec<3> omav_velocity;
         raisim::Vec<4> omav_quaternion;

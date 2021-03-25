@@ -8,6 +8,8 @@
 
 #include "mppi_omav_raisim/cost.h"
 #include <ros/package.h>
+#include <Eigen/Geometry>
+#include <mav_msgs/common.h>
 
 using namespace omav_raisim;
 
@@ -27,14 +29,32 @@ mppi::CostBase::cost_t OMAVRaisimCost::compute_cost(const mppi::observation_t &x
     cost += param_.Q_distance_x*std::pow(x(16) - ref(0), 2);
     cost += param_.Q_distance_y*std::pow(x(17) - ref(1), 2);
     cost += param_.Q_distance_z*std::pow(x(18) - ref(2), 2);
+    // Attitude Cost
+    // TODO: Currently no reference implemented only penalizes difference from (1,0,0,0)
+    Eigen::Quaterniond odometry_quaternion = {x(9),x(10),x(11),x(12)};
+    Eigen::Quaterniond reference_quaternion = {1,0,0,0};
+    Eigen::Matrix3d R_W_B = odometry_quaternion.toRotationMatrix();
+    Eigen::Matrix3d R_W_B_des = reference_quaternion.toRotationMatrix();
+
+    Eigen::Matrix3d attitude_error_matrix =
+            0.5 * (R_W_B_des.transpose() * R_W_B - R_W_B.transpose() * R_W_B_des);
+    Eigen::Vector3d att_error_B;
+    mav_msgs::vectorFromSkewMatrix(attitude_error_matrix, &att_error_B);
+
+    double quaternion_cost = param_.Q_orientation*(std::pow(att_error_B(0),2) +
+            std::pow(att_error_B(1), 2) +
+            std::pow(att_error_B(2), 2));
+    cost += quaternion_cost;
     // Maximum Velocity cost
     cost += std::max(0.0, std::sqrt(pow(x(6),2) + pow(x(7), 2) + pow(x(8), 2))*param_.Q_velocity_max
     - param_.max_velocity*param_.Q_velocity_max);
+    // Maximum angular velocity cost
+    cost += param_.Q_omega*std::sqrt(pow(x(13),2) + pow(x(14), 2) + pow(x(15), 2));
     // Maximum Force cost
-    // TODO: Make only parameter dependent!
-    cost += std::max(0.0, param_.Q_thrust_max/20*x(0) - 9*param_.Q_thrust_max);
-    cost += std::max(0.0, param_.Q_thrust_max/20*x(1) - 9*param_.Q_thrust_max);
-    cost += std::max(0.0, param_.Q_thrust_max/20*x(2) - 9*param_.Q_thrust_max);
+    cost += std::max(0.0, param_.Q_thrust_max*x(0) - param_.max_thrust*param_.Q_thrust_max);
+    cost += std::max(0.0, param_.Q_thrust_max*x(1) - param_.max_thrust*param_.Q_thrust_max);
+    cost += std::max(0.0, param_.Q_thrust_max*x(2) - param_.max_thrust*param_.Q_thrust_max);
+
     return cost;
 }
 
@@ -83,6 +103,15 @@ bool OMAVRaisimCostParam::parse_from_ros(const ros::NodeHandle& nh) {
         ROS_ERROR("Failed to parse thrust_cost or invalid!");
         return false;
     }
+    if (!nh.getParam("orientation_cost", Q_orientation) || Q_orientation < 0){
+        ROS_ERROR("Failed to parse Orientation_cost or invalid!");
+        return false;
+    }
+    if (!nh.getParam("omega_cost", Q_omega) || Q_omega < 0){
+        ROS_ERROR("Failed to parse omega_cost or invalid!");
+        return false;
+    }
+    return true;
 }
 std::ostream& operator<<(std::ostream& os,
                          const omav_raisim::OMAVRaisimCostParam& param) {
@@ -101,6 +130,8 @@ std::ostream& operator<<(std::ostream& os,
     os << " maximum_velocity: " << param.max_velocity << std::endl;
     os << " maximum_thrust: " << param.max_thrust << std::endl;
     os << " thrust_cost: " << param.Q_thrust_max << std::endl;
+    os << " orientation_cost: " << param.Q_orientation << std::endl;
+    os << " omega_cost: " << param.Q_omega << std::endl;
 
     return os;
 }

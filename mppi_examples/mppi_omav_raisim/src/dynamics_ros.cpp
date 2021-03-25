@@ -21,8 +21,9 @@ namespace omav_raisim {
         joint_state_.header.frame_id = "world";
     }
     void OMAVRaisimDynamicsRos::reset_to_default() {
+        // Set thrust in z-Direction to compensate gravity
         x_.setZero();
-        // TODO: Potential Error! Default value of scalar part of quaternion needs to be 1! Not sure if correct x_ chosen here...
+        x_(2) = 5*9.81;
         x_(9) = 1;
         reset(x_);
         ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
@@ -33,6 +34,13 @@ namespace omav_raisim {
         for (size_t j = 0; j < 3; j++) {
             joint_state_.position[j] = x_(j+16);
         }
+        Eigen::Quaterniond quat = {x_(9), x_(10), x_(11), x_(12)};
+        // To publish the attitude of the omav
+        auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
+        joint_state_.position[3] = euler(0);
+        joint_state_.position[4] = euler(1);
+        joint_state_.position[5] = euler(2);
+
         state_publisher_.publish(joint_state_);
     }
 } // namespace omav_raisim

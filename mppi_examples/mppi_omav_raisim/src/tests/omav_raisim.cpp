@@ -41,9 +41,10 @@ int main(int argc, char** argv) {
     Eigen::VectorXd u_snapshot =
             Eigen::VectorXd::Zero(simulation.get_input_dimension());
 
-    u(2) = 4.04 * 9.81;
-    u(5) = 1.0;
+    u(0) = 0.0;
+    u(5) = 0.1;
     std::cout << "Initializing input to: " << u.transpose() << std::endl;
+    std::cout << "Initial state: " << simulation.get_state().transpose() << std::endl;
 
     long int loopN = 2000;
     double elapsed = 0;
