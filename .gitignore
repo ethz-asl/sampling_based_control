@@ -3,3 +3,6 @@
 .idea/
 cmake-build-release/
 cmake-build-debug/
+
+# data directory used for learning
+policy_learning/data/
