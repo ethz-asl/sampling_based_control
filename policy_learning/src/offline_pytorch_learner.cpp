@@ -29,9 +29,10 @@ OfflinePytorchLearner::input_t const OfflinePytorchLearner::get_action(
 void OfflinePytorchLearner::save_state_action(
     const OfflinePytorchLearner::observation_t& x,
     const OfflinePytorchLearner::input_t& u){
-  // TODO(Andy): We should use a more sophisticated format at one point... 
-  output_file_ << x.size() << "," << u.size() << ","
-    << x.format(cvs_format_) << u.format(cvs_format_) << std::endl;
+  // TODO(Andy): We should use a more sophisticated format at one point...
+  if (output_file_) {
+    output_file_ << x.size() << "," << u.size() << ","
+      << x.format(cvs_format_) << u.format(cvs_format_) << std::endl;
+  }
+  else std::cout << "Error occured in outstream" << std::endl;
 }
-
-
