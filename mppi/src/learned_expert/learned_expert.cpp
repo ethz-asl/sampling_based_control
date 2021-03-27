@@ -7,9 +7,13 @@
  */
 
 #include "mppi/learned_expert/learned_expert.h"
-#include <stdexcept>
 
 namespace mppi {
+
+LearnedExpert::LearnedExpert(size_t state_dim, size_t input_dim):
+    state_dim_(state_dim),
+    input_dim_(input_dim){
+}
 
 void LearnedExpert::save_rollout(const Rollout& rollout){
 

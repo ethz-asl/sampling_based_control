@@ -19,7 +19,7 @@ class LearnedExpert {
     using observation_t = Eigen::VectorXd;
     using input_t = Eigen::VectorXd;
 
-    LearnedExpert() = default;
+    LearnedExpert(size_t state_dim, size_t input_dim);
     virtual ~LearnedExpert(){};
 
   public:
@@ -46,5 +46,9 @@ class LearnedExpert {
    * @param uu: planned actions
    */
     void save_rollout(const Rollout& rollout);
+
+  protected:
+    size_t state_dim_;
+    size_t input_dim_;
 };
 }

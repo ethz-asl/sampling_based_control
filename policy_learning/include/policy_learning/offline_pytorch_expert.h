@@ -19,7 +19,8 @@ class OfflinePytorchExpert: public mppi::LearnedExpert{
     using observation_t = mppi::LearnedExpert::observation_t; 
 
   public:  
-    OfflinePytorchExpert();
+    OfflinePytorchExpert(size_t state_dim, size_t input_dim, 
+                         std::string filename);
     ~OfflinePytorchExpert();
 
     input_t const get_action(const observation_t& x) override;

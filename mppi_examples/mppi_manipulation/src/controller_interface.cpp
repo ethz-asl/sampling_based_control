@@ -162,12 +162,24 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // learner
   // -------------------------------
-  auto learner = std::make_shared<OfflinePytorchExpert>();
+  std::string learned_expert_output_path;
+  if (!nh_.param<std::string>("learned_expert_output_path", 
+      learned_expert_output_path, "")) {
+    throw std::runtime_error(
+        "Could not parse path to output of learned expert. "
+        "Is the parameter set?");
+  }
+  auto learner = std::make_shared<OfflinePytorchExpert>(
+    dynamics->get_state_dimension(), 
+    dynamics->get_input_dimension(),
+    learned_expert_output_path
+    );
 
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_, nullptr, nullptr, learner);
+  controller = std::make_shared<mppi::PathIntegral>(
+    dynamics, cost, config_, nullptr, nullptr, learner);
 
   // -------------------------------
   // initialize reference
