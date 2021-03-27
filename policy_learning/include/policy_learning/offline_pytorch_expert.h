@@ -11,7 +11,7 @@
 #pragma once
 
 #include "mppi/learned_expert/learned_expert.h"
-#include <fstream>
+#include <memory>
 
 class OfflinePytorchExpert: public mppi::LearnedExpert{
   public:
@@ -19,15 +19,22 @@ class OfflinePytorchExpert: public mppi::LearnedExpert{
     using observation_t = mppi::LearnedExpert::observation_t; 
 
   public:  
-    OfflinePytorchExpert(size_t state_dim, size_t input_dim, 
-                         std::string filename);
+    explicit OfflinePytorchExpert(size_t state_dim, size_t input_dim, 
+                                  std::string filename);
     ~OfflinePytorchExpert();
+    OfflinePytorchExpert(OfflinePytorchExpert&&) = default;
+    OfflinePytorchExpert& operator=(OfflinePytorchExpert&&) = default;
+    // Delete copy constructor because we would otherwise write on the same object.
+    OfflinePytorchExpert& operator=(OfflinePytorchExpert const& other) = delete;
+
 
     input_t const get_action(const observation_t& x) override;
     void save_state_action(const observation_t& x, const input_t& u) override;
   
   private:
-    std::ofstream output_file_;
-    int output_precision_ = 6;
-    Eigen::IOFormat cvs_format_;
+    // Use pImpl idom as described here: https://arne-mertz.de/2019/01/the-pimpl-idiom/
+    // the goal is to hide implementation details (such as torch) from this header file
+    // so that packages that include this header don't need the internal dependencies.
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
 };
