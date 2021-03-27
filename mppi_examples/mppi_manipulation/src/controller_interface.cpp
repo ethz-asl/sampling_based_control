@@ -169,10 +169,18 @@ bool PandaControllerInterface::set_controller(
         "Could not parse path to output of learned expert. "
         "Is the parameter set?");
   }
+  std::string torchscript_model_path;
+  if (!nh_.param<std::string>("torchscript_model_path", 
+      torchscript_model_path, "")) {
+    throw std::runtime_error(
+        "Could not parse path to output torch module. "
+        "Is the parameter set?");
+  }
   auto learner = std::make_shared<OfflinePytorchExpert>(
     dynamics->get_state_dimension(), 
     dynamics->get_input_dimension(),
-    learned_expert_output_path
+    learned_expert_output_path,
+    torchscript_model_path
     );
 
   // -------------------------------

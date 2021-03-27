@@ -20,7 +20,8 @@ class OfflinePytorchExpert: public mppi::LearnedExpert{
 
   public:  
     explicit OfflinePytorchExpert(size_t state_dim, size_t input_dim, 
-                                  std::string filename);
+                                  std::string output_filename,
+                                  std::string torchscript_filename);
     ~OfflinePytorchExpert();
     OfflinePytorchExpert(OfflinePytorchExpert&&) = default;
     OfflinePytorchExpert& operator=(OfflinePytorchExpert&&) = default;

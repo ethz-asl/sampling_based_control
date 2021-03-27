@@ -54,3 +54,7 @@ Install libtorch with CXX11 ABI (this is not the default install that comes with
 - download distribution from [here](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.8.1%2Bcpu.zip)
 - unzip to folder `<LIBTORCH_PATH>`, e.g. `/home/<USER>/libtorch/`
 - add the following line to your `~/.bashrc`: `export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:<LIBTORCH_PATH>`
+
+Currently, only `mppi_manipulation` is supported. Launch it with desired paths:
+`roslaunch mppi_manipulation control.launch fixed_base:=false learner_output_path:=<PATH> torchscript_model_path:=<PATH>`
+Otherwise, default paths will be taken. Note that there is no error (yet) when no torch model is supplied.

@@ -312,11 +312,13 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              const size_t start_idx,
                                              const size_t end_idx) {
   observation_t x;
-  // TODO(ANDY): currently only checks if call works. Need to use sampled action.
-  if(learned_expert_) learned_expert_->get_action(x); 
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     x = x0_internal_;
+
+    // TODO(ANDY): currently only checks if call works. Need to use sampled action.
+    if(learned_expert_) learned_expert_->get_action(x); 
+    
     for (size_t t = 0; t < steps_; t++) {
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
