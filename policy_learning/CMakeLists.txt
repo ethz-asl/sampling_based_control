@@ -23,7 +23,7 @@ set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 add_library(${PROJECT_NAME}
-        src/offline_pytorch_learner.cpp)
+        src/offline_pytorch_expert.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)

@@ -30,7 +30,7 @@
 #include "mppi/utils/thread_pool.h"
 #include "mppi/utils/timer.h"
 #include "mppi/visualization/rederer.h"
-#include "mppi/learned_sampler/learned_sampler.h"
+#include "mppi/learned_expert/learned_expert.h"
 
 namespace mppi {
 
@@ -40,7 +40,7 @@ class PathIntegral {
   using dynamics_ptr = DynamicsBase::dynamics_ptr;
   using cost_ptr = CostBase::cost_ptr;
   using sampler_ptr = GaussianSampler::sampler_ptr;
-  using learned_sampler_ptr = LearnedSampler::learned_sampler_ptr;
+  using learned_expert_ptr = LearnedExpert::learned_expert_ptr;
   using config_t = SolverConfig;
   using input_t = DynamicsBase::input_t;
   using input_array_t = std::vector<input_t>;
@@ -60,7 +60,7 @@ class PathIntegral {
   PathIntegral(DynamicsBase::dynamics_ptr dynamics, CostBase::cost_ptr cost,
                const SolverConfig& config, sampler_ptr sampler = nullptr,
                renderer_ptr rendere = nullptr, 
-               learned_sampler_ptr lerned_sampler = nullptr);
+               learned_expert_ptr learned_expert = nullptr);
   PathIntegral() = default;
   ~PathIntegral() = default;
 
@@ -362,7 +362,7 @@ class PathIntegral {
   std::vector<input_t> momentum_;
   Timer timer_;
 
-  learned_sampler_ptr learned_sampler_; 
+  learned_expert_ptr learned_expert_; 
 };
 
 }  // namespace mppi

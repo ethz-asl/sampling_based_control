@@ -9,7 +9,7 @@
 #include "mppi_manipulation/controller_interface.h"
 #include "mppi_manipulation/cost.h"
 #include "mppi_manipulation/dynamics.h"
-#include "policy_learning/offline_pytorch_learner.h"
+#include "policy_learning/offline_pytorch_expert.h"
 
 #include <mppi_pinocchio/ros_conversions.h>
 
@@ -162,7 +162,7 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // learner
   // -------------------------------
-  auto learner = std::make_shared<OfflinePytorchLearner>();
+  auto learner = std::make_shared<OfflinePytorchExpert>();
 
   // -------------------------------
   // controller
