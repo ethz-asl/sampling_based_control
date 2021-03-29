@@ -2,7 +2,7 @@
 <package format="2">
     <name>mppi_omav_raisim</name>
     <version>0.1.0</version>
-    <description>mppi package</description>
+    <description>mppi package for an omnidirectional drone</description>
     <maintainer email="studigem@student.ethz.ch">Matthias Studiger</maintainer>
     <license>BSD</license>
 
@@ -15,5 +15,4 @@
     <depend>sensor_msgs</depend>
     <depend>std_msgs</depend>
     <depend>tf2_ros</depend>
-    <depend>mav_msgs</depend>
 </package>

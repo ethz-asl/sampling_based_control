@@ -4,8 +4,6 @@ project(mppi_omav_raisim)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
 
-option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." OFF)
-
 find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
 
@@ -18,7 +16,6 @@ set(PACKAGE_DEPENDENCIES
         roslib
         roscpp
         tf2_ros
-        mav_msgs
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})

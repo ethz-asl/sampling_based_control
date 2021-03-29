@@ -15,24 +15,20 @@
 
 namespace omav_raisim {
 
-    class OMAVRaisimDynamicsRos : public OMAVRaisimDynamics {
-    public:
-        OMAVRaisimDynamicsRos(const ros::NodeHandle& nh,
-                              const std::string& robot_description,
-                              const double dt);
-        ~OMAVRaisimDynamicsRos() = default;
+class OMAVRaisimDynamicsRos : public OMAVRaisimDynamics {
+ public:
+  OMAVRaisimDynamicsRos(const ros::NodeHandle &nh, const double dt);
+  ~OMAVRaisimDynamicsRos() = default;
 
-    public:
-        void reset_to_default();
-        void publish_ros();
+public:
+  void reset_to_default();
+  void publish_ros();
 
-    private:
-        ros::NodeHandle nh_;
-        ros::Publisher state_publisher_;
-        // TODO: Remove, if running (not used when implemented on OMAV)
-        sensor_msgs::JointState joint_state_;
-
-
-
-    };
-} // namespace omav_raisim
+ private:
+  ros::NodeHandle nh_;
+  // State Publisher will be unnecessary once we use it in the omav structure,
+  // only used for the rviz visualization.
+  ros::Publisher state_publisher_;
+  sensor_msgs::JointState joint_state_;
+};
+}  // namespace omav_raisim

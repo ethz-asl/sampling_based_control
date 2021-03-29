@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="description_file" default="$(find mppi_omav_raisim)/data/omav.urdf"/>
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
-    <arg name="plot_cost" default="true"/>
-    <arg name="plot_input" default="true"/>
+    <arg name="description_file" default="$(find mppi_omav_raisim)/data/omav.urdf.xacro"/>
+    <arg name="description_file_raisim" default="$(find mppi_omav_raisim)/data/omav_raisim.urdf.xacro"/>
+    <arg name="plot_cost" default="false"/>
+    <arg name="plot_input" default="false"/>
 
-    <arg name="experiment" default="false"/>
-    <arg name="experiment_id" default="omav_raisim"/>
-
-    <arg name="goal_position_x" default="5.0" />
-    <arg name="goal_position_y" default="5.0" />
+    <arg name="goal_position_x" default="0.0" />
+    <arg name="goal_position_y" default="0.0" />
     <arg name="goal_position_z" default="5.0" />
+
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
+    <param name="robot_description_raisim" value="$(find xacro)/xacro $(arg description_file_raisim)"/>
 
     <node name="omav_control" type="omav_control" pkg="mppi_omav_raisim" output="screen">
         <param name="goal_position_x" value="$(arg goal_position_x)"/>
         <param name="goal_position_y" value="$(arg goal_position_y)"/>
         <param name="goal_position_z" value="$(arg goal_position_z)"/>
-        <param name="activation_file" value="/home/studigem/.raisim/activation.raisim"/>
+        <param name="activation_file" value="$(env HOME)/.raisim/activation.raisim"/>
         <rosparam command="load" file="$(find mppi_omav_raisim)/params/omav_cost.yaml"/>
     </node>
 
@@ -29,20 +29,19 @@
         <remap from="robot_description" to="robot_description"/>
         <remap from="joint_states" to="/joint_states"/>
     </node>
-    <param name="robot_description_raisim" value=""/>
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_omav_raisim)/config/config.rviz" output="screen"/>
+
     <group>
         <param name="/config_file" value="$(find mppi_omav_raisim)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_omav_raisim)/params/params.yaml" ns="omav_control"/>
     </group>
+
     <group if="$(arg plot_cost)">
         <arg name="mp_config" default="$(find mppi_omav_raisim)/resources/rqt_multiplot.xml"/>
         <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config)"
               output="screen"/>
     </group>
-
-
 
 </launch>
