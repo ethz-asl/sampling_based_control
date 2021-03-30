@@ -1,7 +1,7 @@
 ### Build
 
-`catkin build mppi`
+`catkin build mppi_pole_cart`
 
 ### Run example
 
-`roslaunch mppi pendulum_cart_control.launch`
+`roslaunch mppi_pole_cart pole_cart_control.launch`
