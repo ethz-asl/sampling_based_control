@@ -162,26 +162,20 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // learner
   // -------------------------------
-  std::string learned_expert_output_path;
-  if (!nh_.param<std::string>("learned_expert_output_path", 
-      learned_expert_output_path, "")) {
-    throw std::runtime_error(
-        "Could not parse path to output of learned expert. "
-        "Is the parameter set?");
-  }
-  std::string torchscript_model_path;
-  if (!nh_.param<std::string>("torchscript_model_path", 
-      torchscript_model_path, "")) {
-    throw std::runtime_error(
-        "Could not parse path to output torch module. "
-        "Is the parameter set?");
-  }
   auto learner = std::make_shared<OfflinePytorchExpert>(
     dynamics->get_state_dimension(), 
-    dynamics->get_input_dimension(),
-    learned_expert_output_path,
-    torchscript_model_path
-    );
+    dynamics->get_input_dimension());
+  std::string torchscript_model_path;
+  if (nh_.param<std::string>("torchscript_model_path", 
+      torchscript_model_path, "")) {
+    learner->load_torch_module(torchscript_model_path);
+  }
+  std::string learned_expert_output_path;
+  if (nh_.param<std::string>("learned_expert_output_path", 
+      learned_expert_output_path, "")) {
+    learner->set_output_path(learned_expert_output_path);
+  }
+  ROS_INFO_STREAM("Loaded learned expert");
 
   // -------------------------------
   // controller

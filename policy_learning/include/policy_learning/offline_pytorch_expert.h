@@ -12,6 +12,7 @@
 
 #include "mppi/learned_expert/learned_expert.h"
 #include <memory>
+#include <string>
 
 class OfflinePytorchExpert: public mppi::LearnedExpert{
   public:
@@ -19,18 +20,22 @@ class OfflinePytorchExpert: public mppi::LearnedExpert{
     using observation_t = mppi::LearnedExpert::observation_t; 
 
   public:  
-    explicit OfflinePytorchExpert(size_t state_dim, size_t input_dim, 
-                                  std::string output_filename,
-                                  std::string torchscript_filename);
+    explicit OfflinePytorchExpert(size_t state_dim, size_t input_dim);
+    
     ~OfflinePytorchExpert();
     OfflinePytorchExpert(OfflinePytorchExpert&&) = default;
     OfflinePytorchExpert& operator=(OfflinePytorchExpert&&) = default;
     // Delete copy constructor because we would otherwise write on the same object.
     OfflinePytorchExpert& operator=(OfflinePytorchExpert const& other) = delete;
 
-
     input_t const get_action(const observation_t& x) override;
     void save_state_action(const observation_t& x, const input_t& u) override;
+
+    void set_data_logging(bool enable);
+    void clear_data_cache();
+    void set_output_path(std::string path);
+    void const dump_cache();
+    void load_torch_module(std::string path);
   
   private:
     // Use pImpl idom as described here: https://arne-mertz.de/2019/01/the-pimpl-idiom/

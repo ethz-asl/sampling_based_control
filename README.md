@@ -57,4 +57,4 @@ Install libtorch with CXX11 ABI (this is not the default install that comes with
 
 Currently, only `mppi_manipulation` is supported. Launch it with desired paths:
 `roslaunch mppi_manipulation control.launch fixed_base:=false learner_output_path:=<PATH> torchscript_model_path:=<PATH>`
-Otherwise, default paths will be taken. Note that there is no error (yet) when no torch model is supplied.
+Leaving out one of two paths will disable the repective function (either no output or no loaded model).
