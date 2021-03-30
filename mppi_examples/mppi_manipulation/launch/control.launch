@@ -15,7 +15,7 @@
     <arg name="object_reference_position" default="0.50" if="$(eval arg('object') == 'drawer')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
 
-    <arg name="learner_output_path" default="$(env HOME)/learner_output.csv"/>
+    <arg name="learner_output_path" default="$(env HOME)/learner_output.h5"/>
     <arg name="torchscript_model_path" default="$(env HOME)/torch_script_model.pt"/>
 
     <include file="$(find mppi_manipulation)/launch/load.launch">

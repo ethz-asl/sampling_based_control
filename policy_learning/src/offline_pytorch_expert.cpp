@@ -12,20 +12,20 @@
 #include <iostream>
 #include <stdexcept>
 #include <torch/script.h>
-#include <fstream>
+#include <highfive/H5Easy.hpp>
+#include <algorithm>
 
 // Private members and functions that should not be visible in header.
 class OfflinePytorchExpert::Impl{
   public:
     Impl(std::string filename):
-      output_file_(filename),
-      cvs_format_(output_precision_, Eigen::DontAlignCols, ",", ",")
+      output_file_(filename, H5Easy::File::Overwrite)
     {};
 
   public:
-    std::ofstream output_file_;
-    int output_precision_ = 6;
-    Eigen::IOFormat cvs_format_;
+    H5Easy::File output_file_;
+    std::vector<std::vector<float>> stored_states_;
+    std::vector<std::vector<float>> stored_actions_;
 
     bool module_initialized_ = false;
     torch::jit::script::Module module_;
@@ -36,18 +36,6 @@ OfflinePytorchExpert::OfflinePytorchExpert(size_t state_dim, size_t input_dim,
   LearnedExpert(state_dim, input_dim),
   pImpl(std::make_unique<Impl>(filename))
 {
-  if(pImpl->output_file_.is_open()){
-    for(size_t i=0; i<state_dim_; i++){
-      pImpl->output_file_ << "x" << i << ",";
-    }
-    for(size_t i=0; i<input_dim_-1; i++){
-      pImpl->output_file_ << "u" << i << ",";
-    }
-    pImpl->output_file_ << "u" << input_dim_-1 << std::endl;
-  } else {
-    throw std::invalid_argument("Could not open file " + filename);
-  }
-
   try {
     pImpl->module_ = torch::jit::load(torchscript_filename);
     // Check that one can do a forward pass and that the dimensions match.
@@ -70,7 +58,8 @@ OfflinePytorchExpert::OfflinePytorchExpert(size_t state_dim, size_t input_dim,
 }
 
 OfflinePytorchExpert::~OfflinePytorchExpert(){
-  pImpl->output_file_.close();
+  H5Easy::dump(pImpl->output_file_, "/states", pImpl->stored_states_);
+  H5Easy::dump(pImpl->output_file_, "/actions", pImpl->stored_actions_);
 }
 
 OfflinePytorchExpert::input_t const OfflinePytorchExpert::get_action(
@@ -101,7 +90,12 @@ OfflinePytorchExpert::input_t const OfflinePytorchExpert::get_action(
 void OfflinePytorchExpert::save_state_action(
     const OfflinePytorchExpert::observation_t& x,
     const OfflinePytorchExpert::input_t& u){
-  // TODO(Andy): We should use a more sophisticated format at one point... 
-  pImpl->output_file_ << x.format(pImpl->cvs_format_) << "," 
-    << u.format(pImpl->cvs_format_) << std::endl;
+  std::vector<float> x_f, u_f;
+
+  std::transform(x.data(), x.data()+x.size(), std::back_inserter(x_f), 
+    [](double val) -> float { return (float)val; });
+  std::transform(u.data(), u.data()+u.size(), std::back_inserter(u_f), 
+    [](double val) -> float { return (float)val; });
+  pImpl->stored_states_.push_back(x_f);
+  pImpl->stored_actions_.push_back(u_f);
 }
