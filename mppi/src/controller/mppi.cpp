@@ -179,7 +179,6 @@ void PathIntegral::update_policy() {
       stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
     }
     swap_policies();
-    if(learned_expert_) learned_expert_->save_rollout(opt_roll_);
 
     if (renderer_) renderer_->render(rollouts_);
     if (config_.logging) {
@@ -497,6 +496,7 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
       u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
           coeff * opt_roll_cache_.uu[idx];
     }
+    if(learned_expert_) learned_expert_->save_state_action(x, u);
   }
 }
 
