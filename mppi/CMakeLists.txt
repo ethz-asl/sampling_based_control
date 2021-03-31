@@ -38,7 +38,7 @@ add_library(${PROJECT_NAME}
         src/tree/node.cpp
         src/experts/expert.cpp
         src/utils/timer.cpp
-        src/learned_sampler/learned_sampler.cpp)
+        src/learned_expert/learned_expert.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES} gram_savitzky_golay)
 add_dependencies(${PROJECT_NAME} gram_savitzky_golay)
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)

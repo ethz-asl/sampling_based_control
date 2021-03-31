@@ -8,10 +8,17 @@
     <!-- Load robot description -->
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
 
+    <arg name="learner_output_path" default=""/>
+    <arg name="torchscript_model_path" default=""/>
+
     <!--  Run the test node-->
     <node name="pole_cart_control" type="pole_cart_control" pkg="mppi_pole_cart" output="screen">
         <rosparam command="load" file="$(find mppi_pole_cart)/config/params.yaml"/>
         <param name="config_file" value="$(find mppi_pole_cart)/config/params.yaml"/>
+        <param name="learned_expert_output_path" value="$(arg learner_output_path)" 
+            unless="$(eval arg('learner_output_path') == '')" />
+        <param name="torchscript_model_path" value="$(arg torchscript_model_path)" 
+            unless="$(eval arg('torchscript_model_path') == '')"/>
     </node>
 
     <!-- Publish robot state (joints) as TF -->

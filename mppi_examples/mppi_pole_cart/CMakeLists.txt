@@ -9,7 +9,8 @@ set(PACKAGE_DEPENDENCIES
         std_msgs
         roscpp
         mppi
-        mppi_ros)
+        mppi_ros
+        policy_learning)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 

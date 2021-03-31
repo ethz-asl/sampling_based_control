@@ -8,6 +8,11 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 find_package(Eigen3 REQUIRED 3.3)
 
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+find_package(HighFive REQUIRED)
+
 set(PACKAGE_DEPENDENCIES
         mppi
         roscpp)
@@ -18,12 +23,12 @@ catkin_package(
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES})
 
-set(COMMON_LIBRARIES ${catkin_LIBRARIES})
+set(COMMON_LIBRARIES ${catkin_LIBRARIES} ${TORCH_LIBRARIES} HighFive)
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 add_library(${PROJECT_NAME}
-        src/offline_pytorch_learner.cpp)
+        src/offline_pytorch_expert.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)

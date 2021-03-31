@@ -1,5 +1,5 @@
 /*!
- * @file     learned_sampler.h
+ * @file     learned_expert.h
  * @author   Andreas Voigt
  * @date     23.03.2021
  * @version  1.0
@@ -13,14 +13,14 @@
 #include "mppi/controller/rollout.h"
 
 namespace mppi{
-class LearnedSampler {
+class LearnedExpert {
   public:
-    using learned_sampler_ptr = std::shared_ptr<LearnedSampler>;
+    using learned_expert_ptr = std::shared_ptr<LearnedExpert>;
     using observation_t = Eigen::VectorXd;
     using input_t = Eigen::VectorXd;
 
-    LearnedSampler() = default;
-    virtual ~LearnedSampler(){};
+    LearnedExpert(size_t state_dim, size_t input_dim);
+    virtual ~LearnedExpert(){};
 
   public:
     
@@ -46,5 +46,9 @@ class LearnedSampler {
    * @param uu: planned actions
    */
     void save_rollout(const Rollout& rollout);
+
+  protected:
+    size_t state_dim_;
+    size_t input_dim_;
 };
 }

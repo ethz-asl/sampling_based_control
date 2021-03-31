@@ -12,6 +12,7 @@
     <depend>roscpp</depend>
     <depend>mppi</depend>
     <depend>mppi_ros</depend>
+    <depend>policy_learning</depend>
     <depend>eigen</depend>
 </package>
 
