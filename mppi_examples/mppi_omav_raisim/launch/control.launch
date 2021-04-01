@@ -6,17 +6,25 @@
     <arg name="plot_cost" default="false"/>
     <arg name="plot_input" default="false"/>
 
-    <arg name="goal_position_x" default="0.0" />
-    <arg name="goal_position_y" default="0.0" />
+    <arg name="goal_position_x" default="5.0" />
+    <arg name="goal_position_y" default="5.0" />
     <arg name="goal_position_z" default="5.0" />
+    <arg name="goal_quaternion_w" default="1.0" />
+    <arg name="goal_quaternion_x" default="0.0" />
+    <arg name="goal_quaternion_y" default="0.0" />
+    <arg name="goal_quaternion_z" default="0.0" />
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)"/>
-    <param name="robot_description_raisim" value="$(find xacro)/xacro $(arg description_file_raisim)"/>
+    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
 
     <node name="omav_control" type="omav_control" pkg="mppi_omav_raisim" output="screen">
         <param name="goal_position_x" value="$(arg goal_position_x)"/>
         <param name="goal_position_y" value="$(arg goal_position_y)"/>
         <param name="goal_position_z" value="$(arg goal_position_z)"/>
+        <param name="goal_quaternion_w" value="$(arg goal_quaternion_w)"/>
+        <param name="goal_quaternion_x" value="$(arg goal_quaternion_x)"/>
+        <param name="goal_quaternion_y" value="$(arg goal_quaternion_y)"/>
+        <param name="goal_quaternion_z" value="$(arg goal_quaternion_z)"/>
         <param name="activation_file" value="$(env HOME)/.raisim/activation.raisim"/>
         <rosparam command="load" file="$(find mppi_omav_raisim)/params/omav_cost.yaml"/>
     </node>

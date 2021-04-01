@@ -32,9 +32,6 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   mppi::SolverConfig config_;
 
  private:
-  mppi::input_array_t u_opt_;
-  mppi::observation_array_t x_opt_;
-
   bool reference_set_ = false;
 
   mppi::reference_trajectory_t ref_;

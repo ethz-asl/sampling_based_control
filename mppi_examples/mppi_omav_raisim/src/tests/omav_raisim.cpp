@@ -28,7 +28,10 @@ int main(int argc, char **argv) {
                         "/home/studigem/.raisim/activation.raisim");
   raisim::World::setActivationKey(activation_file);
 
-  OMAVRaisimDynamicsRos simulation(nh, TIMESTEP);
+  auto robot_description_raisim =
+      nh.param<std::string>("/robot_description_raisim", "");
+
+  OMAVRaisimDynamicsRos simulation(nh, robot_description_raisim, TIMESTEP);
 
   // Reset the state to a default configuration
   Eigen::VectorXd x, x_snapshot;

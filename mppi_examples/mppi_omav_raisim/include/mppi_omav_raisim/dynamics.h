@@ -22,10 +22,6 @@
 #include <string>
 
 namespace omav_raisim {
-struct force_t {
-  Eigen::Vector3d force;
-  Eigen::Vector3d position;
-};
 
 class OMAVRaisimDynamics : public mppi::DynamicsBase {
  public:
@@ -57,7 +53,7 @@ class OMAVRaisimDynamics : public mppi::DynamicsBase {
   const observation_t get_state() const override { return x_; }
 
   raisim::World *get_world() { return &sim_; }
-  raisim::Cylinder *get_omav() { return omav; }
+  raisim::ArticulatedSystem *get_omav() { return omav; }
 
  protected:
   size_t input_dimension_;
@@ -69,18 +65,12 @@ class OMAVRaisimDynamics : public mppi::DynamicsBase {
   double dt_;
   std::string robot_description_;
 
-  raisim::Cylinder *omav;
+  raisim::ArticulatedSystem *omav;
 
   raisim::World sim_;
 
-  Eigen::Matrix3d R_wb;
-  Eigen::Vector3d b_F, b_T;
   Eigen::Vector3d w_T_new, w_F_new;
-  Eigen::Vector3d b_F_new, b_T_new;
 
-  raisim::Vec<3> omav_velocity;
-  raisim::Vec<4> omav_quaternion;
-  raisim::Vec<3> omav_omega;
-  raisim::Vec<3> omav_position;
+  Eigen::VectorXd omav_pose, omav_velocities;
 };
 }  // namespace omav_raisim

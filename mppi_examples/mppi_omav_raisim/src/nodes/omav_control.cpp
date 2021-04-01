@@ -6,11 +6,11 @@
  * @brief   description
  */
 #include "mppi_omav_raisim/controller_interface.h"
+#include "mppi_omav_raisim/dynamics_ros.h"
+#include "mppi_omav_raisim/ros_conversions.h"
 
 #include <chrono>
-#include <mav_msgs/TorqueThrust.h>
 #include <memory>
-#include <mppi_omav_raisim/dynamics_ros.h>
 #include <ros/ros.h>
 #include <vector>
 
@@ -24,24 +24,31 @@ int main(int argc, char **argv) {
   // ros interface
   auto controller = OMAVControllerInterface(nh);
 
-  auto simulation = std::make_shared<OMAVRaisimDynamicsRos>(nh, 0.015);
-  // Implement all the publishers
-  geometry_msgs::Vector3 ThrustRate;
-  ros::Publisher ThrustRate_publisher_ =
-      nh.advertise<geometry_msgs::Vector3>("/ThrustRate", 10);
+  auto robot_description = nh.param<std::string>("/robot_description", "");
+  auto robot_description_raisim =
+      nh.param<std::string>("/robot_description_raisim", "");
 
-  geometry_msgs::Vector3 TorqueRate;
-  ros::Publisher TorqueRate_publisher_ =
-      nh.advertise<geometry_msgs::Vector3>("/TorqueRate", 10);
+  auto simulation = std::make_shared<OMAVRaisimDynamicsRos>(
+      nh, robot_description_raisim, 0.015);
+  // Implement all the publishers
+  geometry_msgs::Vector3 thrust_rate;
+  ros::Publisher thrust_rate_publisher_ =
+      nh.advertise<geometry_msgs::Vector3>("/thrust_rate", 10);
+
+  geometry_msgs::Vector3 torque_rate;
+  ros::Publisher torque_rate_publisher_ =
+      nh.advertise<geometry_msgs::Vector3>("/torque_rate", 10);
 
   // Thrust Message
   geometry_msgs::Vector3 thrust_command_ros;
   // Torque Message
   geometry_msgs::Vector3 torque_command_ros;
-  // Wrench Publisher
-  mav_msgs::TorqueThrust TorqueThrust_command_ros;
-  ros::Publisher TorqueThrust_command_publisher_ =
-      nh.advertise<mav_msgs::TorqueThrust>("/command/TorqueThrust", 10);
+  // Thrust Publisher
+  ros::Publisher thrust_command_publisher_ =
+      nh.advertise<geometry_msgs::Vector3>("/command/thrust", 10);
+  // Torque Publisher
+  ros::Publisher torque_command_publisher_ =
+      nh.advertise<geometry_msgs::Vector3>("/command/torque", 10);
 
   // set initial state
   observation_t x = observation_t::Zero(simulation->get_state_dimension());
@@ -79,6 +86,7 @@ int main(int argc, char **argv) {
   // do some timing
   double elapsed;
   std::chrono::time_point<std::chrono::steady_clock> start, end;
+  // Remove before push
 
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
@@ -87,21 +95,7 @@ int main(int argc, char **argv) {
       controller.set_observation(x, sim_time);
       controller.update_policy();
       controller.get_input_state(x, x_nom, u, sim_time);
-      std::cout << "---------------- x given to get_input state "
-                   "---------------------------"
-                << std::endl;
-      std::cout << x.transpose() << std::endl;
-      std::cout << "---------------- x_nom from get_input state "
-                   "--------------------------"
-                << std::endl;
-      std::cout << x_nom.transpose() << std::endl;
-      std::cout << "------------------ input u ----------------------"
-                << std::endl;
-      std::cout << u.transpose() << std::endl;
-      std::cout << "------------------------------------------------------"
-                << std::endl;
       controller.publish_ros_default();
-      controller.publish_ros();
     } else {
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);
@@ -109,36 +103,22 @@ int main(int argc, char **argv) {
 
     if (!static_optimization) {
       x = simulation->step(u, sim_dt);
-      std::cout << "-------------- x after simulation ------------------"
-                << std::endl;
-      std::cout << x.transpose() << std::endl;
-      std::cout << "------------------------------------------------------"
-                << std::endl;
+      simulation->publish_ros();
       sim_time += sim_dt;
     }
 
-    // Assemble wrench command and publish it
-    thrust_command_ros.x = x_nom(0);
-    thrust_command_ros.y = x_nom(1);
-    thrust_command_ros.z = x_nom(2);
-    torque_command_ros.x = x_nom(3);
-    torque_command_ros.y = x_nom(4);
-    torque_command_ros.z = x_nom(5);
-    TorqueThrust_command_ros.thrust = thrust_command_ros;
-    TorqueThrust_command_ros.torque = torque_command_ros;
+    // Publish  command and publish it
+    omav_raisim::conversions::to_thrust(x_nom, thrust_command_ros);
+    omav_raisim::conversions::to_torque(x_nom, torque_command_ros);
 
-    TorqueThrust_command_publisher_.publish(TorqueThrust_command_ros);
+    thrust_command_publisher_.publish(thrust_command_ros);
+    torque_command_publisher_.publish(torque_command_ros);
 
     // Publish Rates
-    ThrustRate.x = u(0);
-    ThrustRate.y = u(1);
-    ThrustRate.z = u(2);
-    ThrustRate_publisher_.publish(ThrustRate);
-
-    TorqueRate.x = u(3);
-    TorqueRate.y = u(4);
-    TorqueRate.z = u(5);
-    TorqueRate_publisher_.publish(TorqueRate);
+    omav_raisim::conversions::to_thrust_rate(u, thrust_rate);
+    omav_raisim::conversions::to_torque_rate(u, torque_rate);
+    thrust_rate_publisher_.publish(thrust_rate);
+    torque_rate_publisher_.publish(torque_rate);
 
     end = std::chrono::steady_clock::now();
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)

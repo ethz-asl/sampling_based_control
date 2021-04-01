@@ -10,6 +10,7 @@
     <depend>eigen</depend>
     <depend>mppi</depend>
     <depend>mppi_ros</depend>
+    <depend>mppi_pinocchio</depend>
     <depend>roscpp</depend>
     <depend>roslib</depend>
     <depend>sensor_msgs</depend>

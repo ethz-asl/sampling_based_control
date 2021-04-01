@@ -8,10 +8,6 @@
     <xacro:property name="radius_ouzel" value="0.5"/>
     <xacro:property name="height_ouzel" value="0.3"/>
 
-    <link name="odom">
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-    </link>
-
     <link name="ouzel">
         <inertial>
             <mass value="${mass_ouzel}"/>
@@ -34,10 +30,4 @@
             </material>
         </visual>
     </link>
-
-    <joint name="odom_drone" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <parent link="odom"/>
-        <child link="ouzel"/>
-    </joint>
 </robot>

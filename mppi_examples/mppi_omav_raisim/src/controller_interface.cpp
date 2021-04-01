@@ -44,6 +44,7 @@ bool OMAVControllerInterface::set_controller(
 
   dynamics = std::make_shared<OMAVRaisimDynamics>(robot_description_raisim,
                                                   config_.step_size);
+
   std::cout << "Done." << std::endl;
 
   // -------------------------------
@@ -66,14 +67,24 @@ bool OMAVControllerInterface::set_controller(
   // -------------------------------
   // initialize reference
   // -------------------------------
-  double x_goal_position, y_goal_position, z_goal_position;
+  double x_goal_position, y_goal_position, z_goal_position, w_goal_quaternion,
+      x_goal_quaternion, y_goal_quaternion, z_goal_quaternion;
   nh_.param<double>("goal_position_x", x_goal_position, 0.0);
   nh_.param<double>("goal_position_y", y_goal_position, 0.0);
   nh_.param<double>("goal_position_z", z_goal_position, 0.0);
-  ref_.rr.resize(1, mppi::observation_t::Zero(3));
+  nh_.param<double>("goal_quaternion_w", w_goal_quaternion, 1.0);
+  nh_.param<double>("goal_quaternion_x", x_goal_quaternion, 0.0);
+  nh_.param<double>("goal_quaternion_y", y_goal_quaternion, 0.0);
+  nh_.param<double>("goal_quaternion_z", z_goal_quaternion, 0.0);
+
+  ref_.rr.resize(1, mppi::observation_t::Zero(7));
   ref_.rr[0](0) = x_goal_position;
   ref_.rr[0](1) = y_goal_position;
   ref_.rr[0](2) = z_goal_position;
+  ref_.rr[0](3) = w_goal_quaternion;
+  ref_.rr[0](4) = x_goal_quaternion;
+  ref_.rr[0](5) = y_goal_quaternion;
+  ref_.rr[0](6) = z_goal_quaternion;
   ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());

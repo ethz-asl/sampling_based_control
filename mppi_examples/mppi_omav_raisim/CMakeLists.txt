@@ -13,6 +13,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         mppi
         mppi_ros
+        mppi_pinocchio
         roslib
         roscpp
         tf2_ros
@@ -31,6 +32,7 @@ add_library(${PROJECT_NAME}
         src/dynamics_ros.cpp
         src/cost.cpp
         src/controller_interface.cpp
+        src/ros_conversions.cpp
         )
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 
@@ -42,16 +44,7 @@ add_executable(omav_raisim src/tests/omav_raisim.cpp)
 target_link_libraries(omav_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(omav_raisim ${PROJECT_NAME})
 
-if (BUILD_WITH_OGRE)
-  find_package(raisimOgre CONFIG REQUIRED)
-  add_executable(sim_ogre src/tests/sim.cpp)
-  target_link_libraries(sim_ogre PUBLIC raisim::raisimOgre)
-  add_dependencies(sim_ogre ${PROJECT_NAME})
-
-  add_executable(raisim_rendering_node src/nodes/raisim_rendering_node.cpp)
-  target_link_libraries(raisim_rendering_node PUBLIC ${PROJECT_NAME} ${catkin_LIBRARIES} raisim::raisimOgre)
-  add_dependencies(raisim_rendering_node ${PROJECT_NAME})
-endif()
+add_definitions("-DBOOST_MPL_LIMIT_LIST_SIZE=30")
 
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

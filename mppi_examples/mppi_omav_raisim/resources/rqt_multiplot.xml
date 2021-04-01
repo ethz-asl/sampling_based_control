@@ -35,11 +35,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/thrust</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>thrust/x</field>
+                                    <field>x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -48,8 +48,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/thrust</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -86,11 +86,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/thrust</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>thrust/y</field>
+                                    <field>y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -99,8 +99,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/thrust</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -137,11 +137,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/thrust</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>thrust/z</field>
+                                    <field>z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -150,8 +150,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/thrust</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -211,7 +211,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/ThrustRate</topic>
+                                    <topic>/thrust_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
@@ -224,7 +224,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/ThrustRate</topic>
+                                    <topic>/thrust_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
@@ -262,7 +262,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/ThrustRate</topic>
+                                    <topic>/thrust_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
@@ -275,7 +275,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/ThrustRate</topic>
+                                    <topic>/thrust_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
@@ -313,7 +313,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/ThrustRate</topic>
+                                    <topic>/thrust_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
@@ -326,7 +326,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/ThrustRate</topic>
+                                    <topic>/thrust_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
@@ -359,6 +359,233 @@
                     <plot_rate>30</plot_rate>
                     <title>Thrust Rates</title>
                 </column_1>
+                <column_2>
+                    <axes>
+                        <axes>
+                            <x_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </x_axis>
+                            <y_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </y_axis>
+                        </axes>
+                    </axes>
+                    <curves>
+                        <curve_0>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/orientation/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>orientation_x</title>
+                        </curve_0>
+                        <curve_1>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/orientation/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>orientation_y</title>
+                        </curve_1>
+                        <curve_2>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/orientation/z</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>orientation_z</title>
+                        </curve_2>
+                        <curve_3>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/orientation/w</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>orientation_w</title>
+                        </curve_3>
+                    </curves>
+                    <legend>
+                        <visible>true</visible>
+                    </legend>
+                    <plot_rate>30</plot_rate>
+                    <title>Cost</title>
+                </column_2>
             </row_0>
             <row_1>
                 <column_0>
@@ -389,11 +616,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/torque</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>torque/x</field>
+                                    <field>x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -402,8 +629,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/torque</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -440,11 +667,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/torque</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>torque/y</field>
+                                    <field>y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -453,8 +680,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/torque</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -491,11 +718,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/torque</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>torque/z</field>
+                                    <field>z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -504,8 +731,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/command/TorqueThrust</topic>
-                                    <type>mav_msgs/TorqueThrust</type>
+                                    <topic>/command/torque</topic>
+                                    <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -565,7 +792,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/TorqueRate</topic>
+                                    <topic>/torque_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
@@ -578,7 +805,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/TorqueRate</topic>
+                                    <topic>/torque_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
@@ -616,7 +843,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/TorqueRate</topic>
+                                    <topic>/torque_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
@@ -629,7 +856,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/TorqueRate</topic>
+                                    <topic>/torque_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
@@ -667,7 +894,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/TorqueRate</topic>
+                                    <topic>/torque_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </x_axis>
                                 <y_axis>
@@ -680,7 +907,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/TorqueRate</topic>
+                                    <topic>/torque_rate</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
@@ -713,6 +940,182 @@
                     <plot_rate>30</plot_rate>
                     <title>Torque Rates</title>
                 </column_1>
+                <column_2>
+                    <axes>
+                        <axes>
+                            <x_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </x_axis>
+                            <y_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </y_axis>
+                        </axes>
+                    </axes>
+                    <curves>
+                        <curve_0>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/position/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Position_x</title>
+                        </curve_0>
+                        <curve_1>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/position/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Position_y</title>
+                        </curve_1>
+                        <curve_2>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/position/z</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/visualization_marker</topic>
+                                    <type>visualization_msgs/Marker</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Position_z</title>
+                        </curve_2>
+                    </curves>
+                    <legend>
+                        <visible>true</visible>
+                    </legend>
+                    <plot_rate>30</plot_rate>
+                    <title>Position</title>
+                </column_2>
             </row_1>
         </plots>
         <track_points>false</track_points>

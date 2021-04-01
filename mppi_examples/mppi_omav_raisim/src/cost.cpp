@@ -7,10 +7,9 @@
  */
 
 #include "mppi_omav_raisim/cost.h"
+#include "mppi_pinocchio/model.h"
 #include <Eigen/Geometry>
 #include <algorithm>
-#include <ros/package.h>
-#include <string>
 
 using namespace omav_raisim;
 
@@ -28,28 +27,16 @@ OMAVRaisimCost::compute_cost(const mppi::observation_t &x,
       abs(x(18)) > param_.z_limit) {
     cost += param_.Q_leafing_field;
   }
-  // Displacement From Reference Cost
-  Eigen::Vector3d position_error = {x(16) - ref(0), x(17) - ref(1),
-                                    x(18) - ref(2)};
-  cost += position_error.transpose() * param_.Q_distance * position_error;
-  // Attitude Cost
-  // TODO(studigem): Currently no reference implemented only penalizes
-  // difference from
-  // (1,0,0,0)
-  Eigen::Quaterniond odometry_quaternion = {x(9), x(10), x(11), x(12)};
-  Eigen::Quaterniond reference_quaternion = {1, 0, 0, 0};
-  Eigen::Matrix3d R_W_B = odometry_quaternion.toRotationMatrix();
-  Eigen::Matrix3d R_W_B_des = reference_quaternion.toRotationMatrix();
+  // Pose Cost
+  mppi_pinocchio::Pose current_pose, reference_pose;
+  current_pose.translation = x.tail<3>();
+  current_pose.rotation = {x(9), x(10), x(11), x(12)};
+  reference_pose.translation = ref.head<3>();
+  reference_pose.rotation = {ref(3), ref(4), ref(5), ref(6)};
 
-  Eigen::Matrix3d attitude_error_matrix =
-      0.5 * (R_W_B_des.transpose() * R_W_B - R_W_B.transpose() * R_W_B_des);
-  Eigen::Vector3d att_error_B;
-  mav_msgs::vectorFromSkewMatrix(attitude_error_matrix, &att_error_B);
+  delta_pose = mppi_pinocchio::get_delta(current_pose, reference_pose);
+  cost += delta_pose.transpose() * param_.Q_pose * delta_pose;
 
-  double quaternion_cost = param_.Q_orientation * (std::pow(att_error_B(0), 2) +
-                                                   std::pow(att_error_B(1), 2) +
-                                                   std::pow(att_error_B(2), 2));
-  cost += quaternion_cost;
   // Maximum Velocity cost
   cost += std::max(0.0, std::sqrt(pow(x(6), 2) + pow(x(7), 2) + pow(x(8), 2)) *
                                 param_.Q_velocity_max -
@@ -123,7 +110,9 @@ bool OMAVRaisimCostParam::parse_from_ros(const ros::NodeHandle &nh) {
     ROS_ERROR("Failed to parse omega_cost or invalid!");
     return false;
   }
-  Q_distance << Q_distance_x, 0, 0, 0, Q_distance_y, 0, 0, 0, Q_distance_z;
+  pose_costs << Q_distance_x, Q_distance_y, Q_distance_y, Q_orientation,
+      Q_orientation, Q_orientation;
+  Q_pose = pose_costs.asDiagonal();
 
   return true;
 }

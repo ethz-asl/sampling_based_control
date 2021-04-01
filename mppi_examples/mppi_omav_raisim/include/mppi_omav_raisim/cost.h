@@ -22,19 +22,17 @@ struct OMAVRaisimCostParam {
   double Q_distance_x;  // Distance to reference Cost
   double Q_distance_y;
   double Q_distance_z;
-  Eigen::Matrix3d Q_distance;
 
   double Q_orientation;  // Orientation Cost
+
+  Eigen::Matrix<double, 6, 1> pose_costs;
+
+  Eigen::Matrix<double, 6, 6> Q_pose;  // Pose cost, is constructed from Q_distance and Q_orientation
 
   double Q_leafing_field;  // Leafing Field Costs
   double x_limit;
   double y_limit;
   double z_limit;
-
-  double Q_obstacle;  // Obstacle Cost
-  double obstacle_x;
-  double obstacle_y;
-  double obstacle_radius;
 
   double Q_velocity_max;  // Maximum velocity cost
   double max_velocity;
@@ -43,7 +41,6 @@ struct OMAVRaisimCostParam {
   double max_thrust;
 
   double Q_omega;  // Maximum angular velocity cost
-  double max_omega;
 
   bool parse_from_ros(const ros::NodeHandle &nh);
 };
@@ -58,6 +55,7 @@ class OMAVRaisimCost : public mppi::CostBase {
  private:
   std::string robot_description_;
   OMAVRaisimCostParam param_;
+  Eigen::Matrix<double, 6, 1> delta_pose;
 
  private:
   cost_ptr create() override {
