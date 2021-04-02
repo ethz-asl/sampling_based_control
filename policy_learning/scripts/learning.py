@@ -161,7 +161,7 @@ if __name__ == "__main__":
     idx=0
     sample = dataset[idx]
     print("Index: ", idx, "\nstate: " , sample['state'], "\naction: ", sample['action'])
-<
+
     # set device for training
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
