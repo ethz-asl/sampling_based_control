@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import pandas as pd
+import h5py
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -22,25 +22,25 @@ class StateActionDataset(Dataset):
         # TODO: (Kiran) adapt to final i/o of data collection
 
 
-        file_name = os.path.join(root_dir, 'data', 'out.csv')
-        # code to read in following csv format:
-        # n_states, n_actions, state_values, action_values
-        n_states = pd.read_csv(file_name, header=None, usecols=[0])  # assusmes that n_states does not change in one csv file
-        n_actions = pd.read_csv(file_name, header=None, usecols=[1]) # same as above for n_actions
-        self._n_states = n_states.values[0][0]
-        self._n_actions = n_actions.values[0][0]
-        self.state = pd.read_csv(file_name, header=None,
-            usecols=range(2, self._n_states+2), dtype=float)
-        self.action = pd.read_csv(file_name, header=None,
-            usecols=range(self._n_states+2, self._n_states+self._n_actions+1),
-            dtype=float) # last entry should be +2 but csv is one column too short for some reason
+        file_name = os.path.join(root_dir, 'data', 'test_file.hdf5')
+        f = h5py.File(file_name, 'r')
+        if f:
+            print('Successfully loaded file')
+        else:
+            print('Could not open dataset')
+        self.state_dataset = f['states']
+        self.action_dataset = f['actions']
+
+        self._n_states = self.state_dataset.shape[1]
+        self._n_actions = self.action_dataset.shape[1]
+
 
     def __len__(self):
         """
         Define magic method.
         """
-        n_data_points_states = len(self.state)
-        n_data_points_actions = len(self.action)
+        n_data_points_states = len(self.state_dataset)
+        n_data_points_actions = len(self.action_dataset)
         if n_data_points_states == n_data_points_actions:
             return n_data_points_states
         else:
@@ -51,8 +51,8 @@ class StateActionDataset(Dataset):
         """
         Define magic method.
         """
-        state = self.state.values[idx]
-        action = self.action.values[idx]
+        state = self.state_dataset[idx, :]
+        action = self.action_dataset[idx, :]
         sample = {'state': state, 'action': action}
         return sample
 
@@ -62,7 +62,7 @@ class StateActionDataset(Dataset):
             int, int: dimensions of the state and action spaces
         """
         return self._n_states, self._n_actions
-        
+
 
 class MLPSampler(nn.Module):
     """
@@ -78,6 +78,7 @@ class MLPSampler(nn.Module):
             nn.ReLU(),
             nn.Linear(512,n_out)
         )
+
     def forward(self, x):
         """
         return: output of model
@@ -100,7 +101,7 @@ class PolicyLearner:
         self.dataset = StateActionDataset(root_dir=file_path)
         self.n_states, self.n_actions = self.dataset.get_dimensions()
         # initialise MLP model
-        self.model = MLPSampler(self.n_states, self.n_actions-1).to(device) #reduce action size for now because of csv n_action bug
+        self.model = MLPSampler(self.n_states, self.n_actions).to(device)
         self._is_trained = False
 
     def train(self):
@@ -124,15 +125,15 @@ class PolicyLearner:
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
             for batch, sample in enumerate(train_dataloader):
-                pred = self.model(sample['state'].float())
-                loss = loss_fn(pred, sample['action'].float())
+                pred = self.model(sample['state'])
+                loss = loss_fn(pred, sample['action'])
 
                 # Backpropagation
-                optimizer.zero_grad() # set grad to zero firs
+                optimizer.zero_grad() # set grad to zero first
                 loss.backward()
                 optimizer.step()
 
-                if batch % 10 == 0:
+                if batch % 1000 == 0:
                     loss, current = loss.item(), batch * len(sample['state'])
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
@@ -159,26 +160,16 @@ if __name__ == "__main__":
     dataset = StateActionDataset(root_dir=file_path)
     idx=0
     sample = dataset[idx]
-    #print("Index: ", idx, "\nstate: " , sample['state'], "\naction: ", sample['action'])
-
-    n_states, n_actions = dataset.get_dimensions()
-
+    print("Index: ", idx, "\nstate: " , sample['state'], "\naction: ", sample['action'])
+<
     # set device for training
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = MLPSampler(n_states, n_actions).to(device)
-    #print(model)
+
+
     learner = PolicyLearner(file_path, device)
     learner.train()
 
-    # # make data in correct format for torch
-    # train_dataloader = DataLoader(dataset, batch_size=1)
-    #
-    # for different_sample in train_dataloader:
-    #
-    #     #print(different_sample)
-    #     state = different_sample['state']
-    #     a_pred = model(state.float())
-    #     #print(a_pred)
 
     action = learner.get_action(sample['state'])
-    print(action)
+    print('predicted action: ', action)
+    print('action from dataset: ', sample['action'])
