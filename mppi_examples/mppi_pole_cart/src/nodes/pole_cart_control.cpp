@@ -33,6 +33,11 @@ int main(int argc, char** argv) {
   x(0) = 0.0;
   x(1) = 0.0;
   x(2) = 0.1;
+  // parametrize initial position of robot
+  x(0) = nh.param<double>("initial_position/x", 0.0);
+  x(1) = nh.param<double>("initial_position/theta", 0.0);
+  x(2) = nh.param<double>("initial_position/x_dot", 0.0);
+  x(3) = nh.param<double>("initial_position/theta_dot", 0.0);
   simulation.reset(x);
 
   mppi::DynamicsBase::input_t u;
