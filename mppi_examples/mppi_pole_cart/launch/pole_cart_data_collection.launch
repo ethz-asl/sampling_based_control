@@ -10,6 +10,10 @@
 
     <arg name="learner_output_path" default=""/>
     <arg name="torchscript_model_path" default=""/>
+    <arg name="x" default=""/>
+    <arg name="x_d" default=""/>
+    <arg name="theta" default=""/>
+    <arg name="theta_d" default=""/>
 
     <!--  Run the test node-->
     <node name="pole_cart_data_collection" type="pole_cart_data_collection" pkg="mppi_pole_cart" output="screen" required="true">
