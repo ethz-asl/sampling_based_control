@@ -21,6 +21,12 @@
             unless="$(eval arg('torchscript_model_path') == '')"/>
         <param name="initial_position/x" value="$(arg x)"
             unless="$(eval arg('x') == '')"/>
+        <param name="initial_position/x_dot" value="$(arg x_d)"
+            unless="$(eval arg('x_d') == '')"/>
+        <param name="initial_position/theta" value="$(arg theta)"
+            unless="$(eval arg('theta') == '')"/>
+        <param name="initial_position/theta_dot" value="$(arg theta_d)"
+            unless="$(eval arg('theta_d') == '')"/>
     </node>
 
     <!-- Publish robot state (joints) as TF -->
