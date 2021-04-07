@@ -2,6 +2,8 @@
 
 import os
 import h5py
+import csv
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -18,18 +20,39 @@ class StateActionDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
 
-        # root_dir must have a data file
+        # root_dir must have a folder with runs and a value log file as generated
+        # by the data_collection bash script
         # TODO: (Kiran) adapt to final i/o of data collection
 
+        # ascertain number of data files from IC log .csv file
+        # --> values inside of csv do not have any use for learning currently
+        log_file_path = os.path.join(root_dir, 'value_log.csv')
+        with open(log_file_path) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                line_count += 1
 
-        file_name = os.path.join(root_dir, 'data', 'test_file.hdf5')
-        f = h5py.File(file_name, 'r')
-        if f:
-            print('Successfully loaded file')
-        else:
-            print('Could not open dataset')
-        self.state_dataset = f['states']
-        self.action_dataset = f['actions']
+        n_runs = line_count - 1 # minus header
+        print('Identified ', n_runs, ' runs.')
+
+        # loop over all files and concatenate into one dataset for each attribute
+        # !!Naive impelementation, needs to be revised if datasets become larger
+
+        for i in range(0, n_runs):
+            file_name = "run_" + str(i) + ".hdf5"
+            file_path = os.path.join(root_dir, file_name)
+            f = h5py.File(file_path, 'r')
+            if not f:
+                print('Could not load file at iteration: ', i)
+            more_states = f['states']
+            more_actions = f['actions']
+            if i==0:
+                self.state_dataset = np.array(more_states[:,:])
+                self.action_dataset = np.array(more_actions[:,:])
+            else:
+                self.state_dataset = np.append(self.state_dataset, more_states[:,:], axis=0)
+                self.action_dataset = np.append(self.action_dataset, more_actions[:,:], axis=0)
 
         self._n_states = self.state_dataset.shape[1]
         self._n_actions = self.action_dataset.shape[1]
@@ -111,7 +134,7 @@ class PolicyLearner:
 
         # Training parameters
         epochs = 2
-        batch_size = 2
+        batch_size = 20
         learning_rate = 1e-3
 
         # initialise loss function
@@ -156,17 +179,18 @@ if __name__ == "__main__":
 
 
     task_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = task_path + "/../"
-    dataset = StateActionDataset(root_dir=file_path)
+    dir_path = task_path + "/../data/0407141317"
+    dataset = StateActionDataset(root_dir=dir_path)
     idx=0
     sample = dataset[idx]
     print("Index: ", idx, "\nstate: " , sample['state'], "\naction: ", sample['action'])
-
+    dimensions = len(dataset)
+    print('number of training samples: ', dimensions)
     # set device for training
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-    learner = PolicyLearner(file_path, device)
+    learner = PolicyLearner(dir_path, device)
     learner.train()
 
 
