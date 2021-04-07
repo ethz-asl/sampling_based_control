@@ -12,7 +12,7 @@
     <arg name="torchscript_model_path" default=""/>
 
     <!--  Run the test node-->
-    <node name="pole_cart_control" type="pole_cart_control" pkg="mppi_pole_cart" output="screen">
+    <node name="pole_cart_data_collection" type="pole_cart_data_collection" pkg="mppi_pole_cart" output="screen" required="true">
         <rosparam command="load" file="$(find mppi_pole_cart)/config/params.yaml"/>
         <param name="config_file" value="$(find mppi_pole_cart)/config/params.yaml"/>
         <param name="learned_expert_output_path" value="$(arg learner_output_path)"
