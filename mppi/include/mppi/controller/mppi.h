@@ -363,6 +363,7 @@ class PathIntegral {
   Timer timer_;
 
   learned_expert_ptr learned_expert_; 
+  size_t learned_rollouts_;
 };
 
 }  // namespace mppi

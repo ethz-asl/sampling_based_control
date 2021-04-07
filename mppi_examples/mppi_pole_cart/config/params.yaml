@@ -15,6 +15,7 @@ solver:
 
   cost_ratio: 0.2
   caching_factor: 0.1
+  learning_factor: 0.0          # percentage of rollouts that is informed by the learned expert
   filtering: false
   substeps: 1
 

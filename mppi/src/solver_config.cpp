@@ -35,6 +35,7 @@ bool SolverConfig::init_from_file(const std::string& file) {
   h               = parse_key<double>(solver_options, "h").value_or(h);
   substeps        = parse_key_quiet<size_t>(solver_options, "substeps").value_or(substeps);
   caching_factor  = parse_key<double>(solver_options, "caching_factor").value_or(caching_factor);
+  learning_factor = parse_key<double>(solver_options, "learning_factor").value_or(learning_factor);
   step_size       = parse_key<double>(solver_options, "step_size").value_or(step_size);
   horizon         = parse_key<double>(solver_options, "horizon").value_or(horizon);
   alpha           = parse_key_quiet<double>(solver_options, "gradient_step_size").value_or(alpha);
@@ -85,6 +86,7 @@ std::ostream &operator<<(std::ostream &os, const mppi::SolverConfig &config) {
   os << " input_variance:   " << config.input_variance.transpose() << std::endl; 
   
   os << " caching_factor:   " << config.caching_factor << std::endl;
+  os << " learning_factor:  " << config.learning_factor << std::endl;
   os << " step_size:        " << config.step_size << "s" << std::endl;
   os << " horizon:          " << config.horizon << "s" << std::endl;
   os << " steps:            " << std::floor(config.horizon / config.step_size) << std::endl;

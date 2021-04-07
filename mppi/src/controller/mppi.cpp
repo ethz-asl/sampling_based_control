@@ -69,6 +69,16 @@ void PathIntegral::init_data() {
 
   omega = Eigen::ArrayXd::Zero(config_.rollouts);
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
+  learned_rollouts_ = std::ceil(config_.learning_factor * config_.rollouts);
+  if(cached_rollouts_ + learned_rollouts_ > config_.rollouts){
+    learned_rollouts_ = config_.rollouts - cached_rollouts_;
+    log_warning("Clipping number of learned rollouts. "
+        "Make sure that caching- and learning-factor sum to < 1.");
+  }
+  if(learned_rollouts_ > 0 && !learned_expert_){
+    log_warning("Learning factor > 0 but no learned expert provided. "
+        "Learning factor will be ignored.");
+  }
 
   momentum_.resize(steps_, input_t::Zero(nu_));
 
@@ -315,9 +325,6 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     dynamics->reset(x0_internal_);
     x = x0_internal_;
 
-    // TODO(ANDY): currently only checks if call works. Need to use sampled action.
-    if(learned_expert_) learned_expert_->get_action(x); 
-    
     for (size_t t = 0; t < steps_; t++) {
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
@@ -327,6 +334,19 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       else if (k == cached_rollouts_) {
         rollouts_[k].nn[t].setZero();
         rollouts_[k].uu[t] = opt_roll_.uu[t];
+      }
+      // sample around learned action 
+      else if (learned_expert_ && k < cached_rollouts_ + learned_rollouts_){
+        sample_noise(rollouts_[k].nn[t]);
+        auto learned_action = learned_expert_->get_action(x); 
+        std::cerr << learned_action.transpose() << std::endl;
+        rollouts_[k].uu[t] = learned_action + rollouts_[k].nn[t];
+      }
+      // noise free learned action
+      else if (learned_expert_ && k == cached_rollouts_ + learned_rollouts_){
+        rollouts_[k].nn[t].setZero();
+        auto learned_action = learned_expert_->get_action(x); 
+        rollouts_[k].uu[t] = learned_action;
       }
       // perturbed trajectory
       else {

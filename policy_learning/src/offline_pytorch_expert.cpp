@@ -107,6 +107,10 @@ OfflinePytorchExpert::input_t const OfflinePytorchExpert::get_action(
     Eigen::VectorXf action_f = Eigen::Map<Eigen::VectorXf>(
       t_action.data_ptr<float>(), t_action.size(0));
     action = action_f.cast<input_t::Scalar>();
+  } else {
+    // TODO(ANDY): this is really not ideal because nobody notices that no module was loaded
+    // at some point we should require to load a module
+    action = input_t::Zero(input_dim_);
   }
   return action;
 }
