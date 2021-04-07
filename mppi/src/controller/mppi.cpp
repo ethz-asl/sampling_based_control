@@ -339,7 +339,6 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       else if (learned_expert_ && k < cached_rollouts_ + learned_rollouts_){
         sample_noise(rollouts_[k].nn[t]);
         auto learned_action = learned_expert_->get_action(x); 
-        std::cerr << learned_action.transpose() << std::endl;
         rollouts_[k].uu[t] = learned_action + rollouts_[k].nn[t];
       }
       // noise free learned action
