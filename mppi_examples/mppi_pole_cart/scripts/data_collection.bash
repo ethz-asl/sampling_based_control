@@ -11,7 +11,8 @@ current_dir=$(pwd)
 # loop over random inital conditions, for each initial condtition save a new
 # data file
 echo "x_position,x_dot,theta,theta_dot" >> value_log.csv
-for ((i=0; i<10; i++))
+n_datapoints=50
+for ((i=0; i<$n_datapoints; i++))
 do
   output_file="/run_${i}.hdf5"
   output_path=$current_dir$output_file
