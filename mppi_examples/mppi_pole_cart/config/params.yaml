@@ -6,12 +6,6 @@ dynamics:
   angular_friction: 0.7
   substep_size: 0.01
 
-initial_position:
-  x: 0
-  theta: 0
-  x_dot: 0
-  theta_dot: 0
-
 solver:
   rollouts: 200
   lambda: 0.0001 #0.001
