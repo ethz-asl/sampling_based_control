@@ -35,7 +35,7 @@ solver:
   pruning_threshold: 0.01      # check with 9999999
   #  expert_types: {NORM, IMP}
   expert_weights: [ 0.5, 0.5 ]
-  log_data: true
+  logging: true
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0

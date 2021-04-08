@@ -35,13 +35,13 @@ class Plotter:
 
     def plot_average_cost_per_rollout(self, tree=False):
         # Mean and std
+        strategy_name = "Tree" if tree else "Monte Carlo"
         average_cost = {}
-
         all_rollouts_nr = self.df.loc[self.df['Sampling Strategy'] ==
-                                      tree]['nr_rollouts'].unique()
+                                      strategy_name]['nr_rollouts'].unique()
         for rollouts_nr in all_rollouts_nr:
             df = self.df.loc[(self.df['nr_rollouts'] == rollouts_nr)
-                             & (self.df['Sampling Strategy'] == tree)]
+                             & (self.df['Sampling Strategy'] == strategy_name)]
             if rollouts_nr not in average_cost:
                 average_cost[rollouts_nr] = [df['stage_cost'].mean()]
             else:
@@ -65,7 +65,7 @@ class Plotter:
                alpha=0.5,
                ecolor='black',
                capsize=10)
-        ax.set_ylabel('Numbers of samples')
+        ax.set_xlabel('Numbers of samples')
         ax.set_xticks(all_rollouts_nr)
         ax.set_title('Average cost')
         ax.yaxis.grid(True)
@@ -78,7 +78,8 @@ class Plotter:
 
     def plot_effective_samples_per_rollout(self, tree=False):
         plt.figure()
-        df = self.df.loc[self.df['Sampling Strategy'] == tree]
+        strategy_name = "Tree" if tree else "Monte Carlo"
+        df = self.df.loc[self.df['Sampling Strategy'] == strategy_name]
         nr_samples = len(df["nr_rollouts"].unique())
         sns.lineplot(data=df,
                      x="index",
@@ -131,6 +132,7 @@ class Plotter:
                      hue=aggregator,
                      legend=True,
                      ci="sd")
+        # ax.set_yscale("log")
 
     def plot_average_cost_samples_comparison(self):
         different_samples = len(self.df["nr_rollouts"].unique())
@@ -208,7 +210,7 @@ class Plotter:
     def plot_momentum_comparison(self):
         plt.figure()
 
-        df_no_tree = self.df.loc[self.df['Sampling Strategy'] == False]
+        df_no_tree = self.df.loc[self.df['Sampling Strategy'] == "Monte Carlo"]
         sample_sizes_no_tree = df_no_tree["nr_rollouts"].unique()
 
         for samples_size in sample_sizes_no_tree:
@@ -222,7 +224,7 @@ class Plotter:
                               size="beta")
             ax.set_title("Effective Samples ({} samples)".format(samples_size))
 
-        df_tree = self.df.loc[self.df['Sampling Strategy'] == True]
+        df_tree = self.df.loc[self.df['Sampling Strategy'] == "Tree"]
         sample_sizes_tree = df_tree["nr_rollouts"].unique()
 
         for samples_size in sample_sizes_tree:
