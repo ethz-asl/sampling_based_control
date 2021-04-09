@@ -6,3 +6,4 @@ cmake-build-debug/
 
 # data directory used for learning
 policy_learning/data/
+policy_learning/scripts/*.pth
