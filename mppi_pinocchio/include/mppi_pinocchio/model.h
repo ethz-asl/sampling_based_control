@@ -20,36 +20,38 @@ struct Pose {
   Pose(Eigen::Vector3d t, Eigen::Quaterniond r) : translation(t), rotation(r){};
 };
 
-Pose operator*(const Pose&, const Pose&);
-Eigen::Matrix<double, 6, 1> diff(const Pose&, const Pose&);
+Pose operator*(const Pose &, const Pose &);
+Eigen::Matrix<double, 6, 1> diff(const Pose &, const Pose &);
+Eigen::Matrix<double, 6, 1> get_delta(const Pose &current_pose,
+                                      const Pose &reference_pose);
 
 class RobotModel {
- public:
+public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
   RobotModel() = default;
   ~RobotModel();
 
-  RobotModel(const RobotModel& rhs);
+  RobotModel(const RobotModel &rhs);
   /**
    *
    * @param robot_description
    * @return
    */
-  bool init_from_xml(const std::string& robot_description);
+  bool init_from_xml(const std::string &robot_description);
 
   /**
    *
    * @param q
    */
-  void update_state(const Eigen::VectorXd& q);
+  void update_state(const Eigen::VectorXd &q);
 
   /**
    *
    * @param q
    * @param qd
    */
-  void update_state(const Eigen::VectorXd& q, Eigen::VectorXd& qd);
+  void update_state(const Eigen::VectorXd &q, Eigen::VectorXd &qd);
 
   /**
    *
@@ -57,8 +59,8 @@ class RobotModel {
    * @param to_frame
    * @param error
    */
-  void get_error(const std::string& from_frame, const std::string& to_frame,
-                 Vector6d& error) const;
+  void get_error(const std::string &from_frame, const std::string &to_frame,
+                 Vector6d &error) const;
   /**
    *
    * @param frame
@@ -66,17 +68,22 @@ class RobotModel {
    * @param trans
    * @param error
    */
-  void get_error(const std::string& frame, const Eigen::Quaterniond& rot,
-                 const Eigen::Vector3d& trans, Vector6d& error) const;
+  void get_error(const std::string &frame, const Eigen::Quaterniond &rot,
+                 const Eigen::Vector3d &trans, Vector6d &error) const;
 
   /**
    *
    * @param frame
    */
-  Pose get_pose(const std::string& frame) const;
+  Pose get_pose(const std::string &frame) const;
 
- private:
-  pinocchio::Model* model_;
-  pinocchio::Data* data_;
+  /**
+   *
+   * @param frame
+   */
+
+private:
+  pinocchio::Model *model_;
+  pinocchio::Data *data_;
 };
-}  // namespace mppi_pinocchio
+} // namespace mppi_pinocchio
