@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data import RandomSampler
+from torch.utils.data import random_split
 import torch.nn as nn
 
 class StateActionDataset(Dataset):
@@ -122,8 +123,14 @@ class PolicyLearner:
             device (string): choose gpu or cpu
         """
         # load data set
-        self.dataset = StateActionDataset(root_dir=file_path)
-        self.n_states, self.n_actions = self.dataset.get_dimensions()
+        self.full_dataset = StateActionDataset(root_dir=file_path)
+        self.n_states, self.n_actions = self.full_dataset.get_dimensions()
+        # split the dataset into train and test sets
+        n_data_points = len(self.full_dataset)
+        n_train_set = int(0.8 * n_data_points)
+        n_test_set = n_data_points - n_train_set
+        self.train_dataset, self.test_dataset = random_split(self.full_dataset,
+            [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
         # initialise MLP model
         self.model = MLPSampler(self.n_states, self.n_actions).to(device)
         self._is_trained = False
@@ -143,8 +150,10 @@ class PolicyLearner:
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
 
         # initialise sampler and data loader
-        sampler = RandomSampler(self.dataset)
-        train_dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler = sampler)
+        train_sampler = RandomSampler(self.train_dataset)
+        train_dataloader = DataLoader(self.train_dataset, batch_size=batch_size,
+            sampler = train_sampler)
+        test_dataloader = DataLoader(self.test_dataset, batch_size=batch_size)
         size = len(train_dataloader.dataset)
 
         for t in range(epochs):
@@ -162,7 +171,18 @@ class PolicyLearner:
                     loss, current = loss.item(), batch * len(sample['state'])
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
+            test_size = len(test_dataloader.dataset)
+            test_loss = 0
+            with torch.no_grad():
+                for sample in test_dataloader:
+                    pred = self.model(sample['state'])
+                    test_loss += loss_fn(pred, sample['action']).item()
+
+            test_loss /= batch_size
+            print(f"Test Error: \n Avg loss: {test_loss:>8f} \n")
+
         self._is_trained = True
+        print("Done!")
 
     def get_action(self, state):
         """
@@ -183,7 +203,9 @@ if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
     dir_path = task_path + "/../data/0407141317"
     dataset = StateActionDataset(root_dir=dir_path)
-    idx=0
+    # fix a random seed
+    torch.manual_seed(1)
+    idx=1
     sample = dataset[idx]
     print("Index: ", idx, "\nstate: " , sample['state'], "\naction: ", sample['action'])
     dimensions = len(dataset)
