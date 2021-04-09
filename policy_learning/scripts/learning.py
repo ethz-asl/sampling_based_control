@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+from torch.utils.data import RandomSampler
 import torch.nn as nn
 
 class StateActionDataset(Dataset):
@@ -141,8 +142,9 @@ class PolicyLearner:
         loss_fn = nn.MSELoss()
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
 
-        # initialise data loader
-        train_dataloader = DataLoader(self.dataset, batch_size=batch_size)
+        # initialise sampler and data loader
+        sampler = RandomSampler(self.dataset)
+        train_dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler = sampler)
         size = len(train_dataloader.dataset)
 
         for t in range(epochs):
