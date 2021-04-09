@@ -1,114 +1,16 @@
 #!/usr/bin/env python3
-
 import os
-import h5py
-import csv
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+
 from torch.utils.data import DataLoader
 from torch.utils.data import RandomSampler
 from torch.utils.data import random_split
 import torch.nn as nn
 
-class StateActionDataset(Dataset):
+from dataset import StateActionDataset
+from models import LinReLu
 
-    def __init__(self, root_dir, transform=None):
-        """
-        Args:
-            root_dir (string): Directory with datasets
-            transform (callable, optional): Optional transform to be applied
-        """
-        self.root_dir = root_dir
-        self.transform = transform
-
-        # root_dir must have a folder with runs and a value log file as generated
-        # by the data_collection bash script
-        # TODO: (Kiran) adapt to final i/o of data collection
-
-        # ascertain number of data files from IC log .csv file
-        # --> values inside of csv do not have any use for learning currently
-        log_file_path = os.path.join(root_dir, 'value_log.csv')
-        with open(log_file_path) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            line_count = 0
-            for row in csv_reader:
-                line_count += 1
-
-        n_runs = line_count - 1 # minus header
-        print('Identified ', n_runs, ' runs.')
-
-        # loop over all files and concatenate into one dataset for each attribute
-        # !!Naive impelementation, needs to be revised if datasets become larger
-
-        for i in range(0, n_runs):
-            file_name = "run_" + str(i) + ".hdf5"
-            file_path = os.path.join(root_dir, file_name)
-            f = h5py.File(file_path, 'r')
-            if not f:
-                print('Could not load file at iteration: ', i)
-            more_states = f['states']
-            more_actions = f['actions']
-            if i==0:
-                self.state_dataset = np.array(more_states[:,:])
-                self.action_dataset = np.array(more_actions[:,:])
-            else:
-                self.state_dataset = np.append(self.state_dataset, more_states[:,:], axis=0)
-                self.action_dataset = np.append(self.action_dataset, more_actions[:,:], axis=0)
-
-        self._n_states = self.state_dataset.shape[1]
-        self._n_actions = self.action_dataset.shape[1]
-
-
-    def __len__(self):
-        """
-        Define magic method.
-        """
-        n_data_points_states = len(self.state_dataset)
-        n_data_points_actions = len(self.action_dataset)
-        if n_data_points_states == n_data_points_actions:
-            return n_data_points_states
-        else:
-            print("Number of state data points don't match number of action data points")
-            return n_data_points_states
-
-    def __getitem__(self, idx):
-        """
-        Define magic method.
-        """
-        state = self.state_dataset[idx, :]
-        action = self.action_dataset[idx, :]
-        sample = {'state': state, 'action': action}
-        return sample
-
-    def get_dimensions(self):
-        """
-        Out:
-            int, int: dimensions of the state and action spaces
-        """
-        return self._n_states, self._n_actions
-
-
-class MLPSampler(nn.Module):
-    """
-    A class for the informed sample generation.
-    """
-    def __init__(self, n_in, n_out):
-        super(MLPSampler, self).__init__()
-        # TODO (Kiran): Dummy structure of network, needs to be properly defined
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(n_in, 512),
-            nn.ReLU(),
-            nn.Linear(512,512),
-            nn.ReLU(),
-            nn.Linear(512,n_out)
-        )
-
-    def forward(self, x):
-        """
-        return: output of model
-        """
-        return self.linear_relu_stack(x)
 
 
 class PolicyLearner:
@@ -132,7 +34,7 @@ class PolicyLearner:
         self.train_dataset, self.test_dataset = random_split(self.full_dataset,
             [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
         # initialise MLP model
-        self.model = MLPSampler(self.n_states, self.n_actions).to(device)
+        self.model = LinReLu(self.n_states, self.n_actions).to(device)
         self._is_trained = False
 
     def train(self):
@@ -178,7 +80,7 @@ class PolicyLearner:
                     pred = self.model(sample['state'])
                     test_loss += loss_fn(pred, sample['action']).item()
 
-            test_loss /= batch_size
+            test_loss /= len(test_dataloader)
             print(f"Test Error: \n Avg loss: {test_loss:>8f} \n")
 
         self._is_trained = True
@@ -214,8 +116,6 @@ class PolicyLearner:
             print('Cannot save model because not trained yet.')
 
 if __name__ == "__main__":
-
-
     task_path = os.path.dirname(os.path.realpath(__file__))
     dir_path = task_path + "/../data/0407141317"
     dataset = StateActionDataset(root_dir=dir_path)
