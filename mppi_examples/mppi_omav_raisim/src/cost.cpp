@@ -17,6 +17,14 @@ OMAVRaisimCost::OMAVRaisimCost(const std::string &robot_description,
                                const OMAVRaisimCostParam &param)
     : param_(param), robot_description_(robot_description) {}
 
+double OMAVRaisimCost::distance_from_obstacle_cost(const mppi::observation_t &x) {
+    distance = std::sqrt(std::pow(x(16) - param_.x_obstacle,2) +
+            std::pow(x(17) - param_.y_obstacle,2));
+    distance_from_savezone = (distance - (2+1));
+    obstacle_cost = -param_.Q_obstacle*std::min(0.0, distance_from_savezone);
+    return obstacle_cost;
+}
+
 mppi::CostBase::cost_t
 OMAVRaisimCost::compute_cost(const mppi::observation_t &x,
                              const mppi::reference_t &ref, const double t) {
@@ -51,6 +59,7 @@ OMAVRaisimCost::compute_cost(const mppi::observation_t &x,
                             param_.max_thrust * param_.Q_thrust_max);
   cost += std::max(0.0, param_.Q_thrust_max * x(2) -
                             param_.max_thrust * param_.Q_thrust_max);
+  cost += OMAVRaisimCost::distance_from_obstacle_cost(x);
 
   return cost;
 }
@@ -110,6 +119,19 @@ bool OMAVRaisimCostParam::parse_from_ros(const ros::NodeHandle &nh) {
     ROS_ERROR("Failed to parse omega_cost or invalid!");
     return false;
   }
+  if (!nh.getParam("obstacle_cost", Q_obstacle) || Q_obstacle < 0) {
+      ROS_ERROR("Failed to parse obstacle_cost or invalid!");
+      return false;
+  }
+  if (!nh.getParam("obstacle_position_x", x_obstacle)) {
+      ROS_ERROR("Failed to parse obstacle_position_x or invalid!");
+      return false;
+  }
+  if (!nh.getParam("obstacle_position_y", y_obstacle)) {
+      ROS_ERROR("Failed to parse obstacle_position_y or invalid!");
+      return false;
+  }
+
   pose_costs << Q_distance_x, Q_distance_y, Q_distance_y, Q_orientation,
       Q_orientation, Q_orientation;
   Q_pose = pose_costs.asDiagonal();
@@ -134,7 +156,10 @@ std::ostream &operator<<(std::ostream &os,
     os << " maximum_thrust: " << param.max_thrust << std::endl;
     os << " thrust_cost: " << param.Q_thrust_max << std::endl;
     os << " orientation_cost: " << param.Q_orientation << std::endl;
-    os << " omega_cost: " << param.Q_omega << std::endl;
+    os << " omega_weight: " << param.Q_omega << std::endl;
+    os << " obstacle_cost: " << param.Q_obstacle << std::endl;
+    os << " obstacle_position_x: " << param.x_obstacle << std::endl;
+    os << " obstacle_position_y: " << param.y_obstacle << std::endl;
 
     return os;
 }

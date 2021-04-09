@@ -7,7 +7,6 @@
  */
 
 #include "mppi_omav_raisim/dynamics.h"
-#include <ros/package.h>
 #include <string>
 
 namespace omav_raisim {
@@ -35,10 +34,11 @@ void OMAVRaisimDynamics::initialize_world(
 }
 mppi::DynamicsBase::observation_t OMAVRaisimDynamics::step(const input_t &u,
                                                            const double dt) {
-  // Calculate the torque and thrust in body frame
-  // w_F_new = {x_(0) + u(0) * dt_, x_(1) + u(1) * dt_, x_(2) + u(2) * dt_};
-  // w_T_new = {x_(3) + u(3) * dt_, x_(4) + u(4) * dt_, x_(5) + u(5) * dt_};
-  w_F_new = {u(0), u(1), u(2)};
+  // Calculate the torque and thrust in body frame, input rates
+  w_F_new = {x_(0) + u(0), x_(1) + u(1), x_(2) + u(2)};
+  //w_T_new = {x_(3) + u(3), x_(4) + u(4), x_(5) + u(5)};
+  // New Forces and Torques as input
+  //w_F_new = {u(0), u(1), u(2)};
   w_T_new = {u(3), u(4), u(5)};
   omav->setGeneralizedForce(omav->getNonlinearities());
   omav->setExternalForce(0, w_F_new);

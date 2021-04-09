@@ -34,6 +34,10 @@ struct OMAVRaisimCostParam {
   double y_limit;
   double z_limit;
 
+  double Q_obstacle;  // Obstacle Costs
+  double x_obstacle;
+  double y_obstacle;
+
   double Q_velocity_max;  // Maximum velocity cost
   double max_velocity;
 
@@ -56,6 +60,9 @@ class OMAVRaisimCost : public mppi::CostBase {
   std::string robot_description_;
   OMAVRaisimCostParam param_;
   Eigen::Matrix<double, 6, 1> delta_pose;
+  double distance;
+  double distance_from_savezone;
+  double obstacle_cost;
 
  private:
   cost_ptr create() override {
@@ -64,6 +71,8 @@ class OMAVRaisimCost : public mppi::CostBase {
   cost_ptr clone() const override {
     return std::make_shared<OMAVRaisimCost>(*this);
   }
+
+  double distance_from_obstacle_cost(const mppi::observation_t &x);
 
   cost_t compute_cost(const mppi::observation_t &x,
                       const mppi::reference_t &ref, const double t) override;

@@ -3,7 +3,7 @@
   y_distance_weight: 100.0
   z_distance_weight: 100.0
   # Weight for the deviation from the reference orientation
-  orientation_weight: 10.0
+  orientation_weight: 100.0
   # Cost for leafing the field
   leafing_field_cost: 10000.0
   # Negative and positive limits of the field
@@ -11,7 +11,7 @@
   field_limit_y: 30.0
   field_limit_z: 30.0
   # Maximum velocity, any velocity higher triggers rectified linear
-  maximum_velocity: 2.0
+  maximum_velocity: 1.0
   # Cost term needed for the specification of the rectified linear
   velocity_cost: 10000.0
   # Maximum thrust, any thrust higher triggers rectified linear
@@ -19,4 +19,9 @@
   # Cost term needed for the specification of the rectified linear
   thrust_cost: 10000.0
   # Weights for the deviation from zero
-  omega_weight: 10.0
+  omega_weight: 1.0
+  # Cost for Obstacle colision
+  obstacle_cost: 10000
+  # Position of the Obstacle
+  obstacle_position_x: 5
+  obstacle_position_y: 5

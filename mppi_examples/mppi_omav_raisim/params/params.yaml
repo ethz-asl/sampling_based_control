@@ -1,12 +1,12 @@
 solver:
-  rollouts: 200
+  rollouts: 100
   lambda: 0.001 #0.001
   h: 10.0
   step_size: 0.015
   horizon: 1.0
 
-  gradient_step_size: 0.1
-  momentum_step_size: 0.8
+  gradient_step_size: 1.0
+  momentum_step_size: 0.0
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -21,12 +21,14 @@ solver:
   filters_order: [1, 1, 1, 1, 1, 1]
   filters_window: [10, 10, 10, 10, 10, 10]
 
-  bound_input: true
-  u_min: [-5.0, -5.0, -5.0, -1.0, -1.0, -1.0]
-  u_max: [5.0, 5.0, 5.0, 0.5, 0.5, 0.5]
+  bound_input: false
+  u_min: [-10.0, -10.0, -10.0, -1.0, -1.0, -1.0]
+  u_max: [10.0, 10.0, 10.0, 1.0, 1.0, 1.0]
 
   adaptive_sampling: false
-  input_variance: [2.5, 2.5, 2.5, 0.1, 0.1, 0.1]
+  input_variance: [0.15, 0.15, 0.15, 0.1, 0.1, 0.1]
+  # Input variance when using forces instead of rates
+  #input_variance: [10, 10, 10, 0.1, 0.1, 0.1]
 
   use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.01       # controls the structure of the tree

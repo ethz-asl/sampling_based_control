@@ -33,7 +33,10 @@ class OMAVRaisimDynamicsRos : public OMAVRaisimDynamics {
   // only used for the rviz visualization.
   ros::Publisher vis_publisher_;
   ros::Publisher goal_publisher_;
+  ros::Publisher obstacle_publisher_;
+
   visualization_msgs::Marker goal_marker_;
   visualization_msgs::Marker omav_marker_;
+  visualization_msgs::Marker obstacle_marker_;
 };
 }  // namespace omav_raisim

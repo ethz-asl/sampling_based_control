@@ -4,11 +4,10 @@
     <arg name="description_file" default="$(find mppi_omav_raisim)/data/omav.urdf.xacro"/>
     <arg name="description_file_raisim" default="$(find mppi_omav_raisim)/data/omav_raisim.urdf.xacro"/>
     <arg name="plot_cost" default="false"/>
-    <arg name="plot_input" default="false"/>
 
-    <arg name="goal_position_x" default="5.0" />
-    <arg name="goal_position_y" default="5.0" />
-    <arg name="goal_position_z" default="5.0" />
+    <arg name="goal_position_x" default="10.0" />
+    <arg name="goal_position_y" default="10.0" />
+    <arg name="goal_position_z" default="10.0" />
     <arg name="goal_quaternion_w" default="1.0" />
     <arg name="goal_quaternion_x" default="0.0" />
     <arg name="goal_quaternion_y" default="0.0" />
@@ -48,7 +47,7 @@
 
     <group if="$(arg plot_cost)">
         <arg name="mp_config" default="$(find mppi_omav_raisim)/resources/rqt_multiplot.xml"/>
-        <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config)"
+        <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config) --multiplot-run-all"
               output="screen"/>
     </group>
 

@@ -202,7 +202,7 @@
                         <curve_0>
                             <axes>
                                 <x_axis>
-                                    <field></field>
+                                    <field>data</field>
                                     <field_type>1</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -211,11 +211,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/thrust_rate</topic>
-                                    <type>geometry_msgs/Vector3</type>
+                                    <topic>/max_rollout_cost</topic>
+                                    <type>std_msgs/Float64</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>x</field>
+                                    <field>data</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -224,8 +224,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/thrust_rate</topic>
-                                    <type>geometry_msgs/Vector3</type>
+                                    <topic>/max_rollout_cost</topic>
+                                    <type>std_msgs/Float64</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -248,12 +248,12 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>ThrustRate x</title>
+                            <title>Max_rollout_cost</title>
                         </curve_0>
                         <curve_1>
                             <axes>
                                 <x_axis>
-                                    <field></field>
+                                    <field>data</field>
                                     <field_type>1</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -262,11 +262,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/thrust_rate</topic>
-                                    <type>geometry_msgs/Vector3</type>
+                                    <topic>/min_rollout_cost</topic>
+                                    <type>std_msgs/Float64</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>y</field>
+                                    <field>data</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -275,8 +275,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/thrust_rate</topic>
-                                    <type>geometry_msgs/Vector3</type>
+                                    <topic>/min_rollout_cost</topic>
+                                    <type>std_msgs/Float64</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -299,65 +299,14 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>ThrustRate_y</title>
+                            <title>Min Rollout Cost</title>
                         </curve_1>
-                        <curve_2>
-                            <axes>
-                                <x_axis>
-                                    <field></field>
-                                    <field_type>1</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/thrust_rate</topic>
-                                    <type>geometry_msgs/Vector3</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/thrust_rate</topic>
-                                    <type>geometry_msgs/Vector3</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>ThrustRate_z</title>
-                        </curve_2>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Thrust Rates</title>
+                    <title>Costs</title>
                 </column_1>
                 <column_2>
                     <axes>

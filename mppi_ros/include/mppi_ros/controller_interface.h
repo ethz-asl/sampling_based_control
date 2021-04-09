@@ -11,6 +11,7 @@
 #include <ros/node_handle.h>
 #include <mppi_ros/threading/WorkerManager.hpp>
 
+#include <geometry_msgs/PoseArray.h>
 #include <mppi_ros/Data.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float64.h>
@@ -80,6 +81,8 @@ class ControllerRos {
   void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u,
                        const double& t);
   bool publish_ros_default();
+  void publish_optimal_rollout();
+  void publish_trajectories();
 
  private:
   void init_default_ros();
@@ -93,7 +96,7 @@ class ControllerRos {
   void publish_rollout_cost();
   void publish_input();
 
- private:
+private:
   bool started_;
   bool initialized_;
   bool observation_set_;
@@ -119,14 +122,23 @@ class ControllerRos {
   ros::Publisher min_rollout_cost_publisher_;
   ros::Publisher max_rollout_cost_publisher_;
   ros::Publisher input_publisher_;
+  ros::Publisher optimal_rollout_publisher_;
+  ros::Publisher trajectory_publisher_;
 
   std_msgs::Float64 stage_cost_;
   std_msgs::Float64 min_rollout_cost_;
   std_msgs::Float64 max_rollout_cost_;
+  geometry_msgs::Pose current_pose_;
+  geometry_msgs::Pose current_trajectory_pose;
 
   std::shared_mutex input_mutex_;
   mppi::input_t input_ = mppi::input_t::Zero(1);
   std_msgs::Float32MultiArray input_ros_;
+  mppi::observation_array_t optimal_rollout_states_;
+  mppi::input_array_t optimal_rollout_inputs_;
+
+  std::vector<mppi::Rollout> current_trajectories;
+  std::vector<Eigen::VectorXd> xx_current_trajectory;
 
   // logging
   mppi_ros::Data data_ros_;
