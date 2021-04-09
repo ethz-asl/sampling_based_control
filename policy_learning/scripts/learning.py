@@ -196,14 +196,20 @@ class PolicyLearner:
             with torch.no_grad():
                 return self.model(torch.as_tensor(state, dtype=torch.float32))
 
-    def save_model(self):
+    def save_model(self, state):
         """
         saves model if trained
         """
         if self._is_trained:
             with torch.no_grad():
+                # save the weights of the model to be used in python
                 torch.save(self.model.state_dict(), 'expert_model.pth')
+                # save the model such that it can be called from cpp
+                traced_script_module = torch.jit.trace(self.model,
+                    torch.as_tensor(state, dtype=torch.float32))
+                traced_script_module.save('expert_model.pt')
                 print('Model saved.')
+
         else:
             print('Cannot save model because not trained yet.')
 
@@ -225,9 +231,9 @@ if __name__ == "__main__":
 
 
     learner = PolicyLearner(dir_path, device)
-    learner.save_model()
+    learner.save_model(sample['state'])
     learner.train()
-    learner.save_model()
+    learner.save_model(sample['state'])
 
     action = learner.get_action(sample['state'])
     print('predicted action: ', action)
