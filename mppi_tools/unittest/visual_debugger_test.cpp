@@ -14,12 +14,17 @@ int main(int argc, char** argv) {
   size_t n = 20;
   double counter = 0;
 
+  mppi::SolverConfig config;
+  config.input_variance = Eigen::VectorXd(10);
+  config.input_variance.setConstant(0.2);
+
   while (true) {
     Eigen::ArrayXd weights(n);
     for (size_t i = 0; i < n; i++) {
       weights(i) = counter + i;
     }
     counter += 0.0001;
+    vd.reset_config(config);
     vd.reset_weights(weights);
     if (!vd.render()) return 0;
   }

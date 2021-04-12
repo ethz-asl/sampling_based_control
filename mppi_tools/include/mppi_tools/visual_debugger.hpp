@@ -20,7 +20,7 @@ class VisualDebugger {
 
   void window_resize(int width, int height);
 
-  void create_config(const mppi::SolverConfig* config);
+  void reset_config(const mppi::SolverConfig& config);
   void reset_policy(const mppi::input_t& u);
   void reset_filtered_policy(const mppi::input_t& u);
   void reset_rollouts(const std::vector<mppi::Rollout>& rollouts);

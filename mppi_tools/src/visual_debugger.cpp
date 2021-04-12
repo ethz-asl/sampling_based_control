@@ -15,6 +15,17 @@ static void resize_callback(GLFWwindow* window, int width, int height) {
   g->window_resize(width, height);
 }
 
+static void HelpMarker(const char* desc) {
+  ImGui::TextDisabled("(?)");
+  if (ImGui::IsItemHovered()) {
+    ImGui::BeginTooltip();
+    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+    ImGui::TextUnformatted(desc);
+    ImGui::PopTextWrapPos();
+    ImGui::EndTooltip();
+  }
+}
+
 using namespace mppi;
 
 namespace mppi_tools {
@@ -100,7 +111,7 @@ void VisualDebugger::draw() {
   ImGui::NewFrame();
 
   bool show_demo_window = true;
-  // ImGui::ShowDemoWindow(&show_demo_window);
+  ImGui::ShowDemoWindow(&show_demo_window);
   // ImPlot::ShowDemoWindow(&show_demo_window);
 
   // This is for resize to cover the full window
@@ -109,6 +120,171 @@ void VisualDebugger::draw() {
   ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
   ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
   ImGui::Begin("Test", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+  //-------------------------------------------------------------------------//
+  if (ImGui::CollapsingHeader("Solver Configuration")) {
+    static int clicked = 0;
+    if (ImGui::Button("Print")) std::cout << config_ << std::endl;
+
+    ImGui::Checkbox("verbose", &config_.verbose);
+    ImGui::Separator();
+    ImGui::LabelText("label", "Value");
+
+    {
+      ImGui::InputScalarN("input variance", ImGuiDataType_Float,
+                          config_.input_variance.data(),
+                          config_.input_variance.size());
+
+      // Using the _simplified_ one-liner Combo() api here
+      // See "Combo" section for examples of how to use the more flexible
+      // BeginCombo()/EndCombo() api.
+      const char* items[] = {"AAAA",    "BBBB", "CCCC",   "DDDD",
+                             "EEEE",    "FFFF", "GGGG",   "HHHH",
+                             "IIIIIII", "JJJJ", "KKKKKKK"};
+      static int item_current = 0;
+      ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
+      ImGui::SameLine();
+      HelpMarker(
+          "Using the simplified one-liner Combo API here.\nRefer to the "
+          "\"Combo\" section below for an explanation of how to use the more "
+          "flexible and general BeginCombo/EndCombo API.");
+    }
+
+    {
+      // To wire InputText() with std::string or any other custom string type,
+      // see the "Text Input > Resize Callback" section of this demo, and the
+      // misc/cpp/imgui_stdlib.h file.
+      static char str0[128] = "Hello, world!";
+      ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0));
+      ImGui::SameLine();
+      HelpMarker(
+          "USER:\n"
+          "Hold SHIFT or use mouse to select text.\n"
+          "CTRL+Left/Right to word jump.\n"
+          "CTRL+A or double-click to select all.\n"
+          "CTRL+X,CTRL+C,CTRL+V clipboard.\n"
+          "CTRL+Z,CTRL+Y undo/redo.\n"
+          "ESCAPE to revert.\n\n"
+          "PROGRAMMER:\n"
+          "You can use the ImGuiInputTextFlags_CallbackResize facility if you "
+          "need to wire InputText() "
+          "to a dynamic string type. See misc/cpp/imgui_stdlib.h for an "
+          "example (this is not demonstrated "
+          "in imgui_demo.cpp).");
+
+      static char str1[128] = "";
+      ImGui::InputTextWithHint("input text (w/ hint)", "enter text here", str1,
+                               IM_ARRAYSIZE(str1));
+
+      static int i0 = 123;
+      ImGui::InputInt("input int", &i0);
+      ImGui::SameLine();
+      HelpMarker(
+          "You can apply arithmetic operators +,*,/ on numerical values.\n"
+          "  e.g. [ 100 ], input \'*2\', result becomes [ 200 ]\n"
+          "Use +- to subtract.");
+
+      static float f0 = 0.001f;
+      ImGui::InputFloat("input float", &f0, 0.01f, 1.0f, "%.3f");
+
+      static double d0 = 999999.00000001;
+      ImGui::InputDouble("input double", &d0, 0.01f, 1.0f, "%.8f");
+
+      static float f1 = 1.e10f;
+      ImGui::InputFloat("input scientific", &f1, 0.0f, 0.0f, "%e");
+      ImGui::SameLine();
+      HelpMarker(
+          "You can input value using the scientific notation,\n"
+          "  e.g. \"1e+8\" becomes \"100000000\".");
+
+      static float vec4a[4] = {0.10f, 0.20f, 0.30f, 0.44f};
+      ImGui::InputFloat3("input float3", vec4a);
+    }
+
+    {
+      static int i1 = 50, i2 = 42;
+      ImGui::DragInt("drag int", &i1, 1);
+      ImGui::SameLine();
+      HelpMarker(
+          "Click and drag to edit value.\n"
+          "Hold SHIFT/ALT for faster/slower edit.\n"
+          "Double-click or CTRL+click to input value.");
+
+      ImGui::DragInt("drag int 0..100", &i2, 1, 0, 100, "%d%%",
+                     ImGuiSliderFlags_AlwaysClamp);
+
+      static float f1 = 1.00f, f2 = 0.0067f;
+      ImGui::DragFloat("drag float", &f1, 0.005f);
+      ImGui::DragFloat("drag small float", &f2, 0.0001f, 0.0f, 0.0f,
+                       "%.06f ns");
+    }
+
+    {
+      static int i1 = 0;
+      ImGui::SliderInt("slider int", &i1, -1, 3);
+      ImGui::SameLine();
+      HelpMarker("CTRL+click to input value.");
+
+      static float f1 = 0.123f, f2 = 0.0f;
+      ImGui::SliderFloat("slider float", &f1, 0.0f, 1.0f, "ratio = %.3f");
+      ImGui::SliderFloat("slider float (log)", &f2, -10.0f, 10.0f, "%.4f",
+                         ImGuiSliderFlags_Logarithmic);
+
+      static float angle = 0.0f;
+      ImGui::SliderAngle("slider angle", &angle);
+
+      // Using the format string to display a name instead of an integer.
+      // Here we completely omit '%d' from the format string, so it'll only
+      // display a name. This technique can also be used with DragInt().
+      enum Element {
+        Element_Fire,
+        Element_Earth,
+        Element_Air,
+        Element_Water,
+        Element_COUNT
+      };
+      static int elem = Element_Fire;
+      const char* elems_names[Element_COUNT] = {"Fire", "Earth", "Air",
+                                                "Water"};
+      const char* elem_name =
+          (elem >= 0 && elem < Element_COUNT) ? elems_names[elem] : "Unknown";
+      ImGui::SliderInt("slider enum", &elem, 0, Element_COUNT - 1, elem_name);
+      ImGui::SameLine();
+      HelpMarker(
+          "Using the format string parameter to display a name instead of the "
+          "underlying integer.");
+    }
+
+    {
+      static float col1[3] = {1.0f, 0.0f, 0.2f};
+      static float col2[4] = {0.4f, 0.7f, 0.0f, 0.5f};
+      ImGui::ColorEdit3("color 1", col1);
+      ImGui::SameLine();
+      HelpMarker(
+          "Click on the color square to open a color picker.\n"
+          "Click and hold to use drag and drop.\n"
+          "Right-click on the color square to show options.\n"
+          "CTRL+click on individual component to input value.\n");
+
+      ImGui::ColorEdit4("color 2", col2);
+    }
+
+    {
+      // Using the _simplified_ one-liner ListBox() api here
+      // See "List boxes" section for examples of how to use the more flexible
+      // BeginListBox()/EndListBox() api.
+      const char* items[] = {"Apple",     "Banana",     "Cherry",
+                             "Kiwi",      "Mango",      "Orange",
+                             "Pineapple", "Strawberry", "Watermelon"};
+      static int item_current = 1;
+      ImGui::ListBox("listbox", &item_current, items, IM_ARRAYSIZE(items), 4);
+      ImGui::SameLine();
+      HelpMarker(
+          "Using the simplified one-liner ListBox API here.\nRefer to the "
+          "\"List boxes\" section below for an explanation of how to use the "
+          "more flexible and general BeginListBox/EndListBox API.");
+    }
+  }
 
   //-------------------------------------------------------------------------//
   if (ImGui::CollapsingHeader("Rollouts Info")) {
@@ -169,7 +345,9 @@ void VisualDebugger::window_resize(int width, int height) {
 
 bool VisualDebugger::close() { return true; }
 
-void VisualDebugger::create_config(const SolverConfig* config) {}
+void VisualDebugger::reset_config(const SolverConfig& config) {
+  config_ = config;
+}
 
 void VisualDebugger::reset_policy(const input_t& u) {}
 
