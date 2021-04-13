@@ -81,10 +81,10 @@ class ControllerRos {
   void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u,
                        const double& t);
   bool publish_ros_default();
-  void publish_optimal_rollout();
-  void publish_trajectories();
+  virtual void publish_optimal_rollout(){};
+  virtual void publish_trajectories(){};
 
- private:
+private:
   void init_default_ros();
   bool init_default_params();
 

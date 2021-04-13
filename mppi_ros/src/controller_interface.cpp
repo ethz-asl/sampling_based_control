@@ -41,10 +41,6 @@ void ControllerRos::init_default_ros() {
   max_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
   data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
-  optimal_rollout_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 10);
-  trajectory_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1000);
 }
 
 bool ControllerRos::init() {
@@ -167,52 +163,6 @@ void ControllerRos::publish_rollout_cost() {
 
   max_rollout_cost_.data = controller_->get_rollout_max_cost();
   max_rollout_cost_publisher_.publish(max_rollout_cost_);
-}
-
-void ControllerRos::publish_optimal_rollout() {
-  controller_->get_optimal_rollout(optimal_rollout_states_,
-                                   optimal_rollout_inputs_);
-  geometry_msgs::PoseArray optimal_rollout_array_;
-  optimal_rollout_array_.header.frame_id = "odom";
-  optimal_rollout_array_.header.stamp = ros::Time::now();
-  for (int i = 0; i < optimal_rollout_states_.size(); i++) {
-    if ((i % 10) == 0) {
-      current_pose_.position.x = optimal_rollout_states_[i](16);
-      current_pose_.position.y = optimal_rollout_states_[i](17);
-      current_pose_.position.z = optimal_rollout_states_[i](18);
-      current_pose_.orientation.w = optimal_rollout_states_[i](9);
-      current_pose_.orientation.x = optimal_rollout_states_[i](10);
-      current_pose_.orientation.y = optimal_rollout_states_[i](11);
-      current_pose_.orientation.z = optimal_rollout_states_[i](12);
-      optimal_rollout_array_.poses.push_back(current_pose_);
-    }
-  }
-  optimal_rollout_publisher_.publish(optimal_rollout_array_);
-
-}
-
-void ControllerRos::publish_trajectories(){
-  controller_->get_rollout_trajectories(current_trajectories);
-  geometry_msgs::PoseArray trajectory_array;
-  trajectory_array.header.frame_id = "odom";
-  trajectory_array.header.stamp = ros::Time::now();
-  for (int i = 0; i < current_trajectories.size(); i++){
-    xx_current_trajectory = current_trajectories[i].xx;
-    for (int j = 0; j < xx_current_trajectory.size(); j++){
-      if ((j % 10) == 0) {
-        current_trajectory_pose.position.x = xx_current_trajectory[j](16);
-        current_trajectory_pose.position.y = xx_current_trajectory[j](17);
-        current_trajectory_pose.position.z = xx_current_trajectory[j](18);
-        current_trajectory_pose.orientation.w = xx_current_trajectory[j](9);
-        current_trajectory_pose.orientation.x = xx_current_trajectory[j](10);
-        current_trajectory_pose.orientation.y = xx_current_trajectory[j](11);
-        current_trajectory_pose.orientation.z = xx_current_trajectory[j](12);
-        trajectory_array.poses.push_back(current_trajectory_pose);
-      }
-    }
-
-}
-  trajectory_publisher_.publish(trajectory_array);
 }
 
 void ControllerRos::publish_input() {

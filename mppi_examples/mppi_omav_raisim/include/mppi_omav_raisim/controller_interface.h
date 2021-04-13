@@ -10,8 +10,8 @@
 
 #include <mppi_ros/controller_interface.h>
 
+#include <geometry_msgs/PoseStamped.h>
 #include <memory>
-#include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 
 namespace omav_raisim {
@@ -21,8 +21,10 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   explicit OMAVControllerInterface(ros::NodeHandle &nh) : ControllerRos(nh) {}
   ~OMAVControllerInterface() = default;
 
-  bool init_ros() override { return true; };
+  bool init_ros() override;
   void publish_ros() override;
+  void publish_trajectories() override;
+  void publish_optimal_rollout() override;
   bool update_reference() override;
 
  private:

@@ -97,8 +97,8 @@ int main(int argc, char **argv) {
       controller.get_input_state(x, x_nom, u, sim_time);
       controller.publish_ros_default();
       // Additional publisher for additional visualization
-      // controller.publish_optimal_rollout();
-      // controller.publish_trajectories();
+      controller.publish_optimal_rollout();
+      controller.publish_trajectories();
     } else {
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);

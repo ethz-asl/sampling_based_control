@@ -64,7 +64,7 @@ class OMAVRaisimCost : public mppi::CostBase {
   double distance_from_savezone;
   double obstacle_cost;
 
- private:
+private:
   cost_ptr create() override {
     return std::make_shared<OMAVRaisimCost>(robot_description_, param_);
   }

@@ -18,11 +18,11 @@ OMAVRaisimCost::OMAVRaisimCost(const std::string &robot_description,
     : param_(param), robot_description_(robot_description) {}
 
 double OMAVRaisimCost::distance_from_obstacle_cost(const mppi::observation_t &x) {
-    distance = std::sqrt(std::pow(x(16) - param_.x_obstacle,2) +
-            std::pow(x(17) - param_.y_obstacle,2));
-    distance_from_savezone = (distance - (2+1));
-    obstacle_cost = -param_.Q_obstacle*std::min(0.0, distance_from_savezone);
-    return obstacle_cost;
+  distance = std::sqrt(std::pow(x(16) - param_.x_obstacle, 2) +
+                       std::pow(x(17) - param_.y_obstacle, 2));
+  distance_from_savezone = (distance - (2 + 1));
+  obstacle_cost = -param_.Q_obstacle * std::min(0.0, distance_from_savezone);
+  return obstacle_cost;
 }
 
 mppi::CostBase::cost_t
@@ -124,12 +124,12 @@ bool OMAVRaisimCostParam::parse_from_ros(const ros::NodeHandle &nh) {
       return false;
   }
   if (!nh.getParam("obstacle_position_x", x_obstacle)) {
-      ROS_ERROR("Failed to parse obstacle_position_x or invalid!");
-      return false;
+    ROS_ERROR("Failed to parse obstacle_position_x or invalid!");
+    return false;
   }
   if (!nh.getParam("obstacle_position_y", y_obstacle)) {
-      ROS_ERROR("Failed to parse obstacle_position_y or invalid!");
-      return false;
+    ROS_ERROR("Failed to parse obstacle_position_y or invalid!");
+    return false;
   }
 
   pose_costs << Q_distance_x, Q_distance_y, Q_distance_y, Q_orientation,

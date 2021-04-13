@@ -16,8 +16,8 @@ OMAVRaisimDynamicsRos::OMAVRaisimDynamicsRos(
   vis_publisher_ =
       nh_.advertise<visualization_msgs::Marker>("visualization_marker", 0);
   goal_publisher_ = nh_.advertise<visualization_msgs::Marker>("goal_marker", 0);
-  obstacle_publisher_ = nh_.advertise<visualization_msgs::Marker>("obstacle_marker", 0);
-
+  obstacle_publisher_ =
+      nh_.advertise<visualization_msgs::Marker>("obstacle_marker", 0);
 
   omav_marker_.header.frame_id = "odom";
   omav_marker_.id = 0;
@@ -55,7 +55,6 @@ OMAVRaisimDynamicsRos::OMAVRaisimDynamicsRos(
   goal_marker_.pose.orientation.y = 0.0;
   goal_marker_.pose.orientation.z = 0.0;
 
-
   obstacle_marker_.header.frame_id = "odom";
   obstacle_marker_.id = 2;
   obstacle_marker_.action = visualization_msgs::Marker::ADD;
@@ -75,7 +74,6 @@ OMAVRaisimDynamicsRos::OMAVRaisimDynamicsRos(
   obstacle_marker_.pose.orientation.x = 0.0;
   obstacle_marker_.pose.orientation.y = 0.0;
   obstacle_marker_.pose.orientation.z = 0.0;
-
 }
 void OMAVRaisimDynamicsRos::reset_to_default() {
   x_.setZero();
