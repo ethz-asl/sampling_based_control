@@ -9,7 +9,7 @@ from torch.utils.data import random_split
 import torch.nn as nn
 
 from dataset import StateActionDataset
-from models import LinReLu
+from models import CartPoleNet
 
 
 
@@ -34,7 +34,7 @@ class PolicyLearner:
         self.train_dataset, self.test_dataset = random_split(self.full_dataset,
             [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
         # initialise MLP model
-        self.model = LinReLu(self.n_states, self.n_actions).to(device)
+        self.model = CartPoleNet(self.n_states, self.n_actions).to(device)
         self._is_trained = False
 
     def train(self):
