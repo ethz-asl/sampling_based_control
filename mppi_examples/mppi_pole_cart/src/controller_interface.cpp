@@ -54,13 +54,15 @@ bool PoleCartControllerInterface::set_controller(
   if (nh_.param<std::string>("torchscript_model_path", 
       torchscript_model_path, "")) {
     learner->load_torch_module(torchscript_model_path);
+    ROS_INFO_STREAM("Loaded learned expert");
   }
   std::string learned_expert_output_path;
   if (nh_.param<std::string>("learned_expert_output_path", 
       learned_expert_output_path, "")) {
     learner->set_output_path(learned_expert_output_path);
+    ROS_INFO_STREAM("Set learning output path");
   }
-  ROS_INFO_STREAM("Loaded learned expert");
+  
 
   // -------------------------------
   // controller
