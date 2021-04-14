@@ -229,6 +229,12 @@ class PathIntegral {
    * rollout
    */
   bool get_optimal_rollout(observation_array_t& x, input_array_t& u);
+  /**
+   * @brief Returns all trajectories of the current rollout
+   * @param rollouts vector with all the rollout trajectories
+   * @return -
+   */
+  bool get_rollout_trajectories(std::vector<Rollout>& rollouts);
 
   /**
    * @brief Get only the diagonal of the sampler's covariance matrix

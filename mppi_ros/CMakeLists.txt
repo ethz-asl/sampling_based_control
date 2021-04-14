@@ -10,6 +10,7 @@ set(PACKAGE_DEPENDENCIES
         sensor_msgs
         std_msgs
         roscpp
+        visualization_msgs
         message_generation)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
