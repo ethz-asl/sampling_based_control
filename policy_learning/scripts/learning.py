@@ -43,8 +43,8 @@ class PolicyLearner:
         """
 
         # Training parameters
-        epochs = 2
-        batch_size = 20
+        epochs = 30
+        batch_size = 32
         learning_rate = 1e-3
 
         # initialise loss function
@@ -69,7 +69,7 @@ class PolicyLearner:
                 loss.backward()
                 optimizer.step()
 
-                if batch % 1000 == 0:
+                if batch % (len(train_dataloader)//5) == 0:
                     loss, current = loss.item(), batch * len(sample['state'])
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
@@ -118,7 +118,7 @@ class PolicyLearner:
 
 if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dir_path = task_path + "/../data/0407141317"
+    dir_path = task_path + "/../data/0414173246"
     dataset = StateActionDataset(root_dir=dir_path)
     # fix a random seed
     torch.manual_seed(1)
