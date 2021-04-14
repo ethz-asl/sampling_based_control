@@ -20,9 +20,9 @@ bool isTerminated(observation_t x) {
   float eps_position_vel = 0.1;
   if (abs(x(1)) < (M_PI+eps_angle) && (M_PI-eps_angle) < abs(x(1)) &&
       // Position reference is not always reached, don't care for now...
-      // abs(x(0)) < eps_position &&
-      abs(x(2)) < eps_position_vel &&
-      abs(x(3)) < eps_angle_vel)
+      // abs(x(0)) < eps_position && 
+      abs(x(2)) < eps_position_vel && 
+      abs(x(3)) < eps_angle_vel) 
   {
     return true;
   }
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
       if (isTerminated(x) && !terminate) {
         terminate = true;
         termination_time = sim_time;
-        std::cout << "waiting for shutdown for " << time_after_termination
+        std::cout << "waiting for shutdown for " << time_after_termination 
           << " seconds." << std::endl;
       }
       if (terminate &&(sim_time - termination_time > time_after_termination)){
