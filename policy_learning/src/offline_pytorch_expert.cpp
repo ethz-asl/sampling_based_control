@@ -93,11 +93,9 @@ OfflinePytorchExpert::input_t const OfflinePytorchExpert::get_action(
     const OfflinePytorchExpert::observation_t& x){
   input_t action;
   if(pImpl->module_){
-    // we need to copy the observation unfortunately because x is const and 
-    // from_blob doesn't seem to support const pointers.
-    auto x_copy = x; 
+    Eigen::VectorXf x_f = x.cast<float>(); 
     auto options = torch::TensorOptions().dtype(torch::kFloat32);
-    at::Tensor tmp = torch::from_blob(x_copy.data(), {x.size()}, options);
+    at::Tensor tmp = torch::from_blob(x_f.data(), {x_f.size()}, options);
     std::vector<torch::jit::IValue> t_observation;
     t_observation.push_back(tmp);
     at::Tensor t_action = pImpl->module_->forward(t_observation).toTensor();
