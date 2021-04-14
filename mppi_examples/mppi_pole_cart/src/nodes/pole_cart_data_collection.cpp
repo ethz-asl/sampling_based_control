@@ -14,8 +14,16 @@
 using namespace pole_cart;
 
 bool isTerminated(observation_t x) {
-  float epsilon = 0.01;
-  if (abs(x(1)) < (M_PI+epsilon) && (M_PI-epsilon) < abs(x(1))) {
+  float eps_angle = 0.01;
+  float eps_position = 0.05;
+  float eps_angle_vel = 0.1;
+  float eps_position_vel = 0.1;
+  if (abs(x(1)) < (M_PI+eps_angle) && (M_PI-eps_angle) < abs(x(1)) &&
+      // Position reference is not always reached, don't care for now...
+      // abs(x(0)) < eps_position && 
+      abs(x(2)) < eps_position_vel && 
+      abs(x(3)) < eps_angle_vel) 
+  {
     return true;
   }
   else return false;
@@ -70,6 +78,8 @@ int main(int argc, char** argv) {
 
     // helper variable to terminate episode
     bool terminate = false;
+    float termination_time = 0.0f;
+    const float time_after_termination = 2.0f;
 
     // init the controller
     bool ok = controller.init();
@@ -102,8 +112,16 @@ int main(int argc, char** argv) {
           1000;
       if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 
-      terminate = isTerminated(x);
-      if (terminate) ros::shutdown();
+      if (isTerminated(x) && !terminate) {
+        terminate = true;
+        termination_time = sim_time;
+        std::cout << "waiting for shutdown for " << time_after_termination 
+          << " seconds." << std::endl;
+      }
+      if (terminate &&(sim_time - termination_time > time_after_termination)){
+            ros::shutdown();
+      }
+
 
       ros::spinOnce();
     }
