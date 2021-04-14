@@ -13,6 +13,7 @@ set(PACKAGE_DEPENDENCIES
     mppi_pinocchio
     roslib
     roscpp
+    policy_learning
 )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})

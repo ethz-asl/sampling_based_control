@@ -2,7 +2,7 @@
 
 
 ### Install instructions
-Clone this repo in the `src` directory of your catkin workspace. Install all dependencies first and then build the desired packages. We manage rosdependecies using [`rosdep`](http://wiki.ros.org/rosdep). 
+Clone this repo in the `src` directory of your catkin workspace. Install all dependencies first and then build the desired packages. We manage rosdependecies using [`rosdep`](http://wiki.ros.org/rosdep).
 
 ### System dependencies
 - `yamlcpp`: `$ sudo apt-get install libyaml-cpp-dev`
@@ -10,7 +10,7 @@ Clone this repo in the `src` directory of your catkin workspace. Install all dep
 ### ROS dependencies
 - `<catkin_workspace>$ rosdep install --from-paths src/sampling_based_control --ignore-src -y`  
 - [`rqt_multiplot`](https://github.com/anybotics/rqt_multiplot_plugin) (Optional)
-    
+
 ### Build
 
 `catkin config --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo`
@@ -55,6 +55,6 @@ Install libtorch with CXX11 ABI (this is not the default install that comes with
 - unzip to folder `<LIBTORCH_PATH>`, e.g. `/home/<USER>/libtorch/`
 - add the following line to your `~/.bashrc`: `export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:<LIBTORCH_PATH>`
 
-Currently, only `mppi_manipulation` and `mppi_pole_cart` are supported. Launch it with desired paths:
+Currently, only `mppi_manipulation`, `mppi_pole_cart` and `mppi_panda` are supported. Launch it with desired paths:
 `roslaunch <PACKAGE> <CONTROL>.launch fixed_base:=false learner_output_path:=<PATH> torchscript_model_path:=<PATH>`
 Leaving out one of two paths will disable the repective function (either no output or no loaded model).
