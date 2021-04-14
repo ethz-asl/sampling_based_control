@@ -1,13 +1,12 @@
 import torch
 import torch.nn as nn
-import math
 
-class CartPoleNet(nn.Module):
+class LinReLu(nn.Module):
     """
-    A policy for the cart pole example. Theta (x(1)) will be normalized to +- pi
+    A class for the informed sample generation.
     """
     def __init__(self, n_in, n_out, n_nodes=512, n_hidden_layers=1):
-        super(CartPoleNet, self).__init__()
+        super(LinReLu, self).__init__()
 
         layers = [
             nn.Linear(n_in, n_nodes),
@@ -24,6 +23,4 @@ class CartPoleNet(nn.Module):
         """
         return: output of model
         """
-        x = torch.atleast_2d(x)
-        x[:,1] = torch.remainder(x[:,1]+math.pi, 2*math.pi) - math.pi
         return self.linear_relu_stack(x)

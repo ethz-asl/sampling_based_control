@@ -73,7 +73,7 @@ void OfflinePytorchExpert::load_torch_module(std::string path){
   test_state.push_back(torch::rand(state_dim_));
   try {
     torch::Tensor action = pImpl->module_->forward(test_state).toTensor();
-    if((size_t)action.size(0) != input_dim_) {
+    if(action.dim() != 1 || (size_t)action.size(0) != input_dim_) {
       error_msg << "Torch model returns vector of size: " << action.sizes() 
       << " expected: [" << input_dim_ << "]";
       ok = false;

@@ -10,7 +10,7 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
 
 from dataset import StateActionDataset
-from models import CartPoleNet
+from models import LinReLu
 
 
 
@@ -35,7 +35,7 @@ class PolicyLearner:
         self.train_dataset, self.test_dataset = random_split(self.full_dataset,
             [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
         # initialise MLP model
-        self.model = CartPoleNet(self.n_states, self.n_actions).to(device)
+        self.model = LinReLu(self.n_states, self.n_actions).to(device)
         self._is_trained = False
 
     def train(self):
