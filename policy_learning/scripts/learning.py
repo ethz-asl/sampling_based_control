@@ -178,7 +178,7 @@ class PolicyLearner:
                     pred = self.model(sample['state'])
                     test_loss += loss_fn(pred, sample['action']).item()
 
-            test_loss /= batch_size
+            test_loss /= test_size
             print(f"Test Error: \n Avg loss: {test_loss:>8f} \n")
 
         self._is_trained = True
