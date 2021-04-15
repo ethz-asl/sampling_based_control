@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import RandomSampler
 from torch.utils.data import random_split
 import torch.nn as nn
+from torch.optim.lr_scheduler import StepLR
 
 from dataset import StateActionDataset
 from models import CartPoleNet
@@ -57,6 +58,7 @@ class PolicyLearner:
             sampler = train_sampler)
         test_dataloader = DataLoader(self.test_dataset, batch_size=batch_size)
         size = len(train_dataloader.dataset)
+        scheduler = StepLR(optimizer, epochs/3, gamma=0.1)
 
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
@@ -83,6 +85,7 @@ class PolicyLearner:
 
             test_loss /= len(test_dataloader)
             print(f"Test Error: \n Avg loss: {test_loss:>8f} \n")
+            scheduler.step()
 
         self._is_trained = True
         print("Done!")
