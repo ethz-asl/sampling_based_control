@@ -11,7 +11,7 @@ current_dir=$(pwd)
 # loop over random inital conditions, for each initial condtition save a new
 # data file
 echo "joint_1,joint_2,joint_3,joint_4,joint_5,joint_6,joint_7" >> value_log.csv
-n_runs=1
+n_runs=50
 for ((i=0; i<$n_runs; i++))
 do
   output_file="/run_${i}.hdf5"
@@ -50,12 +50,16 @@ do
   q_w=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%100))/100)" |bc \
     | awk '{ printf("%1.2f\n",$1) }')
   # position
-  x_pos=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%15))/10)" |bc \
+  # reachable x,y range = [-0.8, 0.8] (we are testing the bounds well at 45deg,
+  # but on the axis we are just at the bounds. to keep in mind. i.e. randomly
+  # sampling box instead of circle)
+  x_pos=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%8))/10)" |bc \
     | awk '{ printf("%1.2f\n",$1) }')
-  y_pos=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%15))/10)" |bc \
+  y_pos=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%8))/10)" |bc \
     | awk '{ printf("%1.2f\n",$1) }')
-  z_pos=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%15))/10)" |bc \
-    | awk '{ printf("%1.2f\n",$1) }')
+  # reachable z range = [-0.2, 1.2]
+  z_pos=$(echo "scale=2; (-1^$(($RANDOM%2)))*($(($RANDOM%7))/10)+0.5" |bc \
+    | awk '{ printf("%1.2f\n",$1) }') # offset because not symmetric
 
 
   # log the random values for reproducibility
@@ -74,7 +78,10 @@ do
   roslaunch mppi_panda panda_data_collection.launch \
   learner_output_path:=$output_path \
   initial_condition_vector:="$initial_cond_vec" &>/dev/null \
-  & sleep 10s; rostopic pub /end_effector_pose_desired geometry_msgs/PoseStamped \
+  & sleep 5s
+  rostopic pub --once /end_effector_pose_desired geometry_msgs/PoseStamped \
   "$goal_pos_cmd"
+  sleep 20s
+
 
 done
