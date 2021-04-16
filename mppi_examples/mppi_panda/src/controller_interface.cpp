@@ -156,6 +156,8 @@ void PandaControllerInterface::ee_pose_desired_callback(
   pr(4) = msg->pose.orientation.y;
   pr(5) = msg->pose.orientation.z;
   pr(6) = msg->pose.orientation.w;
+  // ensure quaternion is normalized 
+  pr.tail<4>().normalize();
   ref_.rr[0].head<7>() = pr;
 }
 
