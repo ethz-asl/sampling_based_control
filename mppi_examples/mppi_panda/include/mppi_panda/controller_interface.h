@@ -26,6 +26,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   geometry_msgs::PoseStamped get_pose_end_effector_ros(
       const mppi::observation_t& x);
+  bool get_reference_set();
 
  private:
   void init_model(const std::string& robot_description);
@@ -45,6 +46,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   size_t last_ob_ref_id_;
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
+  bool reference_set_;
 
   double obstacle_radius_;
   mppi_pinocchio::RobotModel robot_model_;

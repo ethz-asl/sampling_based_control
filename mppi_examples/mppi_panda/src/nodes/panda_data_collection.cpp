@@ -14,6 +14,52 @@
 
 using namespace panda;
 
+// helper functions to determine termination
+bool isTerminated(geometry_msgs::PoseStamped& conv_pose, double& start_time,
+  geometry_msgs::PoseStamped current_pose, double current_time,
+  bool reference_set) {
+  // check if robot converges to a postion in which it stays for a certain time
+  double epsilon = 0.05;
+  double time_thresh = 2.0;
+  // read values from the "convergence" pose
+  double x = conv_pose.pose.position.x;
+  double y = conv_pose.pose.position.y;
+  double z = conv_pose.pose.position.z;
+  double qx = conv_pose.pose.orientation.x;
+  double qy = conv_pose.pose.orientation.y;
+  double qz = conv_pose.pose.orientation.z;
+  double qw = conv_pose.pose.orientation.w;
+  // values from current pose
+  double x_curr = current_pose.pose.position.x;
+  double y_curr = current_pose.pose.position.y;
+  double z_curr = current_pose.pose.position.z;
+  double qx_curr = current_pose.pose.orientation.x;
+  double qy_curr = current_pose.pose.orientation.y;
+  double qz_curr = current_pose.pose.orientation.z;
+  double qw_curr = current_pose.pose.orientation.w;
+
+  bool x_cond = abs(x-x_curr) < epsilon;
+  bool y_cond = abs(y-y_curr) < epsilon;
+  bool z_cond = abs(z-z_curr) < epsilon;
+  bool qx_cond = abs(qx-qx_curr) < epsilon;
+  bool qy_cond = abs(qy-qy_curr) < epsilon;
+  bool qz_cond = abs(qz-qz_curr) < epsilon;
+  bool qw_cond = abs(qw-qw_curr) < epsilon;
+  bool is_in_threshold = x_cond && y_cond && z_cond && qx_cond && qy_cond
+    && qz_cond && qw_cond;
+  bool time_condition = (current_time - start_time) > time_thresh;
+  if(!reference_set) start_time = current_time;
+  if (is_in_threshold && time_condition && reference_set) {
+    return true;
+  }
+  else if (is_in_threshold) return false;
+  else {
+    conv_pose = current_pose;
+    start_time = current_time;
+    return false;
+  }
+}
+
 int main(int argc, char** argv) {
   // ros interface
   ros::init(argc, argv, "panda_control_node");
@@ -70,6 +116,13 @@ int main(int argc, char** argv) {
   // set the very first observation
   controller.set_observation(x, sim_time);
 
+  // helper variable to terminate episode
+  bool terminate = false;
+  geometry_msgs::PoseStamped final_pose =
+    controller.get_pose_end_effector_ros(x);
+  double start_time = 0.0;
+  bool reference_set;
+
   if (!sequential) controller.start();
 
   while (ros::ok()) {
@@ -111,6 +164,15 @@ int main(int argc, char** argv) {
       ROS_WARN_STREAM_THROTTLE(
           3.0, "Simulation slower than real time: last dt=" << elapsed << "s.");
     }
+
+    reference_set = controller.get_reference_set();
+    terminate = isTerminated(final_pose, start_time, ee_pose, sim_time,
+      reference_set);
+
+    if (terminate) {
+      ros::shutdown();
+    }
+
     ros::spinOnce();
   }
 }
