@@ -20,9 +20,9 @@ bool isTerminated(observation_t x) {
   float eps_position_vel = 0.1;
   if (abs(x(1)) < (M_PI+eps_angle) && (M_PI-eps_angle) < abs(x(1)) &&
       // Position reference is not always reached, don't care for now...
-      // abs(x(0)) < eps_position && 
-      abs(x(2)) < eps_position_vel && 
-      abs(x(3)) < eps_angle_vel) 
+      // abs(x(0)) < eps_position &&
+      abs(x(2)) < eps_position_vel &&
+      abs(x(3)) < eps_angle_vel)
   {
     return true;
   }
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     mppi::DynamicsBase::input_t u;
     u = simulation.get_zero_input(x);
     std::cout << "First input: " << u.transpose() << std::endl;
-    
+
     ros::Publisher state_publisher =
         nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
     sensor_msgs::JointState joint_state;
@@ -91,11 +91,24 @@ int main(int argc, char** argv) {
     controller.set_observation(x, sim_time);
 
     // sim loop
-    controller.start();
+      // start controller
+    bool sequential;
+    nh.param<bool>("sequential", sequential, false);
+    if (!sequential) controller.start();
     while (ros::ok()) {
       auto start = std::chrono::steady_clock::now();
-      controller.set_observation(x, sim_time);
-      controller.get_input(x, u, sim_time);
+      if (sequential) {
+        controller.update_reference();
+        controller.set_observation(x, sim_time);
+        controller.update_policy();
+        controller.get_input(x, u, sim_time);
+        controller.publish_ros_default();
+        controller.publish_ros();
+      } else {
+        controller.set_observation(x, sim_time);
+        controller.get_input(x, u, sim_time);
+      }
+
       if (!static_optimization) {
         x = simulation.step(u, sim_dt);
         sim_time += sim_dt;
@@ -115,7 +128,7 @@ int main(int argc, char** argv) {
       if (isTerminated(x) && !terminate) {
         terminate = true;
         termination_time = sim_time;
-        std::cout << "waiting for shutdown for " << time_after_termination 
+        std::cout << "waiting for shutdown for " << time_after_termination
           << " seconds." << std::endl;
       }
       if (terminate &&(sim_time - termination_time > time_after_termination)){
