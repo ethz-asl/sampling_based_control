@@ -27,7 +27,11 @@ class DataRecorder:
             "stage_cost": [],
             "effective_samples": [],
             "time": [],
-            "opt_time": []
+            "opt_time": [],
+            "stage_costs_min": [],
+            "stage_costs_max": [],
+            "stage_costs_mean": [],
+            "learning_factor": []
         }
         self.first_call = True
         self.data_subscriber = rospy.Subscriber("/mppi_data",
@@ -64,6 +68,10 @@ class DataRecorder:
         self.data_dict["stage_cost"].append(data.stage_cost)
         self.data_dict["time"].append(current_time - self.initial_time)
         self.data_dict["opt_time"].append(data.time.to_sec())
+        self.data_dict["learning_factor"].append(data.config.learning_factor)
+        self.data_dict["stage_costs_min"].append(min(data.rollouts_cost.array))
+        self.data_dict["stage_costs_max"].append(max(data.rollouts_cost.array))
+        self.data_dict["stage_costs_mean"].append(np.mean(np.asarray(data.rollouts_cost.array)))
 
         self.idx += 1
 
