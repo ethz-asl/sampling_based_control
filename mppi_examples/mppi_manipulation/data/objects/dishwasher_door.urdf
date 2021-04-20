@@ -1,0 +1,47 @@
+<?xml version="0.0" ?>
+<robot name="dishwasher_door">
+  <link name="world">
+    <origin rpy="0 0 0" xyz="0 0 0" />
+  </link>
+
+  <link name="dishwasher_door">
+    <inertial>
+      <mass value="3" />
+      <inertia ixx="0.000247" iyy="0.077989" izz="0.457670" ixy="0" ixz="0" iyz="0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.08 -0.13" />
+      <geometry>
+        <mesh filename="file:///home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/data/objects/door.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1. 1. 1. 1."/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="file:///home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/data/objects/door.obj" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="articulation_joint" type="revolute">
+    <parent link="world" />
+    <child link="dishwasher_door" />
+    <axis xyz="1 0 0" />
+    <origin xyz="0 0.08 0.13" rpy="0 0 0" />
+    <dynamics damping="1" friction="0.01" />
+    <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
+  </joint>
+
+  <link name="handle_link"/>
+
+  <joint name="handle_joint" type="fixed">
+    <parent link="dishwasher_door"/>
+    <child link="handle_link"/>
+    <origin xyz="0.0 0 0.68" rpy="1.5708 0 0"/>
+  </joint>
+
+</robot>
+
