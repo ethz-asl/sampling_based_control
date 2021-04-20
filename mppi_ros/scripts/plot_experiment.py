@@ -8,6 +8,7 @@ import seaborn as sns
 from rospkg import RosPack
 sns.set_theme()
 sns.set_context("paper")
+sns.set(font_scale=2)
 
 # Avoid Type3 fonts (RA-L submission)
 matplotlib.rcParams['pdf.fonttype'] = 42
@@ -103,15 +104,16 @@ class Plotter:
                      ci="sd",
                      palette=sns.color_palette("tab10", n_colors=nr_samples))
     
-    def plot_effective_samples(self, aggregator, style=None, x='index', x_label=None):
+    def plot_effective_samples(self, aggregator, style=None, x='index', x_label=None, col=None):
         fig, ax = plt.subplots()
         nr_samples = len(self.df[aggregator].unique())
-        sns.lineplot(data=self.df,
+        sns.relplot(data=self.df,
                      x=x,
                      y="effective_samples",
                      hue=aggregator,
+                     col=col,
                      style=style,
-                     ci="sd",
+                     ci="sd", kind='line',
                      palette=sns.color_palette("tab10", n_colors=nr_samples))
         ax.set_ylabel("Effective Samples")
         ax.set_xlabel(x if x_label is None else x_label)
@@ -332,8 +334,9 @@ if __name__ == "__main__":
     # plotter.plot_average_cost_with_without_momentum()
     # plotter.plot_stage_costs()
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
-    plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
-    plotter.plot_cost('learning_factor')
-    plotter.plot_effective_samples('learning_factor')
+    # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
+    plotter.plot_average_cost('horizon', x_label="Horizon [s]")
+    # plotter.plot_cost('learning_factor')
+    # plotter.plot_effective_samples('learning_factor', col='experiment')
 
     plt.show()
