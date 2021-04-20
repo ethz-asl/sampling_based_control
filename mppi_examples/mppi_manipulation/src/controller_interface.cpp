@@ -187,7 +187,6 @@ void PandaControllerInterface::ee_pose_desired_callback(
     const geometry_msgs::PoseStampedConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ee_desired_pose_ = *msg;
-  Eigen::VectorXd pr = Eigen::VectorXd::Zero(7);
   ref_.rr[0].head<7>()(0) = msg->pose.position.x;
   ref_.rr[0].head<7>()(1) = msg->pose.position.y;
   ref_.rr[0].head<7>()(2) = msg->pose.position.z;
