@@ -28,8 +28,17 @@ class Plotter:
                                                     if x else "Monte Carlo")
         df = df.rename(columns={'tree_search': 'Sampling Strategy'})
 
-        print("Looking for experiments with id: {}".format(experiment_id))
-        df = df[df['id'].str.contains(experiment_id)]
+        if type(experiment_id) in [list, tuple]:
+            df['experiment'] = ""
+            print("Looking for experiments with ids: ")
+            for exp in experiment_id:
+                print("  - " + exp)
+                df.loc[df['id'].str.contains(exp), 'experiment'] = exp
+                
+            df = df.loc[df['experiment'] != ""]
+        else:
+            print("Looking for experiments with id: {}".format(experiment_id))
+            df = df[df['id'].str.contains(experiment_id)]
         print("Found {}".format(len(df)))
         return df
 
@@ -76,6 +85,12 @@ class Plotter:
     def plot_average_cost_per_rollout_tree(self):
         self.plot_average_cost_per_rollout(tree=True)
 
+    def plot_average_cost(self, aggregator, hue=None, x_label=None):
+        fig, ax = plt.subplots()
+        sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
+        ax.set_ylabel("Average stage cost")
+        ax.set_xlabel(aggregator if x_label is None else x_label)
+
     def plot_effective_samples_per_rollout(self, tree=False):
         plt.figure()
         strategy_name = "Tree" if tree else "Monte Carlo"
@@ -87,6 +102,19 @@ class Plotter:
                      hue="nr_rollouts",
                      ci="sd",
                      palette=sns.color_palette("tab10", n_colors=nr_samples))
+    
+    def plot_effective_samples(self, aggregator, style=None, x='index', x_label=None):
+        fig, ax = plt.subplots()
+        nr_samples = len(self.df[aggregator].unique())
+        sns.lineplot(data=self.df,
+                     x=x,
+                     y="effective_samples",
+                     hue=aggregator,
+                     style=style,
+                     ci="sd",
+                     palette=sns.color_palette("tab10", n_colors=nr_samples))
+        ax.set_ylabel("Effective Samples")
+        ax.set_xlabel(x if x_label is None else x_label)
 
     def plot_effective_samples_per_rollout_tree(self):
         self.plot_effective_samples_per_rollout(tree=True)
@@ -124,15 +152,21 @@ class Plotter:
                 axs[i].set_ybound(lower=-0.01, upper=1.2)
                 plt.legend(fontsize=18)
 
-    def plot_cost(self, aggregator):
+    def plot_cost(self, aggregator, x='index', style=None, x_label=None, y_log=False):
         fig, ax = plt.subplots()
+        nr_samples = len(self.df[aggregator].unique())
         sns.lineplot(data=self.df,
-                     x="index",
+                     x=x,
                      y="stage_cost",
                      hue=aggregator,
+                     style=style,
                      legend=True,
-                     ci="sd")
-        # ax.set_yscale("log")
+                     ci="sd",
+                     palette=sns.color_palette("tab10", n_colors=nr_samples))
+        ax.set_ylabel("Stage Cost")
+        ax.set_xlabel(x if x_label is None else x_label)
+        if y_log:
+            ax.set_yscale("log")
 
     def plot_average_cost_samples_comparison(self):
         different_samples = len(self.df["nr_rollouts"].unique())
@@ -279,18 +313,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('experiment_id',
                         type=str,
+                        nargs='+',
                         help='the id of the experiment to plot')
     args = parser.parse_args(sys.argv[1:])
 
     plotter = Plotter(args.experiment_id)
-    #plotter.plot_average_cost_per_rollout()
-    #plotter.plot_effective_samples_per_rollout()
-    #plotter.plot_cost_comparison()
-    #plotter.plot_cost_momentum_comparison_tree()
-    #plotter.plot_average_cost_samples_comparison()
-    #plotter.plot_momentum_comparison()
-    #plotter.plot_average_cost_with_without_momentum()
-    #plotter.plot_rate()
-    #plotter.plot_cost('beta')
-    plotter.plot_average_cost_with_without_momentum()
+    # plotter.plot_average_cost_per_rollout()
+    # plotter.plot_average_cost_per_rollout_tree()
+    # plotter.plot_effective_samples_per_rollout()
+    # plotter.plot_effective_samples_per_rollout_tree()
+    # plotter.plot_cost_comparison()
+    # plotter.plot_cost_momentum_comparison_tree()
+    # plotter.plot_average_cost_samples_comparison()
+    # plotter.plot_momentum_comparison()
+    # plotter.plot_average_cost_with_without_momentum()
+    # plotter.plot_rate()
+    # plotter.plot_cost('horizon')
+    # plotter.plot_average_cost_with_without_momentum()
+    # plotter.plot_stage_costs()
+    # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
+    plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
+    plotter.plot_cost('learning_factor')
+    plotter.plot_effective_samples('learning_factor')
+
     plt.show()
