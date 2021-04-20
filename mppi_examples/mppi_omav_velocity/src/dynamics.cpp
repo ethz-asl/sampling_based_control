@@ -7,6 +7,7 @@
  */
 
 #include "mppi_omav_velocity/dynamics.h"
+#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 #include <string>
 
 namespace omav_velocity {
@@ -25,7 +26,6 @@ void OMAVVelocityDynamics::initialize_world(
   // Initialize omav
   robot_description_ = robot_description;
   omav = sim_.addArticulatedSystem(robot_description_, "/");
-
   robot_dof_ = omav->getDOF();
   // Set dimensions
   state_dimension_ =
@@ -42,7 +42,7 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   Eigen::VectorXd p_gain(6), d_gain(6);
   p_gain << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-  d_gain << 5, 5, 5, 5, 5, 5;
+  d_gain << 10, 10, 10, 5, 5, 5;
   omav->setPdGains(p_gain, d_gain);
 }
 

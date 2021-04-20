@@ -35,7 +35,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 8
+  threads: 1
   debug_print: false
 
   logging: true
@@ -43,7 +43,7 @@ solver:
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
-ros_publish_rate: 10.0
+ros_publish_rate: 150.0
 
 sequential: false
 static_optimization: false

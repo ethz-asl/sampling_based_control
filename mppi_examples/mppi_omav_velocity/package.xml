@@ -14,5 +14,6 @@
     <depend>roscpp</depend>
     <depend>roslib</depend>
     <depend>std_msgs</depend>
+    <depend>mav_msgs</depend>
     <depend>tf2_ros</depend>
 </package>

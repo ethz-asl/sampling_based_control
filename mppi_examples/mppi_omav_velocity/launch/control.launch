@@ -14,7 +14,7 @@
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
 
-    <node name="omav_control" type="omav_control" pkg="mppi_omav_velocity" output="screen">
+    <node name="omav_mppi_generator" type="omav_velocity_control" pkg="mppi_omav_velocity" output="screen">
         <param name="goal_position_x" value="$(arg goal_position_x)"/>
         <param name="goal_position_y" value="$(arg goal_position_y)"/>
         <param name="goal_position_z" value="$(arg goal_position_z)"/>
@@ -31,7 +31,7 @@
 
     <group>
         <param name="/config_file" value="$(find mppi_omav_velocity)/params/params.yaml"/>
-        <rosparam command="load" file="$(find mppi_omav_velocity)/params/params.yaml" ns="omav_control"/>
+        <rosparam command="load" file="$(find mppi_omav_velocity)/params/params.yaml" ns="omav_mppi_generator"/>
     </group>
 
     <group if="$(arg plot_cost)">

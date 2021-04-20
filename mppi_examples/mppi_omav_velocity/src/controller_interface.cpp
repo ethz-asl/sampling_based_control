@@ -18,12 +18,15 @@ using namespace omav_velocity;
 
 bool OMAVControllerInterface::init_ros() {
   optimal_rollout_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 10);
+      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
   trajectory_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1000);
+      nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1);
   reference_subscriber_ =
-      nh_.subscribe("/pose_desired", 10,
+      nh_.subscribe("/mppi_pose_desired", 10,
                     &OMAVControllerInterface::desired_pose_callback, this);
+  cmd_multi_dof_joint_trajectory_pub_ =
+      nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
+          mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
 }
 
 bool OMAVControllerInterface::set_controller(
@@ -104,7 +107,6 @@ bool OMAVControllerInterface::set_controller(
 void OMAVControllerInterface::desired_pose_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
-  desired_pose_ = *msg;
   ref_.rr[0](0) = msg->pose.position.x;
   ref_.rr[0](1) = msg->pose.position.y;
   ref_.rr[0](2) = msg->pose.position.z;
@@ -122,10 +124,31 @@ bool OMAVControllerInterface::update_reference() {
   return true;
 }
 
-void OMAVControllerInterface::publish_ros() {}
+bool OMAVControllerInterface::set_reference(const observation_t &x) {
+  ref_.rr[0](0) = x(0);
+  ref_.rr[0](1) = x(1);
+  ref_.rr[0](2) = x(2);
+  ref_.rr[0](3) = x(3);
+  ref_.rr[0](4) = x(4);
+  ref_.rr[0](5) = x(5);
+  ref_.rr[0](6) = x(6);
+  get_controller()->set_reference_trajectory(ref_);
+  return true;
+}
+
+void OMAVControllerInterface::publish_ros() {
+  get_controller()->get_optimal_rollout(xx_opt, uu_opt);
+  OMAVControllerInterface::publish_trajectory(xx_opt);
+}
+
+void OMAVControllerInterface::publish_trajectory(
+    const mppi::observation_array_t &x_opt) {
+  omav_velocity::conversions::to_trajectory_msg(x_opt, current_trajectory_msg_);
+  current_trajectory_msg_.header.stamp = ros::Time::now();
+  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);
+}
 
 void OMAVControllerInterface::publish_trajectories() {
-
   get_controller()->get_rollout_trajectories(current_trajectories);
   geometry_msgs::PoseArray trajectory_array;
   trajectory_array.header.frame_id = "odom";
@@ -152,19 +175,17 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   get_controller()->get_optimal_rollout(optimal_rollout_states_,
                                         optimal_rollout_inputs_);
   geometry_msgs::PoseArray optimal_rollout_array_;
-  optimal_rollout_array_.header.frame_id = "odom";
+  optimal_rollout_array_.header.frame_id = "state";
   optimal_rollout_array_.header.stamp = ros::Time::now();
-  for (int i = 0; i < optimal_rollout_states_.size(); i++) {
-    if ((i % 10) == 0) {
-      current_pose_.position.x = optimal_rollout_states_[i](0);
-      current_pose_.position.y = optimal_rollout_states_[i](1);
-      current_pose_.position.z = optimal_rollout_states_[i](2);
-      current_pose_.orientation.w = optimal_rollout_states_[i](3);
-      current_pose_.orientation.x = optimal_rollout_states_[i](4);
-      current_pose_.orientation.y = optimal_rollout_states_[i](5);
-      current_pose_.orientation.z = optimal_rollout_states_[i](6);
-      optimal_rollout_array_.poses.push_back(current_pose_);
-    }
+  for (int i = 0; i < 30; i++) {
+    current_pose_.position.x = optimal_rollout_states_[i](0);
+    current_pose_.position.y = optimal_rollout_states_[i](1);
+    current_pose_.position.z = optimal_rollout_states_[i](2);
+    current_pose_.orientation.w = optimal_rollout_states_[i](3);
+    current_pose_.orientation.x = optimal_rollout_states_[i](4);
+    current_pose_.orientation.y = optimal_rollout_states_[i](5);
+    current_pose_.orientation.z = optimal_rollout_states_[i](6);
+    optimal_rollout_array_.poses.push_back(current_pose_);
   }
   optimal_rollout_publisher_.publish(optimal_rollout_array_);
 }

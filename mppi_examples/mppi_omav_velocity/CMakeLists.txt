@@ -16,6 +16,7 @@ set(PACKAGE_DEPENDENCIES
         roslib
         roscpp
         tf2_ros
+        mav_msgs
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -35,9 +36,9 @@ add_library(${PROJECT_NAME}
         )
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 
-add_executable(omav_control src/nodes/omav_velocity_control.cpp)
-target_link_libraries(omav_control ${PROJECT_NAME} ${catkin_LIBRARIES} )
-add_dependencies(omav_control ${PROJECT_NAME})
+add_executable(omav_velocity_control src/nodes/omav_velocity_control.cpp)
+target_link_libraries(omav_velocity_control ${PROJECT_NAME} ${catkin_LIBRARIES} )
+add_dependencies(omav_velocity_control ${PROJECT_NAME})
 
 
 add_definitions("-DBOOST_MPL_LIMIT_LIST_SIZE=30")

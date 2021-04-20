@@ -8,32 +8,40 @@ namespace omav_velocity::conversions {
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
-  trajectory_msgs::MultiDOFJointTrajectoryPoint current_trajectory_point;
-  geometry_msgs::Transform current_transform;
-  geometry_msgs::Twist current_twist;
-  trajectory_msg.header.frame_id = "odom";
-
-  for (int i = 0; i < x_opt.size(); i++) {
-    if ((i % 10) == 0) {
-      current_transform.translation.x = x_opt[i](0);
-      current_transform.translation.y = x_opt[i](1);
-      current_transform.translation.z = x_opt[i](2);
-      current_transform.rotation.w = x_opt[i](3);
-      current_transform.rotation.x = x_opt[i](4);
-      current_transform.rotation.y = x_opt[i](5);
-      current_transform.rotation.z = x_opt[i](6);
-      current_trajectory_point.transforms.push_back(current_transform);
-      current_twist.linear.x = x_opt[i](7);
-      current_twist.linear.y = x_opt[i](8);
-      current_twist.linear.z = x_opt[i](9);
-      current_twist.angular.x = x_opt[i](10);
-      current_twist.angular.x = x_opt[i](11);
-      current_twist.angular.x = x_opt[i](12);
-      current_trajectory_point.velocities.push_back(current_twist);
-
-      trajectory_msg.points.push_back(current_trajectory_point);
-    }
+  double dt = 0.015;
+  mav_msgs::EigenTrajectoryPoint current_trajectory_point;
+  mav_msgs::EigenTrajectoryPointVector current_trajectory;
+  for (int i = 1; i < 30; i++) {
+    EigenTrajectoryPointFromState(x_opt, i, current_trajectory_point, dt);
+    current_trajectory.push_back(current_trajectory_point);
   }
-  trajectory_msg.header.stamp = ros::Time::now();
+  mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
+                                                &trajectory_msg);
+}
+
+void EigenTrajectoryPointFromState(
+    const observation_array_t &states, int i,
+    mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt) {
+  trajectorypoint.position_W = states[i].head<3>();
+  trajectorypoint.orientation_W_B =
+      Eigen::Quaternion(states[i](3), states[i](4), states[i](5), states[i](6));
+  trajectorypoint.velocity_W = states[i].segment<3>(7);
+  trajectorypoint.angular_velocity_W = states[i].tail<3>();
+  trajectorypoint.acceleration_W =
+      (states[i].segment<3>(7) - states[i - 1].segment<3>(7)) / dt;
+  trajectorypoint.angular_acceleration_W =
+      (states[i].tail<3>() - states[i - 1].tail<3>()) / dt;
+  trajectorypoint.time_from_start_ns = ros::Duration(i * dt).toNSec();
+}
+void PoseMsgFromVector(const Eigen::VectorXd &pose,
+                       geometry_msgs::PoseStamped &pose_msg) {
+  pose_msg.pose.position.x = pose(0);
+  pose_msg.pose.position.y = pose(1);
+  pose_msg.pose.position.z = pose(2);
+
+  pose_msg.pose.orientation.w = pose(3);
+  pose_msg.pose.orientation.x = pose(4);
+  pose_msg.pose.orientation.y = pose(5);
+  pose_msg.pose.orientation.z = pose(6);
 }
 } // namespace omav_velocity::conversions
