@@ -102,18 +102,18 @@ class PolicyLearner:
             with torch.no_grad():
                 return self.model(torch.as_tensor(state, dtype=torch.float32))
 
-    def save_model(self, state):
+    def save_model(self, state, name):
         """
         saves model if trained
         """
         if self._is_trained:
             with torch.no_grad():
                 # save the weights of the model to be used in python
-                torch.save(self.model.state_dict(), 'expert_model.pth')
+                torch.save(self.model.state_dict(), f'{name}.pth')
                 # save the model such that it can be called from cpp
                 traced_script_module = torch.jit.trace(self.model,
                     torch.as_tensor(state, dtype=torch.float32))
-                traced_script_module.save('expert_model.pt')
+                traced_script_module.save(f'{name}.pt')
                 print('Model saved.')
 
         else:
@@ -121,7 +121,8 @@ class PolicyLearner:
 
 if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dir_path = task_path + "/../data/0414173246"
+    dataset_name = "Horizon_4_Train_0419140234"
+    dir_path = task_path + "/../data/" + dataset_name
     dataset = StateActionDataset(root_dir=dir_path)
     # fix a random seed
     torch.manual_seed(1)
@@ -135,9 +136,8 @@ if __name__ == "__main__":
 
 
     learner = PolicyLearner(dir_path, device)
-    learner.save_model(sample['state'])
     learner.train()
-    learner.save_model(sample['state'])
+    learner.save_model(sample['state'], dataset_name)
 
     action = learner.get_action(sample['state'])
     print('predicted action: ', action)
