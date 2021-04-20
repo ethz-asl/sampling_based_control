@@ -22,7 +22,7 @@ namespace mppi_ros {
 class ControllerRos {
  public:
   ControllerRos() = delete;
-  ControllerRos(ros::NodeHandle& nh);
+  ControllerRos(ros::NodeHandle &nh, ros::NodeHandle &nh_public_);
   ~ControllerRos();
 
   /**
@@ -81,10 +81,10 @@ class ControllerRos {
   void get_input_state(const observation_t& x, observation_t& x_nom, input_t& u,
                        const double& t);
   bool publish_ros_default();
-  void publish_optimal_rollout();
-  void publish_trajectories();
+  virtual void publish_optimal_rollout(){};
+  virtual void publish_trajectories(){};
 
- private:
+private:
   void init_default_ros();
   bool init_default_params();
 
@@ -116,33 +116,33 @@ private:
   double ros_publish_rate_ = 0.0;
 
  public:
-  ros::NodeHandle nh_;
+   ros::NodeHandle nh_, nh_public_;
 
-  ros::Publisher cost_publisher_;
-  ros::Publisher min_rollout_cost_publisher_;
-  ros::Publisher max_rollout_cost_publisher_;
-  ros::Publisher input_publisher_;
-  ros::Publisher optimal_rollout_publisher_;
-  ros::Publisher trajectory_publisher_;
+   ros::Publisher cost_publisher_;
+   ros::Publisher min_rollout_cost_publisher_;
+   ros::Publisher max_rollout_cost_publisher_;
+   ros::Publisher input_publisher_;
+   ros::Publisher optimal_rollout_publisher_;
+   ros::Publisher trajectory_publisher_;
 
-  std_msgs::Float64 stage_cost_;
-  std_msgs::Float64 min_rollout_cost_;
-  std_msgs::Float64 max_rollout_cost_;
-  geometry_msgs::Pose current_pose_;
-  geometry_msgs::Pose current_trajectory_pose;
+   std_msgs::Float64 stage_cost_;
+   std_msgs::Float64 min_rollout_cost_;
+   std_msgs::Float64 max_rollout_cost_;
+   geometry_msgs::Pose current_pose_;
+   geometry_msgs::Pose current_trajectory_pose;
 
-  std::shared_mutex input_mutex_;
-  mppi::input_t input_ = mppi::input_t::Zero(1);
-  std_msgs::Float32MultiArray input_ros_;
-  mppi::observation_array_t optimal_rollout_states_;
-  mppi::input_array_t optimal_rollout_inputs_;
+   std::shared_mutex input_mutex_;
+   mppi::input_t input_ = mppi::input_t::Zero(1);
+   std_msgs::Float32MultiArray input_ros_;
+   mppi::observation_array_t optimal_rollout_states_;
+   mppi::input_array_t optimal_rollout_inputs_;
 
-  std::vector<mppi::Rollout> current_trajectories;
-  std::vector<Eigen::VectorXd> xx_current_trajectory;
+   std::vector<mppi::Rollout> current_trajectories;
+   std::vector<Eigen::VectorXd> xx_current_trajectory;
 
-  // logging
-  mppi_ros::Data data_ros_;
-  ros::Publisher data_publisher_;
+   // logging
+   mppi_ros::Data data_ros_;
+   ros::Publisher data_publisher_;
 };
 
 }  // namespace mppi_ros
