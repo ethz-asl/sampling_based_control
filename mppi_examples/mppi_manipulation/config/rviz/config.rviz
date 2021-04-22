@@ -40,7 +40,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -53,98 +53,12 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        axis_link:
-          Value: true
-        axle_link:
-          Value: false
-        base_link:
-          Value: false
-        box:
-          Value: true
-        chassis_link:
-          Value: false
-        door:
-          Value: false
-        door_hinge:
-          Value: false
-        franka_mount_link:
-          Value: false
-        front_cover_link:
-          Value: false
-        front_lights_link:
-          Value: false
-        handle_link:
-          Value: true
-        handle_support_left:
-          Value: false
-        handle_support_right:
-          Value: false
-        imu_link:
-          Value: false
-        left_side_cover_link:
-          Value: false
-        measured_joint_link:
-          Value: false
-        measured_joint_link_test:
-          Value: true
-        mid_mount:
-          Value: false
-        omni_base_root_link:
-          Value: true
-        panda_grasp:
-          Value: false
-        panda_hand:
-          Value: false
-        panda_leftfinger:
-          Value: false
-        panda_link0:
-          Value: false
-        panda_link1:
-          Value: false
-        panda_link2:
-          Value: false
-        panda_link3:
-          Value: false
-        panda_link4:
-          Value: false
-        panda_link5:
-          Value: false
-        panda_link6:
-          Value: false
-        panda_link7:
-          Value: false
-        panda_link8:
-          Value: false
-        panda_rightfinger:
-          Value: false
-        pivot:
-          Value: true
-        rear_cover_link:
-          Value: false
-        rear_lights_link:
-          Value: false
-        reference_link:
-          Value: false
-        ridgeback_sensor_mount_link:
-          Value: false
-        right_side_cover_link:
-          Value: false
-        shelf:
-          Value: false
-        top_link:
-          Value: false
-        world:
-          Value: false
-        x_slider:
-          Value: true
-        y_slider:
-          Value: true
       Marker Alpha: 1
       Marker Scale: 0.20000000298023224
       Name: TF
@@ -152,69 +66,9 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          box:
-            {}
-          omni_base_root_link:
-            x_slider:
-              y_slider:
-                pivot:
-                  base_link:
-                    chassis_link:
-                      axle_link:
-                        {}
-                      front_cover_link:
-                        {}
-                      front_lights_link:
-                        {}
-                      imu_link:
-                        {}
-                      left_side_cover_link:
-                        {}
-                      rear_cover_link:
-                        {}
-                      rear_lights_link:
-                        {}
-                      right_side_cover_link:
-                        {}
-                      top_link:
-                        {}
-                    mid_mount:
-                      franka_mount_link:
-                        panda_link0:
-                          panda_link1:
-                            panda_link2:
-                              panda_link3:
-                                panda_link4:
-                                  panda_link5:
-                                    panda_link6:
-                                      panda_link7:
-                                        panda_link8:
-                                          panda_hand:
-                                            panda_grasp:
-                                              {}
-                                            panda_leftfinger:
-                                              {}
-                                            panda_rightfinger:
-                                              {}
-                      reference_link:
-                        {}
-                      ridgeback_sensor_mount_link:
-                        {}
-          shelf:
-            door_hinge:
-              axis_link:
-                measured_joint_link:
-                  door:
-                    handle_link:
-                      handle_support_left:
-                        {}
-                      handle_support_right:
-                        {}
-                      measured_joint_link_test:
-                        {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 1
       Axes Length: 0.10000000149011612
       Axes Radius: 0.009999999776482582
@@ -233,13 +87,13 @@ Visualization Manager:
       Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
-      Enabled: true
+      Enabled: false
       Name: Interactive EE Reference
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
       Update Topic: /reference_marker_server/update
-      Value: true
+      Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: true
@@ -254,7 +108,7 @@ Visualization Manager:
       Marker Topic: /obstacle_marker
       Name: Obstacle Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Group
@@ -269,16 +123,17 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            axis_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            door:
+            dishwasher_base:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            door_hinge:
+            dishwasher_door:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            dishwasher_hinge:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -286,30 +141,6 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-              Value: true
-            handle_support_left:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            handle_support_right:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            measured_joint_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            measured_joint_link_test:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            shelf:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             world:
               Alpha: 1
               Show Axes: false
@@ -320,7 +151,7 @@ Visualization Manager:
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Alpha: 0.20000000298023224
+        - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -512,7 +343,7 @@ Visualization Manager:
             {}
           Queue Size: 100
           Value: true
-        - Alpha: 0.20000000298023224
+        - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -522,7 +353,7 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            box:
+            obstacle:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -680,7 +511,7 @@ Visualization Manager:
       Name: Controller
   Enabled: true
   Global Options:
-    Background Color: 211; 215; 207
+    Background Color: 255; 255; 255
     Default Light: true
     Fixed Frame: world
     Frame Rate: 30
@@ -706,7 +537,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.305503845214844
+      Distance: 3.70920467376709
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -714,17 +545,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.946671187877655
-        Y: -0.07541895657777786
-        Z: 0.5484432578086853
+        X: 0.8882758021354675
+        Y: -0.694873034954071
+        Z: 0.49450522661209106
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5147977471351624
+      Pitch: 0.37144264578819275
       Target Frame: <Fixed Frame>
-      Yaw: 1.998708724975586
+      Yaw: 1.9055980443954468
     Saved: ~
 Window Geometry:
   Displays:
@@ -743,4 +574,4 @@ Window Geometry:
     collapsed: true
   Width: 1848
   X: 72
-  Y: 27
+  Y: 147

@@ -1,0 +1,280 @@
+<?xml version="0.0" ?>
+<robot name="dishwasher_door"  xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:property name="l" default="0.65"/>
+  <xacro:property name="l_center" default="0.25"/>
+
+  <xacro:property name="h" default="0.65"/>
+  <xacro:property name="h_handle" default="0.12"/>
+  <xacro:property name="h_bottom" default="0.43"/>
+  <xacro:property name="h_closure" default="0.02"/> <!-- Should be less then h - h_handle - h_bottom --> 
+
+  <xacro:property name="w_body" default="0.50"/>
+  <xacro:property name="w_back" default="0.03"/>
+  <xacro:property name="w_front" default="0.03"/>
+  <xacro:property name="w_handle" default="0.01"/>
+
+  <xacro:property name="intake_angle_deg" default="20"/>
+  <xacro:property name="alpha" value="${intake_angle_deg * pi / 180.0}"/>
+  
+  <xacro:property name="w_intake" default="${w_front}"/>
+  <xacro:property name="h_intake" default="${h_handle}"/> 
+
+  <!--   The handle has a tilted support surface that hands with a flat surface. This is the width of the flat surface
+  measured from the rear of the door -->
+  <xacro:property name="w_intake_rear" default="0.0"/>
+  
+  <xacro:macro name="box_inertia" params="m x y z">
+      <inertial>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <mass value="${m}"/>
+          <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
+                   ixy="0"
+                   ixz="0"
+                   iyy="${0.0833 * m * (x**2 + z**2)}"
+                   iyz="0"
+                   izz="${0.0833 * m * (z**2 + y**2)}"/>
+      </inertial>
+  </xacro:macro>
+  
+  <link name="world"/>
+
+  <link name="dishwasher_base">
+    <visual>
+      <origin xyz="${-w_body/2 -w_back/2 - 0.01} 0 ${h/2.0}" rpy="0 0 0.0"/>
+      <geometry>
+        <box size="${w_body} ${l} ${h}"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.9 1.0 0.8 1.0" />
+      </material>
+    </visual>
+  </link>
+
+  <joint name="dishwasher_base_joint" type="fixed">
+    <origin xyz="1.2 0.0 0.6" rpy="0 0 3.14"/>
+    <parent link="world"/>
+    <child link="dishwasher_base"/>
+  </joint>
+  
+  <link name="dishwasher_hinge"/>
+
+  <link name="dishwasher_door">
+    <xacro:box_inertia m="1" x="${w_back}" y="${l}" z="${h}"/>
+<!--     <visual>
+      <origin xyz="0 -0.08 -0.13" rpy="0 0 1.57"/>
+      <geometry>
+        <mesh filename="file:///home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/data/objects/door.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1. 1. 1. 1."/>
+      </material>
+    </visual> -->
+
+    <!-- Back side -->
+    <visual>
+      <origin xyz="0 0 ${h/2.0}" rpy="0 0 0.0"/>
+      <geometry>
+        <box size="${w_back} ${l} ${h}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 ${h/2.0}" rpy="0 0 0.0"/>
+      <geometry>
+        <box size="${w_back} ${l} ${h}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+
+    <!-- Left part -->
+    <visual>
+      <origin xyz="${w_front/2 + w_back/2} -${(l_center + l)/4} ${h/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${(l-l_center)/2} ${h}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_front/2 + w_back/2} -${(l_center + l)/4} ${h/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${(l-l_center)/2} ${h}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+
+     <!-- Right part -->
+    <visual>
+      <origin xyz="${w_front/2 + w_back/2} ${(l_center + l)/4} ${h/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${(l-l_center)/2} ${h}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_front/2 + w_back/2} ${(l_center + l)/4} ${h/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${(l-l_center)/2} ${h}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+
+    <!-- Upper part -->
+    <visual>
+      <origin xyz="${w_back/2 + w_front - w_handle/2} 0 ${(h_bottom + h_handle + h)/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_handle} ${l_center} ${h - h_bottom - h_handle}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_back/2 + w_front - w_handle/2} 0 ${(h_bottom + h_handle + h)/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_handle} ${l_center} ${h - h_bottom - h_handle}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+
+    <!--  Bottom part-->
+    <visual>
+      <origin xyz="${w_back/2 + w_front/2} 0 ${h_bottom/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${l_center} ${h_bottom}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_back/2 + w_front/2} 0 ${h_bottom/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${l_center} ${h_bottom}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+
+    <!--  Handle intake-->
+    <visual>
+      <origin xyz="${w_back/2 + w_front - h_intake/2 * sin(alpha) - w_intake/2 * cos(alpha)} 
+                   0 
+                   ${h_bottom + 0.5 * h_intake * cos(alpha) - 0.5 * w_intake * sin(alpha)}" 
+              rpy="0 -${alpha} 0"/>
+      <geometry>
+        <box size="${w_intake} ${l_center} ${h_intake}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_back/2 + w_front - h_intake/2 * sin(alpha) - w_intake/2 * cos(alpha)} 
+                   0 
+                   ${h_bottom + 0.5 * h_intake * cos(alpha) - 0.5 * w_intake * sin(alpha)}" 
+              rpy="0 -${alpha} 0"/>
+      <geometry>
+        <box size="${w_intake} ${l_center} ${h_intake}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+
+    <!-- Upper closure -->
+    <visual>
+      <origin xyz="${w_front/2 + w_back/2} 0 ${h - h_closure/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${l_center} ${h_closure}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_front/2 + w_back/2} 0 ${h - h_closure/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_front} ${l_center} ${h_closure}"/>
+      </geometry>
+      <material name="">
+        <contact name="steel"/>
+      </material>
+    </collision>
+    
+    <!-- Intake flat rear -->
+<!--     <collision>
+      <origin xyz="${w_back/2 + w_intake_rear/2} 0 ${(h + h_bottom)/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_intake_rear} ${l_center} ${h - h_bottom}"/>
+      </geometry>
+    </collision> -->
+  </link>
+
+  <!-- <link name="upper">
+     <xacro:box_inertia m="0.2" x="${w_handle}" y="${l_center}" z="${h - h_bottom - h_handle}"/>
+     <visual>
+      <origin xyz="${w_back/2 + w_front - w_handle/2} 0 ${(h_bottom + h_handle + h)/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_handle} ${l_center} ${h - h_bottom - h_handle}"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${w_back/2 + w_front - w_handle/2} 0 ${(h_bottom + h_handle + h)/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${w_handle} ${l_center} ${h - h_bottom - h_handle}"/>
+      </geometry>
+    </collision>
+  </link> -->
+  
+  <joint name="articulation_joint" type="revolute">
+    <parent link="dishwasher_base" />
+    <child link="dishwasher_hinge" />
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0.08 0.13" rpy="0 0 0" />
+    <dynamics damping="1.5" friction="0.1" />
+    <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
+  </joint>
+
+  <joint name="hinge_joint" type="fixed">
+    <parent link="dishwasher_hinge" />
+    <child link="dishwasher_door" />
+    <origin xyz="0 -0.08 -0.13" rpy="0 0 0" />
+  </joint>
+
+
+  <link name="handle_link"/>
+
+  <joint name="handle_joint" type="fixed">
+    <parent link="dishwasher_door"/>
+    <child link="handle_link"/>
+    <origin xyz="${w_front/2 + w_back/2} 0 ${h_bottom + h_handle}" rpy="1.5708 0 0"/>
+  </joint>
+
+<!--   <joint name="upper_joint" type="fixed">
+    <parent link="dishwasher_door"/>
+    <child link="upper"/>
+    <origin xyz="0.0 0 0" rpy="0 0 0"/>
+  </joint> -->
+
+</robot>
+
