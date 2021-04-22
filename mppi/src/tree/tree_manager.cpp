@@ -36,7 +36,7 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost,
     experts_v_[i] = expert_->clone();
   }
 
-  rollouts_cost_ = Eigen::ArrayXd::Zero(config_.rollouts);
+  rollouts_cost_.resize(config_.rollouts, 0.0);
   rollouts_.resize(
       config_.rollouts,
       mppi::Rollout(tree_target_depth_, dynamics_->get_input_dimension(),
@@ -83,7 +83,7 @@ void TreeManager::init_tree() {
 
   sampling_tree_.clear();
   extendable_leaf_pos_.clear();
-  rollouts_cost_.setZero();
+  rollouts_cost_.resize(config_.rollouts, 0.0);
 
   node_iterator_t root = sampling_tree_.insert(
       sampling_tree_.begin(),
@@ -276,7 +276,7 @@ void TreeManager::transform_to_rollouts() {
 
 std::vector<mppi::Rollout> TreeManager::get_rollouts() { return rollouts_; }
 
-Eigen::ArrayXd TreeManager::get_rollouts_cost() { return rollouts_cost_; }
+std::vector<double> TreeManager::get_rollouts_cost() { return rollouts_cost_; }
 
 int TreeManager::random_uniform_int(int v_min, int v_max) {
   static std::mt19937 gen{std::random_device{}()};

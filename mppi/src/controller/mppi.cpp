@@ -63,9 +63,6 @@ void PathIntegral::init_data() {
   opt_roll_cache_ = Rollout(steps_, nu_, nx_);
 
   rollouts_.resize(config_.rollouts, Rollout(steps_, nu_, nx_));
-  rollouts_cost_ = Eigen::ArrayXd::Zero(config_.rollouts);
-
-  omega = Eigen::ArrayXd::Zero(config_.rollouts);
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
 
   momentum_.resize(steps_, input_t::Zero(nu_));
@@ -184,7 +181,7 @@ void PathIntegral::update_policy() {
       data_.step_count = step_count_;
       data_.stage_cost = stage_cost_;
       data_.rollouts_cost = rollouts_cost_;
-      data_.weights = omega;
+      data_.weights = weights_;
       data_.optimization_time = 0.0;
       data_.reset_time = t0_internal_;
       data_.optimal_rollout = opt_roll_;
@@ -245,6 +242,11 @@ void PathIntegral::initialize_rollouts() {
 }
 
 void PathIntegral::prepare_rollouts() {
+  // cleanup
+  rollouts_valid_index_.clear();
+  rollouts_cost_.clear();
+  weights_.clear();
+
   // find trim index
   size_t offset;
   {
@@ -269,6 +271,7 @@ void PathIntegral::prepare_rollouts() {
     shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
     roll.clear_cost();
     roll.clear_observation();
+    roll.valid = true;
   }
 
   // shift and trim the previously optimized trajectory
@@ -310,6 +313,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              const size_t end_idx) {
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
+  
     dynamics->reset(x0_internal_);
     x = x0_internal_;
     for (size_t t = 0; t < steps_; t++) {
@@ -337,7 +341,18 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                   cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
 
       if (std::isnan(cost_temp)) {
-        throw std::runtime_error("Something went wrong ... dynamics diverged?");
+        std::stringstream ss;
+        ss << "Something went wrong ... dynamics diverged?\n" << std::endl;
+        ss << "Rollout#" << k << std::endl;
+        ss << "Time  where diverged: " << t << std::endl;
+        ss << "State where diverged: " << x.transpose() << std::endl;
+        ss << "Previous state: " << rollouts_[k].xx[t-1].transpose() << std::endl;
+        ss << "Input where diverged: " << rollouts_[k].uu[t].transpose();
+        ss << "Previous input: " << rollouts_[k].uu[t-1].transpose() << std::endl;
+        rollouts_[k].valid = false;
+        rollouts_[k].total_cost = std::numeric_limits<double>::infinity();
+        log_warning(ss.str());
+        break;
       }
 
       // store data
@@ -353,7 +368,6 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // integrate dynamics
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
     }
-    rollouts_cost_[k] = rollouts_[k].total_cost;
   }
 }
 
@@ -384,32 +398,35 @@ void PathIntegral::overwrite_rollouts() {
   rollouts_cost_ = tree_manager_.get_rollouts_cost();
 }
 
-void PathIntegral::compute_exponential_cost() {
-  min_cost_ = rollouts_cost_.minCoeff();
-  max_cost_ = rollouts_cost_.maxCoeff();
-
-  if (config_.debug_print) print_cost_histogram();
-
-  exponential_cost_ = Eigen::exp(-config_.h * (rollouts_cost_ - min_cost_) /
-                                 (max_cost_ - min_cost_));
-  if (config_.filtering) {
-    for (size_t k = 0; k < config_.rollouts; k++) {
-      if (rollouts_cost_(k) >
-          (max_cost_ + (1 - config_.cost_ratio) * min_cost_))
-        exponential_cost_(k) = 0.0;
+void PathIntegral::compute_weights() {
+  // keep all non diverged rollouts
+  for (size_t k=0; k < config_.rollouts; k++){
+    if (rollouts_[k].valid){
+        rollouts_cost_.push_back(rollouts_[k].total_cost);
+        rollouts_valid_index_.push_back(k);
     }
   }
+
+  min_cost_ = *std::min_element(rollouts_cost_.begin(), rollouts_cost_.end());
+  max_cost_ = *std::max_element(rollouts_cost_.begin(), rollouts_cost_.end());
+
+  for (const auto& rollout_cost : rollouts_cost_)
+    weights_.push_back(std::exp(-config_.h * (rollout_cost - min_cost_) /
+                                 (max_cost_ - min_cost_)));
+
+  double sum = std::accumulate(weights_.begin(), weights_.end(), 0.0);
+  std::transform(weights_.begin(), weights_.end(), weights_.begin(),
+                   [&sum](double v) -> double { return v/sum; });
 }
 
 void PathIntegral::optimize() {
-  compute_exponential_cost();
-  omega = exponential_cost_ / exponential_cost_.sum();
-
+  compute_weights();
+  
   // rollouts averaging
   for (size_t t = 0; t < steps_; t++) {
     momentum_[t] = config_.beta * momentum_[t];
-    for (size_t k = 0; k < config_.rollouts; k++) {
-      momentum_[t] += omega[k] * rollouts_[k].nn[t];
+    for (size_t i=0; i < rollouts_valid_index_.size(); i++) {
+      momentum_[t] += weights_[i] * rollouts_[rollouts_valid_index_[i]].nn[t];
     }
   }
 
@@ -421,13 +438,14 @@ void PathIntegral::optimize() {
   // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
   if (config_.adaptive_sampling) {
     input_t delta = input_t::Zero(nu_);
+    
     // TODO(giuseppe) remove the hardcoded baseline variance
     Eigen::MatrixXd new_covariance =
         Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
-    for (size_t k = 0; k < config_.rollouts; k++) {
+    for (size_t j=0; j < rollouts_valid_index_.size(); j++) {
       for (size_t i = 0; i < steps_; i++) {
-        delta = rollouts_[k].uu[i] - opt_roll_.uu[i];
-        new_covariance += omega[k] * (delta * delta.transpose()) / steps_;
+        delta = rollouts_[rollouts_valid_index_[j]].uu[i] - opt_roll_.uu[i];
+        new_covariance += weights_[j] * (delta * delta.transpose()) / steps_;
       }
     }
     // I could filter the covariance update using a first order
@@ -594,8 +612,8 @@ void PathIntegral::print_cost_histogram() const {
   std::cout << "Max: " << max_cost_ << ", Min: " << min_cost_
             << ", delta: " << delta << std::endl;
   std::map<int, int> hist{};
-  for (size_t k = 0; k < config_.rollouts; k++) {
-    ++hist[std::round((rollouts_cost_(k) - min_cost_) / delta)];
+  for (const auto& cost : rollouts_cost_) {
+    ++hist[std::round((cost - min_cost_) / delta)];
   }
   for (auto p : hist) {
     std::cout << std::setw(2) << p.first << ' ' << std::string(p.second, '*')
