@@ -15,11 +15,12 @@ struct Rollout {
   Rollout();
   explicit Rollout(size_t steps, size_t input_dim, size_t state_dim);
 
+  bool valid = true;
   size_t steps_;
   size_t input_dim_;
   size_t state_dim_;
   double total_cost = 0.0;
-
+  
   Eigen::VectorXd cc;
   std::vector<double> tt;
   std::vector<Eigen::VectorXd> uu;

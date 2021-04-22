@@ -82,7 +82,7 @@ class TreeManager {
    * tree
    * @return vector of costs for rollouts
    */
-  Eigen::ArrayXd get_rollouts_cost();
+  std::vector<double> get_rollouts_cost();
 
   /**
    * @brief Helper function to print the tree structure
@@ -195,7 +195,7 @@ class TreeManager {
   std::vector<std::future<bool>> futures_;
 
   std::vector<mppi::Rollout> rollouts_;  // internal tree rollouts
-  Eigen::ArrayXd rollouts_cost_;         // internal tree rollout costs
+  std::vector<double> rollouts_cost_;         // internal tree rollout costs
 
   // all nodes save the resulting dynamics to this vector.
   std::vector<dynamics_ptr> tree_dynamics_v_shared_;

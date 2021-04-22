@@ -95,11 +95,10 @@ class PathIntegral {
   void filter_input();
 
   /**
-   * @brief Transforms the cost to go into the corresponding desirability
-   * function
-   * @return the vector of desirabilty values per rollout
+   * @brief Transforms the cost to go into the corresponding sample weights
+   * @return 
    */
-  void compute_exponential_cost();
+  void compute_weights();
 
   /**
    * @brief First multiple rollouts are forward simulated and averaged to
@@ -264,13 +263,11 @@ class PathIntegral {
   void update_reference();
 
   // Generic getters
-  inline const Eigen::ArrayXd& get_weights() const { return omega; }
+  inline const std::vector<double>& get_weights() const { return weights_; }
   inline double get_stage_cost() { return stage_cost_; }
-  inline double get_rollout_cost() { return rollouts_cost_.minCoeff(); }
-  inline double get_rollout_min_cost() { return rollouts_cost_.minCoeff(); }
-  inline double get_rollout_max_cost() { return rollouts_cost_.maxCoeff(); }
-  inline double get_weight_min_cost() { return omega.minCoeff(); }
-  inline double get_weight_max_cost() { return omega.maxCoeff(); }
+  inline double get_rollout_cost() { return get_rollout_min_cost(); }
+  inline double get_rollout_min_cost() { return 0.0; }
+  inline double get_rollout_max_cost() { return 0.0; }
   inline const Rollout& get_optimal_rollout() { return opt_roll_; }
   inline const Rollout& get_optimal_rollout_cache() { return opt_roll_cache_; }
   inline observation_t get_current_observation() { return x0_internal_; }
@@ -287,8 +284,7 @@ class PathIntegral {
   // TODO clean this up: everything public...
  public:
   bool verbose_;
-  Eigen::ArrayXd omega;
-  Eigen::ArrayXd rollouts_cost_;
+  std::vector<double> weights_;
   Eigen::ArrayXd exponential_cost_;
 
   cost_ptr cost_;
@@ -358,6 +354,10 @@ class PathIntegral {
   size_t step_count_;  // total amount of solver optimization steps
   std::vector<input_t> momentum_;
   Timer timer_;
+
+
+  std::vector<int> rollouts_valid_index_;
+  std::vector<double> rollouts_cost_;
 };
 
 }  // namespace mppi
