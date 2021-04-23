@@ -138,10 +138,8 @@ int main(int argc, char **argv) {
 
   // do some timing
   double elapsed;
-  std::chrono::time_point<std::chrono::steady_clock> start, end;
 
   while (ros::ok()) {
-    start = std::chrono::steady_clock::now();
     if (sequential) {
       controller.update_reference();
       controller.set_observation(x, sim_time);
@@ -159,16 +157,6 @@ int main(int argc, char **argv) {
       // controller.publish_optimal_rollout();
     }
 
-    end = std::chrono::steady_clock::now();
-    elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-                  .count() /
-              1000.0;
-
-    if (sim_dt - elapsed > 0)
-      ros::Duration(sim_dt - elapsed).sleep();
-    else
-      ROS_INFO_STREAM_THROTTLE(
-          3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
     ros::spinOnce();
   }
 }
