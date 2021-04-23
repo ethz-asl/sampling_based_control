@@ -128,8 +128,6 @@ private:
    std_msgs::Float64 stage_cost_;
    std_msgs::Float64 min_rollout_cost_;
    std_msgs::Float64 max_rollout_cost_;
-   geometry_msgs::Pose current_pose_;
-   geometry_msgs::Pose current_trajectory_pose;
 
    std::shared_mutex input_mutex_;
    mppi::input_t input_ = mppi::input_t::Zero(1);
