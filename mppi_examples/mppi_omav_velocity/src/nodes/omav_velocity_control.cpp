@@ -30,6 +30,8 @@ void OmavTrajectoryGenerator::initializePublishers() {
   reference_publisher_ =
       nh_.advertise<geometry_msgs::PoseStamped>("/mppi_pose_desired", 1);
 
+  indicator_publisher_ = nh_.advertise<std_msgs::Int64>("/indicator", 1);
+
   take_off_srv_ = nh_.advertiseService(
       "take_off", &OmavTrajectoryGenerator::takeOffSrv, this);
 
@@ -55,6 +57,9 @@ bool OmavTrajectoryGenerator::takeOffSrv(std_srvs::Empty::Request &request,
   omav_velocity::conversions::PoseMsgFromVector(take_off_pose,
                                                 take_off_pose_msg);
   reference_publisher_.publish(take_off_pose_msg);
+  std_msgs::Int64 indicator;
+  indicator.data = 0;
+  indicator_publisher_.publish(indicator);
   return true;
 }
 
@@ -65,6 +70,9 @@ bool OmavTrajectoryGenerator::executeTrajectorySrv(
   goal_pose << 10.0, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0;
   omav_velocity::conversions::PoseMsgFromVector(goal_pose, goal_pose_msg);
   reference_publisher_.publish(goal_pose_msg);
+  std_msgs::Int64 indicator;
+  indicator.data = 1;
+  indicator_publisher_.publish(indicator);
   return true;
 }
 

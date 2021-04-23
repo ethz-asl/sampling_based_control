@@ -32,10 +32,16 @@ OMAVVelocityCost::compute_cost(const mppi::observation_t &x,
   double cost = 0.0;
 
   // Leafing Field Cost
-  if (abs(x(16)) > param_.x_limit || abs(x(17)) > param_.y_limit ||
-      abs(x(18)) > param_.z_limit) {
+  if (x(0) > param_.x_limit_max || x(1) > param_.y_limit_max ||
+      x(2) > param_.z_limit_max || x(0) < param_.x_limit_min ||
+      x(1) < param_.y_limit_min) {
     cost += param_.Q_leafing_field;
   }
+
+  if ((x(2) - param_.floor_thresh) < 0 && ref(7)) {
+    cost += -param_.Q_floor / param_.floor_thresh * x(2) + param_.Q_floor;
+  }
+
   // Pose Cost
   mppi_pinocchio::Pose current_pose, reference_pose;
   current_pose.translation = x.head<3>();
@@ -70,15 +76,31 @@ bool OMAVVelocityCostParam::parse_from_ros(const ros::NodeHandle &nh) {
     ROS_ERROR("Failed to parse leafing_field_cost or invalid!");
     return false;
   }
-  if (!nh.getParam("field_limit_x", x_limit) || x_limit < 0) {
-    ROS_ERROR("Failed to parse field_limit_x or invalid!");
+  if (!nh.getParam("field_limit_x_min", x_limit_min)) {
+    ROS_ERROR("Failed to parse field_limit_x_min or invalid!");
     return false;
   }
-  if (!nh.getParam("field_limit_y", y_limit) || y_limit < 0) {
-    ROS_ERROR("Failed to parse field_limit_y or invalid!");
+  if (!nh.getParam("field_limit_x_max", x_limit_max)) {
+    ROS_ERROR("Failed to parse field_limit_x_max or invalid!");
     return false;
   }
-  if (!nh.getParam("field_limit_z", z_limit) || z_limit < 0) {
+  if (!nh.getParam("field_limit_y_min", y_limit_min)) {
+    ROS_ERROR("Failed to parse field_limit_y_min or invalid!");
+    return false;
+  }
+  if (!nh.getParam("field_limit_y_max", y_limit_max)) {
+    ROS_ERROR("Failed to parse field_limit_y_max or invalid!");
+    return false;
+  }
+  if (!nh.getParam("field_limit_z_max", z_limit_max) || z_limit_max < 0) {
+    ROS_ERROR("Failed to parse field_limit_z_max or invalid!");
+    return false;
+  }
+  if (!nh.getParam("floor_threshold", floor_thresh) || floor_thresh < 0) {
+    ROS_ERROR("Failed to parse floor_thresh or invalid!");
+    return false;
+  }
+  if (!nh.getParam("floor_cost", Q_floor) || Q_floor < 0) {
     ROS_ERROR("Failed to parse field_limit_z or invalid!");
     return false;
   }
@@ -115,9 +137,13 @@ std::ostream &operator<<(std::ostream &os,
     os << " y_distance_weight: " << param.Q_distance_y << std::endl;
     os << " z_distance_weight: " << param.Q_distance_z << std::endl;
     os << " leafing_field_cost: " << param.Q_leafing_field << std::endl;
-    os << " field_limit_x: " << param.x_limit << std::endl;
-    os << " field_limit_y: " << param.y_limit << std::endl;
-    os << " field_limit_z: " << param.z_limit << std::endl;
+    os << " field_limit_x_min: " << param.x_limit_min << std::endl;
+    os << " field_limit_x_max: " << param.x_limit_max << std::endl;
+    os << " field_limit_y_min: " << param.y_limit_min << std::endl;
+    os << " field_limit_y_max: " << param.y_limit_max << std::endl;
+    os << " field_limit_z_max: " << param.z_limit_max << std::endl;
+    os << " floor_threshold: " << param.floor_thresh << std::endl;
+    os << " floor_cost: " << param.Q_floor << std::endl;
     os << " orientation_cost: " << param.Q_orientation << std::endl;
     os << " obstacle_cost: " << param.Q_obstacle << std::endl;
     os << " obstacle_position_x: " << param.x_obstacle << std::endl;

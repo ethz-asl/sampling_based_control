@@ -31,9 +31,15 @@ struct OMAVVelocityCostParam {
       Q_pose; // Pose cost, is constructed from Q_distance and Q_orientation
 
   double Q_leafing_field; // Leafing Field Costs
-  double x_limit;
-  double y_limit;
-  double z_limit;
+
+  double x_limit_min; // Field Limits
+  double x_limit_max;
+  double y_limit_min;
+  double y_limit_max;
+  double z_limit_max;
+
+  double floor_thresh; // Save flying hight
+  double Q_floor;      // Near Floor Cost
 
   double Q_obstacle; // Obstacle Costs
   double x_obstacle;

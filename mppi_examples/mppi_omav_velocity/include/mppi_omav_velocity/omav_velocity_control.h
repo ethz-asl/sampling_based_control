@@ -47,6 +47,7 @@ private:
 
   // publishers
   ros::Publisher reference_publisher_;
+  ros::Publisher indicator_publisher_;
 
   // Services:
   ros::ServiceServer take_off_srv_;

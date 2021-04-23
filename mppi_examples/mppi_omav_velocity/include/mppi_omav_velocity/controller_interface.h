@@ -36,6 +36,7 @@ public:
 private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
   void desired_pose_callback(const geometry_msgs::PoseStampedConstPtr &msg);
+  void indicator_callback(const std_msgs::Int64 &msg);
   void publish_trajectory(const mppi::observation_array_t &x_opt);
 
 public:
@@ -49,6 +50,7 @@ private:
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 
   ros::Subscriber reference_subscriber_;
+  ros::Subscriber indicator_subscriber_;
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;

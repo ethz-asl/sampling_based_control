@@ -7,10 +7,15 @@
   # Cost for leafing the field
   leafing_field_cost: 10000.0
   # Negative and positive limits of the field
-  field_limit_x: 30.0
-  field_limit_y: 30.0
-  field_limit_z: 30.0
-  # Cost for Obstacle colision
+  field_limit_x_min: -30.0
+  field_limit_x_max: 30.0
+  field_limit_y_min: -30.0
+  field_limit_y_max: 30.0
+  field_limit_z_max: 30.0
+  # Cost for flying near the floor
+  floor_threshold: 0.5
+  floor_cost: 1000
+  # Cost for obstacle colision
   obstacle_cost: 10000
   # Position of the Obstacle
   obstacle_position_x: 5

@@ -24,6 +24,8 @@ bool OMAVControllerInterface::init_ros() {
   reference_subscriber_ =
       nh_.subscribe("/mppi_pose_desired", 10,
                     &OMAVControllerInterface::desired_pose_callback, this);
+  indicator_subscriber_ = nh_.subscribe(
+      "/indicator", 10, &OMAVControllerInterface::indicator_callback, this);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
@@ -90,7 +92,7 @@ bool OMAVControllerInterface::set_controller(
   nh_.param<double>("goal_quaternion_y", y_goal_quaternion, 0.0);
   nh_.param<double>("goal_quaternion_z", z_goal_quaternion, 0.0);
 
-  ref_.rr.resize(1, mppi::observation_t::Zero(7));
+  ref_.rr.resize(1, mppi::observation_t::Zero(8));
   ref_.rr[0](0) = x_goal_position;
   ref_.rr[0](1) = y_goal_position;
   ref_.rr[0](2) = z_goal_position;
@@ -98,6 +100,7 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](4) = x_goal_quaternion;
   ref_.rr[0](5) = y_goal_quaternion;
   ref_.rr[0](6) = z_goal_quaternion;
+  ref_.rr[0](7) = 0;
   ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
@@ -114,6 +117,11 @@ void OMAVControllerInterface::desired_pose_callback(
   ref_.rr[0](4) = msg->pose.orientation.x;
   ref_.rr[0](5) = msg->pose.orientation.y;
   ref_.rr[0](6) = msg->pose.orientation.z;
+  get_controller()->set_reference_trajectory(ref_);
+}
+void OMAVControllerInterface::indicator_callback(const std_msgs::Int64 &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](7) = msg.data;
   get_controller()->set_reference_trajectory(ref_);
 }
 
