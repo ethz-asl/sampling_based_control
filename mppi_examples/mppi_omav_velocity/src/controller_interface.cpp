@@ -153,6 +153,7 @@ void OMAVControllerInterface::publish_trajectories() {
   geometry_msgs::PoseArray trajectory_array;
   trajectory_array.header.frame_id = "odom";
   trajectory_array.header.stamp = ros::Time::now();
+  geometry_msgs::Pose current_trajectory_pose;
   for (int i = 0; i < current_trajectories.size(); i++) {
     xx_current_trajectory = current_trajectories[i].xx;
     for (int j = 0; j < xx_current_trajectory.size(); j++) {
@@ -177,6 +178,7 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   geometry_msgs::PoseArray optimal_rollout_array_;
   optimal_rollout_array_.header.frame_id = "state";
   optimal_rollout_array_.header.stamp = ros::Time::now();
+  geometry_msgs::Pose current_pose_;
   for (int i = 0; i < 30; i++) {
     current_pose_.position.x = optimal_rollout_states_[i](0);
     current_pose_.position.y = optimal_rollout_states_[i](1);
