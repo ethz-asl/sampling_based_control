@@ -10,8 +10,8 @@ static void error_callback(int error, const char* description) {
 }
 
 static void resize_callback(GLFWwindow* window, int width, int height) {
-  auto g = static_cast<mppi_tools::ControlGui*>(
-      glfwGetWindowUserPointer(window));
+  auto g =
+      static_cast<mppi_tools::ControlGui*>(glfwGetWindowUserPointer(window));
   g->window_resize(width, height);
 }
 
@@ -240,7 +240,7 @@ void ControlGui::draw() {
         for (size_t i = 0; i < nr_inputs; i++) {
           input_names[i] = new char[10];
           strcpy(input_names[i], "input_");
-          input_names[i][6] = i + '0'; // convert integer to char
+          input_names[i][6] = i + '0';  // convert integer to char
           selected_input[i] = false;
           first_run = false;
         }
@@ -260,7 +260,7 @@ void ControlGui::draw() {
       for (int i = 0; i < nr_inputs; i++) {
         ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(),
                                    ImGuiCond_Always);
-        ImPlot::SetNextPlotLimitsY(-1.0, 1.0,ImGuiCond_Once);
+        ImPlot::SetNextPlotLimitsY(-1.0, 1.0, ImGuiCond_Once);
         if (selected_input[i]) {
           if (ImPlot::BeginPlot(input_names[i], "x", "f(x)")) {
             if (show_all) {
@@ -373,13 +373,9 @@ void ControlGui::window_resize(int width, int height) {
 
 bool ControlGui::close() { return true; }
 
-void ControlGui::reset_config(const SolverConfig& config) {
-  config_ = config;
-}
+void ControlGui::reset_config(const SolverConfig& config) { config_ = config; }
 
-void ControlGui::reset_averaged_policy(const input_array_t& u) {
-  u_avg_ = u;
-}
+void ControlGui::reset_averaged_policy(const input_array_t& u) { u_avg_ = u; }
 
 void ControlGui::reset_policy(const input_array_t& u) { u_ = u; }
 

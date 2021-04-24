@@ -7,8 +7,6 @@
 using namespace mppi;
 using namespace mppi_tools;
 
-ModelTrackingController::ModelTrackingController(DynamicsBase::dynamics_ptr dynamics,
-                                                 CostBase::cost_ptr cost,
-                                                 const SolverConfig &config) {
-
-}
+ModelTrackingController::ModelTrackingController(
+    DynamicsBase::dynamics_ptr dynamics, CostBase::cost_ptr cost,
+    const SolverConfig &config) {}
