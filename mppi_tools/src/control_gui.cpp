@@ -26,28 +26,31 @@ static void HelpMarker(const char* desc) {
   }
 }
 
-static bool ShowStyleSelector(const char* label)
-{
+static bool ShowStyleSelector(const char* label) {
   static int style_idx = -1;
-  if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
-  {
-    switch (style_idx)
-    {
-      case 0: ImGui::StyleColorsDark(); break;
-      case 1: ImGui::StyleColorsLight(); break;
-      case 2: ImGui::StyleColorsClassic(); break;
+  if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0")) {
+    switch (style_idx) {
+      case 0:
+        ImGui::StyleColorsDark();
+        break;
+      case 1:
+        ImGui::StyleColorsLight();
+        break;
+      case 2:
+        ImGui::StyleColorsClassic();
+        break;
     }
     return true;
   }
   return false;
 }
 
-struct RolloutData{
+struct RolloutData {
   const mppi::Rollout* rollout;
   int input_selection = 0;
 };
 
-ImPlotPoint RolloutInputPoint(void* data , int idx) {
+ImPlotPoint RolloutInputPoint(void* data, int idx) {
   auto* d = (RolloutData*)data;
   double x = d->rollout->tt[idx];
   double y = d->rollout->uu[idx](d->input_selection);
@@ -183,25 +186,28 @@ void VisualDebugger::draw() {
   static int counter = 0;
   float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
   ImGui::PushButtonRepeat(true);
-  if (ImGui::ArrowButton("##left", ImGuiDir_Left)) { counter--; }
+  if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
+    counter--;
+  }
   ImGui::SameLine(0.0f, spacing);
-  if (ImGui::ArrowButton("##right", ImGuiDir_Right)) { counter++; }
+  if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
+    counter++;
+  }
   ImGui::PopButtonRepeat();
   ImGui::SameLine();
   ImGui::Text("%d", counter);
 
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
-
-  //-------------------------------------------------------------------------//
-  //                       Configuration
-  //-------------------------------------------------------------------------//
-  if (ImGui::BeginTabItem("Configuration")) {
-    static int clicked = 0;
-    if (ImGui::Button("Print")) std::cout << config_ << std::endl;
-    ImGui::Checkbox("verbose", &config_.verbose);
-    ImGui::EndTabItem();
-  }
+    //-------------------------------------------------------------------------//
+    //                       Configuration
+    //-------------------------------------------------------------------------//
+    if (ImGui::BeginTabItem("Configuration")) {
+      static int clicked = 0;
+      if (ImGui::Button("Print")) std::cout << config_ << std::endl;
+      ImGui::Checkbox("verbose", &config_.verbose);
+      ImGui::EndTabItem();
+    }
 
     //-------------------------------------------------------------------------//
     //                       Inputs info
@@ -230,8 +236,8 @@ void VisualDebugger::draw() {
       static bool* selected_input = new bool[nr_inputs];
       static char** input_names = new char*[nr_inputs];
 
-      if (first_run){
-        for(size_t i=0; i<nr_inputs; i++){
+      if (first_run) {
+        for (size_t i = 0; i < nr_inputs; i++) {
           input_names[i] = new char[10];
           strcpy(input_names[i], "input_");
           input_names[i][6] = i + '0';
@@ -241,11 +247,9 @@ void VisualDebugger::draw() {
       }
 
       ImGui::SameLine();
-      if (ImGui::Button("select input"))
-        ImGui::OpenPopup("selection_popup");
-      if (ImGui::BeginPopup("selection_popup"))
-      {
-        for(size_t i=0; i<nr_inputs; i++){
+      if (ImGui::Button("select input")) ImGui::OpenPopup("selection_popup");
+      if (ImGui::BeginPopup("selection_popup")) {
+        for (size_t i = 0; i < nr_inputs; i++) {
           ImGui::MenuItem(input_names[i], "", &selected_input[i]);
         }
         ImGui::EndPopup();
@@ -253,9 +257,10 @@ void VisualDebugger::draw() {
 
       static std::vector<double> x{1, 2, 3, 4, 5};
       static std::vector<double> y{1, 2, 3, 4, 5};
-      for (int i=0; i<nr_inputs; i++){
-        ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(), ImGuiCond_Always);
-        if (selected_input[i]){
+      for (int i = 0; i < nr_inputs; i++) {
+        ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(),
+                                   ImGuiCond_Always);
+        if (selected_input[i]) {
           if (ImPlot::BeginPlot(input_names[i], "x", "f(x)")) {
             if (show_all) {
               for (const auto& roll : rollouts_) {
@@ -264,9 +269,8 @@ void VisualDebugger::draw() {
                 data.input_selection = i;
                 ImPlot::PlotLineG("##Legend", RolloutInputPoint, &data,
                                   (int)roll.tt.size());
-                }
               }
-            else {
+            } else {
               RolloutData data;
               data.rollout = &rollouts_[rollout_idx];
               data.input_selection = i;
@@ -281,7 +285,7 @@ void VisualDebugger::draw() {
               ImPlot::PlotLine("u_averaged", t.data(), u.data(), (int)t.size());
             }
 
-            if (show_filtered){
+            if (show_filtered) {
               std::vector<double> u;
               std::vector<double> t = rollouts_[0].tt;
               for (int j = 0; j < u_.size(); j++) u.push_back(u_[j][i]);
@@ -345,7 +349,6 @@ void VisualDebugger::draw() {
     ImGui::EndTabBar();
   }
 
-
   ImGui::End();
 
   ImGui::Render();
@@ -377,9 +380,7 @@ void VisualDebugger::reset_averaged_policy(const input_array_t& u) {
   u_avg_ = u;
 }
 
-void VisualDebugger::reset_policy(const input_array_t& u) {
-  u_ = u;
-}
+void VisualDebugger::reset_policy(const input_array_t& u) { u_ = u; }
 
 void VisualDebugger::reset_rollouts(const std::vector<Rollout>& rollouts) {
   rollouts_ = rollouts;

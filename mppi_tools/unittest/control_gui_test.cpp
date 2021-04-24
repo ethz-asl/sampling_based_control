@@ -24,7 +24,8 @@ int main(int argc, char** argv) {
   const int steps = 100;
   const int input_dim = 4;
   const int state_dim = 4;
-  std::vector<mppi::Rollout> rollouts(config.rollouts, mppi::Rollout(steps, input_dim, state_dim));
+  std::vector<mppi::Rollout> rollouts(
+      config.rollouts, mppi::Rollout(steps, input_dim, state_dim));
   mppi::Rollout averaged(steps, input_dim, state_dim);
   mppi::Rollout filtered(steps, input_dim, state_dim);
 
@@ -41,8 +42,8 @@ int main(int argc, char** argv) {
     }
 
     // Sample rollouts
-    if (!vd.should_pause()){
-      for (int i=0; i<config.rollouts; i++) {
+    if (!vd.should_pause()) {
+      for (int i = 0; i < config.rollouts; i++) {
         for (int j = 0; j < steps; j++) {
           rollouts[i].tt[j] = t + t_step * j;
           sampler.get_sample(rollouts[i].uu[j]);
@@ -51,15 +52,14 @@ int main(int argc, char** argv) {
 
       for (int j = 0; j < steps; j++) {
         averaged.tt[j] = t + t_step * j;
-        for (const auto& roll : rollouts)
-          averaged.uu[j] += roll.uu[j]/steps;
+        for (const auto& roll : rollouts) averaged.uu[j] += roll.uu[j] / steps;
       }
 
       filtered.tt[0] = t;
       filtered.uu[0] = averaged.uu[0];
       for (int j = 1; j < steps; j++) {
         filtered.tt[j] = t + t_step * j;
-        filtered.uu[j] = 0.8 * filtered.uu[j-1] + 0.2 * averaged.uu[j];
+        filtered.uu[j] = 0.8 * filtered.uu[j - 1] + 0.2 * averaged.uu[j];
       }
       t += t_step;
     }

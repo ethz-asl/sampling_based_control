@@ -27,6 +27,7 @@ class VisualDebugger {
   void reset_weights(const Eigen::ArrayXd& weights);
 
   bool should_pause() const { return pause; }
+
  private:
   bool setup_glfw();
 
