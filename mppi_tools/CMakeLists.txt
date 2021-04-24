@@ -13,7 +13,7 @@ find_package(OpenGL REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS mppi
+  CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
   DEPENDS
 )
 
@@ -39,12 +39,12 @@ set(IMPLOT_SRC ${IMPLOT_DIR}/implot.cpp
                ${IMPLOT_DIR}/implot_items.cpp)
 set(IMPLOT_INCLUDE_DIRS ${IMPLOT_DIR})
 
-add_library(${PROJECT_NAME} src/visual_debugger.cpp ${IMGUI_SRC} ${IMPLOT_SRC})
+add_library(${PROJECT_NAME} src/control_gui.cpp ${IMGUI_SRC} ${IMPLOT_SRC})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} glfw OpenGL::GL)
 target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS} ${IMPLOT_INCLUDE_DIRS})
 
 ###  Build
-add_executable(vtest unittest/visual_debugger_test.cpp)
+add_executable(vtest unittest/control_gui_test.cpp)
 target_link_libraries(vtest ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(vtest ${PROJECT_NAME})
 

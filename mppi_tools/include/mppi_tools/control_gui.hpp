@@ -21,22 +21,26 @@ class VisualDebugger {
   void window_resize(int width, int height);
 
   void reset_config(const mppi::SolverConfig& config);
-  void reset_policy(const mppi::input_t& u);
-  void reset_filtered_policy(const mppi::input_t& u);
+  void reset_averaged_policy(const mppi::input_array_t& u);
+  void reset_policy(const mppi::input_array_t& u);
   void reset_rollouts(const std::vector<mppi::Rollout>& rollouts);
   void reset_weights(const Eigen::ArrayXd& weights);
 
+  bool should_pause() const { return pause; }
  private:
   bool setup_glfw();
 
  private:
   GLFWwindow* window_ptr_;
 
+  // control
+  bool pause = false;
+
   // mppi data
   mppi::SolverConfig config_;
   std::vector<mppi::Rollout> rollouts_;
-  mppi::input_t u_;
-  mppi::input_t u_filt_;
+  mppi::input_array_t u_;
+  mppi::input_array_t u_avg_;
   Eigen::ArrayXd weights_;
 };
 }  // namespace mppi_tools
