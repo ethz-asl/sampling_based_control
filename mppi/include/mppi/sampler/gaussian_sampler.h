@@ -48,7 +48,7 @@ class GaussianSampler {
     dist_->set_covariance(sigma_);
   }
 
-  void get_sample(DynamicsBase::input_t& sample) { sample = (*dist_)(); }
+  void get_sample(Eigen::VectorXd& sample) { sample = (*dist_)(); }
 
   Eigen::VectorXd get_sample() { return (*dist_)(); }
 
