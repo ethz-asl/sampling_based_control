@@ -10,7 +10,7 @@ static void error_callback(int error, const char* description) {
 }
 
 static void resize_callback(GLFWwindow* window, int width, int height) {
-  auto g = static_cast<mppi_tools::VisualDebugger*>(
+  auto g = static_cast<mppi_tools::ControlGui*>(
       glfwGetWindowUserPointer(window));
   g->window_resize(width, height);
 }
@@ -61,7 +61,7 @@ using namespace mppi;
 
 namespace mppi_tools {
 
-VisualDebugger::~VisualDebugger() {
+ControlGui::~ControlGui() {
   // Cleanup
   ImGui_ImplOpenGL2_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -72,7 +72,7 @@ VisualDebugger::~VisualDebugger() {
   glfwTerminate();
 }
 
-bool VisualDebugger::setup_glfw() {
+bool ControlGui::setup_glfw() {
   // setup the callback
   glfwSetErrorCallback(error_callback);
 
@@ -118,9 +118,9 @@ bool VisualDebugger::setup_glfw() {
   return true;
 }
 
-bool VisualDebugger::init() { return setup_glfw(); }
+bool ControlGui::init() { return setup_glfw(); }
 
-bool VisualDebugger::render() {
+bool ControlGui::render() {
   if (!glfwWindowShouldClose(window_ptr_)) {
     glfwPollEvents();
 
@@ -133,9 +133,9 @@ bool VisualDebugger::render() {
   }
 }
 
-void VisualDebugger::update() {}
+void ControlGui::update() {}
 
-void VisualDebugger::draw() {
+void ControlGui::draw() {
   // Start the Dear ImGui frame
   ImGui_ImplOpenGL2_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -240,7 +240,7 @@ void VisualDebugger::draw() {
         for (size_t i = 0; i < nr_inputs; i++) {
           input_names[i] = new char[10];
           strcpy(input_names[i], "input_");
-          input_names[i][6] = i + '0';
+          input_names[i][6] = i + '0'; // convert integer to char
           selected_input[i] = false;
           first_run = false;
         }
@@ -260,6 +260,7 @@ void VisualDebugger::draw() {
       for (int i = 0; i < nr_inputs; i++) {
         ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(),
                                    ImGuiCond_Always);
+        ImPlot::SetNextPlotLimitsY(-1.0, 1.0,ImGuiCond_Once);
         if (selected_input[i]) {
           if (ImPlot::BeginPlot(input_names[i], "x", "f(x)")) {
             if (show_all) {
@@ -363,30 +364,30 @@ void VisualDebugger::draw() {
   glfwSwapBuffers(window_ptr_);
 }
 
-void VisualDebugger::window_resize(int width, int height) {
+void ControlGui::window_resize(int width, int height) {
   if (width == 0 || height == 0) return;
 
   ImVec2 size(width, height);
   ImGui::SetNextWindowSize(size);
 }
 
-bool VisualDebugger::close() { return true; }
+bool ControlGui::close() { return true; }
 
-void VisualDebugger::reset_config(const SolverConfig& config) {
+void ControlGui::reset_config(const SolverConfig& config) {
   config_ = config;
 }
 
-void VisualDebugger::reset_averaged_policy(const input_array_t& u) {
+void ControlGui::reset_averaged_policy(const input_array_t& u) {
   u_avg_ = u;
 }
 
-void VisualDebugger::reset_policy(const input_array_t& u) { u_ = u; }
+void ControlGui::reset_policy(const input_array_t& u) { u_ = u; }
 
-void VisualDebugger::reset_rollouts(const std::vector<Rollout>& rollouts) {
+void ControlGui::reset_rollouts(const std::vector<Rollout>& rollouts) {
   rollouts_ = rollouts;
 }
 
-void VisualDebugger::reset_weights(const Eigen::ArrayXd& weights) {
+void ControlGui::reset_weights(const Eigen::ArrayXd& weights) {
   weights_ = weights;
 }
 

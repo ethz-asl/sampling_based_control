@@ -7,10 +7,10 @@
 
 namespace mppi_tools {
 
-class VisualDebugger {
+class ControlGui {
  public:
-  VisualDebugger() = default;
-  ~VisualDebugger();
+  ControlGui() = default;
+  ~ControlGui();
 
   bool init();
   bool render();

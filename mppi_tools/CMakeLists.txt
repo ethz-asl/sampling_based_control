@@ -12,7 +12,7 @@ find_package(OpenGL REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES mppi_controller_gui mppi_model_tracking_controller
   CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
   DEPENDS
 )
@@ -39,14 +39,18 @@ set(IMPLOT_SRC ${IMPLOT_DIR}/implot.cpp
                ${IMPLOT_DIR}/implot_items.cpp)
 set(IMPLOT_INCLUDE_DIRS ${IMPLOT_DIR})
 
-add_library(${PROJECT_NAME} src/control_gui.cpp ${IMGUI_SRC} ${IMPLOT_SRC})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} glfw OpenGL::GL)
-target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS} ${IMPLOT_INCLUDE_DIRS})
+add_library(mppi_controller_gui src/control_gui.cpp ${IMGUI_SRC} ${IMPLOT_SRC})
+target_link_libraries(mppi_controller_gui PUBLIC ${catkin_LIBRARIES} glfw OpenGL::GL)
+target_include_directories(mppi_controller_gui PRIVATE ${IMGUI_INCLUDE_DIRS} ${IMPLOT_INCLUDE_DIRS})
+
+add_library(mppi_model_tracking_controller src/model_tracking_controller.cpp)
+target_link_libraries(mppi_model_tracking_controller PUBLIC ${catkin_LIBRARIES} mppi_controller_gui)
+add_dependencies(mppi_model_tracking_controller mppi_controller_gui)
 
 ###  Build
 add_executable(vtest unittest/control_gui_test.cpp)
-target_link_libraries(vtest ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(vtest ${PROJECT_NAME})
+target_link_libraries(vtest mppi_controller_gui ${catkin_LIBRARIES})
+add_dependencies(vtest mppi_controller_gui)
 
 #if (CATKIN_ENABLE_TESTING)
 #    catkin_add_gtest(visual_debugger_test unittest/visual_debugger_test.cpp)
@@ -55,7 +59,7 @@ add_dependencies(vtest ${PROJECT_NAME})
 #endif ()
 
 ###  Install 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS mppi_model_tracking_controller mppi_controller_gui
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
