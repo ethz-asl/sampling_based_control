@@ -40,25 +40,7 @@ bool getNVector(ros::NodeHandle& nh, const std::string& param_name,
 }
 
 bool getString(ros::NodeHandle& nh, const std::string& param_name,
-               std::string& obj) {
-  if (!nh.getParam(param_name, obj)) {
-    ROS_ERROR_STREAM("Failed to parse param " << param_name);
-    return false;
-  }
+               std::string& obj);
 
-  if (obj.empty()) {
-    ROS_ERROR_STREAM("Failed to parse param " << param_name
-                                              << ". String is empty.");
-    return false;
-  }
-  return true;
-}
-
-bool getBool(ros::NodeHandle& nh, const std::string& param_name, bool& obj) {
-  if (!nh.getParam(param_name, obj)) {
-    ROS_ERROR_STREAM("Failed to parse param " << param_name);
-    return false;
-  }
-  return true;
-}
+bool getBool(ros::NodeHandle& nh, const std::string& param_name, bool& obj);
 }  // namespace mppi_ros
