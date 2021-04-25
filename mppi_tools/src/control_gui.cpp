@@ -26,25 +26,6 @@ static void HelpMarker(const char* desc) {
   }
 }
 
-static bool ShowStyleSelector(const char* label) {
-  static int style_idx = -1;
-  if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0")) {
-    switch (style_idx) {
-      case 0:
-        ImGui::StyleColorsDark();
-        break;
-      case 1:
-        ImGui::StyleColorsLight();
-        break;
-      case 2:
-        ImGui::StyleColorsClassic();
-        break;
-    }
-    return true;
-  }
-  return false;
-}
-
 struct RolloutData {
   const mppi::Rollout* rollout;
   int input_selection = 0;
@@ -219,10 +200,10 @@ void ControlGui::draw() {
       static int nr_rollouts = (int)rollouts_.size();
       static int rollout_idx = 0;
       static int input_idx = 0;
-      static int nr_inputs = rollouts_[0].input_dim_;
+      static int nr_inputs = (int)rollouts_[0].uu[0].size();
 
       ImGui::AlignTextToFramePadding();
-      ImGui::SliderInt("rollout index", &rollout_idx, 0, nr_rollouts);
+      ImGui::SliderInt("rollout index", &rollout_idx, 0, nr_rollouts - 1);
       ImGui::SameLine();
       ImGui::Checkbox("show all", &show_all);
       ImGui::SameLine();
@@ -255,8 +236,6 @@ void ControlGui::draw() {
         ImGui::EndPopup();
       }
 
-      static std::vector<double> x{1, 2, 3, 4, 5};
-      static std::vector<double> y{1, 2, 3, 4, 5};
       for (int i = 0; i < nr_inputs; i++) {
         ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(),
                                    ImGuiCond_Always);
