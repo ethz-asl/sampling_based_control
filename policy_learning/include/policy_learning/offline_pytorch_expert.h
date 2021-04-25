@@ -30,6 +30,7 @@ class OfflinePytorchExpert: public mppi::LearnedExpert{
 
     input_t const get_action(const observation_t& x) override;
     void save_state_action(const observation_t& x, const input_t& u) override;
+    bool collect_data() override;
 
     void set_data_logging(bool enable);
     void clear_data_cache();

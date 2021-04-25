@@ -41,6 +41,13 @@ class LearnedExpert {
    */
     virtual void save_state_action(const observation_t& x, const input_t& u) = 0;
 
+
+    /**
+   * @brief Query if state-action pairs are being collected
+   * @return True if data should be collected
+   */    
+    virtual bool collect_data() = 0;
+
     /**
    * @brief Add rollout to data set by repeatedly calling save_state_action 
    * @param xx: planned state trajectory

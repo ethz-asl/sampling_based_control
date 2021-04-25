@@ -75,10 +75,6 @@ void PathIntegral::init_data() {
     log_warning("Clipping number of learned rollouts. "
         "Make sure that caching- and learning-factor sum to < 1.");
   }
-  if(learned_rollouts_ > 0 && !learned_expert_){
-    log_warning("Learning factor > 0 but no learned expert provided. "
-        "Learning factor will be ignored.");
-  }
 
   momentum_.resize(steps_, input_t::Zero(nu_));
 
@@ -338,14 +334,12 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // sample around learned action 
       else if (learned_expert_ && k < cached_rollouts_ + learned_rollouts_){
         sample_noise(rollouts_[k].nn[t]);
-        auto learned_action = learned_expert_->get_action(x); 
-        rollouts_[k].uu[t] = learned_action + rollouts_[k].nn[t];
+        rollouts_[k].uu[t] = learned_expert_->get_action(x) + rollouts_[k].nn[t];
       }
       // noise free learned action
       else if (learned_expert_ && k == cached_rollouts_ + learned_rollouts_){
         rollouts_[k].nn[t].setZero();
-        auto learned_action = learned_expert_->get_action(x); 
-        rollouts_[k].uu[t] = learned_action;
+        rollouts_[k].uu[t] = learned_expert_->get_action(x);
       }
       // perturbed trajectory
       else {
@@ -515,7 +509,9 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
       u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
           coeff * opt_roll_cache_.uu[idx];
     }
-    if(learned_expert_) learned_expert_->save_state_action(x, u);
+    if(learned_expert_ && learned_expert_->collect_data()) {
+      learned_expert_->save_state_action(x, u);
+    }
   }
 }
 
