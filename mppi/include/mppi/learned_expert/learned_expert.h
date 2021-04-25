@@ -12,7 +12,8 @@
 #include <memory>
 #include "mppi/controller/rollout.h"
 
-namespace mppi{
+namespace mppi {
+
 class LearnedExpert {
   public:
     using learned_expert_ptr = std::shared_ptr<LearnedExpert>;
@@ -51,4 +52,5 @@ class LearnedExpert {
     size_t state_dim_;
     size_t input_dim_;
 };
-}
+
+} // namespace mppi

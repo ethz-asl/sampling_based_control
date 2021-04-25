@@ -592,7 +592,6 @@ void PathIntegral::update_experts() { expert_.update_expert(1, opt_roll_.uu); };
 void PathIntegral::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);
   opt_roll_cache_ = opt_roll_;
-  
 }
 
 PathIntegral::input_array_t PathIntegral::offline_control(
