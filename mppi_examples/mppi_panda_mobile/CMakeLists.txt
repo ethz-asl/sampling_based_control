@@ -10,6 +10,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         mppi
         mppi_ros
+        mppi_tools
         mppi_pinocchio
         roslib
         tf2
@@ -28,8 +29,9 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
-        src/controller_interface.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRAIRES})
+        src/controller_interface.cpp
+        src/model_tracking.cpp)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(panda_mobile_control src/nodes/panda_mobile_control.cpp)
 target_link_libraries(panda_mobile_control ${PROJECT_NAME} ${catkin_LIBRARIES})
