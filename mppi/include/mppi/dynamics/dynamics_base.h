@@ -37,6 +37,11 @@ class DynamicsBase {
   virtual input_t get_zero_input(const observation_t& x) {
     return input_t::Zero(this->get_input_dimension());
   }
+
+  inline double get_dt() const { return dt; }
+
+ private:
+  double dt;
 };
 
 }  // end of namespace mppi
