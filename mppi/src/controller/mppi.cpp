@@ -69,7 +69,7 @@ void PathIntegral::init_data() {
 
   omega = Eigen::ArrayXd::Zero(config_.rollouts);
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
-  learned_rollouts_ = std::ceil(config_.learning_factor * config_.rollouts);
+  learned_rollouts_ = std::ceil(config_.learned_rollout_ratio * config_.rollouts);
   if(cached_rollouts_ + learned_rollouts_ > config_.rollouts){
     learned_rollouts_ = config_.rollouts - cached_rollouts_;
     log_warning("Clipping number of learned rollouts. "
