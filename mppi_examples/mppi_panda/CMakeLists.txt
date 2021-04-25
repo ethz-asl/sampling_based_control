@@ -17,7 +17,7 @@ set(PACKAGE_DEPENDENCIES
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 catkin_package(
-        LIBRARIES mppi_panda
+        LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
         DEPENDS)
