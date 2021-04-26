@@ -63,7 +63,7 @@ bool ControlGui::setup_glfw() {
   }
 
   // Initialise the new window
-  window_ptr_ = glfwCreateWindow(640, 480, "MPPI Visual Debugger", NULL, NULL);
+  window_ptr_ = glfwCreateWindow(640, 480, "Control GUI", NULL, NULL);
 
   // Resize callback
   glfwSetWindowUserPointer(window_ptr_, this);
@@ -254,7 +254,7 @@ void ControlGui::draw() {
               RolloutData data;
               data.rollout = &rollouts_[rollout_idx];
               data.input_selection = i;
-              ImPlot::PlotLineG("##Legend", RolloutInputPoint, &data,
+              ImPlot::PlotLineG("u", RolloutInputPoint, &data,
                                 (int)data.rollout->tt.size());
             }
 
@@ -288,37 +288,40 @@ void ControlGui::draw() {
     //                       Statistics
     //-------------------------------------------------------------------------//
     if (ImGui::BeginTabItem("Statistics")) {
-      if (ImGui::CollapsingHeader("Rollouts Info")) {
-        static float xs1[1001], ys1[1001];
-        for (int i = 0; i < 1001; ++i) {
-          xs1[i] = i * 0.001f;
-          ys1[i] =
-              0.5f + 0.5f * sinf(50 * (xs1[i] + (float)ImGui::GetTime() / 10));
-        }
-        static double xs2[11], ys2[11];
-        for (int i = 0; i < 11; ++i) {
-          xs2[i] = i * 0.1f;
-          ys2[i] = xs2[i] * xs2[i];
-        }
-        if (ImPlot::BeginPlot("Line Plot", "x", "f(x)")) {
-          ImPlot::PlotLine("sin(x)", xs1, ys1, 1001);
-          ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-          ImPlot::PlotLine("x^2", xs2, ys2, 11);
-          ImPlot::EndPlot();
-        }
-      }
-
-      //-------------------------------------------------------------------------//
-      if (ImGui::CollapsingHeader("Optimization weights")) {
+      if (ImGui::CollapsingHeader("Rollouts weights")) {
+        static std::vector<double> weights_ranges = {0.01, 0.05, 0.1,
+                                                     0.2,  0.5,  1.0};
+        static double ymax_prev = 0.01;
+        static double ymax_counter = 0.0;
         if (weights_.size() == 0) {
           ImGui::Text("Weights are not set. Cannot display weights.");
         } else {
-          ImPlot::SetNextPlotLimitsX(0, weights_.size());
-          if (ImPlot::BeginPlot("rollouts weights", "rollout number", "weight",
-                                ImVec2(-1, 0), ImPlotFlags_NoLegend)) {
-            ImPlot::PlotLine("weights", weights_.data(), weights_.size(),
-                             weights_.size());
+          std::vector<double> ridx;
+          for (int i = 0; i < (int)weights_.size(); i++) ridx.push_back(i);
 
+          // dynamic y range
+          double ymax =
+              *std::lower_bound(weights_ranges.begin(), weights_ranges.end(),
+                                weights_.maxCoeff());
+          // a lower value must stay long to push down a higher threshold
+          if (ymax > ymax_prev) {
+            ImPlot::SetNextPlotLimitsY(-0.01, ymax, ImGuiCond_Always);
+            ymax_counter = 0;
+            ymax_prev = ymax;
+          } else if (ymax == ymax_prev and ymax_counter > 100) {
+            ImPlot::SetNextPlotLimitsY(-0.01, ymax, ImGuiCond_Always);
+          } else if (ymax == ymax_prev) {
+            ymax_counter++;
+          } else {
+            ymax_prev = ymax;
+            ymax_counter = 0;
+          }
+          ImPlot::SetNextPlotLimitsX(0, (int)weights_.size(), ImGuiCond_Once);
+          if (ImPlot::BeginPlot("rollouts weights", "rollout index", "weight",
+                                ImVec2(-1, 0), ImPlotFlags_NoLegend,
+                                ImPlotAxisFlags_Lock)) {
+            ImPlot::PlotLine("weights", ridx.data(), weights_.data(),
+                             (int)weights_.size());
             ImPlot::EndPlot();
           }
         }

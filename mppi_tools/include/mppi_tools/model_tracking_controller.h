@@ -15,17 +15,17 @@ namespace mppi_tools {
 class ModelTrackingController {
  public:
   ModelTrackingController() = default;
-  ModelTrackingController(mppi::DynamicsBase::dynamics_ptr dynamics,
-                          mppi::CostBase::cost_ptr cost,
-                          const mppi::SolverConfig& config);
 
+  void init(mppi::DynamicsBase::dynamics_ptr dynamics,
+            mppi::CostBase::cost_ptr cost, const mppi::observation_t& x0,
+            const double& t0, const mppi::SolverConfig& config);
   void get_state(mppi::observation_t& x) const;
-  void set_initial_state(const mppi::observation_t& x0);
+  void set_initial_state(const mppi::observation_t& x0, const double& t0);
   void set_reference(mppi::reference_trajectory_t& ref);
-  void run();
+  void step();
 
- private:
-  bool initial_state_set = false;
+ public:
+  bool initialized_ = false;
 
   double t_;
   mppi::input_t u_;
