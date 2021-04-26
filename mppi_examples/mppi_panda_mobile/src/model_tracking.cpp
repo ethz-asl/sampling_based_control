@@ -14,6 +14,13 @@
 
 using namespace panda_mobile;
 
+PandaMobileModelTracking::PandaMobileModelTracking(ros::NodeHandle& nh)
+    : nh_(nh) {
+  initialized_ = true;
+  initialized_ &= init_ros();
+  initialized_ &= setup();
+}
+
 bool PandaMobileModelTracking::init_ros() {
   optimal_trajectory_publisher_ =
       nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
@@ -25,6 +32,18 @@ bool PandaMobileModelTracking::init_ros() {
   ee_pose_desired_subscriber_ =
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaMobileModelTracking::ee_pose_desired_callback, this);
+
+  state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
+  joint_state_.name = {"panda_joint1", "panda_joint2", "panda_joint3",
+                       "panda_joint4", "panda_joint5", "panda_joint6",
+                       "panda_joint7"};
+  joint_state_.position.resize(7);
+  joint_state_.header.frame_id = "base";
+
+  // base tf
+  world_base_tf_.header.frame_id = "world";
+  world_base_tf_.child_frame_id = "base";
 
   if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_))
     return false;
@@ -43,23 +62,11 @@ bool PandaMobileModelTracking::init_ros() {
   obstacle_marker_.pose.orientation.z = 0.0;
   obstacle_marker_.pose.orientation.w = 1.0;
 
-  last_ee_ref_id_ = 0;
-  ee_desired_pose_.header.seq = last_ee_ref_id_;
-
-  last_ob_ref_id_ = 0;
-  obstacle_pose_.header.seq = last_ob_ref_id_;
-
   optimal_path_.header.frame_id = "world";
   return true;
 }
 
-void PandaMobileModelTracking::init_model(
-    const std::string& robot_description) {
-  robot_model_.init_from_xml(robot_description);
-}
-
-bool PandaMobileModelTracking::set_controller(
-    std::shared_ptr<mppi::PathIntegral>& controller) {
+bool PandaMobileModelTracking::setup() {
   // Params
   std::string robot_description;
   double linear_weight;
@@ -82,7 +89,7 @@ bool PandaMobileModelTracking::set_controller(
   // -------------------------------
   // internal model
   // -------------------------------
-  init_model(robot_description);
+  robot_model_.init_from_xml(robot_description);
 
   // -------------------------------
   // dynamics
@@ -108,9 +115,17 @@ bool PandaMobileModelTracking::set_controller(
   }
 
   // -------------------------------
-  // controller
+  // initialize state
   // -------------------------------
-  model_tracking_ = mppi_tools::ModelTrackingController(dynamics, cost, config_);
+  mppi::observation_t x0 =
+      Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
+  auto x0v = nh_.param<std::vector<double>>("initial_configuration", {});
+  for (int i = 0; i < x0v.size(); i++) x0(i) = x0v[i];
+
+  // -------------------------------
+  // controller TODO(giuseppe) change this to the proper way
+  // -------------------------------
+  init(dynamics, cost, x0, 0.0, config_);
 
   // -------------------------------
   // initialize reference
@@ -118,7 +133,6 @@ bool PandaMobileModelTracking::set_controller(
   ref_.rr.resize(
       1, mppi::observation_t::Zero(PandaMobileDim::REFERENCE_DIMENSION));
   ref_.tt.resize(1, 0.0);
-  model_tracking_.set_reference(ref_);
 
   // -------------------------------
   // obstacle marker
@@ -142,7 +156,7 @@ void PandaMobileModelTracking::ee_pose_desired_callback(
   pr(5) = msg->pose.orientation.z;
   pr(6) = msg->pose.orientation.w;
   ref_.rr[0].head<7>() = pr;
-  model_tracking_.set_reference(ref_);
+  set_reference(ref_);
 }
 
 void PandaMobileModelTracking::obstacle_callback(
@@ -152,7 +166,7 @@ void PandaMobileModelTracking::obstacle_callback(
   ref_.rr[0](7) = obstacle_pose_.pose.position.x;
   ref_.rr[0](8) = obstacle_pose_.pose.position.y;
   ref_.rr[0](9) = obstacle_pose_.pose.position.z;
-  model_tracking_.set_reference(ref_);
+  set_reference(ref_);
 }
 
 mppi_pinocchio::Pose PandaMobileModelTracking::get_pose_end_effector(
@@ -177,22 +191,38 @@ geometry_msgs::PoseStamped PandaMobileModelTracking::get_pose_end_effector_ros(
 }
 
 void PandaMobileModelTracking::publish_ros() {
-  if (obstacle_pose_.header.seq != 0) {  // obstacle set at least once
+  // Publish obstacle marker
+  if (obstacle_pose_.header.seq != 0) {
     obstacle_marker_.pose.position = obstacle_pose_.pose.position;
     obstacle_marker_publisher_.publish(obstacle_marker_);
   }
 
+  // Publish optimal rollout
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
   mppi_pinocchio::Pose pose_temp;
   geometry_msgs::PoseStamped pose_temp_ros;
-// TODO(giuseppe) to implement
-//  model_tracking_.controllerget_controller()->get_optimal_rollout(x_opt_, u_opt_);
-//
-//  for (const auto& x : x_opt_) {
-//    pose_temp = get_pose_end_effector(x);
-//    mppi_pinocchio::to_msg(pose_temp, pose_temp_ros.pose);
-//    optimal_path_.poses.push_back(pose_temp_ros);
-//  }
-//  optimal_trajectory_publisher_.publish(optimal_path_);
+  solver_->get_optimal_rollout(x_opt_, u_opt_);
+  for (const auto& x : x_opt_) {
+    pose_temp = get_pose_end_effector(x);
+    mppi_pinocchio::to_msg(pose_temp, pose_temp_ros.pose);
+    optimal_path_.poses.push_back(pose_temp_ros);
+  }
+  optimal_trajectory_publisher_.publish(optimal_path_);
+
+  // publish joint state
+  for (size_t i = 0; i < 7; i++) joint_state_.position[i] = x_(i);
+  joint_state_.header.stamp = ros::Time::now();
+  state_publisher_.publish(joint_state_);
+
+  // publish base transform
+  world_base_tf_.header.stamp = ros::Time::now();
+  world_base_tf_.transform.translation.x = x_(7);
+  world_base_tf_.transform.translation.y = x_(8);
+  Eigen::Quaterniond q(Eigen::AngleAxisd(x_(9), Eigen::Vector3d::UnitZ()));
+  world_base_tf_.transform.rotation.x = q.x();
+  world_base_tf_.transform.rotation.y = q.y();
+  world_base_tf_.transform.rotation.z = q.z();
+  world_base_tf_.transform.rotation.w = q.w();
+  tf_broadcaster_.sendTransform(world_base_tf_);
 }

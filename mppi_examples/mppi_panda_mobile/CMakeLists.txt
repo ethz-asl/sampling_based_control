@@ -37,6 +37,10 @@ add_executable(panda_mobile_control src/nodes/panda_mobile_control.cpp)
 target_link_libraries(panda_mobile_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_mobile_control ${PROJECT_NAME})
 
+add_executable(panda_mobile_model_tracking src/nodes/model_tracking_node.cpp)
+target_link_libraries(panda_mobile_model_tracking ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_mobile_model_tracking ${PROJECT_NAME})
+
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )

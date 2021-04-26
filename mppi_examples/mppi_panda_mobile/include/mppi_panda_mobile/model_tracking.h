@@ -7,47 +7,40 @@
 #include <mppi_pinocchio/model.h>
 #include <mppi_tools/model_tracking_controller.h>
 
-#include <ros/ros.h>
 #include <nav_msgs/Path.h>
+#include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 
 namespace panda_mobile {
 
-class PandaMobileModelTracking {
+class PandaMobileModelTracking : public mppi_tools::ModelTrackingController {
  public:
-  explicit PandaMobileModelTracking(ros::NodeHandle& nh): nh_(nh){};
+  explicit PandaMobileModelTracking(ros::NodeHandle& nh);
   ~PandaMobileModelTracking() = default;
 
   bool init_ros();
+  bool setup();
   void publish_ros();
-  bool update_reference();
 
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_end_effector_ros(
       const mppi::observation_t& x);
 
  private:
-  void init_model(const std::string& robot_description);
-  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller);
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg);
 
  public:
+  bool initialized_;
   mppi::SolverConfig config_;
-  // TODO(giuseppe) reorganize the publish ros into one function
-  // void publish_state();
 
  private:
-  // model tracking
-  mppi_tools::ModelTrackingController model_tracking_;
-
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 
-  size_t last_ee_ref_id_;
-  size_t last_ob_ref_id_;
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
 
@@ -60,7 +53,12 @@ class PandaMobileModelTracking {
   ros::Publisher obstacle_marker_publisher_;
   ros::Subscriber obstacle_subscriber_;
   ros::Subscriber ee_pose_desired_subscriber_;
+  ros::Publisher state_publisher_;
 
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
+  geometry_msgs::TransformStamped world_base_tf_;
+
+  sensor_msgs::JointState joint_state_;
   nav_msgs::Path optimal_path_;
   geometry_msgs::PoseStamped obstacle_pose_;
   geometry_msgs::PoseStamped ee_desired_pose_;
