@@ -313,6 +313,8 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     dynamics->reset(x0_internal_);
     x = x0_internal_;
     for (size_t t = 0; t < steps_; t++) {
+      rollouts_[k].tt[t] = t0_internal_ + t * config_.step_size;
+
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
         rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
