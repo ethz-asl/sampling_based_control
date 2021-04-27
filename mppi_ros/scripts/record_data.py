@@ -28,11 +28,10 @@ class DataRecorder:
             "effective_samples": [],
             "time": [],
             "opt_time": [],
-            "stage_costs_min": [],
-            "stage_costs_max": [],
-            "stage_costs_mean": [],
             "learning_factor": []
         }
+        self.weight_history = []
+        self.cost_history = []
         self.first_call = True
         self.data_subscriber = rospy.Subscriber("/mppi_data",
                                                 Data,
@@ -46,6 +45,9 @@ class DataRecorder:
         self.csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log",
                                      "record.csv")
         rospy.loginfo("Writing to {}".format(self.csv_file))
+        self.array_path = os.path.join(RosPack().get_path("mppi_ros"), "log",
+                                     "record_array.npz")
+
 
     def data_callback(self, data: Data):
         if len(data.weights.array) == 0:
@@ -69,10 +71,8 @@ class DataRecorder:
         self.data_dict["time"].append(current_time - self.initial_time)
         self.data_dict["opt_time"].append(data.time.to_sec())
         self.data_dict["learning_factor"].append(data.config.learning_factor)
-        self.data_dict["stage_costs_min"].append(min(data.rollouts_cost.array))
-        self.data_dict["stage_costs_max"].append(max(data.rollouts_cost.array))
-        self.data_dict["stage_costs_mean"].append(np.mean(np.asarray(data.rollouts_cost.array)))
-
+        self.weight_history.append(data.weights.array)
+        self.cost_history.append(data.rollouts_cost.array)
         self.idx += 1
 
         effective_samples = 1.0 / (len(data.weights.array) * np.square(
@@ -124,6 +124,9 @@ class DataRecorder:
             df.to_csv(self.csv_file, mode='a', header=False)
         else:
             df.to_csv(self.csv_file)
+        self.weight_history = np.array(self.weight_history)
+        self.cost_history = np.array(self.cost_history)
+        np.savez_compressed(self.array_path, costs=self.cost_history, weights=self.weight_history)
 
 
 if __name__ == "__main__":

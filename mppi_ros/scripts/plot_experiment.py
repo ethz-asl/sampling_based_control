@@ -6,6 +6,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 from rospkg import RosPack
+from matplotlib.colors import LogNorm
+import math
 sns.set_theme()
 sns.set_context("paper")
 sns.set(font_scale=2)
@@ -307,6 +309,36 @@ class Plotter:
 
         plt.legend(fontsize=35)
 
+    def plot_rollout_costs(self, logarithmic=True):
+        path = os.path.join(RosPack().get_path("mppi_ros"), "log",
+                            "record_array.npz")
+        arrays = np.load(path)
+        costs = arrays['costs']
+
+
+        plt.figure('costs')
+        if logarithmic:
+            log_norm = LogNorm(vmin=costs.min().min(), vmax=costs.max().max())
+            cbar_ticks = [math.pow(10, i) for i in range(math.floor(math.log10(costs.min().min())), 1+math.ceil(math.log10(costs.max().max())))]
+            sns.heatmap(costs, norm=log_norm, cbar_kws={"ticks": cbar_ticks})
+        else:
+            sns.heatmap(costs)
+        plt.title("Rollout costs")
+        plt.xlabel("Rollout index")
+        plt.ylabel("Time")
+
+    def plot_rollout_weights(self):
+        path = os.path.join(RosPack().get_path("mppi_ros"), "log",
+                            "record_array.npz")
+        arrays = np.load(path)
+        plt.figure('weights')
+        weights = arrays['weights']
+        sns.heatmap(weights)
+        plt.title("Rollout weights")
+        plt.xlabel("Rollout index")
+        plt.ylabel("Time")
+
+
 
 if __name__ == "__main__":
     import sys
@@ -335,7 +367,9 @@ if __name__ == "__main__":
     # plotter.plot_stage_costs()
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
-    plotter.plot_average_cost('horizon', x_label="Horizon [s]")
+    # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
+    plotter.plot_rollout_costs()
+    plotter.plot_rollout_weights()
     # plotter.plot_cost('learning_factor')
     # plotter.plot_effective_samples('learning_factor', col='experiment')
 
