@@ -155,9 +155,9 @@ void PathIntegral::update_policy() {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
     copy_observation();
-
+    prepare_rollouts();
     for (size_t i = 0; i < config_.substeps; i++) {
-      prepare_rollouts();
+      std::sort(rollouts_.begin(), rollouts_.end());
       update_reference();
 
       if (config_.use_tree_search) {
