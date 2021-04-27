@@ -8,39 +8,39 @@
 
 #include "mppi_ros/controller_interface.h"
 #include "mppi_ros/conversions.h"
-#include "mppi_ros/ros_params.h"
 
 using namespace mppi_ros;
-
-ControllerRos::ControllerRos(ros::NodeHandle &nh) : nh_(nh) {}
 
 ControllerRos::~ControllerRos() { this->stop(); }
 
 bool ControllerRos::init_default_params() {
   bool ok = true;
 
-  ok &=
-      mppi_ros::getNonNegative(nh_, "policy_update_rate", policy_update_rate_);
-  ok &= mppi_ros::getNonNegative(nh_, "reference_update_rate",
-                                 reference_update_rate_);
-  ok &= mppi_ros::getNonNegative(nh_, "ros_publish_rate", ros_publish_rate_);
-  ok &= mppi_ros::getBool(nh_, "publish_ros", publish_ros_);
+  node_->declare_parameter<double>("policy_update_rate", 10.0);
+  node_->declare_parameter<double>("reference_update_rate", 10.0);
+  node_->declare_parameter<double>("ros_publish_rate", 10.0);
+  node_->declare_parameter<bool>("publish_ros", false);
+  
+  ok &= node_->get_parameter<double>("policy_update_rate", policy_update_rate_);
+  ok &= node_->get_parameter<double>("reference_update_rate", reference_update_rate_);
+  ok &= node_->get_parameter<double>("ros_publish_rate", ros_publish_rate_);
+  ok &= node_->get_parameter<bool>("publish_ros", publish_ros_);
 
   if (!ok) {
-    ROS_ERROR("Failed to parse default parameters.");
+    RCLCPP_ERROR(node_->get_logger(), "Failed to parse default parameters.");
     return false;
   }
   return true;
 }
 
 void ControllerRos::init_default_ros() {
-  cost_publisher_ = nh_.advertise<std_msgs::Float64>("/cost", 10);
-  input_publisher_ = nh_.advertise<std_msgs::Float32MultiArray>("/input", 10);
+  cost_publisher_ = node_->create_publisher<std_msgs::msg::Float64>("/cost", 10);
+  input_publisher_ = node_->create_publisher<std_msgs::msg::Float32MultiArray>("/input", 10);
   min_rollout_cost_publisher_ =
-      nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 10);
+      node_->create_publisher<std_msgs::msg::Float64>("/min_rollout_cost", 10);
   max_rollout_cost_publisher_ =
-      nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
-  data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
+      node_->create_publisher<std_msgs::msg::Float64>("/max_rollout_cost", 10);
+  data_publisher_ = node_->create_publisher<mppi_ros::msg::Data>("/mppi_data", 10);
 }
 
 bool ControllerRos::init() {
@@ -52,30 +52,28 @@ bool ControllerRos::init() {
   try {
     ok = set_controller(controller_);
   } catch (std::runtime_error &err) {
-    ROS_ERROR_STREAM(err.what());
+    RCLCPP_ERROR_STREAM(node_->get_logger(), err.what());
     ok = false;
   } catch (...) {
-    ROS_ERROR("Unknown exception caught while setting the controller.");
+    RCLCPP_INFO(node_->get_logger(), "Unknown exception caught while setting the controller.");
     ok = false;
   }
   if (controller_ == nullptr || !ok) return false;
 
   initialized_ = true;
   started_ = false;
-  ROS_INFO("Controller interface initialized.");
+  RCLCPP_INFO(node_->get_logger(), "Controller interface initialized.");
   return true;
 }
 
 bool ControllerRos::start() {
   if (!initialized_) {
-    ROS_ERROR_STREAM(
-        "The controller is not initialized. Have you called the init() "
-        "method?");
+    RCLCPP_INFO(node_->get_logger(), "The controller is not initialized. Have you called the init() method?");
     return false;
   }
 
   if (started_) {
-    ROS_WARN_STREAM("The controller has already been started.");
+    RCLCPP_WARN(node_->get_logger(), "The controller has already been started.");
     return true;
   }
 
@@ -112,8 +110,8 @@ bool ControllerRos::update_policy() {
   controller_->update_policy();
 
   if (controller_->config_.logging) {
-    mppi_ros::to_msg(controller_->get_data(), data_ros_);
-    data_publisher_.publish(data_ros_);
+    mppi_ros::to_msg(controller_->get_data(), data_ros_, node_->now());
+    data_publisher_->publish(data_ros_);
   }
   return true;
 }
@@ -124,8 +122,8 @@ bool ControllerRos::update_policy_thread(
   controller_->update_policy();
 
   if (controller_->config_.logging) {
-    mppi_ros::to_msg(controller_->get_data(), data_ros_);
-    data_publisher_.publish(data_ros_);
+    mppi_ros::to_msg(controller_->get_data(), data_ros_, node_->now());
+    data_publisher_->publish(data_ros_);
   }
   return true;
 }
@@ -154,15 +152,15 @@ bool ControllerRos::publish_ros_thread(
 void ControllerRos::publish_stage_cost() {
   stage_cost_.data =
       controller_->get_stage_cost();  // TODO(giuseppe) see how to do this
-  cost_publisher_.publish(stage_cost_);
+  cost_publisher_->publish(stage_cost_);
 }
 
 void ControllerRos::publish_rollout_cost() {
   min_rollout_cost_.data = controller_->get_rollout_min_cost();
-  min_rollout_cost_publisher_.publish(min_rollout_cost_);
+  min_rollout_cost_publisher_->publish(min_rollout_cost_);
 
   max_rollout_cost_.data = controller_->get_rollout_max_cost();
-  max_rollout_cost_publisher_.publish(max_rollout_cost_);
+  max_rollout_cost_publisher_->publish(max_rollout_cost_);
 }
 
 void ControllerRos::publish_input() {
@@ -176,7 +174,7 @@ void ControllerRos::publish_input() {
   for (size_t i = 0; i < input_copy_.size(); i++) {
     input_ros_.data[i] = input_copy_(i);
   }
-  input_publisher_.publish(input_ros_);
+  input_publisher_->publish(input_ros_);
 }
 
 void ControllerRos::set_observation(const mppi::observation_t &x,

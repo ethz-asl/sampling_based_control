@@ -1,5 +1,5 @@
 int64 nr_rollouts
-float64 lambda
+float64 lambda_cost
 float64 h
 float64 step_size
 float64 caching_factor

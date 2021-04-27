@@ -1,4 +1,4 @@
-time time
+builtin_interfaces/Time time
 mppi_ros/Config config
 
 int64 step_count

@@ -8,20 +8,19 @@
 #pragma once
 #include <mppi/controller/mppi.h>
 
-#include <ros/node_handle.h>
+#include <rclcpp/node.hpp>
 #include <mppi_ros/threading/WorkerManager.hpp>
 
-#include <mppi_ros/Data.h>
-#include <std_msgs/Float32MultiArray.h>
-#include <std_msgs/Float64.h>
+#include <mppi_ros/msg/data.hpp>
+#include <std_msgs/msg/float32_multi_array.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 using namespace mppi;
 namespace mppi_ros {
 
-class ControllerRos {
+class ControllerRos{
  public:
-  ControllerRos() = delete;
-  ControllerRos(ros::NodeHandle& nh);
+  ControllerRos(rclcpp::Node::SharedPtr& node): node_(node){};
   ~ControllerRos();
 
   /**
@@ -58,7 +57,6 @@ class ControllerRos {
   inline std::shared_ptr<PathIntegral>& get_controller() {
     return controller_;
   };
-  const ros::NodeHandle& get_node_handle() { return nh_; }
 
   // TODO(giuseppe) this is dangerous since one might not use correctly this
   // class
@@ -113,24 +111,22 @@ class ControllerRos {
   double ros_publish_rate_ = 0.0;
 
  public:
-  ros::NodeHandle nh_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr cost_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr min_rollout_cost_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr max_rollout_cost_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr input_publisher_;
+  rclcpp::Publisher<mppi_ros::msg::Data>::SharedPtr data_publisher_;
 
-  ros::Publisher cost_publisher_;
-  ros::Publisher min_rollout_cost_publisher_;
-  ros::Publisher max_rollout_cost_publisher_;
-  ros::Publisher input_publisher_;
-
-  std_msgs::Float64 stage_cost_;
-  std_msgs::Float64 min_rollout_cost_;
-  std_msgs::Float64 max_rollout_cost_;
+  std_msgs::msg::Float64 stage_cost_;
+  std_msgs::msg::Float64 min_rollout_cost_;
+  std_msgs::msg::Float64 max_rollout_cost_;
+  std_msgs::msg::Float32MultiArray input_ros_;
+  mppi_ros::msg::Data data_ros_;
 
   std::shared_mutex input_mutex_;
   mppi::input_t input_ = mppi::input_t::Zero(1);
-  std_msgs::Float32MultiArray input_ros_;
-
-  // logging
-  mppi_ros::Data data_ros_;
-  ros::Publisher data_publisher_;
+  
 };
 
 }  // namespace mppi_ros

@@ -6,6 +6,7 @@
     <maintainer email="grizzi@mavt.ethz.ch">Giuseppe Rizzi</maintainer>
     <license>BSD</license>
 
+    <buildtool_depend>ament_cmake</buildtool_depend>  
     <depend>eigen</depend>
     
     <test_depend>ament_cmake_gtest</test_depend>

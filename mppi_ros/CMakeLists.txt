@@ -2,48 +2,58 @@ cmake_minimum_required(VERSION 3.10)
 project(mppi_ros)
 
 set(CMAKE_CXX_STANDARD 17)
+
+find_package(ament_cmake REQUIRED)
+
 find_package(Eigen3 REQUIRED 3.3)
-
-set(PACKAGE_DEPENDENCIES
-        rosbag
-        mppi
-        sensor_msgs
-        std_msgs
-        roscpp
-        message_generation)
-
-find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+find_package(mppi REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 # Messages
-add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg
-        FILES Array.msg Config.msg Rollout.msg Data.msg)
-generate_messages(DEPENDENCIES std_msgs)
+set(msg_files
+  "msg/Array.msg"
+  "msg/Config.msg"
+  "msg/Data.msg"
+  "msg/Rollout.msg"
+)
+rosidl_generate_interfaces(${PROJECT_NAME}_interfaces
+  ${msg_files})
 
-catkin_package(
-        LIBRARIES ${PROJECT_NAME}
-        INCLUDE_DIRS include
-        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES} message_runtime)
 
-set(COMMON_LIBRARIES ${catkin_LIBRARIES})
-set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
-
+set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
 include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
 
-# Libraries
-add_library(mppi_threading src/threading/Rate.cpp src/threading/Worker.cpp src/threading/WorkerManager.cpp)
+add_library(mppi_threading 
+  src/threading/Rate.cpp 
+  src/threading/Worker.cpp 
+  src/threading/WorkerManager.cpp)
 
 
 add_library(${PROJECT_NAME} src/controller_interface.cpp src/conversions.cpp)
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} mppi_threading)
-target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} mppi_threading)
+add_dependencies(${PROJECT_NAME} mppi_threading)
+target_link_libraries(${PROJECT_NAME} mppi_threading)
+ament_target_dependencies(${PROJECT_NAME} mppi sensor_msgs std_msgs rclcpp)
 
-catkin_install_python(PROGRAMS scripts/plot_experiment.py scripts/record_data.py
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-        )
-## Testing
-if (CATKIN_ENABLE_TESTING)
-    #    catkin_add_gtest()
-    #    target_link_libraries()
+# This is needed since we are using msgs in the same package where they are defined
+rosidl_target_interfaces(${PROJECT_NAME}
+  ${PROJECT_NAME}_interfaces "rosidl_typesupport_cpp")
 
-endif ()
+
+install(PROGRAMS scripts/plot_experiment.py scripts/record_data.py DESTINATION lib/${PROJECT_NAME})
+
+ament_export_dependencies(Eigen3)
+ament_export_dependencies(mppi)
+ament_export_dependencies(rclcpp)
+ament_export_dependencies(sensor_msgs)
+ament_export_dependencies(std_msgs)
+ament_export_dependencies(rosidl_default_runtime)
+ament_export_libraries(${PROJECT_NAME} mppi_threading)
+ament_export_include_directories(include)
+
+
+ament_package()

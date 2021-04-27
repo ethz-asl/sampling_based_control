@@ -10,15 +10,9 @@ find_package(ament_cmake REQUIRED)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(yaml-cpp REQUIRED)
-find_package(OpenMP REQUIRED)
 
 set(COMMON_LIBRARIES yaml-cpp)
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${yaml_cpp_INCLUDE_DIRS})
-
-ament_export_libraries(${PROJECT_NAME})
-ament_export_include_directories(include)
-ament_export_dependencies(yaml-cpp)
-
 
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 
@@ -27,7 +21,7 @@ add_library(gram_savitzky_golay
         src/filters/gram_savitzky_golay.cpp)
 
 # Libraries
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
         src/controller/mppi.cpp
         src/controller/rollout.cpp
         src/dynamics/dynamics_base.cpp
@@ -42,9 +36,17 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES} gram_savitzky_g
 add_dependencies(${PROJECT_NAME} gram_savitzky_golay)
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
 
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-endif()
+install(
+  DIRECTORY include/
+  DESTINATION include)
+
+install(
+  TARGETS ${PROJECT_NAME} gram_savitzky_golay 
+  EXPORT ${PROJECT_NAME} 
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include)
 
 if (BUILD_TESTING)
     find_package(PythonLibs 2.7 REQUIRED)
@@ -55,4 +57,8 @@ if (BUILD_TESTING)
 
 endif ()
 
+ament_export_dependencies(Eigen3)
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 ament_package()

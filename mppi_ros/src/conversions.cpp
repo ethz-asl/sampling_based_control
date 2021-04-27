@@ -6,9 +6,9 @@
 
 namespace mppi_ros {
 
-void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
+void to_msg(const mppi::SolverConfig& config, msg::Config& config_ros) {
   config_ros.nr_rollouts = config.rollouts;
-  config_ros.lambda = config.lambda;
+  config_ros.lambda_cost = config.lambda;
   config_ros.h = config.h;
   config_ros.alpha = config.alpha;
   config_ros.beta = config.beta;
@@ -34,7 +34,7 @@ void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
   config_ros.tree_search = config.use_tree_search;
 }
 
-void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros) {
+void to_msg(const mppi::Rollout& rollout, msg::Rollout& rollout_ros) {
   rollout_ros.steps = rollout.steps_;
   rollout_ros.input_dim = rollout.input_dim_;
   rollout_ros.state_dim = rollout.state_dim_;
@@ -44,7 +44,7 @@ void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros) {
                                        rollout.cc.data() + rollout.cc.size());
   rollout_ros.time_vector.array.assign(rollout.tt.begin(), rollout.tt.end());
 
-  mppi_ros::Array state, input, noise;
+  mppi_ros::msg::Array state, input, noise;
   for (size_t i = 0; i < rollout.steps_; i++) {
     state.array.assign(rollout.xx[i].data(),
                        rollout.xx[i].data() + rollout.xx[i].size());
@@ -58,8 +58,8 @@ void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros) {
   }
 }
 
-void to_msg(const mppi::data_t& data, Data& data_ros) {
-  data_ros.time = ros::Time::now();
+void to_msg(const mppi::data_t& data, msg::Data& data_ros, const rclcpp::Time& time) {
+  data_ros.time = time;
   to_msg(data.config, data_ros.config);
 
   if (!data.weights.size()) return;
