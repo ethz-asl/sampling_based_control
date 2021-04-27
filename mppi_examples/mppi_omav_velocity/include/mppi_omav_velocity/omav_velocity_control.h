@@ -27,6 +27,7 @@ public:
 
   void get_odometry(observation_t &x);
   bool odometry_bool_;
+  void get_start_position(observation_t &x);
 
 private:
   void initializeSubscribers();
@@ -38,6 +39,8 @@ private:
                             std_srvs::Empty::Response &response);
   bool homingSrv(std_srvs::Empty::Request &request,
                  std_srvs::Empty::Response &response);
+  bool landingSrv(std_srvs::Empty::Request &request,
+                  std_srvs::Empty::Response &response);
 
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
@@ -53,9 +56,16 @@ private:
   ros::ServiceServer take_off_srv_;
   ros::ServiceServer execute_trajectory_srv_;
   ros::ServiceServer homing_srv_;
+  ros::ServiceServer landing_srv_;
 
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
+
+  // Indicator Message
+  std_msgs::Int64 indicator;
+
+  // Start position
+  Eigen::VectorXd start_position_;
 };
 } // namespace omav_velocity
 

@@ -40,6 +40,8 @@ void OmavTrajectoryGenerator::initializePublishers() {
 
   homing_srv_ =
       nh_.advertiseService("homing", &OmavTrajectoryGenerator::homingSrv, this);
+  landing_srv_ =
+      nh_.advertiseService("land", &OmavTrajectoryGenerator::landingSrv, this);
 }
 
 void OmavTrajectoryGenerator::odometryCallback(
@@ -57,7 +59,6 @@ bool OmavTrajectoryGenerator::takeOffSrv(std_srvs::Empty::Request &request,
   omav_velocity::conversions::PoseMsgFromVector(take_off_pose,
                                                 take_off_pose_msg);
   reference_publisher_.publish(take_off_pose_msg);
-  std_msgs::Int64 indicator;
   indicator.data = 0;
   indicator_publisher_.publish(indicator);
   return true;
@@ -70,7 +71,6 @@ bool OmavTrajectoryGenerator::executeTrajectorySrv(
   goal_pose << 10.0, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0;
   omav_velocity::conversions::PoseMsgFromVector(goal_pose, goal_pose_msg);
   reference_publisher_.publish(goal_pose_msg);
-  std_msgs::Int64 indicator;
   indicator.data = 1;
   indicator_publisher_.publish(indicator);
   return true;
@@ -83,7 +83,19 @@ bool OmavTrajectoryGenerator::homingSrv(std_srvs::Empty::Request &request,
   home_pose << 0, 0, 1, 1, 0, 0, 0;
   omav_velocity::conversions::PoseMsgFromVector(home_pose, home_pose_msg);
   reference_publisher_.publish(home_pose_msg);
+  indicator.data = 1;
+  indicator_publisher_.publish(indicator);
   return true;
+}
+
+bool OmavTrajectoryGenerator::landingSrv(std_srvs::Empty::Request &request,
+                                         std_srvs::Empty::Response &response) {
+  geometry_msgs::PoseStamped landing_pose_msg;
+  omav_velocity::conversions::PoseMsgFromVector(start_position_,
+                                                landing_pose_msg);
+  reference_publisher_.publish(landing_pose_msg);
+  indicator.data = 0;
+  indicator_publisher_.publish(indicator);
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
@@ -92,6 +104,10 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
   x.segment<3>(7) = current_odometry_.getVelocityWorld();
   x.tail<3>() = current_odometry_.angular_velocity_B;
+}
+
+void OmavTrajectoryGenerator::get_start_position(observation_t &x) {
+  start_position_ = x;
 }
 
 int main(int argc, char **argv) {
@@ -136,6 +152,7 @@ int main(int argc, char **argv) {
   ROS_INFO_STREAM("First Odometry recieved");
   // Set fir odomety value as reference
   omav_trajectory_node->get_odometry(x);
+  omav_trajectory_node->get_start_position(x);
   controller.set_reference(x);
 
   // start controller
