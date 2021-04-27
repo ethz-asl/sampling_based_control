@@ -31,7 +31,7 @@ void OMAVVelocityDynamics::initialize_world(
   omav = sim_.addArticulatedSystem(robot_description_, "/");
   object = sim_.addArticulatedSystem(object_description_, "/");
   object->getCollisionBody("cube/0").setMaterial("steel");
-  ground = sim_.addGround(-0.3, "steel");
+  ground = sim_.addGround(0.0, "steel");
   sim_.setMaterialPairProp("steel", "steel", 0.5, 0.05, 0.001);
   robot_dof_ = omav->getDOF();
   // Set dimensions

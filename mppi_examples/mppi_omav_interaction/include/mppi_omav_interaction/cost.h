@@ -59,7 +59,7 @@ private:
   double distance;
   double distance_from_savezone;
   double obstacle_cost;
-  int mode;
+  double mode;
 
 private:
   cost_ptr create() override {

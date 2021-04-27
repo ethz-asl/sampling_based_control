@@ -26,6 +26,10 @@ bool OMAVControllerInterface::init_ros() {
                     &OMAVControllerInterface::desired_pose_callback, this);
   mode_subscriber_ = nh_.subscribe(
       "/mppi_omav_mode", 10, &OMAVControllerInterface::mode_callback, this);
+  object_reference_subscriber_ =
+      nh_.subscribe("/mppi_object_desired", 10,
+                    &OMAVControllerInterface::object_reference_callback, this);
+
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
@@ -108,7 +112,7 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](6) = z_goal_quaternion;
   ref_.rr[0](7) = 4;
   ref_.rr[0](8) = 0;
-  ref_.rr[0](9) = -0.16;
+  ref_.rr[0](9) = 0.15;
   ref_.rr[0](10) = 1;
   ref_.rr[0](11) = 0;
   ref_.rr[0](12) = 0;
@@ -137,10 +141,35 @@ void OMAVControllerInterface::desired_pose_callback(
 void OMAVControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr[0](7) = msg->data;
-  ref_.rr[0](7) = msg->data;
+  if (msg->data == 2.0) {
+    x_0_temp = get_controller()->get_current_observation();
+    ref_.rr[0](0) = x_0_temp(0) + 0.13;
+    std::cout << x_0_temp(0) << std::endl;
+    ref_.rr[0](1) = x_0_temp(1);
+    ref_.rr[0](2) = x_0_temp(2);
+    ref_.rr[0](3) = 1.0;
+    ref_.rr[0](4) = 0.0;
+    ref_.rr[0](5) = 0.0;
+    ref_.rr[0](6) = 0.0;
+    ref_.rr[0](14) = 0.0;
+  } else {
+    ref_.rr[0](14) = msg->data;
+  }
   get_controller()->set_reference_trajectory(ref_);
   ROS_INFO_STREAM("Switching to mode:" << msg->data);
+}
+
+void OMAVControllerInterface::object_reference_callback(
+    const geometry_msgs::PoseStampedConstPtr &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](7) = msg->pose.position.x;
+  ref_.rr[0](8) = msg->pose.position.y;
+  ref_.rr[0](9) = msg->pose.position.z;
+  ref_.rr[0](10) = msg->pose.orientation.w;
+  ref_.rr[0](11) = msg->pose.orientation.x;
+  ref_.rr[0](12) = msg->pose.orientation.y;
+  ref_.rr[0](13) = msg->pose.orientation.z;
+  get_controller()->set_reference_trajectory(ref_);
 }
 
 bool OMAVControllerInterface::update_reference() {
@@ -158,6 +187,32 @@ bool OMAVControllerInterface::set_reference(const observation_t &x) {
   ref_.rr[0](4) = x(4);
   ref_.rr[0](5) = x(5);
   ref_.rr[0](6) = x(6);
+  get_controller()->set_reference_trajectory(ref_);
+  return true;
+}
+
+bool OMAVControllerInterface::set_reset_reference(const observation_t &x) {
+  ref_.rr[0](0) = x(0) - 0.1;
+  ref_.rr[0](1) = x(1);
+  ref_.rr[0](2) = x(2);
+  ref_.rr[0](3) = 1;
+  ref_.rr[0](4) = 0;
+  ref_.rr[0](5) = 0;
+  ref_.rr[0](6) = x(6);
+  ref_.rr[0](14) = 0;
+  get_controller()->set_reference_trajectory(ref_);
+  return true;
+}
+
+bool OMAVControllerInterface::set_object_reference() {
+  ref_.rr[0](7) = 4;
+  ref_.rr[0](8) = 0;
+  ref_.rr[0](9) = 0.15;
+  ref_.rr[0](10) = 1;
+  ref_.rr[0](11) = 0;
+  ref_.rr[0](12) = 0;
+  ref_.rr[0](13) = 0;
+  ref_.rr[0](14) = 1;
   get_controller()->set_reference_trajectory(ref_);
   return true;
 }

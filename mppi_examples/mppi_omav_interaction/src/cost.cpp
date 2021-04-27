@@ -34,7 +34,6 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
   mode = ref(14);
 
   if (mode == 0) {
-    ROS_INFO_STREAM_ONCE("Position Mode activated");
     // Leafing Field Cost
     if (abs(x(0)) > param_.x_limit || abs(x(1)) > param_.y_limit ||
         abs(x(2)) > param_.z_limit) {
@@ -52,22 +51,30 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
 
     // cost += OMAVInteractionCost::distance_from_obstacle_cost(x);
   }
-  if (mode == 0) {
-    ROS_INFO_STREAM_ONCE("Touch Mode activated");
+
+  if (mode == 1) {
+    // Leafing Field Cost
+    if (abs(x(0)) > param_.x_limit || abs(x(1)) > param_.y_limit ||
+        abs(x(2)) > param_.z_limit) {
+      cost += param_.Q_leafing_field;
+    }
+    // Pose Cost
+    mppi_pinocchio::Pose current_pose, reference_pose;
+    current_pose.translation = x.head<3>();
+    current_pose.rotation = {x(3), x(4), x(5), x(6)};
+    reference_pose.translation = x.head<3>();
+    reference_pose.rotation = {ref(3), ref(4), ref(5), ref(6)};
+    delta_pose = mppi_pinocchio::get_delta(current_pose, reference_pose);
+    cost += 0.0 * delta_pose.transpose() * param_.Q_pose * delta_pose;
+
     mppi_pinocchio::Pose object_pose, reference_pose_object;
     object_pose.translation = x.segment<3>(13);
-    std::cout << "----------------------------" << std::endl;
-    std::cout << object_pose.translation << std::endl;
     object_pose.rotation = {x(16), x(17), x(18), x(19)};
-    // std::cout << x(16) << std::endl;
     reference_pose_object.translation = ref.segment<3>(7);
-    reference_pose_object.rotation = {ref(10), ref(11), ref(13), ref(13)};
+    reference_pose_object.rotation = {ref(10), ref(11), ref(12), ref(13)};
     delta_pose_object =
         mppi_pinocchio::get_delta(object_pose, reference_pose_object);
-    std::cout << cost << std::endl;
-    cost += 1000 * delta_pose_object.transpose() * param_.Q_pose *
-            delta_pose_object;
-    std::cout << cost << std::endl;
+    cost += delta_pose_object.transpose() * param_.Q_pose * delta_pose_object;
   }
 
   return cost;

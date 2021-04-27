@@ -39,12 +39,18 @@ public:
 
   bool set_reference(const observation_t &x);
 
+  bool set_reset_reference(const observation_t &x);
+
+  bool set_object_reference();
+
 private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 
   void desired_pose_callback(const geometry_msgs::PoseStampedConstPtr &msg);
 
   void mode_callback(const std_msgs::Int64ConstPtr &msg);
+
+  void object_reference_callback(const geometry_msgs::PoseStampedConstPtr &msg);
 
   void publish_trajectory(const mppi::observation_array_t &x_opt);
 
@@ -54,12 +60,15 @@ public:
 private:
   bool reference_set_ = false;
 
+  observation_t x_0_temp;
+
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 
   ros::Subscriber reference_subscriber_;
   ros::Subscriber mode_subscriber_;
+  ros::Subscriber object_reference_subscriber_;
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;

@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
       controller.publish_ros_default();
       // Additional publisher for additional visualization
       controller.publish_optimal_rollout();
-      // controller.publish_trajectories();
+      controller.publish_trajectories();
 
     } else {
       if (running_rotors) {
@@ -188,12 +188,6 @@ int main(int argc, char **argv) {
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
                   .count() /
               1000.0;
-
-    if (sim_dt - elapsed > 0)
-      ros::Duration(sim_dt - elapsed).sleep();
-    else
-      ROS_INFO_STREAM_THROTTLE(
-          3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
     ros::spinOnce();
   }
 }
