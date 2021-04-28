@@ -121,8 +121,7 @@ int main(int argc, char** argv) {
       auto end = std::chrono::steady_clock::now();
       double elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-              .count() *
-          1000;
+              .count() / 1000;
       if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 
       if (isTerminated(x) && !terminate) {
