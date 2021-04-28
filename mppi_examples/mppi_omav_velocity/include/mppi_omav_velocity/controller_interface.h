@@ -15,6 +15,7 @@
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
 #include <memory>
+#include <std_msgs/Float32.h>
 #include <std_msgs/Int64.h>
 
 namespace omav_velocity {
@@ -37,6 +38,8 @@ private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
   void desired_pose_callback(const geometry_msgs::PoseStampedConstPtr &msg);
   void indicator_callback(const std_msgs::Int64 &msg);
+  void obstaclexCallback(const std_msgs::Float32 &msg);
+  void obstacleyCallback(const std_msgs::Float32 &msg);
   void publish_trajectory(const mppi::observation_array_t &x_opt);
 
 public:
@@ -51,6 +54,8 @@ private:
 
   ros::Subscriber reference_subscriber_;
   ros::Subscriber indicator_subscriber_;
+  ros::Subscriber obstacle_x_sub_;
+  ros::Subscriber obstacle_y_sub_;
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;

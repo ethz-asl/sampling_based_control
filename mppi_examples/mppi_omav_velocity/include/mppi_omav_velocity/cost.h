@@ -71,7 +71,8 @@ private:
     return std::make_shared<OMAVVelocityCost>(*this);
   }
 
-  double distance_from_obstacle_cost(const mppi::observation_t &x);
+  double distance_from_obstacle_cost(const mppi::observation_t &x,
+                                     float x_obstacle, float y_obstacle);
 
   cost_t compute_cost(const mppi::observation_t &x,
                       const mppi::reference_t &ref, const double t) override;

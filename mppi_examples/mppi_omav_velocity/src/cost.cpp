@@ -17,10 +17,10 @@ OMAVVelocityCost::OMAVVelocityCost(const std::string &robot_description,
                                    const OMAVVelocityCostParam &param)
     : param_(param), robot_description_(robot_description) {}
 
-double
-OMAVVelocityCost::distance_from_obstacle_cost(const mppi::observation_t &x) {
-  distance = std::sqrt(std::pow(x(0) - param_.x_obstacle, 2) +
-                       std::pow(x(1) - param_.y_obstacle, 2));
+double OMAVVelocityCost::distance_from_obstacle_cost(
+    const mppi::observation_t &x, float x_obstacle, float y_obstacle) {
+  distance = std::sqrt(std::pow(x(0) - x_obstacle, 2) +
+                       std::pow(x(1) - y_obstacle, 2));
   distance_from_savezone = (distance - (2 + 1));
   obstacle_cost = -param_.Q_obstacle * std::min(0.0, distance_from_savezone);
   return obstacle_cost;
@@ -52,7 +52,7 @@ OMAVVelocityCost::compute_cost(const mppi::observation_t &x,
   delta_pose = mppi_pinocchio::get_delta(current_pose, reference_pose);
   cost += delta_pose.transpose() * param_.Q_pose * delta_pose;
 
-  cost += OMAVVelocityCost::distance_from_obstacle_cost(x);
+  cost += OMAVVelocityCost::distance_from_obstacle_cost(x, ref(8), ref(9));
 
   return cost;
 }

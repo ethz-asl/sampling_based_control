@@ -23,6 +23,7 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
                                 &OmavTrajectoryGenerator::odometryCallback,
                                 this, ros::TransportHints().tcpNoDelay());
   ROS_INFO_STREAM("Subscriber initialized");
+
   odometry_bool_ = true;
 }
 
@@ -164,6 +165,7 @@ int main(int argc, char **argv) {
   // do some timing
   double elapsed;
 
+  ros::Rate r(200);
   while (ros::ok()) {
     if (sequential) {
       controller.update_reference();
@@ -179,7 +181,7 @@ int main(int argc, char **argv) {
       omav_trajectory_node->get_odometry(x);
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);
-      // controller.publish_optimal_rollout();
+      r.sleep();
     }
 
     ros::spinOnce();

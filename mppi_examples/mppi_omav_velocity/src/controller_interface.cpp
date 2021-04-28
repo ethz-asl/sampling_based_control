@@ -21,14 +21,19 @@ bool OMAVControllerInterface::init_ros() {
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
   trajectory_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1);
+  cmd_multi_dof_joint_trajectory_pub_ =
+      nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
+          mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
+
   reference_subscriber_ =
       nh_.subscribe("/mppi_pose_desired", 10,
                     &OMAVControllerInterface::desired_pose_callback, this);
   indicator_subscriber_ = nh_.subscribe(
       "/indicator", 10, &OMAVControllerInterface::indicator_callback, this);
-  cmd_multi_dof_joint_trajectory_pub_ =
-      nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
-          mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
+  obstacle_x_sub_ = nh_.subscribe(
+      "/obstacle_x", 1, &OMAVControllerInterface::obstaclexCallback, this);
+  obstacle_y_sub_ = nh_.subscribe(
+      "/obstacle_y", 1, &OMAVControllerInterface::obstacleyCallback, this);
 }
 
 bool OMAVControllerInterface::set_controller(
@@ -92,7 +97,7 @@ bool OMAVControllerInterface::set_controller(
   nh_.param<double>("goal_quaternion_y", y_goal_quaternion, 0.0);
   nh_.param<double>("goal_quaternion_z", z_goal_quaternion, 0.0);
 
-  ref_.rr.resize(1, mppi::observation_t::Zero(8));
+  ref_.rr.resize(1, mppi::observation_t::Zero(10));
   ref_.rr[0](0) = x_goal_position;
   ref_.rr[0](1) = y_goal_position;
   ref_.rr[0](2) = z_goal_position;
@@ -101,6 +106,8 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](5) = y_goal_quaternion;
   ref_.rr[0](6) = z_goal_quaternion;
   ref_.rr[0](7) = 0;
+  ref_.rr[0](8) = 5.0;
+  ref_.rr[0](9) = 5.0;
   ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
@@ -122,6 +129,16 @@ void OMAVControllerInterface::desired_pose_callback(
 void OMAVControllerInterface::indicator_callback(const std_msgs::Int64 &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](7) = msg.data;
+  get_controller()->set_reference_trajectory(ref_);
+}
+void OMAVControllerInterface::obstaclexCallback(const std_msgs::Float32 &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](8) = msg.data;
+  get_controller()->set_reference_trajectory(ref_);
+}
+void OMAVControllerInterface::obstacleyCallback(const std_msgs::Float32 &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](9) = msg.data;
   get_controller()->set_reference_trajectory(ref_);
 }
 
@@ -147,6 +164,7 @@ bool OMAVControllerInterface::set_reference(const observation_t &x) {
 void OMAVControllerInterface::publish_ros() {
   get_controller()->get_optimal_rollout(xx_opt, uu_opt);
   OMAVControllerInterface::publish_trajectory(xx_opt);
+  OMAVControllerInterface::publish_optimal_rollout();
 }
 
 void OMAVControllerInterface::publish_trajectory(
@@ -159,12 +177,12 @@ void OMAVControllerInterface::publish_trajectory(
 void OMAVControllerInterface::publish_trajectories() {
   get_controller()->get_rollout_trajectories(current_trajectories);
   geometry_msgs::PoseArray trajectory_array;
-  trajectory_array.header.frame_id = "odom";
+  trajectory_array.header.frame_id = "world";
   trajectory_array.header.stamp = ros::Time::now();
   for (int i = 0; i < current_trajectories.size(); i++) {
     xx_current_trajectory = current_trajectories[i].xx;
-    for (int j = 0; j < xx_current_trajectory.size(); j++) {
-      if ((j % 10) == 0) {
+    for (int j = 0; j < 30; j++) {
+      if ((j % 1) == 0) {
         current_trajectory_pose.position.x = xx_current_trajectory[j](0);
         current_trajectory_pose.position.y = xx_current_trajectory[j](1);
         current_trajectory_pose.position.z = xx_current_trajectory[j](2);
@@ -183,7 +201,7 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   get_controller()->get_optimal_rollout(optimal_rollout_states_,
                                         optimal_rollout_inputs_);
   geometry_msgs::PoseArray optimal_rollout_array_;
-  optimal_rollout_array_.header.frame_id = "state";
+  optimal_rollout_array_.header.frame_id = "world";
   optimal_rollout_array_.header.stamp = ros::Time::now();
   for (int i = 0; i < 30; i++) {
     current_pose_.position.x = optimal_rollout_states_[i](0);
