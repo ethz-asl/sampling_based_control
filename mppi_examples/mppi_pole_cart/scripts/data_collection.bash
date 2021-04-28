@@ -2,8 +2,17 @@
 
 # dir is relative and should work on any machine as long as file structure of
 # package remains the same
-data_dir="../../../policy_learning/data/"
-cd $data_dir
+# data_dir="../../../policy_learning/data/"
+source ~/catkin_ws/devel/setup.bash
+roscd policy_learning/
+if [ ! -d "$(pwd)/data" ]
+then
+    mkdir data
+    cd data
+else
+    echo "Directory already exists."
+    cd data 
+fi
 current_time=$(date +%m%d%H%M%S)
 mkdir $current_time
 cd $current_time
