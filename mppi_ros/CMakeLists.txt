@@ -27,24 +27,37 @@ rosidl_generate_interfaces(${PROJECT_NAME}_interfaces
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
 include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
-
 add_library(mppi_threading 
   src/threading/Rate.cpp 
   src/threading/Worker.cpp 
   src/threading/WorkerManager.cpp)
 
-
-add_library(${PROJECT_NAME} src/controller_interface.cpp src/conversions.cpp)
-add_dependencies(${PROJECT_NAME} mppi_threading)
-target_link_libraries(${PROJECT_NAME} mppi_threading)
-ament_target_dependencies(${PROJECT_NAME} mppi sensor_msgs std_msgs rclcpp)
+add_library(${PROJECT_NAME} 
+  src/controller_interface.cpp 
+  src/conversions.cpp
+)
+add_dependencies(${PROJECT_NAME} 
+  mppi_threading
+)
+target_link_libraries(${PROJECT_NAME} 
+  mppi_threading
+)
+ament_target_dependencies(${PROJECT_NAME}
+  mppi 
+  sensor_msgs 
+  std_msgs 
+  rclcpp
+)
 
 # This is needed since we are using msgs in the same package where they are defined
 rosidl_target_interfaces(${PROJECT_NAME}
   ${PROJECT_NAME}_interfaces "rosidl_typesupport_cpp")
 
 
-install(PROGRAMS scripts/plot_experiment.py scripts/record_data.py DESTINATION lib/${PROJECT_NAME})
+install(PROGRAMS 
+  scripts/plot_experiment.py 
+  scripts/record_data.py 
+  DESTINATION lib/${PROJECT_NAME})
 
 ament_export_dependencies(Eigen3)
 ament_export_dependencies(mppi)
