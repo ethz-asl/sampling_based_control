@@ -46,10 +46,15 @@ bool PandaExpert::collect_data(){
 
 void const PandaExpert::augment_observation(observation_t const& x, 
                                             augmented_observation_t& x_aug){
-  auto pose = pImpl->robot_model_.get_pose(tracked_frame_);
-  x_aug.resize(x.size() + 7);
-  x_aug << x, pose.translation, pose.rotation;
-  // TODO: use error between pose and reference to augment state...
+  pImpl->robot_model_.update_state(x.head<7>());
+
+  Eigen::Vector3d ref_t = timed_ref_.rr[0].head<3>();
+  Eigen::Quaterniond ref_q(timed_ref_.rr[0].segment<4>(3));
+  Eigen::Matrix<double, 6, 1> error;
+  pImpl->robot_model_.get_error(tracked_frame_, ref_q, ref_t, error);
+
+  Eigen::Vector3d obstacle_position = timed_ref_.rr[0].tail<3>();
+
+  x_aug.resize(x.size() + 9);
+  x_aug << x, error, obstacle_position; 
 }
-
-
