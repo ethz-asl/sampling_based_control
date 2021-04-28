@@ -34,6 +34,8 @@ bool OMAVControllerInterface::init_ros() {
       "/obstacle_x", 1, &OMAVControllerInterface::obstaclexCallback, this);
   obstacle_y_sub_ = nh_.subscribe(
       "/obstacle_y", 1, &OMAVControllerInterface::obstacleyCallback, this);
+  publish_bool_sub_ = nh_.subscribe(
+      "/publish_bool", 1, &OMAVControllerInterface::publishBoolCallback, this);
 }
 
 bool OMAVControllerInterface::set_controller(
@@ -141,6 +143,10 @@ void OMAVControllerInterface::obstacleyCallback(const std_msgs::Float32 &msg) {
   ref_.rr[0](9) = msg.data;
   get_controller()->set_reference_trajectory(ref_);
 }
+void OMAVControllerInterface::publishBoolCallback(
+    const std_msgs::Bool &publish_bool) {
+  publish_bool_ = publish_bool.data;
+}
 
 bool OMAVControllerInterface::update_reference() {
   if (!reference_set_)
@@ -162,9 +168,13 @@ bool OMAVControllerInterface::set_reference(const observation_t &x) {
 }
 
 void OMAVControllerInterface::publish_ros() {
-  get_controller()->get_optimal_rollout(xx_opt, uu_opt);
-  OMAVControllerInterface::publish_trajectory(xx_opt);
-  OMAVControllerInterface::publish_optimal_rollout();
+  if (publish_bool_) {
+    get_controller()->get_optimal_rollout(xx_opt, uu_opt);
+    OMAVControllerInterface::publish_trajectory(xx_opt);
+    OMAVControllerInterface::publish_optimal_rollout();
+  } else {
+    ROS_INFO_STREAM_ONCE("Publishing of MPPI is disabled!");
+  }
 }
 
 void OMAVControllerInterface::publish_trajectory(

@@ -15,6 +15,7 @@
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
 #include <memory>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int64.h>
 
@@ -40,6 +41,7 @@ private:
   void indicator_callback(const std_msgs::Int64 &msg);
   void obstaclexCallback(const std_msgs::Float32 &msg);
   void obstacleyCallback(const std_msgs::Float32 &msg);
+  void publishBoolCallback(const std_msgs::Bool &publish_bool);
   void publish_trajectory(const mppi::observation_array_t &x_opt);
 
 public:
@@ -47,6 +49,7 @@ public:
 
 private:
   bool reference_set_ = false;
+  bool publish_bool_ = false;
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
 
@@ -56,6 +59,7 @@ private:
   ros::Subscriber indicator_subscriber_;
   ros::Subscriber obstacle_x_sub_;
   ros::Subscriber obstacle_y_sub_;
+  ros::Subscriber publish_bool_sub_;
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;

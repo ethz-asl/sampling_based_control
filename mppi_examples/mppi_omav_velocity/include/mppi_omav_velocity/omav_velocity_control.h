@@ -33,6 +33,8 @@ private:
   void initializeSubscribers();
   void initializePublishers();
   void odometryCallback(const nav_msgs::OdometryConstPtr &odometry_msg);
+  void goalTranslationCallback(const geometry_msgs::Vector3 &translation);
+  void goalRotationCallback(const geometry_msgs::Vector3 &rotation);
   bool takeOffSrv(std_srvs::Empty::Request &request,
                   std_srvs::Empty::Response &response);
   bool executeTrajectorySrv(std_srvs::Empty::Request &request,
@@ -47,6 +49,8 @@ private:
 
   // subscribers
   ros::Subscriber odometry_sub_;
+  ros::Subscriber goal_translation_sub_;
+  ros::Subscriber goal_rotation_sub_;
 
   // publishers
   ros::Publisher reference_publisher_;
@@ -63,6 +67,8 @@ private:
 
   // Indicator Message
   std_msgs::Int64 indicator;
+
+  Eigen::VectorXd goal_pose_;
 
   // Start position
   Eigen::VectorXd start_position_;

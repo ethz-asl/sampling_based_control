@@ -34,13 +34,14 @@ void OMAVVelocityDynamics::initialize_world(
       6; // commanded_linear_velocity_(3) commanded_angular_velocity(3)
 
   x_ = observation_t::Zero(state_dimension_);
+  std::cout << robot_dof_ << std::endl;
 }
 
 void OMAVVelocityDynamics::initialize_pd() {
   cmd.setZero(robot_dof_);
   cmdv.setZero(robot_dof_);
   omav->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
-  Eigen::VectorXd p_gain(6), d_gain(6);
+  Eigen::VectorXd p_gain(robot_dof_), d_gain(robot_dof_);
   p_gain << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   d_gain << 10, 10, 10, 5, 5, 5;
   omav->setPdGains(p_gain, d_gain);

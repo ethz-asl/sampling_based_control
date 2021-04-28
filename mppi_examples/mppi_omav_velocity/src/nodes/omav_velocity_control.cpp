@@ -14,6 +14,7 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
     : nh_(nh), private_nh_(private_nh) {
   initializePublishers();
   initializeSubscribers();
+  goal_pose_.resize(7);
 }
 
 OmavTrajectoryGenerator::~OmavTrajectoryGenerator() {}
@@ -23,6 +24,13 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
                                 &OmavTrajectoryGenerator::odometryCallback,
                                 this, ros::TransportHints().tcpNoDelay());
   ROS_INFO_STREAM("Subscriber initialized");
+
+  goal_translation_sub_ = nh_.subscribe(
+      "/goal_translation", 1, &OmavTrajectoryGenerator::goalTranslationCallback,
+      this, ros::TransportHints().tcpNoDelay());
+  goal_rotation_sub_ = nh_.subscribe(
+      "/goal_rotation", 1, &OmavTrajectoryGenerator::goalRotationCallback, this,
+      ros::TransportHints().tcpNoDelay());
 
   odometry_bool_ = true;
 }
@@ -52,6 +60,29 @@ void OmavTrajectoryGenerator::odometryCallback(
   odometry_bool_ = false;
 }
 
+void OmavTrajectoryGenerator::goalTranslationCallback(
+    const geometry_msgs::Vector3 &translation) {
+  goal_pose_(0) = translation.x;
+  goal_pose_(1) = translation.y;
+  goal_pose_(2) = translation.z;
+}
+
+void OmavTrajectoryGenerator::goalRotationCallback(
+    const geometry_msgs::Vector3 &rotation) {
+  Eigen::Quaterniond q;
+  double euler_x = rotation.x * 2 * M_PI / 360;
+  double euler_y = rotation.y * 2 * M_PI / 360;
+  double euler_z = rotation.z * 2 * M_PI / 360;
+  Eigen::AngleAxisd rollAngle(euler_x, Eigen::Vector3d::UnitX());
+  Eigen::AngleAxisd pitchAngle(euler_y, Eigen::Vector3d::UnitY());
+  Eigen::AngleAxisd yawAngle(euler_z, Eigen::Vector3d::UnitZ());
+  q = rollAngle * pitchAngle * yawAngle;
+  std::cout << q.w() << std::endl;
+  std::cout << q.vec() << std::endl;
+  goal_pose_(3) = q.w();
+  goal_pose_.segment<3>(4) = q.vec();
+}
+
 bool OmavTrajectoryGenerator::takeOffSrv(std_srvs::Empty::Request &request,
                                          std_srvs::Empty::Response &response) {
   geometry_msgs::PoseStamped take_off_pose_msg;
@@ -68,9 +99,7 @@ bool OmavTrajectoryGenerator::takeOffSrv(std_srvs::Empty::Request &request,
 bool OmavTrajectoryGenerator::executeTrajectorySrv(
     std_srvs::Empty::Request &request, std_srvs::Empty::Response &response) {
   geometry_msgs::PoseStamped goal_pose_msg;
-  Eigen::VectorXd goal_pose(7);
-  goal_pose << 10.0, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0;
-  omav_velocity::conversions::PoseMsgFromVector(goal_pose, goal_pose_msg);
+  omav_velocity::conversions::PoseMsgFromVector(goal_pose_, goal_pose_msg);
   reference_publisher_.publish(goal_pose_msg);
   indicator.data = 1;
   indicator_publisher_.publish(indicator);
