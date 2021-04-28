@@ -308,6 +308,10 @@ void PathIntegral::update_reference() {
   if (config_.use_tree_search) {
     tree_manager_.set_reference_trajectory(rr_tt_ref_);
   }
+
+  if(learned_expert_){
+    learned_expert_->set_reference_trajectory(rr_tt_ref_);
+  }
 }
 
 void PathIntegral::sample_noise(input_t& noise) { sampler_->get_sample(noise); }

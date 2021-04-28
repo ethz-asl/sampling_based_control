@@ -22,4 +22,14 @@ void LearnedExpert::save_rollout(const Rollout& rollout){
     }
 }
 
+void LearnedExpert::set_reference_trajectory(const reference_trajectory_t &traj) {
+  timed_ref_.tt.clear();
+  timed_ref_.tt.reserve(traj.tt.size());
+  timed_ref_.rr.clear();
+  for (size_t i = 0; i < traj.tt.size(); i++) {
+    timed_ref_.rr.push_back(traj.rr[i]);
+    timed_ref_.tt.push_back(traj.tt[i]);
+  }
+}
+
 } // namespace mppi
