@@ -2,7 +2,7 @@
 <launch>
 
     <arg name="description_file_raisim" default="$(find mppi_omav_interaction)/data/omav_raisim_rod.urdf.xacro"/>
-    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/cube.urdf.xacro"/>
+    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/button.urdf.xacro"/>
 
     <arg name="plot_cost" default="false"/>
 

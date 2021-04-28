@@ -111,6 +111,7 @@ int main(int argc, char **argv) {
 
   auto simulation = std::make_shared<OMAVVelocityDynamicsRos>(
       nh, robot_description_raisim, object_describtion_raisim, 0.015);
+  ROS_INFO_STREAM("Simulation Created");
   // set initial state
   observation_t x = observation_t::Zero(26);
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
@@ -188,6 +189,12 @@ int main(int argc, char **argv) {
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
                   .count() /
               1000.0;
+    if (sim_dt - elapsed > 0)
+      ros::Duration(sim_dt - elapsed).sleep();
+    else
+      ROS_INFO_STREAM_THROTTLE(
+          3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
+
     ros::spinOnce();
   }
 }

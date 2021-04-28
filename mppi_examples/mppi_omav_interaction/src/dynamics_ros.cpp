@@ -60,18 +60,18 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   obstacle_marker_.header.frame_id = "odom";
   obstacle_marker_.id = 2;
   obstacle_marker_.action = visualization_msgs::Marker::ADD;
-  obstacle_marker_.type = visualization_msgs::Marker::CYLINDER;
-  obstacle_marker_.scale.x = 2.0;
-  obstacle_marker_.scale.y = 2.0;
-  obstacle_marker_.scale.z = 10.0;
+  obstacle_marker_.type = visualization_msgs::Marker::CUBE;
+  obstacle_marker_.scale.x = 0.2;
+  obstacle_marker_.scale.y = 4.0;
+  obstacle_marker_.scale.z = 4.0;
   obstacle_marker_.color.a = 1.0;
   obstacle_marker_.color.r = 1.0;
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.header.stamp = ros::Time::now();
-  obstacle_marker_.pose.position.x = 5.0;
-  obstacle_marker_.pose.position.y = 5.0;
-  obstacle_marker_.pose.position.z = 5.0;
+  obstacle_marker_.pose.position.x = 2.2;
+  obstacle_marker_.pose.position.y = 0.0;
+  obstacle_marker_.pose.position.z = 2.0;
   obstacle_marker_.pose.orientation.w = 1.0;
   obstacle_marker_.pose.orientation.x = 0.0;
   obstacle_marker_.pose.orientation.y = 0.0;
@@ -89,9 +89,9 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   object_marker_.color.g = 1.0;
   object_marker_.color.b = 1.0;
   object_marker_.header.stamp = ros::Time::now();
-  object_marker_.pose.position.x = 1.0;
+  object_marker_.pose.position.x = 2.0;
   object_marker_.pose.position.y = 0.0;
-  object_marker_.pose.position.z = 0.0;
+  object_marker_.pose.position.z = 1.0;
   object_marker_.pose.orientation.w = 1.0;
   object_marker_.pose.orientation.x = 0.0;
   object_marker_.pose.orientation.y = 0.0;
@@ -117,13 +117,13 @@ void OMAVVelocityDynamicsRos::publish_ros() {
   omav_marker_.pose.orientation.z = x_(6);
 
   object_marker_.header.stamp = ros::Time::now();
-  object_marker_.pose.position.x = x_(13);
-  object_marker_.pose.position.y = x_(14);
-  object_marker_.pose.position.z = x_(15);
-  object_marker_.pose.orientation.w = x_(16);
-  object_marker_.pose.orientation.x = x_(17);
-  object_marker_.pose.orientation.y = x_(18);
-  object_marker_.pose.orientation.z = x_(19);
+  object_marker_.pose.position.x = x_(13) + 2.0;
+  object_marker_.pose.position.y = 0.0;
+  object_marker_.pose.position.z = 1.0;
+  object_marker_.pose.orientation.w = 1;
+  object_marker_.pose.orientation.x = 0;
+  object_marker_.pose.orientation.y = 0;
+  object_marker_.pose.orientation.z = 0;
 
   vis_publisher_.publish(omav_marker_);
   goal_publisher_.publish(goal_marker_);

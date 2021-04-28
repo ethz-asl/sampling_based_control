@@ -21,7 +21,7 @@ def cost_callback(data):
 
 if __name__ == "__main__":
     rospy.init_node("reference_node")
-    rospy.loginfo("Give new reference in 3 seconds.")
+    rospy.loginfo("Set new reference in 3 seconds.")
 
     reference_publisher = rospy.Publisher("/mppi_pose_desired",
                                           PoseStamped,
@@ -35,11 +35,11 @@ if __name__ == "__main__":
     mode = Int64()
     object_pose = PoseStamped()
 
-    rospy.sleep(3.0)
+    rospy.sleep(5.0)
     reference_pose.header.frame_id = "odom"
     reference_pose.pose.position.x = 1.24
     reference_pose.pose.position.y = 0.0
-    reference_pose.pose.position.z = 0.0
+    reference_pose.pose.position.z = 1.0
     reference_pose.pose.orientation.w = 1.0
     reference_pose.pose.orientation.x = 0.0
     reference_pose.pose.orientation.y = 0.0
@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
     rospy.sleep(3.0)
     object_pose.header.frame_id = "odom"
-    object_pose.pose.position.x = 5
+    object_pose.pose.position.x = 0.23
     object_pose.pose.position.y = 0
-    object_pose.pose.position.z = 0.15
+    object_pose.pose.position.z = 0
     object_pose.pose.orientation.w = 1.0
     object_pose.pose.orientation.x = 0.0
     object_pose.pose.orientation.y = 0.0
@@ -64,12 +64,17 @@ if __name__ == "__main__":
     rospy.loginfo("Setting Object Target")
     object_reference_publisher.publish(object_pose)
     mode_publisher.publish(mode)
-    #cost_subscriber = rospy.Subscriber("/min_rollout_cost", Float64, cost_callback)
 
-    while not rospy.is_shutdown():
-        rospy.sleep(4.0)
-        mode.data = 2.0
-        mode_publisher.publish(mode)
-        rospy.sleep(2.0)
-        mode.data = 1.0
-        mode_publisher.publish(mode)
+    rospy.sleep(5.0)
+    reference_pose.header.frame_id = "odom"
+    reference_pose.pose.position.x = 0.0
+    reference_pose.pose.position.y = 0.0
+    reference_pose.pose.position.z = 1.0
+    reference_pose.pose.orientation.w = 1.0
+    reference_pose.pose.orientation.x = 0.0
+    reference_pose.pose.orientation.y = 0.0
+    reference_pose.pose.orientation.z = 0.0
+    mode.data = 0.0
+    rospy.loginfo("Setting reference as target")
+    reference_publisher.publish(reference_pose)
+    mode_publisher.publish(mode)

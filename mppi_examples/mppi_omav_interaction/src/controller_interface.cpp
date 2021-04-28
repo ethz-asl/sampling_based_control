@@ -110,15 +110,9 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](4) = x_goal_quaternion;
   ref_.rr[0](5) = y_goal_quaternion;
   ref_.rr[0](6) = z_goal_quaternion;
-  ref_.rr[0](7) = 4;
-  ref_.rr[0](8) = 0;
-  ref_.rr[0](9) = 0.15;
-  ref_.rr[0](10) = 1;
-  ref_.rr[0](11) = 0;
-  ref_.rr[0](12) = 0;
-  ref_.rr[0](13) = 0;
+  ref_.rr[0](7) = 2.5;
   // Initialize mode
-  ref_.rr[0](14) = 0;
+  ref_.rr[0](8) = 0;
   ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
@@ -151,9 +145,9 @@ void OMAVControllerInterface::mode_callback(
     ref_.rr[0](4) = 0.0;
     ref_.rr[0](5) = 0.0;
     ref_.rr[0](6) = 0.0;
-    ref_.rr[0](14) = 0.0;
+    ref_.rr[0](8) = 0.0;
   } else {
-    ref_.rr[0](14) = msg->data;
+    ref_.rr[0](8) = msg->data;
   }
   get_controller()->set_reference_trajectory(ref_);
   ROS_INFO_STREAM("Switching to mode:" << msg->data);
@@ -163,12 +157,6 @@ void OMAVControllerInterface::object_reference_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](7) = msg->pose.position.x;
-  ref_.rr[0](8) = msg->pose.position.y;
-  ref_.rr[0](9) = msg->pose.position.z;
-  ref_.rr[0](10) = msg->pose.orientation.w;
-  ref_.rr[0](11) = msg->pose.orientation.x;
-  ref_.rr[0](12) = msg->pose.orientation.y;
-  ref_.rr[0](13) = msg->pose.orientation.z;
   get_controller()->set_reference_trajectory(ref_);
 }
 

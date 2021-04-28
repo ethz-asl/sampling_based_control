@@ -31,7 +31,7 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
                                   const mppi::reference_t &ref,
                                   const double t) {
   double cost = 0.0;
-  mode = ref(14);
+  mode = ref(8);
 
   if (mode == 0) {
     // Leafing Field Cost
@@ -68,10 +68,10 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     cost += 0.0 * delta_pose.transpose() * param_.Q_pose * delta_pose;
 
     mppi_pinocchio::Pose object_pose, reference_pose_object;
-    object_pose.translation = x.segment<3>(13);
-    object_pose.rotation = {x(16), x(17), x(18), x(19)};
-    reference_pose_object.translation = ref.segment<3>(7);
-    reference_pose_object.rotation = {ref(10), ref(11), ref(12), ref(13)};
+    object_pose.translation = {x(13), 0, 1};
+    object_pose.rotation = {1, 0, 0, 0};
+    reference_pose_object.translation = {ref(7), 0, 1};
+    reference_pose_object.rotation = {1, 0, 0, 0};
     delta_pose_object =
         mppi_pinocchio::get_delta(object_pose, reference_pose_object);
     cost += delta_pose_object.transpose() * param_.Q_pose * delta_pose_object;
