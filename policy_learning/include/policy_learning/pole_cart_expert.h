@@ -24,12 +24,12 @@ class PoleCartExpert: public mppi::LearnedExpert{
   public:  
     PoleCartExpert(std::unique_ptr<Policy> policy, std::unique_ptr<Dataset> dataset);
 
-    input_t const get_action( observation_t const& x) override;
+    input_t const get_action(observation_t const& x) override;
     void save_state_action(observation_t const& x, input_t const& u) override;
     bool collect_data() override;
 
   private:
-    input_t const normalize_angle(input_t const& x);
+    observation_t const normalize_angle(observation_t const& x);
 
     std::unique_ptr<Dataset> dataset_ = nullptr;
     std::unique_ptr<Policy> policy_ = nullptr;
