@@ -6,7 +6,7 @@
 
 namespace mppi_pinocchio {
 
-void to_msg(const Pose& pose, geometry_msgs::Pose& pose_ros) {
+void to_msg(const Pose& pose, geometry_msgs::msg::Pose& pose_ros) {
   pose_ros.position.x = pose.translation.x();
   pose_ros.position.y = pose.translation.y();
   pose_ros.position.z = pose.translation.z();
