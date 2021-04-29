@@ -12,6 +12,9 @@
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
 
+    <arg name="learner_output_path" default=""/>
+    <arg name="torchscript_model_path" default=""/>
+
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
 
     <arg name="learner_output_path" default=""/>
@@ -32,9 +35,9 @@
           launch-prefix="$(arg launch_prefix)">
         <rosparam command="load" file="$(find mppi_panda)/config/params.yaml"/>
         <param name="config_file" value="$(find mppi_panda)/config/params.yaml"/>
-        <param name="learned_expert_output_path" value="$(arg learner_output_path)"
+        <param name="learned_expert_output_path" value="$(arg learner_output_path)" 
             unless="$(eval arg('learner_output_path') == '')" />
-        <param name="torchscript_model_path" value="$(arg torchscript_model_path)"
+        <param name="torchscript_model_path" value="$(arg torchscript_model_path)" 
             unless="$(eval arg('torchscript_model_path') == '')"/>
     </node>
 
