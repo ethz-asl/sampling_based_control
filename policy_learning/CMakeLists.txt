@@ -28,6 +28,7 @@ set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 add_library(${PROJECT_NAME}
+        src/panda_expert.cpp
         src/pole_cart_expert.cpp
         src/torch_script_policy.cpp
         src/hdf5_dataset.cpp)

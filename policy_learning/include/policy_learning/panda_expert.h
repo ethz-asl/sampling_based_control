@@ -25,6 +25,10 @@ class PandaExpert: public mppi::LearnedExpert{
   public:  
     PandaExpert(std::unique_ptr<Policy> policy, std::unique_ptr<Dataset> dataset, 
                 const std::string& robot_description);
+    ~PandaExpert();
+    PandaExpert(PandaExpert&&) = default;
+    PandaExpert& operator=(PandaExpert&&) = default;
+    PandaExpert& operator=(PandaExpert const& other);
 
     input_t const get_action(observation_t const& x) override;
     void save_state_action(observation_t const& x, input_t const& u) override;
@@ -34,11 +38,11 @@ class PandaExpert: public mppi::LearnedExpert{
     void const augment_observation(observation_t const& x, 
                                    augmented_observation_t& x_aug);
 
-    std::string tracked_frame_ = "panda_grasp";
-
-    std::unique_ptr<Dataset> dataset_ = nullptr;
-    std::unique_ptr<Policy> policy_ = nullptr;
-
+  private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
+
+    std::string tracked_frame_ = "panda_hand";
+    std::unique_ptr<Dataset> dataset_ = nullptr;
+    std::unique_ptr<Policy> policy_ = nullptr;
 };

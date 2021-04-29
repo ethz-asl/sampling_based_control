@@ -26,6 +26,13 @@ PandaExpert::PandaExpert(std::unique_ptr<Policy> policy,
   pImpl->robot_model_.init_from_xml(robot_description);
 }
 
+PandaExpert::~PandaExpert() = default;
+
+PandaExpert& PandaExpert::operator=(PandaExpert const& other){
+  *pImpl = *other.pImpl;
+  return *this;
+}
+
 PandaExpert::input_t const PandaExpert::get_action(const observation_t& x){
   augmented_observation_t x_aug;
   augment_observation(x, x_aug);
