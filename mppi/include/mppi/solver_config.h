@@ -31,7 +31,7 @@ struct SolverConfig {
   double step_size = 0.1;
   double horizon = 1.0;
   double caching_factor = 0.0;
-  double learning_factor = 0.0;
+  double learned_rollout_ratio = 0.0;
   size_t substeps = 1;
 
   double alpha = 1.0;

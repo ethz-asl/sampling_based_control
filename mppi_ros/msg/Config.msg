@@ -3,7 +3,7 @@ float64 lambda
 float64 h
 float64 step_size
 float64 caching_factor
-float64 learning_factor
+float64 learned_rollout_ratio
 float64 horizon
 float64 alpha
 float64 beta

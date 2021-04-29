@@ -45,16 +45,3 @@ Terminal #2
 __Royalpanda controller__
 
 The implementation of the _Royalpanda_ controller used for testing whole-body motion and manipulation control can be found [here](https://github.com/grizzi/mppi_royalpanda). A video of the real robot experiments can be watched [here](https://www.youtube.com/watch?v=4mTHYehNMCc&feature=youtu.be).
-
-### Policy Learning
-
-Install software needed for the PLR project *Learn How to Explore*
-
-Install libtorch with CXX11 ABI (this is not the default install that comes with pytorch). This is needed so that the packages using libtorch can be linked with ROS. The default pytorch installation uses the pre-CXX11 ABI.
-- download distribution from [here](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.8.1%2Bcpu.zip)
-- unzip to folder `<LIBTORCH_PATH>`, e.g. `/home/<USER>/libtorch/`
-- add the following line to your `~/.bashrc`: `export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:<LIBTORCH_PATH>`
-
-Currently, only `mppi_manipulation`, `mppi_pole_cart` and `mppi_panda` are supported. Launch it with desired paths:
-`roslaunch <PACKAGE> <CONTROL>.launch fixed_base:=false learner_output_path:=<PATH> torchscript_model_path:=<PATH>`
-Leaving out one of two paths will disable the repective function (either no output or no loaded model).

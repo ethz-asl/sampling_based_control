@@ -22,4 +22,4 @@ void LearnedExpert::save_rollout(const Rollout& rollout){
     }
 }
 
-}
+} // namespace mppi

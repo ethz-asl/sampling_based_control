@@ -14,8 +14,16 @@
 using namespace pole_cart;
 
 bool isTerminated(observation_t x) {
-  float epsilon = 0.01;
-  if (abs(x(1)) < (M_PI+epsilon) && (M_PI-epsilon) < abs(x(1))) {
+  float eps_angle = 0.01;
+  float eps_position = 0.05;
+  float eps_angle_vel = 0.1;
+  float eps_position_vel = 0.1;
+  if (abs(x(1)) < (M_PI+eps_angle) && (M_PI-eps_angle) < abs(x(1)) &&
+      // Position reference is not always reached, don't care for now...
+      // abs(x(0)) < eps_position &&
+      abs(x(2)) < eps_position_vel &&
+      abs(x(3)) < eps_angle_vel)
+  {
     return true;
   }
   else return false;
@@ -54,7 +62,7 @@ int main(int argc, char** argv) {
     mppi::DynamicsBase::input_t u;
     u = simulation.get_zero_input(x);
     std::cout << "First input: " << u.transpose() << std::endl;
-    
+
     ros::Publisher state_publisher =
         nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
     sensor_msgs::JointState joint_state;
@@ -70,6 +78,8 @@ int main(int argc, char** argv) {
 
     // helper variable to terminate episode
     bool terminate = false;
+    float termination_time = 0.0f;
+    const float time_after_termination = 2.0f;
 
     // init the controller
     bool ok = controller.init();
@@ -81,11 +91,24 @@ int main(int argc, char** argv) {
     controller.set_observation(x, sim_time);
 
     // sim loop
-    controller.start();
+      // start controller
+    bool sequential;
+    nh.param<bool>("sequential", sequential, false);
+    if (!sequential) controller.start();
     while (ros::ok()) {
       auto start = std::chrono::steady_clock::now();
-      controller.set_observation(x, sim_time);
-      controller.get_input(x, u, sim_time);
+      if (sequential) {
+        controller.update_reference();
+        controller.set_observation(x, sim_time);
+        controller.update_policy();
+        controller.get_input(x, u, sim_time);
+        controller.publish_ros_default();
+        controller.publish_ros();
+      } else {
+        controller.set_observation(x, sim_time);
+        controller.get_input(x, u, sim_time);
+      }
+
       if (!static_optimization) {
         x = simulation.step(u, sim_dt);
         sim_time += sim_dt;
@@ -98,12 +121,19 @@ int main(int argc, char** argv) {
       auto end = std::chrono::steady_clock::now();
       double elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-              .count() *
-          1000;
+              .count() / 1000;
       if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 
-      terminate = isTerminated(x);
-      if (terminate) ros::shutdown();
+      if (isTerminated(x) && !terminate) {
+        terminate = true;
+        termination_time = sim_time;
+        std::cout << "waiting for shutdown for " << time_after_termination
+          << " seconds." << std::endl;
+      }
+      if (terminate &&(sim_time - termination_time > time_after_termination)){
+            ros::shutdown();
+      }
+
 
       ros::spinOnce();
     }

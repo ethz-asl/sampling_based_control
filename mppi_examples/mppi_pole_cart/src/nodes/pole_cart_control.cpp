@@ -62,11 +62,24 @@ int main(int argc, char** argv) {
   controller.set_observation(x, sim_time);
 
   // sim loop
-  controller.start();
+    // start controller
+  bool sequential;
+  nh.param<bool>("sequential", sequential, false);
+  if (!sequential) controller.start();
   while (ros::ok()) {
     auto start = std::chrono::steady_clock::now();
-    controller.set_observation(x, sim_time);
-    controller.get_input(x, u, sim_time);
+    if (sequential) {
+      controller.update_reference();
+      controller.set_observation(x, sim_time);
+      controller.update_policy();
+      controller.get_input(x, u, sim_time);
+      controller.publish_ros_default();
+      controller.publish_ros();
+    } else {
+      controller.set_observation(x, sim_time);
+      controller.get_input(x, u, sim_time);
+    }
+
     if (!static_optimization) {
       x = simulation.step(u, sim_dt);
       sim_time += sim_dt;
@@ -79,7 +92,7 @@ int main(int argc, char** argv) {
     auto end = std::chrono::steady_clock::now();
     double elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-            .count() *
+            .count() /
         1000;
     if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 

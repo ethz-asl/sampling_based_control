@@ -126,3 +126,7 @@ void OfflinePytorchExpert::save_state_action(
     pImpl->stored_actions_.push_back(u_f);
   }
 }
+
+bool OfflinePytorchExpert::collect_data(){
+  return pImpl->log_data_;
+}
