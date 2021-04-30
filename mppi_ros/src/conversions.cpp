@@ -6,7 +6,7 @@
 
 namespace mppi_ros {
 
-void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
+void to_msg(const mppi::config_t& config, Config& config_ros) {
   config_ros.nr_rollouts = config.rollouts;
   config_ros.lambda = config.lambda;
   config_ros.h = config.h;
@@ -76,10 +76,10 @@ void to_msg(const mppi::data_t& data, Data& data_ros) {
   data_ros.reset_time = data.reset_time;
   data_ros.optimization_time = data.optimization_time;
   data_ros.rollouts_cost.array.assign(
-      data.rollouts_cost.data(),
-      data.rollouts_cost.data() + data.rollouts_cost.size());
-  data_ros.weights.array.assign(data.weights.data(),
-                                data.weights.data() + data.weights.size());
+      data.rollouts_cost.begin(),
+      data.rollouts_cost.end());
+  data_ros.weights.array.assign(data.weights.begin(),
+                                data.weights.end());
 }
 
 }  // namespace mppi_ros

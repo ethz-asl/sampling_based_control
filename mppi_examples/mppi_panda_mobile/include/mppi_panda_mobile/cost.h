@@ -9,17 +9,15 @@
 #pragma once
 #include <mppi_pinocchio/model.h>
 
-#include <mppi/cost/cost_base.h>
+#include <mppi/core/cost.h>
 #include <ros/ros.h>
 
 #include <ros/package.h>
 
 namespace panda_mobile {
 
-class PandaMobileCost : public mppi::CostBase {
+class PandaMobileCost : public mppi::Cost {
  public:
-  using cost_ptr = mppi::CostBase::cost_ptr;
-
   PandaMobileCost(const std::string& robot_description,
                   const double linear_weight, const double angular_weight,
                   const double obstacle_radius, bool joint_limits = false);
@@ -46,14 +44,15 @@ class PandaMobileCost : public mppi::CostBase {
   Eigen::Matrix<double, 7, 1> joint_limits_upper_;
 
  public:
-  cost_ptr create() override;
-  cost_ptr clone() const override;
+  mppi::cost_ptr create() override;
+  mppi::cost_ptr clone() const override;
 
   void set_linear_weight(const double k);
   void set_angular_weight(const double k);
   void set_obstacle_radius(const double r);
   mppi_pinocchio::Pose get_current_pose(const Eigen::VectorXd& x);
-  cost_t compute_cost(const mppi::observation_t& x,
-                      const mppi::reference_t& ref, const double t) override;
+  mppi::cost_t compute_cost(const mppi::observation_t& x,
+                            const mppi::reference_t& ref,
+                            const double t) override;
 };
 }  // namespace panda_mobile

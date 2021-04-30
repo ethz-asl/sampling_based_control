@@ -18,8 +18,8 @@ PandaMobileDynamics::PandaMobileDynamics(const std::string& robot_description,
   x_ = observation_t::Zero(PandaMobileDim::STATE_DIMENSION);
 }
 
-DynamicsBase::observation_t PandaMobileDynamics::step(
-    const DynamicsBase::input_t& u, const double dt) {
+mppi::observation_t PandaMobileDynamics::step(const mppi::input_t& u,
+                                              const double dt) {
   // integrate joint velocities
   x_.head<7>() += u.head<7>() * dt;
 
@@ -40,17 +40,12 @@ DynamicsBase::observation_t PandaMobileDynamics::step(
   return x_;
 }
 
-const DynamicsBase::observation_t PandaMobileDynamics::get_state() const {
-  return x_;
-}
+const mppi::observation_t PandaMobileDynamics::get_state() const { return x_; }
 
-void PandaMobileDynamics::reset(const DynamicsBase::observation_t& x) {
-  x_ = x;
-}
+void PandaMobileDynamics::reset(const mppi::observation_t& x) { x_ = x; }
 
-DynamicsBase::input_t PandaMobileDynamics::get_zero_input(
-    const observation_t& x) {
-  return DynamicsBase::input_t::Zero(get_input_dimension());
+mppi::input_t PandaMobileDynamics::get_zero_input(const observation_t& x) {
+  return mppi::input_t::Zero(get_input_dimension());
 }
 
 }  // namespace panda_mobile

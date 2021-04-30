@@ -11,20 +11,18 @@
 using namespace mppi;
 namespace panda {
 
-DynamicsBase::observation_t PandaDynamics::step(const DynamicsBase::input_t &u,
-                                                const double dt) {
+mppi::observation_t PandaDynamics::step(const mppi::input_t &u,
+                                        const double dt) {
   x_.head<7>() += u * dt;
   return x_;
 }
 
-const DynamicsBase::observation_t PandaDynamics::get_state() const {
-  return x_;
-}
+const mppi::observation_t PandaDynamics::get_state() const { return x_; }
 
-void PandaDynamics::reset(const DynamicsBase::observation_t &x) { x_ = x; }
+void PandaDynamics::reset(const mppi::observation_t &x) { x_ = x; }
 
-DynamicsBase::input_t PandaDynamics::get_zero_input(const observation_t &x) {
-  return DynamicsBase::input_t::Zero(get_input_dimension());
+mppi::input_t PandaDynamics::get_zero_input(const observation_t &x) {
+  return mppi::input_t::Zero(get_input_dimension());
 }
 
 }  // namespace panda

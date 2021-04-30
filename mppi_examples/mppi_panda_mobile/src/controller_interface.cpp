@@ -62,7 +62,7 @@ void PandaMobileControllerInterface::init_model(
 }
 
 bool PandaMobileControllerInterface::set_controller(
-    std::shared_ptr<mppi::PathIntegral>& controller) {
+    mppi::solver_ptr& controller) {
   // Params
   std::string robot_description;
   double linear_weight;
@@ -113,7 +113,7 @@ bool PandaMobileControllerInterface::set_controller(
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
 
   // -------------------------------
   // initialize reference

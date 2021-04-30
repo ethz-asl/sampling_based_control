@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mppi_tools</name>
+  <version>0.0.0</version>
+  <description>The mppi_tools package</description>
+
+  <maintainer email="grizzi@ethz.ch">Giuseppe Rizzi</maintainer>
+  <license>TODO</license>
+  <author >Giuseppe Rizzi</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>mppi</depend>
+</package>

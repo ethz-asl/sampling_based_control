@@ -62,8 +62,7 @@ void PandaControllerInterface::init_model(
   robot_model_.init_from_xml(robot_description);
 }
 
-bool PandaControllerInterface::set_controller(
-    std::shared_ptr<mppi::PathIntegral>& controller) {
+bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   std::string robot_description;
   double linear_weight;
   double angular_weight;
@@ -114,8 +113,8 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_,
-                                                    nullptr, renderer);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_, nullptr,
+                                              renderer);
 
   // -------------------------------
   // initialize reference

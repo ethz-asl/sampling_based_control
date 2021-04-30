@@ -7,12 +7,12 @@
  */
 
 #pragma once
-#include <math.h>
-#include <mppi/cost/cost_base.h>
+#include <mppi/core/cost.h>
+#include <cmath>
 
 namespace pole_cart {
 
-class PoleCartCost : public mppi::CostBase {
+class PoleCartCost : public mppi::Cost {
  public:
   PoleCartCost() = default;
   ~PoleCartCost() = default;
@@ -24,17 +24,18 @@ class PoleCartCost : public mppi::CostBase {
   double x_limit = 3.0;
 
  public:
-  cost_ptr create() override { return std::make_shared<PoleCartCost>(); }
+  mppi::cost_ptr create() override { return std::make_shared<PoleCartCost>(); }
 
-  cost_ptr clone() const override {
+  mppi::cost_ptr clone() const override {
     return std::make_shared<PoleCartCost>(*this);
   }
 
   // When the limit is violeted than the cost is only almost the max cost.
   // adding an increasing cost can push the agent to enter the violated limits
   // again
-  cost_t compute_cost(const mppi::observation_t& x,
-                      const mppi::reference_t& ref, const double t) override {
+  mppi::cost_t compute_cost(const mppi::observation_t& x,
+                            const mppi::reference_t& ref,
+                            const double t) override {
     double cost = 0.0;
     if (x(0) > x_limit || x(0) < -x_limit)
       cost += c_x_limit * (1 + w_origin * ((std::abs(x(0)) - x_limit) *

@@ -31,13 +31,13 @@ class PandaMobileControllerInterface : public mppi_ros::ControllerRos {
 
  private:
   void init_model(const std::string& robot_description);
-  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
+  bool set_controller(mppi::solver_ptr& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void obstacle_callback(const geometry_msgs::PoseStampedConstPtr& msg);
 
  public:
-  mppi::SolverConfig config_;
+  mppi::Config config_;
 
  private:
   mppi::input_array_t u_opt_;

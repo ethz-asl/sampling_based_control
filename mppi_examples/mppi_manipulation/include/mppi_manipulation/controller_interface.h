@@ -36,14 +36,14 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
  private:
   void init_model(const std::string& robot_description,
                   const std::string& object_description);
-  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
+  bool set_controller(mppi::solver_ptr& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
 
  public:
   bool fixed_base_;
-  mppi::SolverConfig config_;
+  mppi::config_t config_;
 
  private:
   mppi::input_array_t u_opt_;

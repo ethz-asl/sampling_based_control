@@ -11,7 +11,6 @@
 
 #include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
-#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <chrono>
 
@@ -38,7 +37,7 @@ int main(int argc, char** argv) {
     x(i) = initial_configuration[i];
   simulation.reset(x);
 
-  mppi::DynamicsBase::input_t u;
+  mppi::input_t u;
   u = simulation.get_zero_input(x);
 
   // joint state publisher
@@ -56,6 +55,10 @@ int main(int argc, char** argv) {
   geometry_msgs::TransformStamped world_base_tf;
   world_base_tf.header.frame_id = "world";
   world_base_tf.child_frame_id = "base";
+  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
+                      "panda_joint4", "panda_joint5", "panda_joint6",
+                      "panda_joint7"};
+  joint_state.position.resize(7);
 
   ros::Publisher ee_publisher =
       nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);

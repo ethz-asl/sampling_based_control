@@ -34,16 +34,13 @@ include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 add_library(mppi_threading src/threading/Rate.cpp src/threading/Worker.cpp src/threading/WorkerManager.cpp)
 
 
-add_library(${PROJECT_NAME} src/controller_interface.cpp src/conversions.cpp)
+add_library(${PROJECT_NAME}
+        src/controller_interface.cpp
+        src/conversions.cpp
+        src/ros_params.cpp )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} mppi_threading)
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} mppi_threading)
 
 catkin_install_python(PROGRAMS scripts/plot_experiment.py scripts/record_data.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
-## Testing
-if (CATKIN_ENABLE_TESTING)
-    #    catkin_add_gtest()
-    #    target_link_libraries()
-
-endif ()

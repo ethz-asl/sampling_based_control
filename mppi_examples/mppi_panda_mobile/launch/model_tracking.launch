@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="plot_cost" default="false"/>
+    <arg name="plot_input" default="false"/>
+    <arg name="enable_obstacle" default="true"/>
+    <arg name="debug" default="false"/>
+
+    <arg name="experiment" default="false"/>
+    <arg name="experiment_id" default="manipulation_target_reaching"/>
+
+    <arg name="description_file" default="$(find mppi_panda_mobile)/resources/panda/panda_mobile.urdf.xacro"/>
+    <!-- TF prefix -->
+    <arg name="tf_prefix" default=""/>
+    <!-- Load robot description -->
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
+
+    <!--  Run the test node-->
+    <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
+    <arg name="launch_prefix" value="" unless="$(arg debug)"/>
+
+    <node name="panda_mobile_model_tracking" type="panda_mobile_model_tracking" pkg="mppi_panda_mobile" output="screen"
+          launch-prefix="$(arg launch_prefix)">
+        <rosparam command="load" file="$(find mppi_panda_mobile)/config/params.yaml"/>
+        <param name="config_file" value="$(find mppi_panda_mobile)/config/params.yaml"/>
+    </node>
+
+    <!-- Publish robot state (joints) as TF -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value="$(arg tf_prefix)"/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/joint_states"/>
+    </node>
+
+    <!-- Open Rviz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_mobile)/config/config.rviz" output="screen"/>
+
+    <!--    Plot cost and other info-->
+    <group if="$(arg plot_cost)">
+        <arg name="mp_config" default="$(find mppi_panda_mobile)/resources/rqt_multiplot.xml"/>
+        <node name="rqt_multiplot_cost" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config)"
+              output="screen"/>
+    </group>
+
+    <!--    Plot input-->
+    <group if="$(arg plot_input)">
+        <arg name="mp_config_input" default="$(find mppi_panda_mobile)/resources/rqt_multiplot_input.xml"/>
+        <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config_input)"
+              output="screen"/>
+    </group>
+
+    <!--    Interactive marker to command the end effector-->
+    <node name="interactive_reference" pkg="mppi_panda" type="interactive_marker.py" output="screen">
+        <param name="marker_server_name" value="reference_marker_server"/>
+        <param name="subscribe_initial_pose" value="true"/>
+        <param name="initial_pose_topic" value="/end_effector"/>
+        <param name="frame_id" value="world"/>
+        <param name="target_pose_topic" value="/end_effector_pose_desired"/>
+    </node>
+
+    <!--    Interactive marker for the end effector obstacle -->
+    <group if="$(arg enable_obstacle)">
+        <node name="interactive_obstacle" pkg="mppi_panda" type="interactive_marker.py" output="screen">
+            <param name="marker_server_name" value="obstacle_marker_server"/>
+            <param name="subscribe_initial_pose" value="false"/>
+            <param name="frame_id" value="world"/>
+            <param name="target_pose_topic" value="/obstacle"/>
+        </node>
+    </group>
+
+    <group if="$(arg experiment)">
+        <node pkg="mppi_ros" type="record_data.py" name="record_data">
+            <param name="experiment_id" value="$(arg experiment_id)"/>
+        </node>
+        <node pkg="mppi_panda_mobile" type="target_generator.py" name="target_generator" output="screen">
+            <param name="experiment_id" value="panda_mobile_kin_multi_target"/>
+        </node>
+    </group>
+</launch>
