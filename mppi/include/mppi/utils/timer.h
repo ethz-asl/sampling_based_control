@@ -9,6 +9,10 @@
 #include <iostream>
 #include <map>
 
+// TODO(giuseppe) proper timer class implementation
+
+namespace mppi {
+
 class Timer {
  public:
   using time_t = std::chrono::time_point<std::chrono::steady_clock>;
@@ -50,6 +54,8 @@ class Timer {
     }
   }
 
+  double get_interval(const std::string& name){ return intervals_[name]/1e3; }
+
  private:
   time_t current_;
   time_t since_last_interval_;
@@ -57,3 +63,4 @@ class Timer {
   std::map<std::string, double> intervals_;
   std::map<std::string, double> intervals_cumulated_;
 };
+}  // namespace mppi

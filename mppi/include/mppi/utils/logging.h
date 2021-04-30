@@ -13,10 +13,10 @@ using namespace std::chrono;
 
 namespace mppi {
 
-// TODO how can I define macros for print?
+// TODO how can I define macros for print? This implementation is erratic
 
-struct Timer {
-  Timer() { reset(); }
+struct TimerLog {
+  TimerLog() { reset(); }
   time_point<steady_clock> t;
   void reset() noexcept { t = steady_clock::now(); }
   inline double elapsed() {
@@ -38,7 +38,7 @@ void log_error(const std::string& msg) {
 }
 
 void log_warning_throttle(const double dt, const std::string& msg) {
-  static Timer timer;
+  static TimerLog timer;
   static bool first_run = true;
   if (timer.elapsed() > dt || first_run) {
     log_warning(msg);

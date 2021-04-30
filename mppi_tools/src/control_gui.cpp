@@ -1,5 +1,7 @@
-#include "mppi_tools/control_gui.hpp"
 #include <iostream>
+#include <boost/circular_buffer.hpp>
+
+#include "mppi_tools/control_gui.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
@@ -25,6 +27,56 @@ static void HelpMarker(const char* desc) {
     ImGui::EndTooltip();
   }
 }
+
+ScrollingBuffer::ScrollingBuffer(int max_size) {
+  MaxSize = max_size;
+  Offset = 0;
+  x.reserve(MaxSize);
+  y.reserve(MaxSize);
+}
+void ScrollingBuffer::AddPoint(double px, double py) {
+  if (x.size() < MaxSize){
+    x.push_back(px);
+    y.push_back(py);
+  }
+  else {
+    x[Offset] = px;
+    y[Offset] = py;
+    Offset = (Offset + 1) % MaxSize;
+  }
+}
+void ScrollingBuffer::Erase() {
+  if (!x.empty()) {
+    x.resize(0);
+    y.resize(0);
+    Offset = 0;
+  }
+}
+
+bool ScrollingBuffer::empty(){ return x.empty();}
+int ScrollingBuffer::size(){ return x.size(); }
+double ScrollingBuffer::back_x() { return size() < MaxSize ? x.back() : x[Offset-1]; }
+double ScrollingBuffer::back_y() { return size() < MaxSize ? y.back() : y[Offset-1]; }
+
+
+template<typename T>
+struct CircularBuffer{
+  CircularBuffer(int size=1000): max_size_(size), size_(0){
+    x = boost::circular_buffer<T>(max_size_);
+    y = boost::circular_buffer<T>(max_size_);
+  }
+
+  inline int size(){ return size_; }
+  void add_point(const T& xp, const T& yp){
+    x.push_back(xp);
+    y.push_back(yp);
+    size_ = size_ >= max_size_ ? max_size_ : size_ + 1;
+  }
+  int size_;
+  int max_size_;
+  boost::circular_buffer<T> x;
+  boost::circular_buffer<T> y;
+};
 
 struct RolloutData {
   const mppi::Rollout* rollout;
@@ -124,7 +176,7 @@ void ControlGui::draw() {
 
   bool show_demo_window = true;
   ImGui::ShowDemoWindow(&show_demo_window);
-  // ImPlot::ShowDemoWindow(&show_demo_window);
+  ImPlot::ShowDemoWindow(&show_demo_window);
 
   // This is for resize to cover the full window
   static bool use_work_area = true;
@@ -327,6 +379,25 @@ void ControlGui::draw() {
         }
       }
 
+      if (ImGui::CollapsingHeader("Rate")) {
+        if (frequency_data.empty()){
+          ImGui::Text("No rate data yet.");
+        }
+        else{
+          static int history = 10.0f;
+          ImGui::SliderInt("History",&history,10,300,"%d steps");
+
+          ImPlot::SetNextPlotLimitsY(-0.01, 200, ImGuiCond_Once);
+          ImPlot::SetNextPlotLimitsX(frequency_data.back_x() - history, frequency_data.back_x(), ImGuiCond_Always);
+          if (ImPlot::BeginPlot("##Frequency")) {
+            ImPlot::PlotLine("##frequency", &frequency_data.x[0],
+                             &frequency_data.y[0],
+                             frequency_data.size(), frequency_data.Offset, sizeof(double));
+            ImPlot::EndPlot();
+          }
+        }
+      }
+
       ImGui::EndTabItem();
     }
     ImGui::EndTabBar();
@@ -369,6 +440,12 @@ void ControlGui::reset_rollouts(const std::vector<Rollout>& rollouts) {
 
 void ControlGui::reset_weights(const std::vector<double>& weights) {
   weights_ = weights;
+}
+
+void ControlGui::reset_optimization_time(const double& dt) {
+  static double step_counter = 0;
+  frequency_data.AddPoint(step_counter, 1.0/dt);
+  step_counter++;
 }
 
 }  // namespace mppi_tools

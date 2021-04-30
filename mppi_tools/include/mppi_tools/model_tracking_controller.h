@@ -4,6 +4,8 @@
 
 #pragma once
 #include <mppi/core/solver.h>
+#include <mppi/utils/timer.h>
+
 #include "mppi_tools/control_gui.hpp"
 
 //  This class implements a model tracking controller.
@@ -33,6 +35,7 @@ class ModelTrackingController {
 
   mppi::dynamics_ptr model_;
   mppi::solver_ptr solver_;
+  mppi::Timer timer_;
 
   mppi_tools::ControlGui gui_;
 };

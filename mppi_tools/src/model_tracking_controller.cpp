@@ -42,7 +42,12 @@ void ModelTrackingController::step() {
   // sim + control
   if (!gui_.should_pause()) {
     solver_->set_observation(x_, t_);
+
+    timer_.reset();
     solver_->update_policy();
+    timer_.add_interval("update_policy");
+    gui_.reset_optimization_time(timer_.get_interval("update_policy"));
+
     solver_->get_input(x_, u_, t_);
     x_ = model_->step(u_, solver_->config_.step_size);
     t_ += solver_->config_.step_size;

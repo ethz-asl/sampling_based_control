@@ -2,8 +2,23 @@
 #include <mppi/core/config.h>
 #include <mppi/core/rollout.h>
 #include <mppi/core/typedefs.h>
+#include <mppi/utils/timer.h>
 
 #include <GLFW/glfw3.h>
+
+struct ScrollingBuffer {
+  int MaxSize;
+  int Offset;
+  std::vector<double> x;
+  std::vector<double> y;
+  ScrollingBuffer(int max_size = 1000);
+  void AddPoint(double x, double y);
+  void Erase();
+  int size();
+  bool empty();
+  double back_x();
+  double back_y();
+};
 
 namespace mppi_tools {
 
@@ -25,6 +40,7 @@ class ControlGui {
   void reset_policy(const mppi::input_array_t& u);
   void reset_rollouts(const std::vector<mppi::Rollout>& rollouts);
   void reset_weights(const std::vector<double>& weights);
+  void reset_optimization_time(const double& dt);
 
   bool should_pause() const { return pause; }
 
@@ -43,5 +59,9 @@ class ControlGui {
   mppi::input_array_t u_;
   mppi::input_array_t u_avg_;
   std::vector<double> weights_;
+
+  // visualization data
+  ScrollingBuffer frequency_data;
+
 };
 }  // namespace mppi_tools

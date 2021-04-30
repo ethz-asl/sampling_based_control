@@ -12,12 +12,14 @@ int main(int argc, char** argv) {
   // ros interface
   ros::init(argc, argv, "panda_mobile_model_tracking_node");
   ros::NodeHandle nh("~");
+  ros::Rate rate(100);
 
   PandaMobileModelTracking mt(nh);
   while (ros::ok()) {
     mt.step();
     mt.publish_ros();
     ros::spinOnce();
+    rate.sleep();
   }
 
   return 0;

@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   while (true) {
     std::vector<double> weights(n, 0.0);
     for (int i = 0; i < n; i++) {
-      weights[i] = counter + i;
+      weights[i] = counter + i*0.001;
     }
 
     // Sample rollouts
