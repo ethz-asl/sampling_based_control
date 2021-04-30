@@ -10,15 +10,28 @@
 
     <arg name="learner_output_path" default=""/>
     <arg name="torchscript_model_path" default=""/>
+    <arg name="x" default=""/>
+    <arg name="x_d" default=""/>
+    <arg name="theta" default=""/>
+    <arg name="theta_d" default=""/>
 
     <!--  Run the test node-->
-    <node name="pole_cart_control" type="pole_cart_control" pkg="mppi_pole_cart" output="screen">
+    <node name="pole_cart_data_collection" type="pole_cart_data_collection"
+          pkg="mppi_pole_cart" output="screen" required="true">
         <rosparam command="load" file="$(find mppi_pole_cart)/config/params.yaml"/>
         <param name="config_file" value="$(find mppi_pole_cart)/config/params.yaml"/>
-        <param name="learned_expert_output_path" value="$(arg learner_output_path)" 
+        <param name="learned_expert_output_path" value="$(arg learner_output_path)"
             unless="$(eval arg('learner_output_path') == '')" />
-        <param name="torchscript_model_path" value="$(arg torchscript_model_path)" 
+        <param name="torchscript_model_path" value="$(arg torchscript_model_path)"
             unless="$(eval arg('torchscript_model_path') == '')"/>
+        <param name="initial_position/x" value="$(arg x)"
+            unless="$(eval arg('x') == '')"/>
+        <param name="initial_position/x_dot" value="$(arg x_d)"
+            unless="$(eval arg('x_d') == '')"/>
+        <param name="initial_position/theta" value="$(arg theta)"
+            unless="$(eval arg('theta') == '')"/>
+        <param name="initial_position/theta_dot" value="$(arg theta_d)"
+            unless="$(eval arg('theta_d') == '')"/>
     </node>
 
     <!-- Publish robot state (joints) as TF -->

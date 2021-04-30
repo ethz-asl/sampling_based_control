@@ -9,6 +9,7 @@
 #include "mppi_manipulation/controller_interface.h"
 #include "mppi_manipulation/cost.h"
 #include "mppi_manipulation/dynamics.h"
+#include "policy_learning/offline_pytorch_expert.h"
 
 #include <mppi_pinocchio/ros_conversions.h>
 
@@ -157,11 +158,30 @@ bool PandaControllerInterface::set_controller(
   ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
   auto cost = std::make_shared<PandaCost>(robot_description, object_description,
                                           cost_param, fixed_base_);
+  
+  // -------------------------------
+  // learner
+  // -------------------------------
+  auto learner = std::make_shared<OfflinePytorchExpert>(
+    dynamics->get_state_dimension(), 
+    dynamics->get_input_dimension());
+  std::string torchscript_model_path;
+  if (nh_.param<std::string>("torchscript_model_path", 
+      torchscript_model_path, "")) {
+    learner->load_torch_module(torchscript_model_path);
+  }
+  std::string learned_expert_output_path;
+  if (nh_.param<std::string>("learned_expert_output_path", 
+      learned_expert_output_path, "")) {
+    learner->set_output_path(learned_expert_output_path);
+  }
+  ROS_INFO_STREAM("Loaded learned expert");
 
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::PathIntegral>(
+    dynamics, cost, config_, nullptr, nullptr, learner);
 
   // -------------------------------
   // initialize reference

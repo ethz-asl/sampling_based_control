@@ -9,7 +9,8 @@ set(PACKAGE_DEPENDENCIES
         std_msgs
         roscpp
         mppi
-        mppi_ros)
+        mppi_ros
+        policy_learning)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
@@ -28,6 +29,10 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRAIRES})
 add_executable(pole_cart_control src/nodes/pole_cart_control.cpp)
 target_link_libraries(pole_cart_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(pole_cart_control ${PROJECT_NAME})
+
+add_executable(pole_cart_data_collection src/nodes/pole_cart_data_collection.cpp)
+target_link_libraries(pole_cart_data_collection ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(pole_cart_data_collection ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

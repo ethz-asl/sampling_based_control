@@ -31,14 +31,16 @@ namespace mppi {
 
 PathIntegral::PathIntegral(dynamics_ptr dynamics, cost_ptr cost,
                            const SolverConfig& config, sampler_ptr sampler,
-                           renderer_ptr renderer)
+                           renderer_ptr renderer,
+                           learned_expert_ptr learned_expert)
     : cost_(std::move(cost)),
       dynamics_(std::move(dynamics)),
       config_(config),
       sampler_(std::move(sampler)),
       renderer_(std::move(renderer)),
       expert_(config_, dynamics_),
-      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_) {
+      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_),
+      learned_expert_(learned_expert) {
   init_data();
   init_filter();
   if (!config_.use_tree_search) {
@@ -67,6 +69,12 @@ void PathIntegral::init_data() {
 
   omega = Eigen::ArrayXd::Zero(config_.rollouts);
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
+  learned_rollouts_ = std::ceil(config_.learned_rollout_ratio * config_.rollouts);
+  if(cached_rollouts_ + learned_rollouts_ > config_.rollouts){
+    learned_rollouts_ = config_.rollouts - cached_rollouts_;
+    log_warning("Clipping number of learned rollouts. "
+        "Make sure that caching- and learning-factor sum to < 1.");
+  }
 
   momentum_.resize(steps_, input_t::Zero(nu_));
 
@@ -312,6 +320,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     x = x0_internal_;
+
     for (size_t t = 0; t < steps_; t++) {
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
@@ -321,6 +330,16 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       else if (k == cached_rollouts_) {
         rollouts_[k].nn[t].setZero();
         rollouts_[k].uu[t] = opt_roll_.uu[t];
+      }
+      // sample around learned action 
+      else if (learned_expert_ && k < cached_rollouts_ + learned_rollouts_){
+        sample_noise(rollouts_[k].nn[t]);
+        rollouts_[k].uu[t] = learned_expert_->get_action(x) + rollouts_[k].nn[t];
+      }
+      // noise free learned action
+      else if (learned_expert_ && k == cached_rollouts_ + learned_rollouts_){
+        rollouts_[k].nn[t].setZero();
+        rollouts_[k].uu[t] = learned_expert_->get_action(x);
       }
       // perturbed trajectory
       else {
@@ -489,6 +508,9 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
       coeff = (t - *(lower - 1)) / (*lower - *(lower - 1));
       u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
           coeff * opt_roll_cache_.uu[idx];
+    }
+    if(learned_expert_ && learned_expert_->collect_data()) {
+      learned_expert_->save_state_action(x, u);
     }
   }
 }

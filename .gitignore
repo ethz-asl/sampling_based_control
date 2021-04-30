@@ -1,5 +1,7 @@
 *.csv
 *.bag
+*.hdf5
+*.pyc
 .idea/
 cmake-build-release/
 cmake-build-debug/

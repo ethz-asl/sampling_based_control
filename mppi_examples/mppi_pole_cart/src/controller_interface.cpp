@@ -7,6 +7,8 @@
  */
 
 #include "mppi_pole_cart/controller_interface.h"
+#include "policy_learning/offline_pytorch_expert.h"
+
 #include <ros/package.h>
 
 using namespace pole_cart;
@@ -43,9 +45,30 @@ bool PoleCartControllerInterface::set_controller(
   }
 
   // -------------------------------
+  // learner
+  // -------------------------------
+  auto learner = std::make_shared<OfflinePytorchExpert>(
+    dynamics->get_state_dimension(), 
+    dynamics->get_input_dimension());
+  std::string torchscript_model_path;
+  if (nh_.param<std::string>("torchscript_model_path", 
+      torchscript_model_path, "")) {
+    learner->load_torch_module(torchscript_model_path);
+    ROS_INFO_STREAM("Loaded learned expert");
+  }
+  std::string learned_expert_output_path;
+  if (nh_.param<std::string>("learned_expert_output_path", 
+      learned_expert_output_path, "")) {
+    learner->set_output_path(learned_expert_output_path);
+    ROS_INFO_STREAM("Set learning output path");
+  }
+  
+
+  // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::PathIntegral>(
+    dynamics, cost, config_, nullptr, nullptr, learner);
 
   // -------------------------------
   // initialize reference
