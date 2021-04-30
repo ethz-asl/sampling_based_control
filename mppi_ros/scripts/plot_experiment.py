@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 import os
 import numpy as np
 import pandas as pd
@@ -370,7 +370,7 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
     plotter.plot_rollout_costs()
     plotter.plot_rollout_weights()
-    # plotter.plot_cost('learning_factor')
-    # plotter.plot_effective_samples('learning_factor', col='experiment')
+    # plotter.plot_cost('learned_rollout_ratio')
+    # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
 
     plt.show()
