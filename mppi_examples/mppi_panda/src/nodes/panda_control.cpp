@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   auto sequential = nh.param<bool>("sequential", false);
   auto controller = PandaControllerInterface(nh);
 
-  mppi::DynamicsBase::dynamics_ptr simulation;
+  mppi::dynamics_ptr simulation;
   std::string robot_description =
       nh.param<std::string>("/robot_description", "");
   simulation = std::make_shared<PandaDynamics>(robot_description);
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   simulation->reset(x);
 
   // init control input
-  mppi::DynamicsBase::input_t u;
+  mppi::input_t u;
   u = simulation->get_zero_input(x);
 
   ros::Publisher state_publisher =

@@ -300,9 +300,10 @@ void ControlGui::draw() {
           for (int i = 0; i < (int)weights_.size(); i++) ridx.push_back(i);
 
           // dynamic y range
+          double wmax = *std::max_element(weights_.begin(), weights_.end());
           double ymax =
               *std::lower_bound(weights_ranges.begin(), weights_ranges.end(),
-                                weights_.maxCoeff());
+                                wmax);
           // a lower value must stay long to push down a higher threshold
           if (ymax > ymax_prev) {
             ImPlot::SetNextPlotLimitsY(-0.01, ymax, ImGuiCond_Always);
@@ -355,7 +356,7 @@ void ControlGui::window_resize(int width, int height) {
 
 bool ControlGui::close() { return true; }
 
-void ControlGui::reset_config(const SolverConfig& config) { config_ = config; }
+void ControlGui::reset_config(const mppi::config_t& config) { config_ = config; }
 
 void ControlGui::reset_averaged_policy(const input_array_t& u) { u_avg_ = u; }
 
@@ -365,7 +366,7 @@ void ControlGui::reset_rollouts(const std::vector<Rollout>& rollouts) {
   rollouts_ = rollouts;
 }
 
-void ControlGui::reset_weights(const Eigen::ArrayXd& weights) {
+void ControlGui::reset_weights(const std::vector<double>& weights) {
   weights_ = weights;
 }
 

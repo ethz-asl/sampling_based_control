@@ -48,7 +48,7 @@ void PandaRaisimDynamics::initialize_world(
         2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
     input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   }
-  x_ = observation_t::Zero(state_dimension_);
+  x_ = mppi::observation_t::Zero(state_dimension_);
 }
 
 void PandaRaisimDynamics::initialize_pd() {
@@ -95,8 +95,8 @@ void PandaRaisimDynamics::set_collision() {
       panda->ignoreCollisionBetween(body_idx1, body_idx2);
 }
 
-mppi::DynamicsBase::observation_t PandaRaisimDynamics::step(
-    const DynamicsBase::input_t& u, const double dt) {
+mppi::observation_t PandaRaisimDynamics::step(
+    const mppi::input_t& u, const double dt) {
   // keep the gripper in the current position
   if (fixed_base_) {
     cmd.tail<PandaDim::GRIPPER_DIMENSION>()
@@ -153,7 +153,7 @@ mppi::DynamicsBase::observation_t PandaRaisimDynamics::step(
   return x_;
 }
 
-void PandaRaisimDynamics::reset(const DynamicsBase::observation_t& x) {
+void PandaRaisimDynamics::reset(const mppi::observation_t& x) {
   // internal eigen state
   x_ = x;
 
@@ -172,9 +172,9 @@ void PandaRaisimDynamics::reset(const DynamicsBase::observation_t& x) {
   }
 }
 
-mppi::DynamicsBase::input_t PandaRaisimDynamics::get_zero_input(
-    const observation_t& x) {
-  return DynamicsBase::input_t::Zero(get_input_dimension());
+mppi::input_t PandaRaisimDynamics::get_zero_input(
+    const mppi::observation_t& x) {
+  return mppi::input_t::Zero(get_input_dimension());
 }
 
 void PandaRaisimDynamics::get_end_effector_pose(

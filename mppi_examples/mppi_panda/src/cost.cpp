@@ -39,7 +39,7 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
             << std::endl;
 }
 
-mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
+mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                                                const mppi::reference_t& ref,
                                                const double t) {
   double cost = 0;

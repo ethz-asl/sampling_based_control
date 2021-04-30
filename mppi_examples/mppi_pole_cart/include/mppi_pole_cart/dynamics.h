@@ -8,16 +8,17 @@
 
 #pragma once
 
-#include <math.h>
-#include <mppi/dynamics/dynamics_base.h>
+#include <cmath>
 #include <Eigen/Core>
 #include <iostream>
 #include <stdexcept>
 
+#include <mppi/core/dynamics.h>
+
 namespace pole_cart {
 
 enum PoleCartDim {
-  STATE_DIMENSION = 4,     // x, xd, theta, thetad
+  STATE_DIMENSION = 4,     // x, xd, theta, theta_d
   INPUT_DIMENSION = 1,     // F
   REFERENCE_DIMENSION = 2  // x, theta
 };
@@ -31,11 +32,11 @@ struct PoleCartDynamicsConfig {
   double dt_internal = 0.001;
 };
 
-class PoleCartDynamics : public mppi::DynamicsBase {
+class PoleCartDynamics : public mppi::Dynamics {
  public:
   PoleCartDynamics() {
-    x_ = observation_t::Zero(PoleCartDim::STATE_DIMENSION);
-    xd_ = observation_t::Zero(PoleCartDim::STATE_DIMENSION);
+    x_ = mppi::observation_t::Zero(PoleCartDim::STATE_DIMENSION);
+    xd_ = mppi::observation_t::Zero(PoleCartDim::STATE_DIMENSION);
   };
 
   explicit PoleCartDynamics(const PoleCartDynamicsConfig& config)
@@ -53,19 +54,19 @@ class PoleCartDynamics : public mppi::DynamicsBase {
   size_t get_input_dimension() override { return PoleCartDim::INPUT_DIMENSION; }
   size_t get_state_dimension() override { return PoleCartDim::STATE_DIMENSION; }
 
-  dynamics_ptr create() override {
+  mppi::dynamics_ptr create() override {
     return std::make_shared<PoleCartDynamics>();
   }
 
-  dynamics_ptr clone() const override {
+  mppi::dynamics_ptr clone() const override {
     return std::make_shared<PoleCartDynamics>(*this);
   }
 
-  void reset(const observation_t& x) override;
+  void reset(const mppi::observation_t& x) override;
 
-  observation_t step(const input_t& u, const double dt) override;
+  mppi::observation_t step(const mppi::input_t& u, const double dt) override;
 
-  const observation_t get_state() const override;
+  const mppi::observation_t get_state() const override;
 
  private:
   void compute_velocities(double F);
@@ -73,7 +74,7 @@ class PoleCartDynamics : public mppi::DynamicsBase {
 
  private:
   PoleCartDynamicsConfig config_;
-  observation_t x_;
-  observation_t xd_;
+  mppi::observation_t x_;
+  mppi::observation_t xd_;
 };
 }  // namespace pole_cart

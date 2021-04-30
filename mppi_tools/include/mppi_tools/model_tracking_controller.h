@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <mppi/controller/mppi.h>
+#include <mppi/core/solver.h>
 #include "mppi_tools/control_gui.hpp"
 
 //  This class implements a model tracking controller.
@@ -16,9 +16,9 @@ class ModelTrackingController {
  public:
   ModelTrackingController() = default;
 
-  void init(mppi::DynamicsBase::dynamics_ptr dynamics,
-            mppi::CostBase::cost_ptr cost, const mppi::observation_t& x0,
-            const double& t0, const mppi::SolverConfig& config);
+  void init(mppi::dynamics_ptr dynamics, mppi::cost_ptr cost,
+            const mppi::observation_t& x0, const double& t0,
+            const mppi::config_t& config);
   void get_state(mppi::observation_t& x) const;
   void set_initial_state(const mppi::observation_t& x0, const double& t0);
   void set_reference(mppi::reference_trajectory_t& ref);
@@ -31,8 +31,8 @@ class ModelTrackingController {
   mppi::input_t u_;
   mppi::observation_t x_;
 
-  mppi::DynamicsBase::dynamics_ptr model_;
-  std::unique_ptr<mppi::PathIntegral> solver_;
+  mppi::dynamics_ptr model_;
+  mppi::solver_ptr solver_;
 
   mppi_tools::ControlGui gui_;
 };

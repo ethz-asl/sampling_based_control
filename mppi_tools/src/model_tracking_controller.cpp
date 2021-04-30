@@ -7,11 +7,12 @@
 using namespace mppi;
 using namespace mppi_tools;
 
-void ModelTrackingController::init(DynamicsBase::dynamics_ptr dynamics,
-                                   CostBase::cost_ptr cost,
-                                   const observation_t &x0, const double &t0,
-                                   const SolverConfig &config) {
-  solver_ = std::make_unique<PathIntegral>(dynamics, cost, config);
+void ModelTrackingController::init(mppi::dynamics_ptr dynamics,
+                                   mppi::cost_ptr cost,
+                                   const mppi::observation_t &x0,
+                                   const double &t0,
+                                   const mppi::config_t &config) {
+  solver_ = std::make_unique<mppi::Solver>(dynamics, cost, config);
   model_ = dynamics->clone();
   set_initial_state(x0, t0);
 

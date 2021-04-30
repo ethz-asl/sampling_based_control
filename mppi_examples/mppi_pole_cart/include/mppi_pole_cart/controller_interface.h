@@ -27,10 +27,10 @@ class PoleCartControllerInterface : public mppi_ros::ControllerRos {
   bool update_reference() override;
 
  private:
-  bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
+  bool set_controller(mppi::solver_ptr& controller) override;
 
  public:
-  mppi::SolverConfig config_;
+  mppi::config_t config_;
 
  private:
   bool reference_set_ = false;

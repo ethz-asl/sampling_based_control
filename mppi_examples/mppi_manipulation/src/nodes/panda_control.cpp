@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   simulation->reset(x);
 
   // init control input
-  mppi::DynamicsBase::input_t u;
+  mppi::input_t u;
   u = simulation->get_zero_input(x);
 
   bool static_optimization = nh.param<bool>("static_optimization", false);

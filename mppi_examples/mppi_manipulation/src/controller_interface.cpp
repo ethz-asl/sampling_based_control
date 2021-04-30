@@ -85,8 +85,7 @@ void PandaControllerInterface::init_model(
   object_model_.init_from_xml(object_description);
 }
 
-bool PandaControllerInterface::set_controller(
-    std::shared_ptr<mppi::PathIntegral>& controller) {
+bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   // internal model
   // -------------------------------
@@ -117,7 +116,7 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // dynamics
   // -------------------------------
-  mppi::DynamicsBase::dynamics_ptr dynamics;
+  mppi::dynamics_ptr dynamics;
   std::string robot_description_raisim, object_description_raisim;
   if (!nh_.param<std::string>("/robot_description_raisim",
                               robot_description_raisim, "")) {
@@ -161,7 +160,7 @@ bool PandaControllerInterface::set_controller(
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
 
   // -------------------------------
   // initialize reference

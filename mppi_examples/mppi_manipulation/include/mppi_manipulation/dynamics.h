@@ -10,7 +10,7 @@
 #include <raisim/World.hpp>
 #include <raisim/configure.hpp>
 
-#include <mppi/dynamics/dynamics_base.h>
+#include <mppi/core/dynamics.h>
 #include <ros/package.h>
 #include <Eigen/Core>
 #include <cmath>
@@ -27,7 +27,7 @@ struct force_t {
   Eigen::Vector3d position;
 };
 
-class PandaRaisimDynamics : public mppi::DynamicsBase {
+class PandaRaisimDynamics : public mppi::Dynamics {
  public:
   PandaRaisimDynamics(const std::string& robot_description,
                       const std::string& object_description, const double dt,
@@ -45,23 +45,23 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   double get_dt() { return dt_; }
   size_t get_input_dimension() override { return input_dimension_; }
   size_t get_state_dimension() override { return state_dimension_; }
-  dynamics_ptr create() override {
+  mppi::dynamics_ptr create() override {
     return std::make_shared<PandaRaisimDynamics>(
         robot_description_, object_description_, dt_, fixed_base_);
   }
 
-  dynamics_ptr clone() const override {
+  mppi::dynamics_ptr clone() const override {
     std::cout << "cannot clone, raisim world copy constructor is deleted. "
                  "Returning empty pointer"
               << std::endl;
-    return dynamics_ptr();
+    return mppi::dynamics_ptr();
   }
 
-  void reset(const observation_t& x) override;
+  void reset(const mppi::observation_t& x) override;
 
-  observation_t step(const input_t& u, const double dt) override;
-  input_t get_zero_input(const observation_t& x) override;
-  const observation_t get_state() const override { return x_; }
+  mppi::observation_t step(const mppi::input_t& u, const double dt) override;
+  mppi::input_t get_zero_input(const mppi::observation_t& x) override;
+  const mppi::observation_t get_state() const override { return x_; }
 
   raisim::World* get_world() { return &sim_; }
   raisim::ArticulatedSystem* get_panda() { return panda; }
@@ -80,7 +80,7 @@ class PandaRaisimDynamics : public mppi::DynamicsBase {
   size_t input_dimension_;
   size_t state_dimension_;
 
-  observation_t x_;
+  mppi::observation_t x_;
 
  private:
   double dt_;

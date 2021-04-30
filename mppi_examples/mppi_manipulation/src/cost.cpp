@@ -25,9 +25,9 @@ PandaCost::PandaCost(const std::string& robot_description,
   object_model_.init_from_xml(object_description_);
 }
 
-mppi::CostBase::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
-                                               const mppi::reference_t& ref,
-                                               const double t) {
+mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
+                                     const mppi::reference_t& ref,
+                                     const double t) {
   double cost = 0.0;
 
   if (fixed_base_) {

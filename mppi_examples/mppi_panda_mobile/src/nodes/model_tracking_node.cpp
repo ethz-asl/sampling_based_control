@@ -2,14 +2,9 @@
 // Created by giuseppe on 25.04.21.
 //
 
-#include "mppi_panda_mobile/dynamics.h"
 #include "mppi_panda_mobile/model_tracking.h"
 
-#include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <chrono>
 
 using namespace panda_mobile;
 

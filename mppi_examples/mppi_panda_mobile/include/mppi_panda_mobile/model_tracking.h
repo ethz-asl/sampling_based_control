@@ -5,6 +5,10 @@
 #pragma once
 
 #include <mppi_pinocchio/model.h>
+
+#include <mppi/core/config.h>
+#include <mppi/core/typedefs.h>
+
 #include <mppi_tools/model_tracking_controller.h>
 
 #include <nav_msgs/Path.h>
@@ -35,7 +39,7 @@ class PandaMobileModelTracking : public mppi_tools::ModelTrackingController {
 
  public:
   bool initialized_;
-  mppi::SolverConfig config_;
+  mppi::Config config_;
 
  private:
   mppi::input_array_t u_opt_;

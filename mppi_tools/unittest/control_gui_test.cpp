@@ -1,5 +1,5 @@
 #include "mppi_tools/control_gui.hpp"
-#include "mppi/sampler/gaussian_sampler.h"
+#include "mppi/utils/gaussian_sampler.h"
 //#include <gtest/gtest.h>
 //
 // TEST(VisualDebuggerTest, Main) {
@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
   size_t n = 20;
   double counter = 0;
 
-  mppi::SolverConfig config;
+  mppi::Config config;
   config.rollouts = 10;
   config.input_variance = Eigen::VectorXd(10);
   config.input_variance.setConstant(0.2);
@@ -36,9 +36,9 @@ int main(int argc, char** argv) {
   const double t_step = 0.01;
 
   while (true) {
-    Eigen::ArrayXd weights(n);
+    std::vector<double> weights(n, 0.0);
     for (int i = 0; i < n; i++) {
-      weights(i) = counter + i;
+      weights[i] = counter + i;
     }
 
     // Sample rollouts

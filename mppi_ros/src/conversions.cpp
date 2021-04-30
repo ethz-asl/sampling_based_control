@@ -6,7 +6,7 @@
 
 namespace mppi_ros {
 
-void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
+void to_msg(const mppi::config_t& config, Config& config_ros) {
   config_ros.nr_rollouts = config.rollouts;
   config_ros.lambda = config.lambda;
   config_ros.h = config.h;

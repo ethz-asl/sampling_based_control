@@ -8,8 +8,7 @@
 
 #include "mppi_panda_mobile/cost.h"
 
-#include <math.h>
-#include <mppi/cost/cost_base.h>
+#include <cmath>
 #include <ros/ros.h>
 
 #include <ros/package.h>
@@ -41,13 +40,13 @@ PandaMobileCost::PandaMobileCost(const std::string& robot_description,
   joint_limits_upper_ << PANDA_UPPER_LIMITS;
 }
 
-PandaMobileCost::cost_ptr PandaMobileCost::create() {
+mppi::cost_ptr PandaMobileCost::create() {
   return std::make_shared<PandaMobileCost>(robot_description_, linear_weight_,
                                            angular_weight_, obstacle_radius_,
                                            joint_limits_);
 }
 
-PandaMobileCost::cost_ptr PandaMobileCost::clone() const {
+mppi::cost_ptr PandaMobileCost::clone() const {
   return std::make_shared<PandaMobileCost>(*this);
 }
 
@@ -69,10 +68,10 @@ mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
   return base_pose * arm_pose;
 }
 
-PandaMobileCost::cost_t PandaMobileCost::compute_cost(
+mppi::cost_t PandaMobileCost::compute_cost(
     const mppi::observation_t& x, const mppi::reference_t& ref,
     const double t) {
-  cost_t cost;
+  mppi::cost_t cost;
 
   // update model
   robot_model_.update_state(x.head<7>());

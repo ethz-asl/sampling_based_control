@@ -11,8 +11,7 @@
 
 using namespace pole_cart;
 
-bool PoleCartControllerInterface::set_controller(
-    std::shared_ptr<mppi::PathIntegral> &controller) {
+bool PoleCartControllerInterface::set_controller(mppi::solver_ptr &controller) {
   // -------------------------------
   // dynamics
   // -------------------------------
@@ -45,7 +44,7 @@ bool PoleCartControllerInterface::set_controller(
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
 
   // -------------------------------
   // initialize reference

@@ -6,7 +6,7 @@
  * @brief    description
  */
 #pragma once
-#include <mppi/controller/mppi.h>
+#include <mppi/core/solver.h>
 
 #include <ros/node_handle.h>
 #include <mppi_ros/threading/WorkerManager.hpp>
@@ -28,7 +28,7 @@ class ControllerRos {
    * @brief Must implement to set the sampling based controller
    * @param controller
    */
-  virtual bool set_controller(std::shared_ptr<PathIntegral>& controller) = 0;
+  virtual bool set_controller(std::shared_ptr<Solver>& controller) = 0;
 
   /**
    * @brief Must implement to set the reference for the controller
@@ -55,7 +55,7 @@ class ControllerRos {
    */
   void stop();
 
-  inline std::shared_ptr<PathIntegral>& get_controller() {
+  inline std::shared_ptr<Solver>& get_controller() {
     return controller_;
   };
   const ros::NodeHandle& get_node_handle() { return nh_; }
@@ -100,11 +100,11 @@ class ControllerRos {
 
   mppi::threading::WorkerManager worker_manager_;
 
-  mppi::CostBase::cost_ptr cost_;
-  mppi::DynamicsBase::dynamics_ptr dynamics_;
-  mppi::SolverConfig config_;
+  mppi::cost_ptr cost_;
+  mppi::dynamics_ptr dynamics_;
+  mppi::config_t config_;
 
-  std::shared_ptr<mppi::PathIntegral> controller_ = nullptr;
+  std::shared_ptr<mppi::Solver> controller_ = nullptr;
 
   double policy_update_rate_ = 0.0;
   double reference_update_rate_ = 0.0;

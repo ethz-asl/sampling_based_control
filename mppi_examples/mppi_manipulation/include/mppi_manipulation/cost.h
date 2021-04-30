@@ -9,7 +9,7 @@
 #pragma once
 
 #include <math.h>
-#include <mppi/cost/cost_base.h>
+#include <mppi/core/cost.h>
 #include <mppi_pinocchio/model.h>
 #include <ros/ros.h>
 
@@ -40,7 +40,7 @@ struct PandaCostParam {
   bool parse_from_ros(const ros::NodeHandle& nh);
 };
 
-class PandaCost : public mppi::CostBase {
+class PandaCost : public mppi::Cost {
  public:
   PandaCost() : PandaCost("", "", PandaCostParam()){};
   PandaCost(const std::string& robot_description,
@@ -65,17 +65,17 @@ class PandaCost : public mppi::CostBase {
   Eigen::Matrix<double, 6, 1> error_;
 
  public:
-  cost_ptr create() override {
+  mppi::cost_ptr create() override {
     return std::make_shared<PandaCost>(robot_description_, object_description_,
                                        param_, fixed_base_);
   }
-  cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
+  mppi::cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
 
   void set_linear_weight(const double k) { param_.Qt = k; }
   void set_angular_weight(const double k) { param_.Qr = k; }
   void set_obstacle_radius(const double r) { param_.ro = r; }
 
-  cost_t compute_cost(const mppi::observation_t& x,
+  mppi::cost_t compute_cost(const mppi::observation_t& x,
                       const mppi::reference_t& ref, const double t) override;
 };
 }  // namespace manipulation

@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <mppi/visualization/rederer.h>
+#include <mppi/core/rederer.h>
 
 #include <mppi_pinocchio/model.h>
 #include <mppi_pinocchio/ros_conversions.h>

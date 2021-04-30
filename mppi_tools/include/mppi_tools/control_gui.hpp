@@ -1,7 +1,7 @@
 #pragma once
-#include <mppi/controller/rollout.h>
-#include <mppi/solver_config.h>
-#include <mppi/typedefs.h>
+#include <mppi/core/rollout.h>
+#include <mppi/core/config.h>
+#include <mppi/core/typedefs.h>
 
 #include <GLFW/glfw3.h>
 
@@ -20,11 +20,11 @@ class ControlGui {
 
   void window_resize(int width, int height);
 
-  void reset_config(const mppi::SolverConfig& config);
+  void reset_config(const mppi::config_t& config);
   void reset_averaged_policy(const mppi::input_array_t& u);
   void reset_policy(const mppi::input_array_t& u);
   void reset_rollouts(const std::vector<mppi::Rollout>& rollouts);
-  void reset_weights(const Eigen::ArrayXd& weights);
+  void reset_weights(const std::vector<double>& weights);
 
   bool should_pause() const { return pause; }
 
@@ -38,10 +38,10 @@ class ControlGui {
   bool pause = false;
 
   // mppi data
-  mppi::SolverConfig config_;
+  mppi::Config config_;
   std::vector<mppi::Rollout> rollouts_;
   mppi::input_array_t u_;
   mppi::input_array_t u_avg_;
-  Eigen::ArrayXd weights_;
+  std::vector<double> weights_;
 };
 }  // namespace mppi_tools

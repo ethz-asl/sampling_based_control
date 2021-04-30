@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include <mppi/controller/data.h>
-#include <mppi/controller/rollout.h>
-#include <mppi/solver_config.h>
+#include <mppi/core/data.h>
+#include <mppi/core/rollout.h>
+#include <mppi/core/config.h>
+#include <mppi/core/typedefs.h>
 
 #include "mppi_ros/Array.h"
 #include "mppi_ros/Config.h"
@@ -15,7 +16,7 @@
 
 namespace mppi_ros {
 
-void to_msg(const mppi::SolverConfig& config, Config& config_ros);
+void to_msg(const mppi::config_t& config, Config& config_ros);
 void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros);
 void to_msg(const mppi::data_t& data, Data& data_ros);
 

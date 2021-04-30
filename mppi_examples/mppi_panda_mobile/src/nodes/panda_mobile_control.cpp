@@ -11,7 +11,6 @@
 
 #include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
-#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <chrono>
 
@@ -38,7 +37,7 @@ int main(int argc, char** argv) {
     x(i) = initial_configuration[i];
   simulation.reset(x);
 
-  mppi::DynamicsBase::input_t u;
+  mppi::input_t u;
   u = simulation.get_zero_input(x);
 
   // joint state publisher

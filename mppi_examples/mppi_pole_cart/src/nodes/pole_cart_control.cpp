@@ -5,11 +5,12 @@
  * @version  1.0
  * @brief    description
  */
-#include "mppi_pole_cart/controller_interface.h"
+#include <chrono>
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <chrono>
+
+#include "mppi_pole_cart/controller_interface.h"
 
 using namespace pole_cart;
 
@@ -35,7 +36,7 @@ int main(int argc, char** argv) {
   x(2) = 0.1;
   simulation.reset(x);
 
-  mppi::DynamicsBase::input_t u;
+  mppi::input_t u;
   u = simulation.get_zero_input(x);
   std::cout << "First input: " << u.transpose() << std::endl;
 
