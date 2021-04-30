@@ -28,7 +28,7 @@ class DataRecorder:
             "effective_samples": [],
             "time": [],
             "opt_time": [],
-            "learning_factor": []
+            "learned_rollout_ratio": []
         }
         self.weight_history = []
         self.cost_history = []
@@ -70,7 +70,7 @@ class DataRecorder:
         self.data_dict["stage_cost"].append(data.stage_cost)
         self.data_dict["time"].append(current_time - self.initial_time)
         self.data_dict["opt_time"].append(data.time.to_sec())
-        self.data_dict["learning_factor"].append(data.config.learning_factor)
+        self.data_dict["learned_rollout_ratio"].append(data.config.learned_rollout_ratio)
         self.weight_history.append(data.weights.array)
         self.cost_history.append(data.rollouts_cost.array)
         self.idx += 1
