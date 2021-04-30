@@ -54,7 +54,9 @@ class Timer {
     }
   }
 
-  double get_interval(const std::string& name){ return intervals_[name]/1e3; }
+  double get_interval(const std::string& name) {
+    return intervals_[name] / 1e3;
+  }
 
  private:
   time_t current_;

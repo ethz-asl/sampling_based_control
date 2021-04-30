@@ -1,11 +1,11 @@
-#include <iostream>
 #include <boost/circular_buffer.hpp>
+#include <iostream>
 
-#include "mppi_tools/control_gui.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
 #include "implot.h"
+#include "mppi_tools/control_gui.hpp"
 
 static void error_callback(int error, const char* description) {
   fputs(description, stderr);
@@ -35,11 +35,10 @@ ScrollingBuffer::ScrollingBuffer(int max_size) {
   y.reserve(MaxSize);
 }
 void ScrollingBuffer::AddPoint(double px, double py) {
-  if (x.size() < MaxSize){
+  if (x.size() < MaxSize) {
     x.push_back(px);
     y.push_back(py);
-  }
-  else {
+  } else {
     x[Offset] = px;
     y[Offset] = py;
     Offset = (Offset + 1) % MaxSize;
@@ -53,21 +52,24 @@ void ScrollingBuffer::Erase() {
   }
 }
 
-bool ScrollingBuffer::empty(){ return x.empty();}
-int ScrollingBuffer::size(){ return x.size(); }
-double ScrollingBuffer::back_x() { return size() < MaxSize ? x.back() : x[Offset-1]; }
-double ScrollingBuffer::back_y() { return size() < MaxSize ? y.back() : y[Offset-1]; }
+bool ScrollingBuffer::empty() { return x.empty(); }
+int ScrollingBuffer::size() { return x.size(); }
+double ScrollingBuffer::back_x() {
+  return size() < MaxSize ? x.back() : x[Offset - 1];
+}
+double ScrollingBuffer::back_y() {
+  return size() < MaxSize ? y.back() : y[Offset - 1];
+}
 
-
-template<typename T>
-struct CircularBuffer{
-  CircularBuffer(int size=1000): max_size_(size), size_(0){
+template <typename T>
+struct CircularBuffer {
+  CircularBuffer(int size = 1000) : max_size_(size), size_(0) {
     x = boost::circular_buffer<T>(max_size_);
     y = boost::circular_buffer<T>(max_size_);
   }
 
-  inline int size(){ return size_; }
-  void add_point(const T& xp, const T& yp){
+  inline int size() { return size_; }
+  void add_point(const T& xp, const T& yp) {
     x.push_back(xp);
     y.push_back(yp);
     size_ = size_ >= max_size_ ? max_size_ : size_ + 1;
@@ -380,19 +382,19 @@ void ControlGui::draw() {
       }
 
       if (ImGui::CollapsingHeader("Rate")) {
-        if (frequency_data.empty()){
+        if (frequency_data.empty()) {
           ImGui::Text("No rate data yet.");
-        }
-        else{
+        } else {
           static int history = 10.0f;
-          ImGui::SliderInt("History",&history,10,300,"%d steps");
+          ImGui::SliderInt("History", &history, 10, 300, "%d steps");
 
           ImPlot::SetNextPlotLimitsY(-0.01, 200, ImGuiCond_Once);
-          ImPlot::SetNextPlotLimitsX(frequency_data.back_x() - history, frequency_data.back_x(), ImGuiCond_Always);
+          ImPlot::SetNextPlotLimitsX(frequency_data.back_x() - history,
+                                     frequency_data.back_x(), ImGuiCond_Always);
           if (ImPlot::BeginPlot("##Frequency")) {
             ImPlot::PlotLine("##frequency", &frequency_data.x[0],
-                             &frequency_data.y[0],
-                             frequency_data.size(), frequency_data.Offset, sizeof(double));
+                             &frequency_data.y[0], frequency_data.size(),
+                             frequency_data.Offset, sizeof(double));
             ImPlot::EndPlot();
           }
         }
@@ -444,7 +446,7 @@ void ControlGui::reset_weights(const std::vector<double>& weights) {
 
 void ControlGui::reset_optimization_time(const double& dt) {
   static double step_counter = 0;
-  frequency_data.AddPoint(step_counter, 1.0/dt);
+  frequency_data.AddPoint(step_counter, 1.0 / dt);
   step_counter++;
 }
 

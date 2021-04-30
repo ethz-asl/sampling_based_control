@@ -62,6 +62,5 @@ class ControlGui {
 
   // visualization data
   ScrollingBuffer frequency_data;
-
 };
 }  // namespace mppi_tools
