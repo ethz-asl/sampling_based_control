@@ -61,7 +61,8 @@ void PandaMobileControllerInterface::init_model(
   robot_model_.init_from_xml(robot_description);
 }
 
-bool PandaMobileControllerInterface::set_controller(mppi::solver_ptr& controller) {
+bool PandaMobileControllerInterface::set_controller(
+    mppi::solver_ptr& controller) {
   // Params
   std::string robot_description;
   double linear_weight;

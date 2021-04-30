@@ -50,13 +50,16 @@ class PandaCost : public mppi::Cost {
                                        angular_weight_, obstacle_radius_);
   }
 
-  mppi::cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
+  mppi::cost_ptr clone() const override {
+    return std::make_shared<PandaCost>(*this);
+  }
 
   void set_linear_weight(const double k) { Q_linear_ *= k; }
   void set_angular_weight(const double k) { Q_angular_ *= k; }
   void set_obstacle_radius(const double r) { obstacle_radius_ = r; }
 
   mppi::cost_t compute_cost(const mppi::observation_t& x,
-                            const mppi::reference_t& ref, const double t) override;
+                            const mppi::reference_t& ref,
+                            const double t) override;
 };
 }  // namespace panda

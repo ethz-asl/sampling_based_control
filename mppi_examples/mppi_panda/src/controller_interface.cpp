@@ -113,8 +113,8 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_,
-                                                    nullptr, renderer);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_, nullptr,
+                                              renderer);
 
   // -------------------------------
   // initialize reference

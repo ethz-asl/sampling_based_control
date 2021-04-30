@@ -35,8 +35,8 @@ void PoleCartDynamics::integrate_internal(double u, double dt) {
   x_ += xd_ * dt;
 }
 
-mppi::observation_t PoleCartDynamics::step(
-    const mppi::input_t &u, const double dt) {
+mppi::observation_t PoleCartDynamics::step(const mppi::input_t &u,
+                                           const double dt) {
   size_t steps = std::floor(dt / config_.dt_internal);
   if (steps > 0) {
     for (size_t i = 0; i < steps; i++)
@@ -47,9 +47,7 @@ mppi::observation_t PoleCartDynamics::step(
   return x_;
 }
 
-const mppi::observation_t PoleCartDynamics::get_state() const {
-  return x_;
-}
+const mppi::observation_t PoleCartDynamics::get_state() const { return x_; }
 
 void PoleCartDynamics::reset(const mppi::observation_t &x) { x_ = x; }
 }  // namespace pole_cart

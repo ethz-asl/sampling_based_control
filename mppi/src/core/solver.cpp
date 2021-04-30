@@ -586,8 +586,8 @@ void Solver::swap_policies() {
   opt_roll_cache_ = opt_roll_;
 }
 
-input_array_t Solver::offline_control(
-    const observation_t& x, const int subit, const double t) {
+input_array_t Solver::offline_control(const observation_t& x, const int subit,
+                                      const double t) {
   set_observation(x, t);
   for (size_t i = 0; i < subit; i++) update_policy();
 }

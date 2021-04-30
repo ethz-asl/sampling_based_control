@@ -40,8 +40,8 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
 }
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
-                                               const mppi::reference_t& ref,
-                                               const double t) {
+                                     const mppi::reference_t& ref,
+                                     const double t) {
   double cost = 0;
   robot_model_.update_state(x.head<7>());
 

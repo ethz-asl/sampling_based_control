@@ -18,17 +18,17 @@
 
 #include <Eigen/Core>
 
-#include "mppi/core/data.h"
-#include "mppi/core/rollout.h"
+#include "mppi/core/config.h"
 #include "mppi/core/cost.h"
+#include "mppi/core/data.h"
 #include "mppi/core/dynamics.h"
 #include "mppi/core/rederer.h"
-#include "mppi/core/config.h"
+#include "mppi/core/rollout.h"
 
+#include "mppi/utils/gaussian_sampler.h"
+#include "mppi/utils/savgol_filter.h"
 #include "mppi/utils/thread_pool.h"
 #include "mppi/utils/timer.h"
-#include "mppi/utils/savgol_filter.h"
-#include "mppi/utils/gaussian_sampler.h"
 
 #include "mppi/tree_search/experts/expert.h"
 #include "mppi/tree_search/tree/tree_manager.h"
@@ -46,9 +46,8 @@ class Solver {
    * @param config: the solver configuration
    * @param verbose: (bool) flag to turn on/off verbosity
    */
-  Solver(dynamics_ptr dynamics, cost_ptr cost,
-               const config_t& config, sampler_ptr sampler = nullptr,
-               renderer_ptr renderer = nullptr);
+  Solver(dynamics_ptr dynamics, cost_ptr cost, const config_t& config,
+         sampler_ptr sampler = nullptr, renderer_ptr renderer = nullptr);
   Solver() = default;
   ~Solver() = default;
 
@@ -169,8 +168,8 @@ class Solver {
    * @param t the current time
    * @return the optimized trajectory over the time horizon
    */
-  input_array_t offline_control(const observation_t& x,
-                                const int subit = 1, const double t = 0);
+  input_array_t offline_control(const observation_t& x, const int subit = 1,
+                                const double t = 0);
 
   /**
    * @brief Print to screen the cost histogram split in a fixes number of bins

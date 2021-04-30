@@ -83,7 +83,7 @@ struct Config {
 
 template <typename T>
 std::optional<T> Config::parse_key(const YAML::Node& node,
-                                         const std::string& key, bool quiet) {
+                                   const std::string& key, bool quiet) {
   if (!node[key]) {
     std::cout << "Could not find entry: " << key << std::endl;
     if (!quiet) parsing_error = true;
@@ -109,7 +109,7 @@ inline std::optional<Eigen::VectorXd> Config::parse_key<Eigen::VectorXd>(
 
 template <typename T>
 std::optional<T> Config::parse_key_quiet(const YAML::Node& node,
-                                               const std::string& key) {
+                                         const std::string& key) {
   return parse_key<T>(node, key, true);
 };
 

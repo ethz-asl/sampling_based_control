@@ -16,7 +16,6 @@ namespace mppi {
 
 class Cost {
  public:
-
   Cost() = default;
   ~Cost() = default;
 

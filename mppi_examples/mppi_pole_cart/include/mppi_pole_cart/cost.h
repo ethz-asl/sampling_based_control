@@ -7,8 +7,8 @@
  */
 
 #pragma once
-#include <cmath>
 #include <mppi/core/cost.h>
+#include <cmath>
 
 namespace pole_cart {
 
@@ -34,7 +34,8 @@ class PoleCartCost : public mppi::Cost {
   // adding an increasing cost can push the agent to enter the violated limits
   // again
   mppi::cost_t compute_cost(const mppi::observation_t& x,
-                      const mppi::reference_t& ref, const double t) override {
+                            const mppi::reference_t& ref,
+                            const double t) override {
     double cost = 0.0;
     if (x(0) > x_limit || x(0) < -x_limit)
       cost += c_x_limit * (1 + w_origin * ((std::abs(x(0)) - x_limit) *

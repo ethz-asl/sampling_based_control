@@ -55,9 +55,7 @@ class ControllerRos {
    */
   void stop();
 
-  inline std::shared_ptr<Solver>& get_controller() {
-    return controller_;
-  };
+  inline std::shared_ptr<Solver>& get_controller() { return controller_; };
   const ros::NodeHandle& get_node_handle() { return nh_; }
 
   // TODO(giuseppe) this is dangerous since one might not use correctly this

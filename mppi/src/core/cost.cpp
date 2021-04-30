@@ -22,16 +22,15 @@ void Cost::set_reference_trajectory(const reference_trajectory_t &traj) {
   }
 }
 
-void Cost::interpolate_reference(const observation_t & /*x*/,
-                                     reference_t &ref, const double t) {
+void Cost::interpolate_reference(const observation_t & /*x*/, reference_t &ref,
+                                 const double t) {
   auto lower = std::lower_bound(timed_ref_.tt.begin(), timed_ref_.tt.end(), t);
   size_t offset = std::distance(timed_ref_.tt.begin(), lower);
   if (lower == timed_ref_.tt.end()) offset -= 1;
   ref = timed_ref_.rr[offset];
 }
 
-double Cost::get_stage_cost(const mppi::observation_t &x,
-                                          const double t) {
+double Cost::get_stage_cost(const mppi::observation_t &x, const double t) {
   interpolate_reference(x, r_, t);
   return compute_cost(x, r_, t);
 }

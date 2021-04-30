@@ -8,8 +8,8 @@
 
 #include "mppi_panda_mobile/cost.h"
 
-#include <cmath>
 #include <ros/ros.h>
+#include <cmath>
 
 #include <ros/package.h>
 
@@ -68,9 +68,9 @@ mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
   return base_pose * arm_pose;
 }
 
-mppi::cost_t PandaMobileCost::compute_cost(
-    const mppi::observation_t& x, const mppi::reference_t& ref,
-    const double t) {
+mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
+                                           const mppi::reference_t& ref,
+                                           const double t) {
   mppi::cost_t cost;
 
   // update model

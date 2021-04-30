@@ -6,8 +6,8 @@
 
 #include <Eigen/Core>
 
-#include "mppi/core/rollout.h"
 #include "mppi/core/config.h"
+#include "mppi/core/rollout.h"
 
 namespace mppi {
 

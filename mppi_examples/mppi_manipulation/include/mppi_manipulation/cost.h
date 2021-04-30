@@ -69,14 +69,17 @@ class PandaCost : public mppi::Cost {
     return std::make_shared<PandaCost>(robot_description_, object_description_,
                                        param_, fixed_base_);
   }
-  mppi::cost_ptr clone() const override { return std::make_shared<PandaCost>(*this); }
+  mppi::cost_ptr clone() const override {
+    return std::make_shared<PandaCost>(*this);
+  }
 
   void set_linear_weight(const double k) { param_.Qt = k; }
   void set_angular_weight(const double k) { param_.Qr = k; }
   void set_obstacle_radius(const double r) { param_.ro = r; }
 
   mppi::cost_t compute_cost(const mppi::observation_t& x,
-                      const mppi::reference_t& ref, const double t) override;
+                            const mppi::reference_t& ref,
+                            const double t) override;
 };
 }  // namespace manipulation
 

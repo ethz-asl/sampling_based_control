@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <mppi/core/config.h>
 #include <mppi/core/data.h>
 #include <mppi/core/rollout.h>
-#include <mppi/core/config.h>
 #include <mppi/core/typedefs.h>
 
 #include "mppi_ros/Array.h"

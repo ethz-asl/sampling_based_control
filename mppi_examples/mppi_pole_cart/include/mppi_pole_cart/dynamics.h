@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <cmath>
 #include <Eigen/Core>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 

@@ -9,7 +9,6 @@
 
 namespace mppi {
 
-
 class Cost;
 class Dynamics;
 class Solver;
@@ -24,7 +23,7 @@ typedef std::shared_ptr<Solver> solver_ptr;
 typedef std::shared_ptr<GaussianSampler> sampler_ptr;
 typedef Config config_t;
 typedef std::shared_ptr<Renderer> renderer_ptr;
-typedef std::shared_ptr<Expert>expert_ptr;
+typedef std::shared_ptr<Expert> expert_ptr;
 
 typedef Eigen::VectorXd input_t;
 typedef std::vector<input_t> input_array_t;

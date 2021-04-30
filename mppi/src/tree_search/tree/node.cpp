@@ -8,7 +8,6 @@
 
 #include "mppi/tree_search/tree/node.h"
 
-
 Node::Node(node_handle parent_node_handle, double t, double cost,
            const Eigen::VectorXd& u, const Eigen::VectorXd& x,
            size_t expert_type)

@@ -95,8 +95,8 @@ void PandaRaisimDynamics::set_collision() {
       panda->ignoreCollisionBetween(body_idx1, body_idx2);
 }
 
-mppi::observation_t PandaRaisimDynamics::step(
-    const mppi::input_t& u, const double dt) {
+mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
+                                              const double dt) {
   // keep the gripper in the current position
   if (fixed_base_) {
     cmd.tail<PandaDim::GRIPPER_DIMENSION>()

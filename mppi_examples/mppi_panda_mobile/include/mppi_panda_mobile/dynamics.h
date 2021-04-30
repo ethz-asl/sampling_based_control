@@ -7,10 +7,10 @@
  */
 
 #pragma once
-#include <cmath>
 #include <mppi/core/dynamics.h>
 #include <ros/package.h>
 #include <Eigen/Core>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
