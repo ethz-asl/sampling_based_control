@@ -85,6 +85,46 @@ class Plotter:
         # Save the figure and show
         plt.tight_layout()
 
+    def plot_average_cost_per_substep(self, tree=False):
+        # Mean and std
+        strategy_name = "Tree" if tree else "Monte Carlo"
+        average_cost = {}
+        all_substeps_nr = self.df.loc[self.df['Sampling Strategy'] ==
+                                      strategy_name]['substeps'].unique()
+        for substeps_nr in all_substeps_nr:
+            df = self.df.loc[(self.df['substeps'] == substeps_nr)
+                             & (self.df['Sampling Strategy'] == strategy_name)]
+            if substeps_nr not in average_cost:
+                average_cost[substeps_nr] = [df['stage_cost'].mean()]
+            else:
+                average_cost[substeps_nr].append(df['stage_cost'].mean())
+
+        average_cost_mean = [
+            np.mean(average_cost_vector)
+            for average_cost_vector in average_cost.values()
+        ]
+        average_cost_std = [
+            np.std(average_cost_vector)
+            for average_cost_vector in average_cost.values()
+        ]
+
+        # Build the plot
+        fig, ax = plt.subplots()
+        ax.bar(all_substeps_nr,
+               average_cost_mean,
+               yerr=average_cost_std,
+               align='center',
+               alpha=0.5,
+               ecolor='black',
+               capsize=10)
+        ax.set_xlabel('Number of substeps')
+        ax.set_xticks(all_substeps_nr)
+        ax.set_title('Average cost')
+        ax.yaxis.grid(True)
+
+        # Save the figure and show
+        plt.tight_layout()
+
     def plot_average_cost_per_rollout_tree(self):
         self.plot_average_cost_per_rollout(tree=True)
 
@@ -367,6 +407,7 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     plotter = Plotter(args.experiment_id)
+    plotter.plot_average_cost_per_substep()
     # plotter.plot_average_cost_per_rollout()
     # plotter.plot_average_cost_per_rollout_tree()
     # plotter.plot_effective_samples_per_rollout()

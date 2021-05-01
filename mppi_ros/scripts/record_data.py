@@ -30,7 +30,8 @@ class DataRecorder:
             "opt_time": [],
             "learned_rollout_ratio": [],
             "cost_history": [],
-            "weight_history": []
+            "weight_history": [],
+            "substeps": []
         }
         self.first_call = True
         self.data_subscriber = rospy.Subscriber("/mppi_data",
@@ -73,6 +74,7 @@ class DataRecorder:
         self.data_dict["learned_rollout_ratio"].append(data.config.learned_rollout_ratio)
         self.data_dict["cost_history"].append(data.rollouts_cost.array)
         self.data_dict["weight_history"].append(data.weights.array)
+        self.data_dict["substeps"].append(data.config.substeps)
         self.idx += 1
 
         effective_samples = 1.0 / (len(data.weights.array) * np.square(
