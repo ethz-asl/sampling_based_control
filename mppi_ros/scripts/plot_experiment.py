@@ -309,12 +309,18 @@ class Plotter:
 
         plt.legend(fontsize=35)
 
-    def plot_rollout_costs(self, logarithmic=True):
-        path = os.path.join(RosPack().get_path("mppi_ros"), "log",
-                            "record_array.npz")
-        arrays = np.load(path)
-        costs = arrays['costs']
+    def plot_rollout_costs(self, experiment_id, logarithmic=True):
+        strategy_name = "Monte Carlo"
+        df = self.df.loc[self.df['id'].str.contains(experiment_id)
+                         & (self.df['Sampling Strategy'] == strategy_name)]
+        costs = []
 
+        # convert dataframe of strings to a 2D np array
+        costs_temp = df['cost_history']
+        for index, row in costs_temp.iteritems():
+            line = row[1:-1] # get rid of parentheisis first
+            costs.append([float(s) for s in line.split(',')])
+        costs = np.array(costs)
 
         plt.figure('costs')
         if logarithmic:
@@ -327,12 +333,21 @@ class Plotter:
         plt.xlabel("Rollout index")
         plt.ylabel("Time")
 
-    def plot_rollout_weights(self):
-        path = os.path.join(RosPack().get_path("mppi_ros"), "log",
-                            "record_array.npz")
-        arrays = np.load(path)
+    def plot_rollout_weights(self, experiment_id):
+        strategy_name = "Monte Carlo"
+
+        df = self.df.loc[self.df['id'].str.contains(experiment_id)
+                         & (self.df['Sampling Strategy'] == strategy_name)]
+        weights = []
+
+        # convert dataframe of strings to a 2D np array
+        weights_temp = df['weight_history']
+        for index, row in weights_temp.iteritems():
+            line = row[1:-1] # get rid of parentheisis first
+            weights.append([float(s) for s in line.split(',')])
+        weights = np.array(weights)
+
         plt.figure('weights')
-        weights = arrays['weights']
         sns.heatmap(weights)
         plt.title("Rollout weights")
         plt.xlabel("Rollout index")
@@ -368,8 +383,8 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
-    plotter.plot_rollout_costs()
-    plotter.plot_rollout_weights()
+    plotter.plot_rollout_costs(args.experiment_id[0])
+    plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
     # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
 

@@ -28,10 +28,10 @@ class DataRecorder:
             "effective_samples": [],
             "time": [],
             "opt_time": [],
-            "learned_rollout_ratio": []
+            "learned_rollout_ratio": [],
+            "cost_history": [],
+            "weight_history": []
         }
-        self.weight_history = []
-        self.cost_history = []
         self.first_call = True
         self.data_subscriber = rospy.Subscriber("/mppi_data",
                                                 Data,
@@ -71,8 +71,8 @@ class DataRecorder:
         self.data_dict["time"].append(current_time - self.initial_time)
         self.data_dict["opt_time"].append(data.time.to_sec())
         self.data_dict["learned_rollout_ratio"].append(data.config.learned_rollout_ratio)
-        self.weight_history.append(data.weights.array)
-        self.cost_history.append(data.rollouts_cost.array)
+        self.data_dict["cost_history"].append(data.rollouts_cost.array)
+        self.data_dict["weight_history"].append(data.weights.array)
         self.idx += 1
 
         effective_samples = 1.0 / (len(data.weights.array) * np.square(
@@ -124,15 +124,12 @@ class DataRecorder:
             df.to_csv(self.csv_file, mode='a', header=False)
         else:
             df.to_csv(self.csv_file)
-        self.weight_history = np.array(self.weight_history)
-        self.cost_history = np.array(self.cost_history)
-        np.savez_compressed(self.array_path, costs=self.cost_history, weights=self.weight_history)
 
 
 if __name__ == "__main__":
     rospy.init_node("record_data")
-    experiment_id = rospy.get_param("~experiment_id")
-    recorder = DataRecorder(experiment_id)
+    #experiment_id = rospy.get_param("~experiment_id")
+    recorder = DataRecorder()
     rospy.spin()
 
     recorder.postprocess()
