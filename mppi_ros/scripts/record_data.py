@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import rospy
@@ -27,7 +27,11 @@ class DataRecorder:
             "stage_cost": [],
             "effective_samples": [],
             "time": [],
-            "opt_time": []
+            "opt_time": [],
+            "learned_rollout_ratio": [],
+            "cost_history": [],
+            "weight_history": [],
+            "substeps": []
         }
         self.first_call = True
         self.data_subscriber = rospy.Subscriber("/mppi_data",
@@ -42,6 +46,9 @@ class DataRecorder:
         self.csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log",
                                      "record.csv")
         rospy.loginfo("Writing to {}".format(self.csv_file))
+        self.array_path = os.path.join(RosPack().get_path("mppi_ros"), "log",
+                                     "record_array.npz")
+
 
     def data_callback(self, data: Data):
         if len(data.weights.array) == 0:
@@ -64,7 +71,10 @@ class DataRecorder:
         self.data_dict["stage_cost"].append(data.stage_cost)
         self.data_dict["time"].append(current_time - self.initial_time)
         self.data_dict["opt_time"].append(data.time.to_sec())
-
+        self.data_dict["learned_rollout_ratio"].append(data.config.learned_rollout_ratio)
+        self.data_dict["cost_history"].append(data.rollouts_cost.array)
+        self.data_dict["weight_history"].append(data.weights.array)
+        self.data_dict["substeps"].append(data.config.substeps)
         self.idx += 1
 
         effective_samples = 1.0 / (len(data.weights.array) * np.square(
@@ -120,8 +130,8 @@ class DataRecorder:
 
 if __name__ == "__main__":
     rospy.init_node("record_data")
-    experiment_id = rospy.get_param("~experiment_id")
-    recorder = DataRecorder(experiment_id)
+    #experiment_id = rospy.get_param("~experiment_id")
+    recorder = DataRecorder()
     rospy.spin()
 
     recorder.postprocess()

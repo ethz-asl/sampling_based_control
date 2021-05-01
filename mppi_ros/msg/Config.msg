@@ -7,6 +7,7 @@ float64 learned_rollout_ratio
 float64 horizon
 float64 alpha
 float64 beta
+int64 substeps 
 
 bool adaptive_sampling
 mppi_ros/Array input_variance
