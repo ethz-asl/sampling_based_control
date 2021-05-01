@@ -38,6 +38,7 @@ struct SolverConfig {
   double beta = 0.0;
   bool adaptive_sampling = false;
   Eigen::VectorXd input_variance;
+  double max_cost_quantile = 0.8;
 
   bool filtering = false;
   double cost_ratio = 0.2;

@@ -34,6 +34,10 @@ add_executable(pole_cart_data_collection src/nodes/pole_cart_data_collection.cpp
 target_link_libraries(pole_cart_data_collection ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(pole_cart_data_collection ${PROJECT_NAME})
 
+add_executable(pole_cart_evaluation src/nodes/pole_cart_evaluation.cpp)
+target_link_libraries(pole_cart_evaluation ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(pole_cart_evaluation ${PROJECT_NAME})
+
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )

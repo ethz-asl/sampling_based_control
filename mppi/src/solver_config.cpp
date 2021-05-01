@@ -63,6 +63,7 @@ bool SolverConfig::init_from_file(const std::string& file) {
   expert_weights   = parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
   expert_types 	   = {NORM, IMP};
   display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
+  max_cost_quantile = parse_key_quiet<double>(solver_options, "max_cost_quantile").value_or(max_cost_quantile);
   //clang-format on
 
   if (parsing_error) return false;

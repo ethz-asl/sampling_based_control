@@ -155,9 +155,9 @@ void PathIntegral::update_policy() {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
     copy_observation();
-
+    prepare_rollouts();
     for (size_t i = 0; i < config_.substeps; i++) {
-      prepare_rollouts();
+      std::sort(rollouts_.begin(), rollouts_.end());
       update_reference();
 
       if (config_.use_tree_search) {
@@ -408,8 +408,10 @@ void PathIntegral::overwrite_rollouts() {
 }
 
 void PathIntegral::compute_exponential_cost() {
+  Eigen::ArrayXd sorted_costs = rollouts_cost_;
+  std::sort(sorted_costs.data(), sorted_costs.data() + sorted_costs.size());
   min_cost_ = rollouts_cost_.minCoeff();
-  max_cost_ = rollouts_cost_.maxCoeff();
+  max_cost_ = sorted_costs[(int) (sorted_costs.size() * config_.max_cost_quantile)];
 
   if (config_.debug_print) print_cost_histogram();
 

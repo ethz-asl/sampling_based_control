@@ -15,6 +15,7 @@ void to_msg(const mppi::SolverConfig& config, Config& config_ros) {
   config_ros.step_size = config.step_size;
   config_ros.caching_factor = config.caching_factor;
   config_ros.learned_rollout_ratio = config.learned_rollout_ratio;
+  config_ros.substeps = config.substeps; 
   config_ros.horizon = config.horizon;
   config_ros.adaptive_sampling = config.adaptive_sampling;
   config_ros.input_variance.array.assign(
