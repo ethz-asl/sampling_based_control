@@ -11,7 +11,6 @@
 
 #include <ros/package.h>
 #include "mppi_panda/controller_interface.h"
-#include "policy_learning/offline_pytorch_expert.h"
 #include "mppi_panda/renderer.h"
 #include "mppi_ros/ros_params.h"
 

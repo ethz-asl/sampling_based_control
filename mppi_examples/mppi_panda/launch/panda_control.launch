@@ -17,9 +17,6 @@
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
 
-    <arg name="learner_output_path" default=""/>
-    <arg name="torchscript_model_path" default=""/>
-
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <param name="use_tf_static" value="true"/>
