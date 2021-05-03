@@ -111,6 +111,9 @@
             <geometry>
                 <sphere radius="0.015"/>
             </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
         </collision>
         <visual>
             <origin rpy="0 0 0" xyz="0 0.0 0"/>

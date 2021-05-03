@@ -18,7 +18,7 @@
         <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
         <axis xyz="1 0 0"/>
         <limit effort="1000.0" velocity="5.0" lower="-100" upper="100"/>
-        <dynamics spring_mount="0 0 0" stiffness="1.0" damping="1"/>
+        <dynamics spring_mount="0 0 0" stiffness="10.0" damping="1"/>
     </joint>
 
     <link name="button_x">
@@ -32,6 +32,9 @@
             <geometry>
                 <box size="${dimension_cube} ${dimension_cube} ${dimension_cube}"/>
             </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
         </collision>
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>

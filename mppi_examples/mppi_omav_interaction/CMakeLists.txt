@@ -47,6 +47,6 @@ install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
 
-catkin_install_python(PROGRAMS scripts/demo.py
+catkin_install_python(PROGRAMS scripts/button.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )

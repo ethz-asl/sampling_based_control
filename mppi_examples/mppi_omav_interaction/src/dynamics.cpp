@@ -31,7 +31,7 @@ void OMAVVelocityDynamics::initialize_world(
   omav = sim_.addArticulatedSystem(robot_description_, "/");
   object = sim_.addArticulatedSystem(object_description_, "/");
   ground = sim_.addGround(0.0, "steel");
-  sim_.setMaterialPairProp("steel", "steel", 0.5, 0.05, 0.001);
+  sim_.setMaterialPairProp("rubber", "rubber", 0.8, 0.05, 0.001);
   robot_dof_ = omav->getDOF();
   // Set dimensions
   state_dimension_ = 15; // I_position(3), orientation(4), I_velocity(3),
