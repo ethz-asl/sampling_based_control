@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     ros::spinOnce();
   }
   ROS_INFO_STREAM("First Odometry recieved");
-  // Set fir odomety value as reference
+  // Set first odomety value as reference
   omav_trajectory_node->get_odometry(x);
   omav_trajectory_node->get_start_position(x);
   controller.set_reference(x);
