@@ -65,6 +65,10 @@ int main(int argc, char** argv) {
     // start controller
   bool sequential;
   nh.param<bool>("sequential", sequential, false);
+  bool fix_length;
+  float runtime;
+  nh.param<bool>("fix_length", fix_length, false);
+  nh.param<float>("runtime", runtime, 5.);
   if (!sequential) controller.start();
   while (ros::ok()) {
     auto start = std::chrono::steady_clock::now();
@@ -95,6 +99,10 @@ int main(int argc, char** argv) {
             .count() /
         1000;
     if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
+
+    if (sim_time > runtime && fix_length){
+      ros::shutdown();
+    }
 
     ros::spinOnce();
   }
