@@ -42,6 +42,7 @@ class DataRecorder:
         self.initial_time = 0
         self.idx = 0
         self.experiment_id = experiment_id + str(uuid.uuid4())
+        print('Experiment ID for this run: ', self.experiment_id)
 
         self.csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log",
                                      "record.csv")
