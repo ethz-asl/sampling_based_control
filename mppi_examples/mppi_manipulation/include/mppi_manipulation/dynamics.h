@@ -74,12 +74,13 @@ class PandaRaisimDynamics : public mppi::Dynamics {
                        Eigen::Quaterniond& orientation);
   double get_object_displacement() const;
 
- protected:
+ public:
   bool fixed_base_;
   size_t robot_dof_;
+
+ protected:
   size_t input_dimension_;
   size_t state_dimension_;
-
   mppi::observation_t x_;
 
  private:

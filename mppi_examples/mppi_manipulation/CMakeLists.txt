@@ -15,6 +15,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         mppi
         mppi_ros
+        mppi_tools
         mppi_pinocchio
         roslib
         roscpp
@@ -41,6 +42,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 add_executable(manipulation_control src/nodes/panda_control.cpp)
 target_link_libraries(manipulation_control ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_control ${PROJECT_NAME})
+
+add_executable(model_tracking_node src/nodes/model_tracking_node.cpp src/model_tracking.cpp)
+target_link_libraries(model_tracking_node ${PROJECT_NAME} ${catkin_LIBRARIES} )
+add_dependencies(model_tracking_node ${PROJECT_NAME})
 
 add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
