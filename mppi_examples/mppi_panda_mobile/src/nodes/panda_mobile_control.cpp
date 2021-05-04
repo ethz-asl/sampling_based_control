@@ -28,7 +28,8 @@ int main(int argc, char** argv) {
 
   std::string robot_description =
       nh.param<std::string>("/robot_description", "");
-  auto simulation = PandaMobileDynamics(robot_description);
+  double sim_dt = nh.param<double>("sim_dt", 0.01);
+  auto simulation = PandaMobileDynamics(robot_description, sim_dt);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
   auto initial_configuration =
@@ -65,7 +66,6 @@ int main(int argc, char** argv) {
   geometry_msgs::PoseStamped ee_pose;
 
   bool static_optimization = nh.param<bool>("static_optimization", false);
-  double sim_dt = nh.param<double>("sim_dt", 0.01);
 
   double sim_time = 0.0;
 

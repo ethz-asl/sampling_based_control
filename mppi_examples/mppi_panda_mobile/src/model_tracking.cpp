@@ -94,8 +94,10 @@ bool PandaMobileModelTracking::setup() {
   // -------------------------------
   // dynamics
   // -------------------------------
-  auto dynamics =
-      std::make_shared<PandaMobileDynamics>(robot_description, holonomic);
+  double sim_dt;
+  mppi_ros::getNonNegative(nh_, "sim_dt", sim_dt);
+  auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description,
+                                                        sim_dt, holonomic);
 
   // -------------------------------
   // cost
@@ -211,15 +213,17 @@ void PandaMobileModelTracking::publish_ros() {
   optimal_trajectory_publisher_.publish(optimal_path_);
 
   // publish joint state
-  for (size_t i = 0; i < 7; i++) joint_state_.position[i] = x_(i);
+  static mppi::observation_t x;
+  this->get_state(x);
+  for (int i = 0; i < 7; i++) joint_state_.position[i] = x(i);
   joint_state_.header.stamp = ros::Time::now();
   state_publisher_.publish(joint_state_);
 
   // publish base transform
   world_base_tf_.header.stamp = ros::Time::now();
-  world_base_tf_.transform.translation.x = x_(7);
-  world_base_tf_.transform.translation.y = x_(8);
-  Eigen::Quaterniond q(Eigen::AngleAxisd(x_(9), Eigen::Vector3d::UnitZ()));
+  world_base_tf_.transform.translation.x = x(7);
+  world_base_tf_.transform.translation.y = x(8);
+  Eigen::Quaterniond q(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
   world_base_tf_.transform.rotation.x = q.x();
   world_base_tf_.transform.rotation.y = q.y();
   world_base_tf_.transform.rotation.z = q.z();

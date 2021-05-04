@@ -90,8 +90,10 @@ bool PandaMobileControllerInterface::set_controller(
   // -------------------------------
   // dynamics
   // -------------------------------
-  auto dynamics =
-      std::make_shared<PandaMobileDynamics>(robot_description, holonomic);
+  double sim_dt;
+  mppi_ros::getNonNegative(nh_, "sim_dt", sim_dt);
+  auto dynamics = std::make_shared<PandaMobileDynamics>(robot_description,
+                                                        sim_dt, holonomic);
 
   // -------------------------------
   // cost

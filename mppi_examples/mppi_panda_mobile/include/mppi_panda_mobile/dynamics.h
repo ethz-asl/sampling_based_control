@@ -24,7 +24,7 @@ enum PandaMobileDim {
 
 class PandaMobileDynamics : public mppi::Dynamics {
  public:
-  PandaMobileDynamics(const std::string& robot_description,
+  PandaMobileDynamics(const std::string& robot_description, const double& dt,
                       bool holonomic = true);
   ~PandaMobileDynamics() = default;
 
@@ -37,7 +37,7 @@ class PandaMobileDynamics : public mppi::Dynamics {
   }
 
   mppi::dynamics_ptr create() override {
-    return std::make_shared<PandaMobileDynamics>(robot_description_,
+    return std::make_shared<PandaMobileDynamics>(robot_description_, get_dt(),
                                                  holonomic_);
   }
 
