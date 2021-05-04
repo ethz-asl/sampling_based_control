@@ -8,9 +8,48 @@
 //  gui.render();
 //}
 
+class IfaceClass{
+ public:
+  IfaceClass(): p1_(0.0), p2_(0.0){};
+  bool print_p1(const float& p1){
+    p1_ = p1;
+    std::cout << "Param p1 is: " << p1_ << std::endl;
+    return true;
+  }
+  bool print_p2(const float& p2){
+    p2_ = p2;
+    std::cout << "Param p2 is: " << p2_ << std::endl;
+    return true;
+  }
+
+ private:
+  float p1_, p2_;
+};
+
 int main(int argc, char** argv) {
   std::cout << "Starting the visual debugger test" << std::endl;
+
+  IfaceClass my_iface;
+
   mppi_tools::ControlGui gui;
+
+  using std::placeholders::_1;
+  mppi_tools::param_options_t<float> p1_opt, p2_opt;
+  p1_opt.value = 0.0;
+  p1_opt.lower = -10.0;
+  p1_opt.upper = 10.0;
+  p1_opt.default_value = -2;
+  p1_opt.callback = std::bind(&IfaceClass::print_p1, &my_iface, _1);
+
+  p2_opt.value = 0.0;
+  p2_opt.lower = -10.0;
+  p2_opt.upper = 10.0;
+  p2_opt.default_value = 2.0;
+  p2_opt.callback = std::bind(&IfaceClass::print_p2, &my_iface, _1);
+
+  gui.register_param("param_1", p1_opt);
+  gui.register_param("param_2", p2_opt);
+
   gui.init();
 
   size_t n = 20;

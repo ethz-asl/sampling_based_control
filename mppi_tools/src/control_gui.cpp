@@ -155,6 +155,16 @@ bool ControlGui::setup_glfw() {
 
 bool ControlGui::init() { return setup_glfw(); }
 
+bool ControlGui::register_param(const std::string& param_name,
+                                param_options_t<float>& param_opt) {
+  if (params_list_.find(param_name) != params_list_.end()) {
+    return false;
+  }
+  params_list_[param_name] = param_opt;
+  std::cout << "Registered param: " << param_name << std::endl;
+  return true;
+}
+
 bool ControlGui::render() {
   if (!glfwWindowShouldClose(window_ptr_)) {
     glfwPollEvents();
@@ -211,10 +221,9 @@ void ControlGui::draw() {
   //-------------------------------------------------------------------------//
   //                       Common
   //-------------------------------------------------------------------------//
-  ImGui::Checkbox("Pause", &pause);
+  if (ImGui::Button("Start")) start_ = true;
   ImGui::SameLine();
-  ImGui::AlignTextToFramePadding();
-  ImGui::Text("Step:");
+  ImGui::Checkbox("Pause", &pause_);
   ImGui::SameLine();
 
   // Arrow buttons with Repeater
@@ -235,12 +244,27 @@ void ControlGui::draw() {
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
     //-------------------------------------------------------------------------//
-    //                       Configuration
+    //                       Configs
     //-------------------------------------------------------------------------//
     if (ImGui::BeginTabItem("Configuration")) {
-      static int clicked = 0;
-      if (ImGui::Button("Print")) std::cout << config_ << std::endl;
-      ImGui::Checkbox("verbose", &config_.verbose);
+      int i=0;
+      for (auto& param_pair : params_list_) {
+        auto& param_opt = param_pair.second;
+        ImGui::SliderFloat(param_pair.first.c_str(), &param_opt.value,
+                           param_opt.lower, param_opt.upper, "%.3f");
+        ImGui::SameLine();
+
+        std::string l1{"set to default##"}, l2{"apply##"};
+        if (ImGui::Button((l1 + std::to_string(i)).c_str())) {
+          param_opt.value = param_opt.default_value;
+          param_opt.callback(param_opt.value);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button((l2 + std::to_string(i)).c_str())) {
+          param_opt.callback(param_opt.value);
+        }
+        i++;
+      }
       ImGui::EndTabItem();
     }
 
@@ -252,83 +276,91 @@ void ControlGui::draw() {
       static bool show_averaged = false;
       static bool show_filtered = false;
       static int nr_rollouts = (int)rollouts_.size();
-      static int rollout_idx = 0;
-      static int input_idx = 0;
-      static int nr_inputs = (int)rollouts_[0].uu[0].size();
 
-      ImGui::AlignTextToFramePadding();
-      ImGui::SliderInt("rollout index", &rollout_idx, 0, nr_rollouts - 1);
-      ImGui::SameLine();
-      ImGui::Checkbox("show all", &show_all);
-      ImGui::SameLine();
-      ImGui::Checkbox("show averaged", &show_averaged);
-      ImGui::SameLine();
-      ImGui::Checkbox("show filtered", &show_filtered);
-      ImGui::EndTabItem();
-      ImGui::SameLine();
-
-      static bool first_run = true;
-      static bool* selected_input = new bool[nr_inputs];
-      static char** input_names = new char*[nr_inputs];
-
-      if (first_run) {
-        for (size_t i = 0; i < nr_inputs; i++) {
-          input_names[i] = new char[10];
-          strcpy(input_names[i], "input_");
-          input_names[i][6] = i + '0';  // convert integer to char
-          selected_input[i] = false;
-          first_run = false;
-        }
+      if (nr_rollouts == 0){
+        ImGui::Text("No rollouts data available yet.");
       }
+      else{
+        static int rollout_idx = 0;
+        static int input_idx = 0;
+        static int nr_inputs = (int)rollouts_[0].uu[0].size();
 
-      ImGui::SameLine();
-      if (ImGui::Button("select input")) ImGui::OpenPopup("selection_popup");
-      if (ImGui::BeginPopup("selection_popup")) {
-        for (size_t i = 0; i < nr_inputs; i++) {
-          ImGui::MenuItem(input_names[i], "", &selected_input[i]);
-        }
-        ImGui::EndPopup();
-      }
+        ImGui::AlignTextToFramePadding();
+        ImGui::SliderInt("rollout index", &rollout_idx, 0, nr_rollouts - 1);
+        ImGui::SameLine();
+        ImGui::Checkbox("show all", &show_all);
+        ImGui::SameLine();
+        ImGui::Checkbox("show averaged", &show_averaged);
+        ImGui::SameLine();
+        ImGui::Checkbox("show filtered", &show_filtered);
+        ImGui::EndTabItem();
+        ImGui::SameLine();
 
-      for (int i = 0; i < nr_inputs; i++) {
-        ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(),
-                                   ImGuiCond_Always);
-        ImPlot::SetNextPlotLimitsY(-1.0, 1.0, ImGuiCond_Once);
-        if (selected_input[i]) {
-          if (ImPlot::BeginPlot(input_names[i], "x", "f(x)")) {
-            if (show_all) {
-              for (const auto& roll : rollouts_) {
-                RolloutData data;
-                data.rollout = &roll;
-                data.input_selection = i;
-                ImPlot::PlotLineG("##Legend", RolloutInputPoint, &data,
-                                  (int)roll.tt.size());
-              }
-            } else {
-              RolloutData data;
-              data.rollout = &rollouts_[rollout_idx];
-              data.input_selection = i;
-              ImPlot::PlotLineG("u", RolloutInputPoint, &data,
-                                (int)data.rollout->tt.size());
-            }
+        static bool first_run = true;
+        static bool* selected_input = new bool[nr_inputs];
+        static char** input_names = new char*[nr_inputs];
 
-            if (show_averaged) {
-              std::vector<double> u;
-              std::vector<double> t = rollouts_[0].tt;
-              for (int j = 0; j < u_avg_.size(); j++) u.push_back(u_avg_[j][i]);
-              ImPlot::PlotLine("u_averaged", t.data(), u.data(), (int)t.size());
-            }
-
-            if (show_filtered) {
-              std::vector<double> u;
-              std::vector<double> t = rollouts_[0].tt;
-              for (int j = 0; j < u_.size(); j++) u.push_back(u_[j][i]);
-              ImPlot::PlotLine("u_filtered", t.data(), u.data(), (int)t.size());
-            }
-            ImPlot::EndPlot();
+        if (first_run) {
+          for (size_t i = 0; i < nr_inputs; i++) {
+            input_names[i] = new char[10];
+            strcpy(input_names[i], "input_");
+            input_names[i][6] = i + '0';  // convert integer to char
+            selected_input[i] = false;
+            first_run = false;
           }
         }
+
+        ImGui::SameLine();
+        if (ImGui::Button("select input")) ImGui::OpenPopup("selection_popup");
+        if (ImGui::BeginPopup("selection_popup")) {
+          for (size_t i = 0; i < nr_inputs; i++) {
+            ImGui::MenuItem(input_names[i], "", &selected_input[i]);
+          }
+          ImGui::EndPopup();
+        }
+
+        for (int i = 0; i < nr_inputs; i++) {
+          ImPlot::SetNextPlotLimitsX(rollouts_[0].tt[0], rollouts_[0].tt.back(),
+                                     ImGuiCond_Always);
+          ImPlot::SetNextPlotLimitsY(-1.0, 1.0, ImGuiCond_Once);
+          if (selected_input[i]) {
+            if (ImPlot::BeginPlot(input_names[i], "x", "f(x)")) {
+              if (show_all) {
+                for (const auto& roll : rollouts_) {
+                  RolloutData data;
+                  data.rollout = &roll;
+                  data.input_selection = i;
+                  ImPlot::PlotLineG("##Legend", RolloutInputPoint, &data,
+                                    (int)roll.tt.size());
+                }
+              } else {
+                RolloutData data;
+                data.rollout = &rollouts_[rollout_idx];
+                data.input_selection = i;
+                ImPlot::PlotLineG("u", RolloutInputPoint, &data,
+                                  (int)data.rollout->tt.size());
+              }
+
+              if (show_averaged) {
+                std::vector<double> u;
+                std::vector<double> t = rollouts_[0].tt;
+                for (int j = 0; j < u_avg_.size(); j++) u.push_back(u_avg_[j][i]);
+                ImPlot::PlotLine("u_averaged", t.data(), u.data(), (int)t.size());
+              }
+
+              if (show_filtered) {
+                std::vector<double> u;
+                std::vector<double> t = rollouts_[0].tt;
+                for (int j = 0; j < u_.size(); j++) u.push_back(u_[j][i]);
+                ImPlot::PlotLine("u_filtered", t.data(), u.data(), (int)t.size());
+              }
+              ImPlot::EndPlot();
+            }
+          }
+        }
+
       }
+      ImGui::EndTabItem();
     }
 
     //-------------------------------------------------------------------------//
@@ -349,7 +381,9 @@ void ControlGui::draw() {
         static double ymax_counter = 0.0;
         if (weights_.size() == 0) {
           ImGui::Text("Weights are not set. Cannot display weights.");
-        } else {
+        }
+        else
+        {
           std::vector<double> ridx;
           for (int i = 0; i < (int)weights_.size(); i++) ridx.push_back(i);
 

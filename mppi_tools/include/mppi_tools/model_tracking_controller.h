@@ -5,6 +5,7 @@
 #pragma once
 #include <mppi/core/solver.h>
 #include <mppi/utils/timer.h>
+#include <mppi/threading/WorkerManager.hpp>
 
 #include "mppi_tools/control_gui.hpp"
 
@@ -26,17 +27,31 @@ class ModelTrackingController {
   void set_reference(mppi::reference_trajectory_t& ref);
   void step();
 
+ private:
+  bool update_gui(const mppi::WorkerEvent& );
+  bool run_sim(const mppi::WorkerEvent& );
+  bool run_control(const mppi::WorkerEvent& );
+
+  bool set_control_rate(const double& );
+
  public:
   bool initialized_ = false;
+  bool started_ = false;
 
   double t_;
+  std::mutex input_mutex_;
   mppi::input_t u_;
+
+  std::mutex state_mutex_;
   mppi::observation_t x_;
 
-  mppi::dynamics_ptr model_;
-  mppi::solver_ptr solver_;
-  mppi::Timer timer_;
-
+  std::mutex gui_mutex_;
   mppi_tools::ControlGui gui_;
+
+  mppi::dynamics_ptr model_;  // simulator
+  mppi::solver_ptr solver_;   // controller
+
+  mppi::Timer timer_;
+  mppi::WorkerManager worker_manager_;
 };
 }  // namespace mppi_tools
