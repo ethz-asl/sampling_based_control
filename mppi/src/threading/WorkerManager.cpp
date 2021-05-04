@@ -6,10 +6,10 @@
 
 // modified by: Giuseppe Rizzi
 
-#include "mppi_ros/threading/WorkerManager.hpp"
-#include "mppi_ros/threading/log_messages.hpp"
+#include "mppi/threading/WorkerManager.hpp"
+#include "mppi/threading/log_messages.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 WorkerManager::WorkerManager() : workers_(), mutexWorkers_() {}
 
@@ -124,4 +124,4 @@ void WorkerManager::cleanDestructibleWorkers() {
   }
 }
 
-}  // namespace mppi::threading
+}  // namespace mppi

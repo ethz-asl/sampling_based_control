@@ -45,7 +45,7 @@
 
 #include <sys/time.h>
 
-namespace mppi::threading {
+namespace mppi {
 
 /*!
  * Todo: not every member of this struct is guaranteed to hold an appropriate
@@ -66,4 +66,4 @@ struct WorkerEvent {
   timespec timeStamp;  // NOLINT(readability-identifier-naming)
 };
 
-}  // namespace mppi::threading
+}  // namespace mppi

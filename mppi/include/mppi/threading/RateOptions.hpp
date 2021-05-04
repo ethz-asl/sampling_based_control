@@ -48,7 +48,7 @@
 #include <cmath>
 #include <string>
 
-namespace mppi::threading {
+namespace mppi {
 
 /*!
  * RateOptions class.
@@ -142,4 +142,4 @@ struct RateOptions {
   }
 };
 
-}  // namespace mppi::threading
+}  // namespace mppi

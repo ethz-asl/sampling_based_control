@@ -13,10 +13,10 @@
 #include <string>
 #include <unordered_map>
 
-#include "mppi_ros/threading/Worker.hpp"
-#include "mppi_ros/threading/WorkerOptions.hpp"
+#include "mppi/threading/Worker.hpp"
+#include "mppi/threading/WorkerOptions.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 class WorkerManager {
  public:
@@ -101,4 +101,4 @@ class WorkerManager {
   std::mutex mutexWorkers_;
 };
 
-}  // namespace mppi::threading
+}  // namespace mppi

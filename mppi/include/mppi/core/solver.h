@@ -24,14 +24,12 @@
 #include "mppi/core/dynamics.h"
 #include "mppi/core/rederer.h"
 #include "mppi/core/rollout.h"
-
-#include "mppi/utils/gaussian_sampler.h"
-#include "mppi/utils/savgol_filter.h"
-#include "mppi/utils/thread_pool.h"
-#include "mppi/utils/timer.h"
-
+#include "mppi/threading/thread_pool.h"
 #include "mppi/tree_search/experts/expert.h"
 #include "mppi/tree_search/tree/tree_manager.h"
+#include "mppi/utils/gaussian_sampler.h"
+#include "mppi/utils/savgol_filter.h"
+#include "mppi/utils/timer.h"
 
 namespace mppi {
 
@@ -86,7 +84,7 @@ class Solver {
 
   /**
    * @brief Transforms the cost to go into the corresponding sample weights
-   * @return 
+   * @return
    */
   void compute_weights();
 
@@ -261,6 +259,9 @@ class Solver {
   inline const Rollout& get_optimal_rollout() { return opt_roll_; }
   inline const Rollout& get_optimal_rollout_cache() { return opt_roll_cache_; }
   inline observation_t get_current_observation() { return x0_internal_; }
+  inline const std::vector<double>& get_rollouts_cost() {
+    return rollouts_cost_;
+  }
   inline data_t get_data() { return data_; }
 
  public:
@@ -353,7 +354,7 @@ class Solver {
   std::vector<input_t> momentum_;
   // timer
   Timer timer_;
-  // track indeces of rollouts which did not diverge
+  // track indexes of rollouts which did not diverge
   std::vector<int> rollouts_valid_index_;
   // rollouts costs
   std::vector<double> rollouts_cost_;

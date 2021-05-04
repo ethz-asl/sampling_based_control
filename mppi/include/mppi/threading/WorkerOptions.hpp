@@ -46,10 +46,10 @@
 #include <atomic>
 #include <string>
 
-#include "mppi_ros/threading/RateOptions.hpp"
-#include "mppi_ros/threading/WorkerEvent.hpp"
+#include "mppi/threading/RateOptions.hpp"
+#include "mppi/threading/WorkerEvent.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 using WorkerCallback = std::function<bool(const WorkerEvent&)>;
 using WorkerCallbackFailureReaction = std::function<void(void)>;
@@ -113,4 +113,4 @@ struct WorkerOptions : public RateOptions {
   bool destructWhenDone_;
 };
 
-}  // namespace mppi::threading
+}  // namespace mppi

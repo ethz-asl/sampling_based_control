@@ -30,9 +30,9 @@
 #include "mppi/tree_search/tree/node.h"
 #include "mppi/tree_search/tree/tree.h"
 
+#include "mppi/threading/thread_pool.h"
 #include "mppi/utils/data_logger.h"
 #include "mppi/utils/gaussian_sampler.h"
-#include "mppi/utils/thread_pool.h"
 
 namespace mppi {
 

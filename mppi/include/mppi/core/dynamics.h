@@ -27,6 +27,8 @@ class Dynamics {
 
   virtual void reset(const observation_t& x) = 0;
   virtual void render() {}
+
+  // TODO(giuseppe) decouple from time step. Set once for all instead
   virtual observation_t step(const input_t& u, const double dt) = 0;
   virtual const observation_t get_state() const = 0;
 
@@ -35,7 +37,7 @@ class Dynamics {
     return input_t::Zero(this->get_input_dimension());
   }
 
-  inline double get_dt() const { return dt; }
+  inline double& get_dt() { return dt; }
 
  private:
   double dt;

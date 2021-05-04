@@ -29,17 +29,12 @@ set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
-
-# Libraries
-add_library(mppi_threading src/threading/Rate.cpp src/threading/Worker.cpp src/threading/WorkerManager.cpp)
-
-
 add_library(${PROJECT_NAME}
         src/controller_interface.cpp
         src/conversions.cpp
         src/ros_params.cpp )
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} mppi_threading)
-target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} mppi_threading)
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
 
 catkin_install_python(PROGRAMS scripts/plot_experiment.py scripts/record_data.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

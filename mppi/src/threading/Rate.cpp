@@ -41,10 +41,10 @@
 
 // modified by: Giuseppe Rizzi
 
-#include "mppi_ros/threading/Rate.hpp"
-#include "mppi_ros/threading/log_messages.hpp"
+#include "mppi/threading/Rate.hpp"
+#include "mppi/threading/log_messages.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 Rate::Rate(const std::string& name, const double timeStep)
     : Rate(RateOptions(name, timeStep)) {}
@@ -197,4 +197,4 @@ void Rate::AddDuration(
   time.tv_nsec = time.tv_nsec % NSecPerSec_;
 }
 
-}  // namespace mppi::threading
+}  // namespace mppi

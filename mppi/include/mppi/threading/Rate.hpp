@@ -46,9 +46,9 @@
 // std
 #include <ctime>
 
-#include "mppi_ros/threading/RateOptions.hpp"
+#include "mppi/threading/RateOptions.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 /*!
  * Rate class for repeated processing at a certain rate.
@@ -243,4 +243,4 @@ class Rate {
       const double duration);  // NOLINT(readability-identifier-naming)
 };
 
-}  // namespace mppi::threading
+}  // namespace mppi

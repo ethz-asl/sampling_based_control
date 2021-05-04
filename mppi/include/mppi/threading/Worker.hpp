@@ -48,11 +48,11 @@
 #include <string>
 #include <thread>
 
-#include "mppi_ros/threading/Rate.hpp"
-#include "mppi_ros/threading/WorkerEvent.hpp"
-#include "mppi_ros/threading/WorkerOptions.hpp"
+#include "mppi/threading/Rate.hpp"
+#include "mppi/threading/WorkerEvent.hpp"
+#include "mppi/threading/WorkerOptions.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 class Worker {
  public:
@@ -108,4 +108,4 @@ class Worker {
   Rate rate_;
 };
 
-}  // namespace mppi::threading
+}  // namespace mppi

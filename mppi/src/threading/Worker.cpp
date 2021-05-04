@@ -47,10 +47,10 @@
 #include <cstring>  // strerror(..)
 #include <ctime>
 
-#include "mppi_ros/threading/Worker.hpp"
-#include "mppi_ros/threading/log_messages.hpp"
+#include "mppi/threading/Worker.hpp"
+#include "mppi/threading/log_messages.hpp"
 
-namespace mppi::threading {
+namespace mppi {
 
 Worker::Worker(const std::string& name, const double timestep,
                const WorkerCallback& callback)
@@ -178,4 +178,4 @@ void Worker::run() {
   done_ = true;
 }
 
-}  // namespace mppi::threading
+}  // namespace mppi
