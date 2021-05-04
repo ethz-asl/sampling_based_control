@@ -37,7 +37,7 @@ class Plotter:
             for exp in experiment_id:
                 print("  - " + exp)
                 df.loc[df['id'].str.contains(exp), 'experiment'] = exp
-                
+
             df = df.loc[df['experiment'] != ""]
         else:
             print("Looking for experiments with id: {}".format(experiment_id))
@@ -145,7 +145,7 @@ class Plotter:
                      hue="nr_rollouts",
                      ci="sd",
                      palette=sns.color_palette("tab10", n_colors=nr_samples))
-    
+
     def plot_effective_samples(self, aggregator, style=None, x='index', x_label=None, col=None):
         fig, ax = plt.subplots()
         nr_samples = len(self.df[aggregator].unique())
@@ -408,7 +408,7 @@ if __name__ == "__main__":
 
     plotter = Plotter(args.experiment_id)
     plotter.plot_average_cost_per_substep()
-    # plotter.plot_average_cost_per_rollout()
+    plotter.plot_average_cost_per_rollout()
     # plotter.plot_average_cost_per_rollout_tree()
     # plotter.plot_effective_samples_per_rollout()
     # plotter.plot_effective_samples_per_rollout_tree()
@@ -424,8 +424,8 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
-    plotter.plot_rollout_costs(args.experiment_id[0])
-    plotter.plot_rollout_weights(args.experiment_id[0])
+    # plotter.plot_rollout_costs(args.experiment_id[0])
+    # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
     # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
 
