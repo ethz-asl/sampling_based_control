@@ -16,6 +16,10 @@
 
 #include <mppi_pinocchio/ros_conversions.h>
 
+#include <policy_learning/panda_expert.h>
+#include <policy_learning/hdf5_dataset.h>
+#include <policy_learning/torch_script_policy.h>
+
 using namespace panda;
 
 bool PandaControllerInterface::init_ros() {
@@ -49,6 +53,7 @@ bool PandaControllerInterface::init_ros() {
 
   last_ee_ref_id_ = 0;
   ee_desired_pose_.header.seq = last_ee_ref_id_;
+  reference_set_ = false;
 
   last_ob_ref_id_ = 0;
   obstacle_pose_.header.seq = last_ob_ref_id_;
@@ -112,10 +117,38 @@ bool PandaControllerInterface::set_controller(
   }
 
   // -------------------------------
+  // learner
+  // -------------------------------
+  std::unique_ptr<Policy> policy_ptr = nullptr;
+  std::string torchscript_model_path;
+  if (nh_.param<std::string>("torchscript_model_path", 
+      torchscript_model_path, "")) {
+    policy_ptr = std::make_unique<TorchScriptPolicy>(
+      torchscript_model_path
+    );
+    ROS_INFO_STREAM("Using Torch script from " << torchscript_model_path);
+  }
+  std::unique_ptr<Dataset> dataset_ptr = nullptr;
+  std::string learned_expert_output_path;
+  if (nh_.param<std::string>("learned_expert_output_path", 
+      learned_expert_output_path, "")) {
+    dataset_ptr = std::make_unique<Hdf5Dataset>(
+      learned_expert_output_path
+    );
+    ROS_INFO_STREAM("HDF5 output path: " << learned_expert_output_path);
+  }
+
+  auto learner = std::make_shared<PandaExpert>(
+    std::move(policy_ptr), 
+    std::move(dataset_ptr),
+    robot_description
+  );  
+  // -------------------------------
   // controller
   // -------------------------------
   controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_,
-                                                    nullptr, renderer);
+                                                    nullptr, renderer, 
+                                                    learner);
 
   // -------------------------------
   // initialize reference
@@ -137,6 +170,8 @@ void PandaControllerInterface::ee_pose_desired_callback(
   pr(4) = msg->pose.orientation.y;
   pr(5) = msg->pose.orientation.z;
   pr(6) = msg->pose.orientation.w;
+  // ensure quaternion is normalized
+  pr.tail<4>().normalize();
   ref_.rr[0].head<7>() = pr;
 }
 
@@ -155,6 +190,7 @@ bool PandaControllerInterface::update_reference() {
       (last_ob_ref_id_ != obstacle_pose_.header.seq &&
        ee_desired_pose_.header.seq != 0)) {
     get_controller()->set_reference_trajectory(ref_);
+    reference_set_ = true;
   }
   last_ee_ref_id_ = ee_desired_pose_.header.seq;
   last_ob_ref_id_ = obstacle_pose_.header.seq;
@@ -190,4 +226,9 @@ void PandaControllerInterface::publish_ros() {
     optimal_path_.poses.push_back(pose_temp_ros);
   }
   optimal_trajectory_publisher_.publish(optimal_path_);
+}
+
+bool PandaControllerInterface::get_reference_set(){
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  return reference_set_;
 }

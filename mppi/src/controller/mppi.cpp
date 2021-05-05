@@ -308,6 +308,10 @@ void PathIntegral::update_reference() {
   if (config_.use_tree_search) {
     tree_manager_.set_reference_trajectory(rr_tt_ref_);
   }
+
+  if(learned_expert_){
+    learned_expert_->set_reference_trajectory(rr_tt_ref_);
+  }
 }
 
 void PathIntegral::sample_noise(input_t& noise) { sampler_->get_sample(noise); }
@@ -511,7 +515,7 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
       u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
           coeff * opt_roll_cache_.uu[idx];
     }
-    if(learned_expert_ && learned_expert_->collect_data()) {
+    if(reference_set_ && learned_expert_ && learned_expert_->collect_data()) {
       learned_expert_->save_state_action(x, u);
     }
   }

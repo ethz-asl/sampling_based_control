@@ -9,4 +9,5 @@
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>mppi</depend>
+    <depend>mppi_pinocchio</depend>
 </package>

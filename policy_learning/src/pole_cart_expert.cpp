@@ -29,8 +29,9 @@ bool PoleCartExpert::collect_data(){
   return dataset_ != nullptr;
 }
 
-PoleCartExpert::input_t const PoleCartExpert::normalize_angle(input_t const& x){
-   Eigen::VectorXd x_local = x;
+PoleCartExpert::observation_t const PoleCartExpert::normalize_angle(
+    observation_t const& x){
+  Eigen::VectorXd x_local = x;
   // Make sure that the angle is between +pi and -pi.
   // The neural net will not capture the periodicity of the angle.
   x_local(1) = fmod(x_local(1) + M_PI, 2*M_PI);

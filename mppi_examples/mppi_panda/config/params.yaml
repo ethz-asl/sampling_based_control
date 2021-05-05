@@ -14,6 +14,7 @@ solver:
   horizon: 1.0                  # time horizon (secs)
 
   cost_ratio: 0.2               # the (1-0.2)% of higher costs trajectories are neglected (if filtering=true)
+  learning_factor: 0.0  # percentage of rollouts that is informed by the learned expert
   caching_factor: 0.3           # the caching_factor pecentage of previous rollouts is kept as warm start
   filtering: true               # if to use cost ratio to cuf off some rollouts
   substeps: 1                   # number of optimization substeps (never investigated)
@@ -52,6 +53,8 @@ solver:
   # expert_types: {NORM, IMP}
   expert_weights: [ 0.0, 1.0 ]  # controls the weights of the different experts
 
+  learned_rollout_ratio: 0.0
+
   logging: true
 
 # custom params
@@ -66,5 +69,6 @@ publish_ros: false                 # optional ros publishing
 ros_publish_rate: 10.0            # ros publishing rate, used if sequential=false
 
 static_optimization: false        # in this setup, no control is sent to the simulation and optimize from same x0
+sequential: true
 # set filter type to 0 if true since this is broken with filtering active
 sim_dt: 0.01                      # simulation step time (can be different from internal solver simulation step)
