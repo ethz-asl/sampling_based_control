@@ -59,6 +59,7 @@ solver:
 
 # custom params
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
+goal_configuration: [-0.6, 0.4, 0.4, 1., 0., 0., 0.]
 linear_weight: 100.0
 angular_weight: 10.0
 obstacle_radius: 0.20
@@ -72,3 +73,6 @@ static_optimization: false        # in this setup, no control is sent to the sim
 sequential: true
 # set filter type to 0 if true since this is broken with filtering active
 sim_dt: 0.01                      # simulation step time (can be different from internal solver simulation step)
+
+fix_length: true                  # determines wether the simulation stops after a defined duration
+runtime: 4.5                      # duration the simulation should run
