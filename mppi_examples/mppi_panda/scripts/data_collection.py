@@ -15,10 +15,14 @@ parser = argparse.ArgumentParser(description='Run data collection for pole cart'
 parser.add_argument('name',
                     type=str,
                     help='name of the dataset')
+parser.add_argument('--n_runs', '-n',
+                    type=int,
+                    default=50,
+                    help='Number of rollouts')
 args = parser.parse_args()
 
 data_path = os.path.join(RosPack().get_path('policy_learning'), 'data')
-dataset_name = datetime.now().strftime('%y-%m-%d-%H:%M:%S-') + args.name
+dataset_name = args.name + datetime.now().strftime('_%y%m%d_%H%M%S') 
 dataset_path = os.path.join(data_path, dataset_name)
 os.mkdir(dataset_path)
 csv_path = os.path.join(dataset_path, 'value_log.csv')
@@ -26,8 +30,6 @@ csv_path = os.path.join(dataset_path, 'value_log.csv')
 with open(csv_path, 'a', newline='') as f:
     writer = csv.writer(f)
     writer.writerow([f'joint_{i+1}' for i in range(7)])
-
-N_RUNS = 10
 
 # initial conditions
 limits_lower = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
@@ -66,7 +68,7 @@ obstacle_pose = PoseStamped()
 obstacle_pose.header.frame_id = 'world'
 obstacle_pose.pose.position = Point(1000., 1000., 1000.,) # ignore obstacle...
 
-for i in range(N_RUNS):
+for i in range(args.n_runs):
   joint_state = np.random.normal(nominal_position, std_dev)
   joint_state = np.clip(joint_state, limits_lower, limits_upper)
   joint_state_string = np.array2string(joint_state, separator=', ', precision=4, max_line_width=1000)
@@ -75,7 +77,7 @@ for i in range(N_RUNS):
     writer = csv.writer(f)
     writer.writerow([f'{j:1.4}' for j in joint_state])
 
-  output_path = os.path.join(dataset_path, f'run{i}.hdf5')
+  output_path = os.path.join(dataset_path, f'run_{i}.hdf5')
   
   panda_cli_args = ['mppi_panda', 'panda_data_collection.launch', 
                     f'learner_output_path:={output_path}',
