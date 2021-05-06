@@ -122,10 +122,10 @@ class DataAnalyzer:
                 plt.plot(mean)
                 legend.append("GT-action + low pass")
             if noisy_model_actions is not None:
-                plt.plot(noisy_model_actions)
+                plt.plot(noisy_model_actions[:,a])
                 legend.append("noisy NN-action")
             if model_actions is not None:
-                plt.plot(model_actions)
+                plt.plot(model_actions[:,a])
                 legend.append("NN-action")
             plt.legend(legend)
             plt.xlabel("Time step")
