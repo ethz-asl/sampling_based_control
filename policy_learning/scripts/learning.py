@@ -29,14 +29,18 @@ class PolicyLearner:
         self.full_dataset = StateActionDataset(root_dir=file_path)
         self.n_states, self.n_actions = self.full_dataset.get_dimensions()
         # split the dataset into train and test sets
-        n_data_points = len(self.full_dataset)
-        n_train_set = int(0.8 * n_data_points)
-        n_test_set = n_data_points - n_train_set
-        self.train_dataset, self.test_dataset = random_split(self.full_dataset,
-            [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
+        self.train_dataset, self.test_dataset = self.split_dataset()
         # initialise MLP model
         self.model = LinReLu(self.n_states, self.n_actions).to(device)
         self._is_trained = False
+
+    def split_dataset(self):
+        n_data_points = len(self.full_dataset)
+        n_train_set = int(0.8 * n_data_points)
+        n_test_set = n_data_points - n_train_set
+        train_dataset, test_dataset = random_split(self.full_dataset,
+            [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
+        return train_dataset, test_dataset
 
     def train(self):
         """
@@ -44,7 +48,7 @@ class PolicyLearner:
         """
 
         # Training parameters
-        epochs = 30
+        epochs = 2
         batch_size = 32
         learning_rate = 1e-3
 
@@ -101,6 +105,13 @@ class PolicyLearner:
             print('Model has not been trained yet. Action is the output of random initialised network')
             with torch.no_grad():
                 return self.model(torch.as_tensor(state, dtype=torch.float32))
+
+    def update_dataset(self, path):
+        # update the dataset object with the datapoints stored in path
+        self.full_dataset.aggregate_dataset(path)
+        # split the dataset into train and test sets again
+        self.train_dataset, self.test_dataset = split_dataset()
+
 
     def save_model(self, state, name):
         """

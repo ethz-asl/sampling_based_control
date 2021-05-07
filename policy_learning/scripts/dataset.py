@@ -81,3 +81,28 @@ class StateActionDataset(Dataset):
             int, int: dimensions of the state and action spaces
         """
         return self._n_states, self._n_actions
+
+    def aggregate_dataset(self, path):
+        log_file_path = os.path.join(path, 'value_log.csv')
+        with open(log_file_path) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                line_count += 1
+
+        n_runs = line_count - 1 # minus header
+        print('Identified ', n_runs, ' runs.')
+
+        # loop over all files and concatenate into one dataset for each attribute
+        # !!Naive impelementation, needs to be revised if datasets become larger
+
+        for i in range(0, n_runs):
+            file_name = "run_" + str(i) + ".hdf5"
+            file_path = os.path.join(root_dir, file_name)
+            f = h5py.File(file_path, 'r')
+            if not f:
+                print('Could not load file at iteration: ', i)
+            more_states = f['states']
+            more_actions = f['actions']
+            self.state_dataset = np.append(self.state_dataset, more_states[:,:], axis=0)
+            self.action_dataset = np.append(self.action_dataset, more_actions[:,:], axis=0)

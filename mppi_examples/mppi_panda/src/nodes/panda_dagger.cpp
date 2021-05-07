@@ -20,7 +20,7 @@ using namespace panda;
 
 int main(int argc, char** argv) {
   // ros interface
-  ros::init(argc, argv, "panda_control_node");
+  ros::init(argc, argv, "panda_dagger");
   ros::NodeHandle nh("~");
 
   auto sequential = nh.param<bool>("sequential", false);
@@ -45,6 +45,12 @@ int main(int argc, char** argv) {
     );
     ROS_INFO_STREAM("Using Torch script from " << torchscript_model_path);
   }
+  else {
+    ROS_ERROR_STREAM("Failed to load the expert policy. " <<
+      torchscript_model_path << " is not a path to a model. Provide proper path to" <<
+      " model parameters.");
+    throw std::runtime_error("Failed to initialzied controller!");
+  }
   std::unique_ptr<Dataset> dataset_ptr = nullptr;
   std::string learned_expert_output_path;
   if (nh.param<std::string>("learned_expert_output_path",
@@ -53,6 +59,11 @@ int main(int argc, char** argv) {
       learned_expert_output_path
     );
     ROS_INFO_STREAM("HDF5 output path: " << learned_expert_output_path);
+  }
+  else {
+    ROS_ERROR_STREAM("Failed to open dataset storage location. Provide proper path to" <<
+      " save collected data.");
+    throw std::runtime_error("Failed to initialzied data saving!");
   }
 
   auto learner = std::make_shared<PandaExpert>(
@@ -108,6 +119,13 @@ int main(int argc, char** argv) {
 
   if (!sequential) controller.start();
 
+
+  // ensure we don't sample any learned trajectories in expert
+  if (controller.config_.learned_rollout_ratio != 0) {
+    ROS_ERROR_STREAM("Aborting Dagger, turn off sampling from NN in params!");
+    throw std::runtime_error("Failed to initialzied controller!");
+  }
+
   while (ros::ok()) {
     auto start = std::chrono::steady_clock::now();
 
@@ -115,9 +133,9 @@ int main(int argc, char** argv) {
     controller.set_observation(x, sim_time);
     // loop this ?
     controller.update_policy();
-    u = learner->get_action(x);
+    //u = learner->get_action(x);
     // check if this then also saves this state action pair
-    controller.get_input(x, u_expert, sim_time);
+    controller.get_input(x, u, sim_time);
     controller.publish_ros_default();
     controller.publish_ros();
 

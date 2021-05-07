@@ -1,7 +1,13 @@
+#!/usr/bin/env python3
+
+import os
+import datetime
+import torch
 import roslaunch
 import rospy
 
-from leaning import PolicyLearner
+from learning import PolicyLearner
+from dataset import StateActionDataset
 
 
 if __name__ == "__main__":
@@ -27,13 +33,24 @@ if __name__ == "__main__":
     # load first dataset and train first policy
 
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dataset_name = "Horizon_4_Train_0419140234"
+    dataset_name = "PandaR10_sStart_sGoal_0504163457"
     dir_path = task_path + "/../data/" + dataset_name
+    dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name)
     initial_dataset = StateActionDataset(root_dir=dir_path)
+    # define a new folder where all dagger saving and loading takes place
+    dagger_path = os.path.join(dir_path,
+        datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+'_dagger')
+    dagger_models_path = os.path.join(dagger_path, 'policies')
+    dagger_datasets_path = os.path.join(dagger_path, 'datasets')
+    if (not os.path.isdir(dagger_models_path)):
+        os.makedirs(dagger_models_path)
+    if (not os.path.isdir(dagger_datasets_path)):
+        os.makedirs(dagger_datasets_path)
+    model_path = os.path.join(dagger_models_path, 'iter_0')
     # fix a random seed
     torch.manual_seed(1)
     idx=1
-    sample = dataset[idx]
+    sample = initial_dataset[idx]
 
     # set device for training
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -41,7 +58,7 @@ if __name__ == "__main__":
     learner = PolicyLearner(dir_path, device)
     learner.train()
     # save first policy, will be loaded from the ros node
-    learner.save_model(sample['state'], dataset_name)
+    learner.save_model(sample['state'], model_path)
 
 
     ##############################
@@ -53,9 +70,23 @@ if __name__ == "__main__":
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
 
-        cli_args1 = ['mppi_panda', 'panda_dagger.launch']
-        roslaunch_file = roslaunch.rlutil.resolve_launch_arguments(cli_args1)
-        parent = rosluanch.parent.ROSLaunchParent(uuid, roslaunch_file)
+
+        dataset_path = os.path.join(dagger_datasets_path, f'iter_{i+1}.hdf5')
+        model_path = os.path.join(dagger_models_path, f'iter_{i}.pt')
+
+        print('Dataset path: ', dataset_path)
+        print('Model path: ', model_path)
+
+        cli_args = ['mppi_panda', 'panda_dagger.launch',
+                        f'learner_output_path:={dataset_path}',
+                        f'torchscript_model_path:={model_path}']
+        print(cli_args)
+        roslaunch_file = roslaunch.rlutil.resolve_launch_arguments(cli_args)[0]
+        print(roslaunch_file)
+        parent = roslaunch.parent.ROSLaunchParent(uuid,
+                                            [(roslaunch_file, cli_args[2:])],
+                                            force_required=True,
+                                            timeout=60)
 
         parent.start()
 
@@ -65,11 +96,9 @@ if __name__ == "__main__":
         ## load the newly created datafile
         ## some kind of function which joins the datasets (and also saves the
         ## larger dataset and deletes the other one?)
+        learner.update_dataset()
 
         ## train the classifier using data from this new dataset
-        dataset_name = "aggregated_dataset"
-        dir_path = task_path + "/../data/" + dataset_name
-        aggregated_dataset = StateActionDataset(root_dir=dir_path)
 
         idx=1
         sample = dataset[idx]
@@ -79,4 +108,5 @@ if __name__ == "__main__":
         ## intialise a new one
         learner.train()
         # save update policy, will be loaded from the ros node, make sure naming is consistent
-        learner.save_model(sample['state'], dataset_name)
+        save_model_path = os.path.join(dagger_models_path, f'iter_{i+1}')
+        learner.save_model(sample['state'], save_model_path)
