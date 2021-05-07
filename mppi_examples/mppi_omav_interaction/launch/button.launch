@@ -16,6 +16,7 @@
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
     <param name="object_description_raisim" command="$(find xacro)/xacro $(arg description_file_object)"/>
+    <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
 
     <node name="omav_mppi_interaction" type="omav_interaction_control" pkg="mppi_omav_interaction" output="screen" >
         <param name="goal_position_x" value="$(arg goal_position_x)"/>
@@ -27,6 +28,12 @@
         <param name="goal_quaternion_z" value="$(arg goal_quaternion_z)"/>
         <param name="activation_file" value="$(env HOME)/.raisim/activation.raisim"/>
         <rosparam command="load" file="$(find mppi_omav_interaction)/params/omav_cost.yaml"/>
+    </node>
+
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="object_description"/>
+        <remap from="joint_states" to="/object/joint_state"/>
     </node>
 
     <!-- Open Rviz -->

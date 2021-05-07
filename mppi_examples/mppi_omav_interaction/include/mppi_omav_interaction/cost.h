@@ -60,6 +60,9 @@ private:
   double distance_from_savezone;
   double obstacle_cost;
   double mode;
+  double handle_position_x;
+  double handle_position_y;
+  double distance_omav_handle;
 
 private:
   cost_ptr create() override {

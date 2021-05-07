@@ -105,15 +105,15 @@ int main(int argc, char **argv) {
 
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
-  auto object_describtion_raisim =
+  auto object_description_raisim =
       nh.param<std::string>("/object_description_raisim", "");
   ROS_INFO_STREAM("Robot & Object Description Raisim Loaded");
 
   auto simulation = std::make_shared<OMAVVelocityDynamicsRos>(
-      nh, robot_description_raisim, object_describtion_raisim, 0.015);
+      nh, robot_description_raisim, object_description_raisim, 0.015);
   ROS_INFO_STREAM("Simulation Created");
   // set initial state
-  observation_t x = observation_t::Zero(26);
+  observation_t x = observation_t::Zero(simulation->get_state_dimension());
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < x0.size(); i++)
     x(i) = x0[i];

@@ -110,7 +110,7 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](4) = x_goal_quaternion;
   ref_.rr[0](5) = y_goal_quaternion;
   ref_.rr[0](6) = z_goal_quaternion;
-  ref_.rr[0](7) = 2.5;
+  ref_.rr[0](7) = 0.0;
   // Initialize mode
   ref_.rr[0](8) = 0;
   ref_.tt.resize(1, 0.0);
@@ -222,7 +222,7 @@ void OMAVControllerInterface::publish_trajectories() {
   get_controller()->get_rollout_trajectories(current_trajectories);
   geometry_msgs::PoseArray trajectory_array;
   geometry_msgs::Pose current_trajectory_pose;
-  trajectory_array.header.frame_id = "odom";
+  trajectory_array.header.frame_id = "world";
   trajectory_array.header.stamp = ros::Time::now();
   for (int i = 0; i < current_trajectories.size(); i++) {
     xx_current_trajectory = current_trajectories[i].xx;
@@ -242,7 +242,7 @@ void OMAVControllerInterface::publish_optimal_rollout() {
                                         optimal_rollout_inputs_);
   geometry_msgs::PoseArray optimal_rollout_array_;
   geometry_msgs::Pose current_pose_;
-  optimal_rollout_array_.header.frame_id = "odom";
+  optimal_rollout_array_.header.frame_id = "world";
   optimal_rollout_array_.header.stamp = ros::Time::now();
   for (int i = 0; i < 30; i++) {
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],

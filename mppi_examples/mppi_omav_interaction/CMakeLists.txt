@@ -17,6 +17,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         tf2_ros
         mav_msgs
+        tf
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -43,10 +44,6 @@ add_dependencies(omav_interaction_control ${PROJECT_NAME})
 
 add_definitions("-DBOOST_MPL_LIMIT_LIST_SIZE=30")
 
-install(DIRECTORY launch resources
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        )
+install(DIRECTORY launch resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-catkin_install_python(PROGRAMS scripts/button.py
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-        )
+catkin_install_python(PROGRAMS scripts/button.py scripts/linear_drawer.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -18,10 +18,10 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   goal_publisher_ = nh_.advertise<visualization_msgs::Marker>("goal_marker", 0);
   obstacle_publisher_ =
       nh_.advertise<visualization_msgs::Marker>("obstacle_marker", 0);
-  object_publisher_ =
-      nh_.advertise<visualization_msgs::Marker>("object_marker", 0);
+  object_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
 
-  omav_marker_.header.frame_id = "odom";
+  omav_marker_.header.frame_id = "world";
   omav_marker_.id = 0;
   omav_marker_.action = visualization_msgs::Marker::ADD;
   omav_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
@@ -35,7 +35,7 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   omav_marker_.color.g = 0.0;
   omav_marker_.color.b = 0.0;
 
-  goal_marker_.header.frame_id = "odom";
+  goal_marker_.header.frame_id = "world";
   goal_marker_.id = 1;
   goal_marker_.action = visualization_msgs::Marker::ADD;
   goal_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
@@ -57,7 +57,7 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   goal_marker_.pose.orientation.y = 0.0;
   goal_marker_.pose.orientation.z = 0.0;
 
-  obstacle_marker_.header.frame_id = "odom";
+  obstacle_marker_.header.frame_id = "world";
   obstacle_marker_.id = 2;
   obstacle_marker_.action = visualization_msgs::Marker::ADD;
   obstacle_marker_.type = visualization_msgs::Marker::CUBE;
@@ -77,25 +77,8 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   obstacle_marker_.pose.orientation.y = 0.0;
   obstacle_marker_.pose.orientation.z = 0.0;
 
-  object_marker_.header.frame_id = "odom";
-  object_marker_.id = 3;
-  object_marker_.action = visualization_msgs::Marker::ADD;
-  object_marker_.type = visualization_msgs::Marker::CUBE;
-  object_marker_.scale.x = 0.3;
-  object_marker_.scale.y = 0.3;
-  object_marker_.scale.z = 0.3;
-  object_marker_.color.a = 1.0;
-  object_marker_.color.r = 1.0;
-  object_marker_.color.g = 1.0;
-  object_marker_.color.b = 1.0;
-  object_marker_.header.stamp = ros::Time::now();
-  object_marker_.pose.position.x = 2.0;
-  object_marker_.pose.position.y = 0.0;
-  object_marker_.pose.position.z = 1.0;
-  object_marker_.pose.orientation.w = 1.0;
-  object_marker_.pose.orientation.x = 0.0;
-  object_marker_.pose.orientation.y = 0.0;
-  object_marker_.pose.orientation.z = 0.0;
+  object_state_.name = {"articulation_joint"};
+  object_state_.position.resize(1);
 }
 
 void OMAVVelocityDynamicsRos::reset_to_default() {
@@ -116,18 +99,19 @@ void OMAVVelocityDynamicsRos::publish_ros() {
   omav_marker_.pose.orientation.y = x_(5);
   omav_marker_.pose.orientation.z = x_(6);
 
-  object_marker_.header.stamp = ros::Time::now();
-  object_marker_.pose.position.x = x_(13) + 2.0;
-  object_marker_.pose.position.y = 0.0;
-  object_marker_.pose.position.z = 1.0;
-  object_marker_.pose.orientation.w = 1;
-  object_marker_.pose.orientation.x = 0;
-  object_marker_.pose.orientation.y = 0;
-  object_marker_.pose.orientation.z = 0;
+  static tf::TransformBroadcaster odom_broadcaster;
+  tf::Transform omav_odom;
+  omav_odom.setOrigin(tf::Vector3(x_(0), x_(1), x_(2)));
+  omav_odom.setRotation(tf::Quaternion(x_(4), x_(5), x_(6), x_(3)));
+  odom_broadcaster.sendTransform(
+      tf::StampedTransform(omav_odom, ros::Time::now(), "world", "odom_omav"));
+  // update object state visualization
+  object_state_.header.stamp = ros::Time::now();
+  object_state_.position[0] = x_(13);
+  object_state_publisher_.publish(object_state_);
 
   vis_publisher_.publish(omav_marker_);
   goal_publisher_.publish(goal_marker_);
   obstacle_publisher_.publish(obstacle_marker_);
-  object_publisher_.publish(object_marker_);
 }
 } // namespace omav_velocity

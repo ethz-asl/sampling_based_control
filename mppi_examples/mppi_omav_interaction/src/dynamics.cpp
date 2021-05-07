@@ -31,11 +31,11 @@ void OMAVVelocityDynamics::initialize_world(
   omav = sim_.addArticulatedSystem(robot_description_, "/");
   object = sim_.addArticulatedSystem(object_description_, "/");
   ground = sim_.addGround(0.0, "steel");
-  sim_.setMaterialPairProp("rubber", "rubber", 0.8, 0.05, 0.001);
+  sim_.setMaterialPairProp("rubber", "rubber", 0.1, 0.05, 0.001);
   robot_dof_ = omav->getDOF();
   // Set dimensions
-  state_dimension_ = 15; // I_position(3), orientation(4), I_velocity(3),
-  // I_omega(3), I_position_object(1), I_velocity_object(1)
+  state_dimension_ = 16; // I_position(3), orientation(4), I_velocity(3),
+  // I_omega(3), I_position_object(1), I_velocity_object(1), contact_state
   input_dimension_ =
       6; // commanded_linear_velocity_(3) commanded_angular_velocity(3)
 
@@ -63,15 +63,25 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   omav->setGeneralizedForce(omav->getNonlinearities());
   // step
   sim_.integrate();
-
+  // Get states after integration
   omav->getState(omav_pose, omav_velocity);
   object->getState(object_pose, object_velocity);
+
+  // get contact state
+  double in_contact = 0;
+  for (const auto &contact : omav->getContacts()) {
+    if (contact.skip())
+      continue;
+    in_contact = 1;
+    break;
+  }
+
   // Assemble state
   x_.head<7>() = omav_pose;
   x_.segment<6>(7) = omav_velocity;
   x_.segment<1>(13) = object_pose;
-  x_.tail<1>() = object_velocity;
-
+  x_.segment<1>(14) = object_velocity;
+  x_.segment<1>(15)(0) = in_contact;
   return x_;
 }
 
@@ -80,11 +90,11 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   x_ = x;
   // reset omav and object in raisim
   omav->setState(x_.head<7>(), x_.segment<6>(7));
-  object->setState(x_.segment<1>(13), x_.tail<1>());
+  object->setState(x_.segment<1>(13), x_.segment<1>(14));
 }
 
 mppi::DynamicsBase::input_t
 OMAVVelocityDynamics::get_zero_input(const observation_t &x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
 }
-} // namespace omav_velocity
+} // namespace omav_interaction

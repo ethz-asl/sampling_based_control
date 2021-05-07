@@ -9,14 +9,14 @@
     <xacro:property name="height_ouzel" value="0.3"/>
 
     <link name="world"/>
-    <link name="odom_omav"/>
+    <link name="odom"/>
     <joint name="odom_to_world" type="fixed">
         <parent link="world"/>
-        <child link="odom_omav"/>
+        <child link="odom"/>
     </joint>
 
     <joint name="odom_to_omav_x" type="prismatic">
-        <parent link="odom_omav"/>
+        <parent link="odom"/>
         <child link="omav_x"/>
         <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
         <axis xyz="1 0 0"/>
@@ -87,6 +87,9 @@
             <geometry>
                 <cylinder radius="0.015" length="0.54"/>
             </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
         </collision>
         <visual>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
@@ -125,4 +128,32 @@
             </material>
         </visual>
     </link>
+
+    <joint name="tip_to_hook" type="fixed">
+        <parent link="tip"/>
+        <child link="hook"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 -0.025"/>
+    </joint>
+
+    <link name="hook">
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1"/>
+            </material>
+        </visual>
+    </link>
+
 </robot>

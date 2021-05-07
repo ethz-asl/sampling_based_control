@@ -5,15 +5,17 @@
     <xacro:property name="dimension_cube" value="0.3"/>
 
     <link name="world"/>
-    <link name="odom"/>
+
     <joint name="odom_to_world" type="fixed">
         <parent link="world"/>
-        <child link="odom"/>
+        <child link="odom_button"/>
         <origin rpy="0 0 0" xyz="2.0 0.0 1.0"/>
     </joint>
 
-    <joint name="odom_to_button_x" type="prismatic">
-        <parent link="odom"/>
+    <link name="odom_button"/>
+
+    <joint name="articulation_joint" type="prismatic">
+        <parent link="odom_button"/>
         <child link="button_x"/>
         <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
         <axis xyz="1 0 0"/>
