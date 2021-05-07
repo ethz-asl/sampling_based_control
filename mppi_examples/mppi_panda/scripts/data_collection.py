@@ -50,7 +50,7 @@ def get_pose():
   min_rad = 0.2
   center = np.array([0, 0, 0.4])
   while True:
-    position = np.random.uniform(high=max_rad, size=3)
+    position = np.random.uniform(low=-max_rad, high=max_rad, size=3)
     if min_rad <= np.linalg.norm(position) <= max_rad:
       position += center
       if position[0] > 0 and position[2] > 0:
