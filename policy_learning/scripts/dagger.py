@@ -9,6 +9,65 @@ import rospy
 from learning import PolicyLearner
 from dataset import StateActionDataset
 
+class Dagger:
+    """
+    Class to handle the generic dataset aggregation loop with virtual methods
+    to be completed in the example which are implementation specific.
+    """
+
+    def __init__(self, file_path):
+        # handle path to initial dataset or (TODO) flag to start from fresh (data collection)
+        self.dagger_path = os.path.join(file_path,
+            datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+'_dagger')
+        self.dagger_models_path = os.path.join(dagger_path, 'policies')
+        self.dagger_datasets_path = os.path.join(dagger_path, 'datasets')
+        if (not os.path.isdir(self.dagger_models_path)):
+            os.makedirs(self.dagger_models_path)
+        if (not os.path.isdir(self.dagger_datasets_path)):
+            os.makedirs(self.dagger_datasets_path)
+
+        # set device for policy
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # initialise policy
+        self.learner = PolicyLearner(dir_path, device)
+
+    def train_torch_model(self, iteration):
+        """
+        Handles all setup regarding loading files and saving model to train
+        a model.
+        Args:
+            iteration (int): current iteration of the main Dagger loop.
+        """
+        model_save_path = os.path.join(self.dagger_models_path,
+            f'iter_{iteration}')
+        self.learner.train()
+        self.learner.save_model(None, model_save_path)
+
+    def collect_dataset(self, iteration):
+        """
+        Handels collecting a dataset at a given iteration with the current policy.
+        Args:
+            iteration (int): current iteration of the main Dagger loop.
+        """
+        dataset_save_dir = os.path.join(self.dagger_datasets_path,
+            f'iter_{iteration}')
+        model_load_path = os.path.join(self.dagger_models_path,
+            f'iter_{iteration-1}.pt')
+        ## somehow do datacollection
+        return dataset_save_dir
+
+    def aggregate_dataset(self, dataset_load_dir):
+        learner.append_dataset(dataset_load_dir)
+
+    def dagger_loop(self, n_iterations):
+        for iter in range(n_iterations):
+            if iter == 0:
+                train_torch_model(iter)
+                continue
+            save_path = collect_dataset(iter)
+            aggregate_dataset(save_path)
+            train_torch_model(iter)
+
 
 if __name__ == "__main__":
 
@@ -29,84 +88,12 @@ if __name__ == "__main__":
     #   train classifier
     #   --> done here
 
-    #######################################
-    # load first dataset and train first policy
-
+    # Dir to dataset
     task_path = os.path.dirname(os.path.realpath(__file__))
     dataset_name = "PandaR10_sStart_sGoal_0504163457"
-    dir_path = task_path + "/../data/" + dataset_name
     dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name)
-    initial_dataset = StateActionDataset(root_dir=dir_path)
-    # define a new folder where all dagger saving and loading takes place
-    dagger_path = os.path.join(dir_path,
-        datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+'_dagger')
-    dagger_models_path = os.path.join(dagger_path, 'policies')
-    dagger_datasets_path = os.path.join(dagger_path, 'datasets')
-    if (not os.path.isdir(dagger_models_path)):
-        os.makedirs(dagger_models_path)
-    if (not os.path.isdir(dagger_datasets_path)):
-        os.makedirs(dagger_datasets_path)
-    model_path = os.path.join(dagger_models_path, 'iter_0')
-    # fix a random seed
-    torch.manual_seed(1)
-    idx=1
-    sample = initial_dataset[idx]
-
-    # set device for training
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    # train first policy
-    learner = PolicyLearner(dir_path, device)
-    learner.train()
-    # save first policy, will be loaded from the ros node
-    learner.save_model(sample['state'], model_path)
-
-
-    ##############################
-    # loop
-    iterations = 10
-    for i in range(iterations):
-        ## launch a dagger node -> this also saves a new dataset file
-        # set name for this dataset file
-        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        roslaunch.configure_logging(uuid)
-
-
-        dataset_path = os.path.join(dagger_datasets_path, f'iter_{i+1}.hdf5')
-        model_path = os.path.join(dagger_models_path, f'iter_{i}.pt')
-
-        print('Dataset path: ', dataset_path)
-        print('Model path: ', model_path)
-
-        cli_args = ['mppi_panda', 'panda_dagger.launch',
-                        f'learner_output_path:={dataset_path}',
-                        f'torchscript_model_path:={model_path}']
-        print(cli_args)
-        roslaunch_file = roslaunch.rlutil.resolve_launch_arguments(cli_args)[0]
-        print(roslaunch_file)
-        parent = roslaunch.parent.ROSLaunchParent(uuid,
-                                            [(roslaunch_file, cli_args[2:])],
-                                            force_required=True,
-                                            timeout=60)
-
-        parent.start()
-
-        rospy.sleep(10)
-        parent.shutdown()
-
-        ## load the newly created datafile
-        ## some kind of function which joins the datasets (and also saves the
-        ## larger dataset and deletes the other one?)
-        learner.update_dataset()
-
-        ## train the classifier using data from this new dataset
-
-        idx=1
-        sample = dataset[idx]
-
-        # train update policy
-        ## might need a new method on PolicyLerning to update the dataset or just
-        ## intialise a new one
-        learner.train()
-        # save update policy, will be loaded from the ros node, make sure naming is consistent
-        save_model_path = os.path.join(dagger_models_path, f'iter_{i+1}')
-        learner.save_model(sample['state'], save_model_path)
+    # intiialise dagger object
+    dagger = Dagger(dir_path)
+    # run dagger
+    n_iterations = 10
+    dagger.dagger_loop(n_iterations)

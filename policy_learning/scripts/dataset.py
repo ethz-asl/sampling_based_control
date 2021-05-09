@@ -82,7 +82,7 @@ class StateActionDataset(Dataset):
         """
         return self._n_states, self._n_actions
 
-    def aggregate_dataset(self, path):
+    def append_dataset(self, path):
         log_file_path = os.path.join(path, 'value_log.csv')
         with open(log_file_path) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')

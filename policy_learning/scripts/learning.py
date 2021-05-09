@@ -106,24 +106,29 @@ class PolicyLearner:
             with torch.no_grad():
                 return self.model(torch.as_tensor(state, dtype=torch.float32))
 
-    def update_dataset(self, path):
+    def append_dataset(self, path):
         # update the dataset object with the datapoints stored in path
-        self.full_dataset.aggregate_dataset(path)
+        self.full_dataset.append_dataset(path)
         # split the dataset into train and test sets again
         self.train_dataset, self.test_dataset = split_dataset()
+
 
 
     def save_model(self, state, name):
         """
         saves model if trained
         """
+        # TODO (Kiran): change I/O to get rid of state, not required because
+        # a sample state can also be generated from inside this class (see
+        # sample_state below)
         if self._is_trained:
             with torch.no_grad():
+                sample_state = self.full_dataset[0]
                 # save the weights of the model to be used in python
                 torch.save(self.model.state_dict(), f'{name}.pth')
                 # save the model such that it can be called from cpp
                 traced_script_module = torch.jit.trace(self.model,
-                    torch.as_tensor(state, dtype=torch.float32))
+                    torch.as_tensor(sample_state, dtype=torch.float32))
                 traced_script_module.save(f'{name}.pt')
                 print('Model saved.')
 
