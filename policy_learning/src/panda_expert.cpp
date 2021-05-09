@@ -62,6 +62,6 @@ void const PandaExpert::augment_observation(observation_t const& x,
 
   Eigen::Vector3d obstacle_position = timed_ref_.rr[0].tail<3>();
 
-  x_aug.resize(x.size() + 9);
-  x_aug << x, error, obstacle_position; 
+  x_aug.resize(7 + 6);
+  x_aug << x.head<7>(), error; 
 }
