@@ -3,11 +3,10 @@
 import os
 import datetime
 import torch
-import roslaunch
-import rospy
 
 from learning import PolicyLearner
 from dataset import StateActionDataset
+from dataset_collection_panda import DatasetCollectionPanda
 
 class Dagger:
     """
@@ -19,8 +18,8 @@ class Dagger:
         # handle path to initial dataset or (TODO) flag to start from fresh (data collection)
         self.dagger_path = os.path.join(file_path,
             datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+'_dagger')
-        self.dagger_models_path = os.path.join(dagger_path, 'policies')
-        self.dagger_datasets_path = os.path.join(dagger_path, 'datasets')
+        self.dagger_models_path = os.path.join(self.dagger_path, 'policies')
+        self.dagger_datasets_path = os.path.join(self.dagger_path, 'datasets')
         if (not os.path.isdir(self.dagger_models_path)):
             os.makedirs(self.dagger_models_path)
         if (not os.path.isdir(self.dagger_datasets_path)):
@@ -30,6 +29,7 @@ class Dagger:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         # initialise policy
         self.learner = PolicyLearner(dir_path, device)
+
 
     def train_torch_model(self, iteration):
         """
@@ -54,19 +54,29 @@ class Dagger:
         model_load_path = os.path.join(self.dagger_models_path,
             f'iter_{iteration-1}.pt')
         ## somehow do datacollection
+        n_runs = 1
+        collector = DatasetCollectionPanda(None, dagger=True,
+            save_path=dataset_save_dir, n_runs=n_runs, model_path=model_load_path)
+        collector.run_collection()
+
         return dataset_save_dir
 
     def aggregate_dataset(self, dataset_load_dir):
-        learner.append_dataset(dataset_load_dir)
+        self.learner.append_dataset(dataset_load_dir)
 
     def dagger_loop(self, n_iterations):
+        """
+        Main loop of the dagger algorithm.
+        Args:
+            n_iterations: Number of iterations to run the dagger algorithm in total
+        """
         for iter in range(n_iterations):
             if iter == 0:
-                train_torch_model(iter)
+                self.train_torch_model(iter)
                 continue
-            save_path = collect_dataset(iter)
-            aggregate_dataset(save_path)
-            train_torch_model(iter)
+            save_path = self.collect_dataset(iter)
+            self.aggregate_dataset(save_path)
+            self.train_torch_model(iter)
 
 
 if __name__ == "__main__":
