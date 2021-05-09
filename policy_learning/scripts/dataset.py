@@ -98,7 +98,7 @@ class StateActionDataset(Dataset):
 
         for i in range(0, n_runs):
             file_name = "run_" + str(i) + ".hdf5"
-            file_path = os.path.join(root_dir, file_name)
+            file_path = os.path.join(path, file_name)
             f = h5py.File(file_path, 'r')
             if not f:
                 print('Could not load file at iteration: ', i)

@@ -110,7 +110,7 @@ class PolicyLearner:
         # update the dataset object with the datapoints stored in path
         self.full_dataset.append_dataset(path)
         # split the dataset into train and test sets again
-        self.train_dataset, self.test_dataset = split_dataset()
+        self.train_dataset, self.test_dataset = self.split_dataset()
 
 
 
@@ -123,7 +123,7 @@ class PolicyLearner:
         # sample_state below)
         if self._is_trained:
             with torch.no_grad():
-                sample_state = self.full_dataset[0]
+                sample_state = self.full_dataset[0]['state']
                 # save the weights of the model to be used in python
                 torch.save(self.model.state_dict(), f'{name}.pth')
                 # save the model such that it can be called from cpp
