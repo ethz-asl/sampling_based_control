@@ -183,10 +183,15 @@ int main(int argc, char** argv) {
 
     controller.update_reference();
     controller.set_observation(x, sim_time);
-    // loop this ?
+    // loop this ? -> i think controlling over substeps would be better, then we only have one parameter
+    // check out function "offline_control" which would have the same effect.
+    // Controller is our "expert" --> thus if we loop this we are basically
+    // modifying the substeps of the expert. If we do this, I think we should do
+    // it explicitly via substeps.
     controller.update_policy();
-    //u = learner->get_action(x);
+    //u = learner->get_action(x); // segfault if reference in learner is not set!!!
     // check if this then also saves this state action pair
+    // controller.get_input(x, u_expert, sim_time);
     controller.get_input(x, u, sim_time);
     controller.publish_ros_default();
     controller.publish_ros();
