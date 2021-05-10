@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import os
 import numpy as np
-import torch
+from datetime import datetime
 
+import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import RandomSampler
 from torch.utils.data import random_split
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
+from torch.utils.tensorboard import SummaryWriter
 
 from dataset import StateActionDataset
 from models import LinReLu
@@ -38,19 +40,23 @@ class PolicyLearner:
         self.model = LinReLu(self.n_states, self.n_actions).to(device)
         self._is_trained = False
 
+        experiment_name = 'panda'
+        run_name = datetime.now().strftime('_%y%m%d_%H%M%S') 
+        self.writer = SummaryWriter(log_dir=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'runs', experiment_name, run_name))
+
     def train(self):
         """
         Main training loop.
         """
 
         # Training parameters
-        epochs = 30
+        epochs = 8
         batch_size = 32
-        learning_rate = 1e-3
+        learning_rate = 1e-4
 
         # initialise loss function
         loss_fn = nn.MSELoss()
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
 
         # initialise sampler and data loader
         train_sampler = RandomSampler(self.train_dataset)
@@ -58,8 +64,9 @@ class PolicyLearner:
             sampler = train_sampler)
         test_dataloader = DataLoader(self.test_dataset, batch_size=batch_size)
         size = len(train_dataloader.dataset)
-        scheduler = StepLR(optimizer, epochs/3, gamma=0.1)
+        scheduler = StepLR(optimizer, epochs/2, gamma=0.1)
 
+        global_step = 0
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
             for batch, sample in enumerate(train_dataloader):
@@ -74,6 +81,8 @@ class PolicyLearner:
                 if batch % (len(train_dataloader)//5) == 0:
                     loss, current = loss.item(), batch * len(sample['state'])
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+                    self.writer.add_scalar('loss/train', loss, global_step)
+                global_step += 1
 
             test_size = len(test_dataloader.dataset)
             test_loss = 0
@@ -85,8 +94,17 @@ class PolicyLearner:
 
             test_loss /= len(test_dataloader)
             print(f"Test Error: \n Avg loss: {test_loss:>8f} \n")
+            self.writer.add_scalar('loss/val', test_loss, global_step)
+            self.writer.add_scalar('learning_rate', scheduler.get_last_lr()[0], global_step)
             scheduler.step()
 
+
+        self.writer.add_hparams({'lr': learning_rate, 
+                                 'bsize': batch_size, 
+                                 'optimizer': type(optimizer).__name__, 
+                                 'loss': type(loss_fn).__name__},
+                                {'hparam/loss': test_loss}, run_name='hparams')
+        self.writer.flush()
         self._is_trained = True
         print("Done!")
 
@@ -121,7 +139,7 @@ class PolicyLearner:
 
 if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dataset_name = "Horizon_4_Train_0419140234"
+    dataset_name = "PandaR100_0501213400"
     dir_path = task_path + "/../data/" + dataset_name
     dataset = StateActionDataset(root_dir=dir_path)
     # fix a random seed
