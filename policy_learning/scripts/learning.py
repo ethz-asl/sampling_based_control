@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
 import os
-import numpy as np
 from datetime import datetime
 
 import torch
-from torch.utils.data import DataLoader
-from torch.utils.data import RandomSampler
-from torch.utils.data import random_split
 import torch.nn as nn
+from torch.utils.data import DataLoader, RandomSampler
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
 
 from dataset import StateActionDataset
 from models import LinReLu
-
-
 
 class PolicyLearner:
     """
@@ -28,35 +23,41 @@ class PolicyLearner:
             device (string): choose gpu or cpu
         """
         # load data set
-        self.full_dataset = StateActionDataset(root_dir=file_path)
-        self.n_states, self.n_actions = self.full_dataset.get_dimensions()
-        # split the dataset into train and test sets
-        n_data_points = len(self.full_dataset)
-        n_train_set = int(0.8 * n_data_points)
-        n_test_set = n_data_points - n_train_set
-        self.train_dataset, self.test_dataset = random_split(self.full_dataset,
-            [n_train_set, n_test_set], generator=torch.Generator().manual_seed(1))
+        self.device = device
+        self.file_path = file_path
+        self.train_dataset = StateActionDataset(root_dir=os.path.join(file_path, 'train'))
+        self.test_dataset = StateActionDataset(root_dir=os.path.join(file_path, 'test'))
+        self.n_states, self.n_actions = self.train_dataset.get_dimensions()
         # initialise MLP model
-        self.model = LinReLu(self.n_states, self.n_actions).to(device)
-        self._is_trained = False
-
-        experiment_name = 'panda'
-        run_name = datetime.now().strftime('_%y%m%d_%H%M%S') 
-        self.writer = SummaryWriter(log_dir=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'runs', experiment_name, run_name))
+        self.model = None
 
     def train(self):
         """
         Main training loop.
         """
+        # Model parameters
+        n_nodes = 32
+        n_hidden_layers = 1
+        self.model = LinReLu(self.n_states, self.n_actions,
+                             n_nodes=n_nodes, n_hidden_layers=n_hidden_layers).to(self.device)
 
         # Training parameters
-        epochs = 8
+        epochs = 16
         batch_size = 32
         learning_rate = 1e-4
-
         # initialise loss function
         loss_fn = nn.MSELoss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        scheduler = None
+        # scheduler = StepLR(optimizer, epochs/2, gamma=0.1)
+
+        # Initialize TensorBoard logger
+        experiment_name = os.path.join(os.path.basename(self.file_path),
+                                       type(loss_fn).__name__)
+        run_name = datetime.now().strftime('_%y%m%d_%H%M%S')
+        writer = SummaryWriter(log_dir=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'runs', experiment_name, run_name))
 
         # initialise sampler and data loader
         train_sampler = RandomSampler(self.train_dataset)
@@ -64,7 +65,6 @@ class PolicyLearner:
             sampler = train_sampler)
         test_dataloader = DataLoader(self.test_dataset, batch_size=batch_size)
         size = len(train_dataloader.dataset)
-        scheduler = StepLR(optimizer, epochs/2, gamma=0.1)
 
         global_step = 0
         for t in range(epochs):
@@ -81,82 +81,70 @@ class PolicyLearner:
                 if batch % (len(train_dataloader)//5) == 0:
                     loss, current = loss.item(), batch * len(sample['state'])
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-                    self.writer.add_scalar('loss/train', loss, global_step)
+                    writer.add_scalar('loss/train', loss, global_step)
                 global_step += 1
 
-            test_size = len(test_dataloader.dataset)
             test_loss = 0
             with torch.no_grad():
                 for sample in test_dataloader:
                     pred = self.model(sample['state'])
                     test_loss += loss_fn(pred, sample['action']).item()
 
-
             test_loss /= len(test_dataloader)
             print(f"Test Error: \n Avg loss: {test_loss:>8f} \n")
-            self.writer.add_scalar('loss/val', test_loss, global_step)
-            self.writer.add_scalar('learning_rate', scheduler.get_last_lr()[0], global_step)
-            scheduler.step()
+            writer.add_scalar('loss/val', test_loss, global_step)
+            writer.add_scalar('learning_rate',
+                              scheduler.get_last_lr()[0] if scheduler is not None else learning_rate,
+                              global_step)
+            if scheduler is not None:
+                scheduler.step()
 
-
-        self.writer.add_hparams({'lr': learning_rate, 
-                                 'bsize': batch_size, 
-                                 'optimizer': type(optimizer).__name__, 
-                                 'loss': type(loss_fn).__name__},
-                                {'hparam/loss': test_loss}, run_name='hparams')
-        self.writer.flush()
-        self._is_trained = True
-        print("Done!")
+        writer.add_hparams({'lr': learning_rate,
+                            'bsize': batch_size,
+                            'optimizer': type(optimizer).__name__,
+                            'loss': type(loss_fn).__name__,
+                            'n_nodes': n_nodes,
+                            'n_hidden_layers': n_hidden_layers,
+                            'model_name': type(self.model).__name__},
+                            {'hparam/loss': test_loss}, run_name='hparams')
+        writer.flush()
 
     def get_action(self, state):
         """
         returns action from trained model
         """
-        if self._is_trained:
+        if self.model is not None:
             with torch.no_grad():
                 return self.model(torch.as_tensor(state, dtype=torch.float32))
         else:
-            print('Model has not been trained yet. Action is the output of random initialised network')
-            with torch.no_grad():
-                return self.model(torch.as_tensor(state, dtype=torch.float32))
+            print('Model has not been trained yet.')
+            return None
 
-    def save_model(self, state, name):
+    def save_model(self, path, name):
         """
         saves model if trained
         """
-        if self._is_trained:
+        if self.model is not None:
             with torch.no_grad():
+                state = self.train_dataset[0]['state']
                 # save the weights of the model to be used in python
-                torch.save(self.model.state_dict(), f'{name}.pth')
+                torch.save(self.model.state_dict(), f'{path}/{name}.pth')
                 # save the model such that it can be called from cpp
                 traced_script_module = torch.jit.trace(self.model,
                     torch.as_tensor(state, dtype=torch.float32))
-                traced_script_module.save(f'{name}.pt')
+                traced_script_module.save(f'{path}/{name}.pt')
                 print('Model saved.')
 
         else:
             print('Cannot save model because not trained yet.')
 
 if __name__ == "__main__":
+    DATASET_NAME = "PandaPrivileged250_210507_172626"
+
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dataset_name = "PandaR100_0501213400"
-    dir_path = task_path + "/../data/" + dataset_name
-    dataset = StateActionDataset(root_dir=dir_path)
-    # fix a random seed
-    torch.manual_seed(1)
-    idx=1
-    sample = dataset[idx]
-    print("Index: ", idx, "\nstate: " , sample['state'], "\naction: ", sample['action'])
-    dimensions = len(dataset)
-    print('number of training samples: ', dimensions)
-    # set device for training
+    dir_path = task_path + "/../data/" + DATASET_NAME
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-
     learner = PolicyLearner(dir_path, device)
     learner.train()
-    learner.save_model(sample['state'], dataset_name)
-
-    action = learner.get_action(sample['state'])
-    print('predicted action: ', action)
-    print('action from dataset: ', sample['action'])
+    learner.save_model(task_path + "/../models/", DATASET_NAME)
