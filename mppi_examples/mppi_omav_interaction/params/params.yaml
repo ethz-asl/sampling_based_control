@@ -22,11 +22,11 @@ solver:
   filters_window: [ 10, 10, 10, 10, 10, 10 ]
 
   bound_input: true
-  u_min: [ -0.9, -0.9, -0.9, -1, -1, -1 ]
-  u_max: [ 0.9, 0.9, 0.9, 1, 1, 1 ]
+  u_min: [ -1.5, -1.5, -1.5, -1, -1, -1 ]
+  u_max: [ 1.5, 1.5, 1.5, 1, 1, 1 ]
 
   adaptive_sampling: false
-  input_variance: [ 0.5, 0.5, 0.5, 1, 1, 1]
+  input_variance: [ 1, 1, 1, 0.25, 0.25, 0.25]
 
   use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.01       # controls the structure of the tree
@@ -35,7 +35,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 8
   debug_print: false
 
   logging: true
@@ -50,4 +50,4 @@ static_optimization: false
 running_rotors: false
 sim_dt: 0.015
 
-initial_configuration: [ 0.0, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+initial_configuration: [ 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

@@ -55,7 +55,9 @@ bool OMAVControllerInterface::set_controller(
   // -------------------------------
   mppi::DynamicsBase::dynamics_ptr dynamics;
   std::string robot_description_raisim;
+  std::string robot_description_pinocchio;
   std::string object_description_raisim;
+
   if (!nh_.param<std::string>("/robot_description_raisim",
                               robot_description_raisim, "")) {
     throw std::runtime_error(
@@ -65,6 +67,11 @@ bool OMAVControllerInterface::set_controller(
                               object_description_raisim, "")) {
     throw std::runtime_error(
         "Could not parse object_description_raisim. Is the parameter set?");
+  }
+  if (!nh_.param<std::string>("/robot_description_pinocchio",
+                              robot_description_pinocchio, "")) {
+    throw std::runtime_error(
+        "Could not parse robot_description_pinocchio. Is the parameter set?");
   }
 
   dynamics = std::make_shared<OMAVVelocityDynamics>(
@@ -81,8 +88,9 @@ bool OMAVControllerInterface::set_controller(
     return false;
   }
   ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
-  auto cost = std::make_shared<OMAVInteractionCost>(robot_description_raisim,
-                                                    cost_param);
+  auto cost = std::make_shared<OMAVInteractionCost>(
+      robot_description_raisim, robot_description_pinocchio,
+      object_description_raisim, cost_param);
 
   // -------------------------------
   // controller

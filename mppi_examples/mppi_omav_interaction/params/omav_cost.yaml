@@ -1,17 +1,36 @@
 # Weights for the deviation from the reference position
-x_distance_weight: 100.0
-y_distance_weight: 100.0
-z_distance_weight: 100.0
+x_distance_weight: 10.0
+y_distance_weight: 10.0
+z_distance_weight: 10.0
 # Weight for the deviation from the reference orientation
-orientation_weight: 100.0
+orientation_weight: 10.0
+# Weights for the deviation from the reference position
+x_object_weight: 100.0
+y_object_weight: 100.0
+z_object_weight: 100.0
+# Weight for the deviation from the reference orientation
+orientation_object_weight: 100.0
+# Velocity costs
+lin_vel_weight: 0.1
+ang_vel_weight: 0.05
 # Cost for leafing the field
 leafing_field_cost: 10000.0
 # Negative and positive limits of the field
-field_limit_x: 30.0
-field_limit_y: 30.0
-field_limit_z: 30.0
+field_limit_x_min: -5.0
+field_limit_x_max: 5.0
+field_limit_y_min: -5.0
+field_limit_y_max: 5.0
+field_limit_z_max: 2.0
+# Cost for flying near the floor
+floor_threshold: 0.5
+floor_cost: 1000
 # Cost for Obstacle colision
 obstacle_cost: 10000
 # Position of the Obstacle
 obstacle_position_x: 5
 obstacle_position_y: 5
+# Cost handle hook distance
+handle_hook_cost: 100
+handle_hook_threshold: 0.2
+# Force cost
+force_cost: 0.0

@@ -23,6 +23,11 @@
 
 namespace omav_interaction {
 
+struct force_t {
+  Eigen::Vector3d force;
+  Eigen::Vector3d position;
+};
+
 class OMAVVelocityDynamics : public mppi::DynamicsBase {
 public:
   OMAVVelocityDynamics(const std::string &robot_description,
@@ -63,6 +68,9 @@ public:
 
   const observation_t get_state() const override { return x_; }
 
+  std::vector<force_t> get_contact_forces();
+  force_t get_dominant_force();
+
   raisim::World *get_world() { return &sim_; }
 
   raisim::ArticulatedSystem *get_omav() { return omav; }
@@ -89,5 +97,6 @@ private:
   Eigen::VectorXd cmd, cmdv;
   Eigen::VectorXd omav_pose, omav_velocity;
   Eigen::VectorXd object_pose, object_velocity;
+  force_t contact_force;
 };
 } // namespace omav_velocity

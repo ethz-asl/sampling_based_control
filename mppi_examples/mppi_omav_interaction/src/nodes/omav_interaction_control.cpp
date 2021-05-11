@@ -105,6 +105,8 @@ int main(int argc, char **argv) {
 
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
+  auto robot_description_pinocchio =
+      nh.param<std::string>("/robot_description_pinocchio", "");
   auto object_description_raisim =
       nh.param<std::string>("/object_description_raisim", "");
   ROS_INFO_STREAM("Robot & Object Description Raisim Loaded");
@@ -118,7 +120,7 @@ int main(int argc, char **argv) {
   for (size_t i = 0; i < x0.size(); i++)
     x(i) = x0[i];
   // Set nominal state
-  observation_t x_nom = observation_t::Zero(26);
+  observation_t x_nom = observation_t::Zero(18);
 
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);

@@ -20,6 +20,8 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
       nh_.advertise<visualization_msgs::Marker>("obstacle_marker", 0);
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+  contact_forces_publisher_ =
+      nh_.advertise<visualization_msgs::Marker>("/contact_force", 10);
 
   omav_marker_.header.frame_id = "world";
   omav_marker_.id = 0;
@@ -79,6 +81,18 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
 
   object_state_.name = {"articulation_joint"};
   object_state_.position.resize(1);
+
+  force_marker_.type = visualization_msgs::Marker::ARROW;
+  force_marker_.header.frame_id = "world";
+  force_marker_.action = visualization_msgs::Marker::ADD;
+  force_marker_.pose.orientation.w = 1.0;
+  force_marker_.scale.x = 0.005;
+  force_marker_.scale.y = 0.01;
+  force_marker_.scale.z = 0.0;
+  force_marker_.color.r = 1.0;
+  force_marker_.color.b = 0.0;
+  force_marker_.color.g = 0.0;
+  force_marker_.color.a = 1.0;
 }
 
 void OMAVVelocityDynamicsRos::reset_to_default() {
@@ -109,6 +123,18 @@ void OMAVVelocityDynamicsRos::publish_ros() {
   object_state_.header.stamp = ros::Time::now();
   object_state_.position[0] = x_(13);
   object_state_publisher_.publish(object_state_);
+
+  // visualize contact forces
+  force_t force = get_dominant_force();
+  visualization_msgs::Marker force_marker;
+  force_marker_.points.resize(2);
+  force_marker_.points[0].x = force.position(0);
+  force_marker_.points[0].y = force.position(1);
+  force_marker_.points[0].z = force.position(2);
+  force_marker_.points[1].x = force.position(0) + force.force(0) / 10;
+  force_marker_.points[1].y = force.position(1) + force.force(1) / 10;
+  force_marker_.points[1].z = force.position(2) + force.force(2) / 10;
+  contact_forces_publisher_.publish(force_marker_);
 
   vis_publisher_.publish(omav_marker_);
   goal_publisher_.publish(goal_marker_);

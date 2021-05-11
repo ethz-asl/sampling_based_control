@@ -15,6 +15,7 @@
 #include <string>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace omav_interaction {
 
@@ -40,10 +41,12 @@ private:
   ros::Publisher goal_publisher_;
   ros::Publisher obstacle_publisher_;
   ros::Publisher object_state_publisher_;
+  ros::Publisher contact_forces_publisher_;
 
   visualization_msgs::Marker goal_marker_;
   visualization_msgs::Marker omav_marker_;
   visualization_msgs::Marker obstacle_marker_;
+  visualization_msgs::Marker force_marker_;
   sensor_msgs::JointState object_state_;
 };
 } // namespace omav_velocity
