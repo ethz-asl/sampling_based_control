@@ -82,22 +82,22 @@ int main(int argc, char** argv) {
   // -------------------------------
   // learner
   // -------------------------------
-  std::unique_ptr<Policy> policy_ptr = nullptr;
-  std::string torchscript_model_path;
-  if (nh.param<std::string>("torchscript_model_path",
-      torchscript_model_path, "")) {
-    policy_ptr = std::make_unique<TorchScriptPolicy>(
-      torchscript_model_path
-    );
-    ROS_INFO_STREAM("Using Torch script from " << torchscript_model_path);
-  }
-  else {
-    ROS_ERROR_STREAM("Failed to load the expert policy. " <<
-      torchscript_model_path << " is not a path to a model. Provide proper path to" <<
-      " model parameters.");
-    throw std::runtime_error("Failed to initialzied controller!");
-  }
-  std::unique_ptr<Dataset> dataset_ptr = nullptr;
+  // std::unique_ptr<Policy> policy_ptr = nullptr;
+  // std::string torchscript_model_path;
+  // if (nh.param<std::string>("torchscript_model_path",
+  //     torchscript_model_path, "")) {
+  //   policy_ptr = std::make_unique<TorchScriptPolicy>(
+  //     torchscript_model_path
+  //   );
+  //   ROS_INFO_STREAM("Using Torch script from " << torchscript_model_path);
+  // }
+  // else {
+  //   ROS_ERROR_STREAM("Failed to load the expert policy. " <<
+  //     torchscript_model_path << " is not a path to a model. Provide proper path to" <<
+  //     " model parameters.");
+  //   throw std::runtime_error("Failed to initialzied controller!");
+  // }
+  // std::unique_ptr<Dataset> dataset_ptr = nullptr;
   // std::string learned_expert_output_path;
   // if (nh.param<std::string>("learned_expert_output_path",
   //     learned_expert_output_path, "")) {
@@ -112,11 +112,11 @@ int main(int argc, char** argv) {
   //   throw std::runtime_error("Failed to initialzied data saving!");
   // }
 
-  auto learner = std::make_shared<PandaExpert>(
-    std::move(policy_ptr),
-    std::move(dataset_ptr),
-    robot_description
-  );
+  // auto learner = std::make_shared<PandaExpert>(
+  //   std::move(policy_ptr),
+  //   std::move(dataset_ptr),
+  //   robot_description
+  // );
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
   Eigen::VectorXd x_nom = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
@@ -172,6 +172,9 @@ int main(int argc, char** argv) {
   double start_time = 0.0;
   bool reference_set;
 
+  // get the pointer to the learned expert which is in the controller
+  auto learner = controller.get_controller()-> get_learned_expert();
+
   // ensure we don't sample any learned trajectories in expert
   if (controller.config_.learned_rollout_ratio != 0) {
     ROS_ERROR_STREAM("Aborting Dagger, turn off sampling from NN in params!");
@@ -189,10 +192,12 @@ int main(int argc, char** argv) {
     // modifying the substeps of the expert. If we do this, I think we should do
     // it explicitly via substeps.
     controller.update_policy();
-    //u = learner->get_action(x); // segfault if reference in learner is not set!!!
+    if (controller.get_reference_set()) {
+      u = learner->get_action(x); // segfault if reference in learner is not set!!!
+    }
     // check if this then also saves this state action pair
     // controller.get_input(x, u_expert, sim_time);
-    controller.get_input(x, u, sim_time);
+    controller.get_input(x, u_expert, sim_time);
     controller.publish_ros_default();
     controller.publish_ros();
 
