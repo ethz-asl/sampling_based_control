@@ -41,7 +41,7 @@ class Dagger:
         model_save_path = os.path.join(self.dagger_models_path,
             f'iter_{iteration}')
         self.learner.train()
-        self.learner.save_model(None, model_save_path)
+        self.learner.save_model(model_save_path)
 
     def collect_dataset(self, iteration):
         """
