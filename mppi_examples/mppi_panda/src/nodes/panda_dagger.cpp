@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
     controller.publish_ros();
 
     if (!static_optimization) {
-      x = simulation->step(u, sim_dt);
+      x = simulation->step(u_expert, sim_dt);
       sim_time += sim_dt;
     }
 
