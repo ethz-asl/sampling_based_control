@@ -23,13 +23,19 @@ class DatasetCollectionPanda:
             data_path = os.path.join(RosPack().get_path('policy_learning'), 'data')
             dataset_name = args.name + datetime.now().strftime('_%y%m%d_%H%M%S')
             self.dataset_path = os.path.join(data_path, dataset_name)
-            os.mkdir(self.dataset_path)
+            try:
+                os.mkdir(self.dataset_path)
+            except:
+                os.makedirs(self.dataset_path)
 
         if dagger:
             self.n_runs = n_runs
             self.dataset_path = save_path
             self.model_path = model_path
-            os.mkdir(self.dataset_path)
+            try:
+                os.mkdir(self.dataset_path)
+            except:
+                os.makedirs(self.dataset_path)
 
         self.csv_path = os.path.join(self.dataset_path, 'value_log.csv')
         with open(self.csv_path, 'a', newline='') as f:

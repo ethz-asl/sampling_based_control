@@ -28,7 +28,7 @@ class Dagger:
         # set device for policy
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         # initialise policy
-        self.learner = PolicyLearner(dir_path, device)
+        self.learner = PolicyLearner(file_path, device)
 
 
     def train_torch_model(self, iteration):
@@ -50,7 +50,7 @@ class Dagger:
             iteration (int): current iteration of the main Dagger loop.
         """
         dataset_save_dir = os.path.join(self.dagger_datasets_path,
-            f'iter_{iteration}')
+            f'iter_{iteration}', 'train')
         model_load_path = os.path.join(self.dagger_models_path,
             f'iter_{iteration-1}.pt')
         ## somehow do datacollection
