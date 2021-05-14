@@ -10,6 +10,8 @@ from rospkg import RosPack
 import roslaunch
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 
+from roscore_helper import Roscore
+
 class DatasetCollectionPanda:
     """
     Should eventually inherit an be implemenation of abstract class but for now
@@ -52,6 +54,10 @@ class DatasetCollectionPanda:
         self.std_dev = np.minimum(self.limits_upper-self.nominal_position,
             self.nominal_position-self.limits_lower) / 4
 
+        # Init roscore
+        self.roscore = Roscore()
+        self.roscore.run()
+
         # Init publishing node
         rospy.init_node('target_pub', anonymous=True)
         self.target_pose_pub = rospy.Publisher('/end_effector_pose_desired', PoseStamped, queue_size=10)
@@ -78,7 +84,8 @@ class DatasetCollectionPanda:
           panda_cli_args = ['mppi_panda', 'panda_dagger.launch',
                             f'learner_output_path:={output_path}',
                             f'torchscript_model_path:={self.model_path}',
-                            f"initial_condition_vector:={joint_state_string}"]
+                            f"initial_condition_vector:={joint_state_string}",
+                            "--wait"]
 
           uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
           roslaunch.configure_logging(uuid)
@@ -98,6 +105,9 @@ class DatasetCollectionPanda:
 
           parent.spin()
           parent.shutdown()
+
+        # take down roscore
+        self.roscore.terminate()
 
     # target pose
     def get_pose(self):
