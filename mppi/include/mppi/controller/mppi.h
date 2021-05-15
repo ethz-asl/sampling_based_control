@@ -280,6 +280,8 @@ class PathIntegral {
   inline data_t get_data() { return data_; }
   inline learned_expert_ptr get_learned_expert() {return learned_expert_; }
 
+  inline void set_learned_expert(learned_expert_ptr learned_expert) {learned_expert_ = learned_expert;}
+
  public:
   /**
    * @brief Set the reference trajectory to be used in the next optimization
