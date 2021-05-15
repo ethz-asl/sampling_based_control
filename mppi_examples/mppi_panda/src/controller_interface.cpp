@@ -208,6 +208,11 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
   return pose_ros;
 }
 
+geometry_msgs::PoseStamped PandaControllerInterface::get_target_pose_ros(){
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  return ee_desired_pose_;
+}
+
 void PandaControllerInterface::publish_ros() {
   if (obstacle_pose_.header.seq != 0) {  // obstacle set at least once
     obstacle_marker_.pose.position = obstacle_pose_.pose.position;

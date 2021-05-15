@@ -28,6 +28,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
       const mppi::observation_t& x);
   bool get_reference_set();
 
+  geometry_msgs::PoseStamped get_target_pose_ros();
+
  private:
   void init_model(const std::string& robot_description);
   bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;
