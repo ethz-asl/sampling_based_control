@@ -88,8 +88,8 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh("~");
   
   action_server = std::make_shared<actionlib::SimpleActionServer<policy_learning::collect_rolloutAction>>
-                      (nh, "bla", std::bind(action_callback, std::placeholders::_1), false);
-                        
+                      (nh, "collector", std::bind(action_callback, std::placeholders::_1), false);
+
   action_server->start();
 
   auto sequential = nh.param<bool>("sequential", false);

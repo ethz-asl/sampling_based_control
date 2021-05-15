@@ -5,8 +5,10 @@ import datetime
 import torch
 
 from learning import PolicyLearner
-from dataset import StateActionDataset
-from dataset_collection_panda import DatasetCollectionPanda
+
+import rospy
+import actionlib
+import policy_learning.msg
 
 class Dagger:
     """
@@ -30,6 +32,10 @@ class Dagger:
         # initialise policy
         self.learner = PolicyLearner(file_path, device)
 
+        # init ros
+        rospy.init_node('dagger_orchestrator')
+        self.client = actionlib.SimpleActionClient('panda_dagger/collector',
+            policy_learning.msg.collect_rolloutAction)
 
     def train_torch_model(self, iteration):
         """
@@ -48,16 +54,27 @@ class Dagger:
         Handels collecting a dataset at a given iteration with the current policy.
         Args:
             iteration (int): current iteration of the main Dagger loop.
+        Returns:
+            dataset_save_dir (string): loaction where dataset is saved
         """
-        dataset_save_dir = os.path.join(self.dagger_datasets_path,
+        dataset_save_dir_intermed = os.path.join(self.dagger_datasets_path,
             f'iter_{iteration}', 'train')
         model_load_path = os.path.join(self.dagger_models_path,
             f'iter_{iteration-1}.pt')
-        ## somehow do datacollection
-        n_runs = 1
-        collector = DatasetCollectionPanda(None, dagger=True,
-            save_path=dataset_save_dir, n_runs=n_runs, model_path=model_load_path)
-        collector.run_collection()
+        n_runs = 2
+        for i in range(n_runs):
+            dataset_save_dir = os.path.join(dataset_save_dir_intermed,
+                f'run_{i}.hdf5')
+            goal = policy_learning.msg.collect_rolloutGoal(
+                timeout = 60,
+                use_policy = False,
+                policy_path = model_load_path,
+                dataset_path = dataset_save_dir)
+            self.client.send_goal(goal)
+            self.client.wait_for_result()
+            if self.client.get_result():
+                print('Server was successfull')
+
 
         return dataset_save_dir
 
@@ -70,6 +87,8 @@ class Dagger:
         Args:
             n_iterations: Number of iterations to run the dagger algorithm in total
         """
+        print('waiting for action server')
+        self.client.wait_for_server()
         for iter in range(n_iterations):
             if iter == 0:
                 self.train_torch_model(iter)
@@ -100,7 +119,7 @@ if __name__ == "__main__":
 
     # Dir to dataset
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dataset_name = "PandaR10_sStart_sGoal_0504163457"
+    dataset_name = "Panda_R15_S5_210511_220510"
     dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name)
     # intiialise dagger object
     dagger = Dagger(dir_path)
