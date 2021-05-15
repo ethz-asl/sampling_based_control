@@ -14,6 +14,7 @@ set(PACKAGE_DEPENDENCIES
     roslib
     roscpp
     policy_learning
+    actionlib
 )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})

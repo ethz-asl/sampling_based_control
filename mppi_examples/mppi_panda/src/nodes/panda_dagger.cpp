@@ -10,11 +10,13 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <actionlib/server/simple_action_server.h>
 #include <chrono>
 
 #include <policy_learning/panda_expert.h>
 #include <policy_learning/hdf5_dataset.h>
 #include <policy_learning/torch_script_policy.h>
+#include <policy_learning/collect_rolloutAction.h>
 
 using namespace panda;
 
@@ -64,10 +66,31 @@ bool isTerminated(geometry_msgs::PoseStamped& conv_pose, double& start_time,
   }
 }
 
+std::shared_ptr<actionlib::SimpleActionServer<policy_learning::collect_rolloutAction>> action_server;
+
+void action_callback(const policy_learning::collect_rolloutGoalConstPtr &goal){
+  printf("Received goal with: \n- timeout %f,\n- use_policy %d,\n"
+         "- dataset_path %s,\n-policy_path %s\n",
+         goal->timeout, goal->use_policy, 
+         goal->dataset_path.c_str(), goal->policy_path.c_str());
+
+  policy_learning::collect_rolloutFeedback feedback;
+  feedback.sim_time = 13.37;
+  action_server->publishFeedback(feedback);
+  policy_learning::collect_rolloutResult result;
+  result.goal_reached = true;
+  action_server->setSucceeded(result);
+}
+
 int main(int argc, char** argv) {
   // ros interface
   ros::init(argc, argv, "panda_dagger");
   ros::NodeHandle nh("~");
+  
+  action_server = std::make_shared<actionlib::SimpleActionServer<policy_learning::collect_rolloutAction>>
+                      (nh, "bla", std::bind(action_callback, std::placeholders::_1), false);
+                        
+  action_server->start();
 
   auto sequential = nh.param<bool>("sequential", false);
   // controller has a learned expert in it, but we can turn it off by using the

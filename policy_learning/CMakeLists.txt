@@ -15,9 +15,20 @@ find_package(HighFive REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
         mppi
-        mppi_pinocchio)
+        mppi_pinocchio
+        actionlib_msgs)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+
+add_action_files(
+        DIRECTORY actions
+        FILES collect_rollout.action
+)
+
+generate_messages(
+        DEPENDENCIES actionlib_msgs
+)
+
 catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include

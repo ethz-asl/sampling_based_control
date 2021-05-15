@@ -1,0 +1,15 @@
+# goal
+bool use_policy
+float64 timeout
+string dataset_path 
+string policy_path
+
+---
+
+# result
+bool goal_reached
+
+---
+
+# feedback
+float64 sim_time
