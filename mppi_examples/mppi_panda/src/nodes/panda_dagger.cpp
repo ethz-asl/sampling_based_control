@@ -21,6 +21,11 @@
 
 using namespace panda;
 
+#define PANDA_UPPER_LIMITS \
+  2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
+#define PANDA_LOWER_LIMITS \
+  -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
+
 class PandaDataCollector{
   public:
     PandaDataCollector(ros::NodeHandle nh):
@@ -51,6 +56,9 @@ class PandaDataCollector{
       if (!ok) {
         throw std::runtime_error("Failed to initialzied controller!");
       }
+
+      joint_limits_lower_ << PANDA_LOWER_LIMITS;
+      joint_limits_upper_ << PANDA_UPPER_LIMITS;
 
       action_server_.registerGoalCallback(
         std::bind(&PandaDataCollector::action_callback, this));
@@ -111,6 +119,7 @@ class PandaDataCollector{
         }
 
         if (sim_time_ > timeout_ || 
+            joint_limit_violation() ||
             action_server_.isPreemptRequested() || 
             !ros::ok()){
           policy_learning::collect_rolloutResult result;
@@ -216,6 +225,16 @@ class PandaDataCollector{
       obstacle_publisher_.publish(obstacle);
     }
 
+    bool joint_limit_violation(){
+      for (size_t i = 0; i < 7; i++){
+        if (x_(i) < joint_limits_lower_(i) ||
+            x_(i) > joint_limits_upper_(i)){
+              return true;
+        }
+      }
+      return false;
+    }
+
     void publish_ros(const Eigen::VectorXd& x){
       sensor_msgs::JointState joint_state;
       joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
@@ -310,6 +329,9 @@ class PandaDataCollector{
     std::shared_ptr<PandaExpert> learner_ = nullptr;  
     std::string dataset_path_;
     std::string policy_path_;
+
+    Eigen::Matrix<double, 7, 1> joint_limits_lower_;
+    Eigen::Matrix<double, 7, 1> joint_limits_upper_;
     
 };
 
