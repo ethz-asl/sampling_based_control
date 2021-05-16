@@ -3,11 +3,13 @@
 import os
 import datetime
 import torch
+from actionlib.simple_action_client import SimpleGoalState
 
 from learning import PolicyLearner
 
 import rospy
 import actionlib
+from actionlib_msgs.msg import GoalStatus
 import policy_learning.msg
 
 class Dagger:
@@ -59,24 +61,32 @@ class Dagger:
         """
         dataset_save_dir_intermed = os.path.join(self.dagger_datasets_path,
             f'iter_{iteration}', 'train')
+        if (not os.path.isdir(dataset_save_dir_intermed)):
+            os.makedirs(dataset_save_dir_intermed)
         model_load_path = os.path.join(self.dagger_models_path,
             f'iter_{iteration-1}.pt')
-        n_runs = 2
+        n_runs = 50
+        print(f"Collecting data for {n_runs} runs...")
         for i in range(n_runs):
             dataset_save_dir = os.path.join(dataset_save_dir_intermed,
                 f'run_{i}.hdf5')
             goal = policy_learning.msg.collect_rolloutGoal(
-                timeout = 60,
-                use_policy = False,
+                timeout = 10,
+                use_policy = True,
                 policy_path = model_load_path,
                 dataset_path = dataset_save_dir)
             self.client.send_goal(goal)
-            self.client.wait_for_result()
-            if self.client.get_result():
-                print('Server was successfull')
+            self.client.wait_for_result(timeout=rospy.Duration(30))
+            if self.client.get_state() == GoalStatus.SUCCEEDED:
+                print(f'{i}: Goal Reached')
+            elif self.client.get_state() == GoalStatus.PREEMPTED:
+                print(f'{i}: Goal not reached')
+            else:
+                print(f'{i}: Action call failed, state {self.client.get_state()}')
+        print('Done')
 
 
-        return dataset_save_dir
+        return dataset_save_dir_intermed
 
     def aggregate_dataset(self, dataset_load_dir):
         self.learner.append_dataset(dataset_load_dir)

@@ -114,6 +114,11 @@ class PandaDataCollector{
             action_server_.isPreemptRequested() || 
             !ros::ok()){
           policy_learning::collect_rolloutResult result;
+
+          // Force write by destructing learner... A bit hacky and ugly :(
+          learner_ = nullptr;
+          controller_.get_controller()->set_learned_expert(learner_);
+
           if (terminated){
             result.goal_reached = true;
             action_server_.setSucceeded(result);
@@ -121,12 +126,9 @@ class PandaDataCollector{
             result.goal_reached = false;
             action_server_.setPreempted(result);
           }
+
           action_active_ = false;
           terminated = false;
-
-          // Force write by destructing learner... A bit hacky and ugly :(
-          learner_ = nullptr;
-          controller_.get_controller()->set_learned_expert(learner_);
         }
       } else if (callback_received_){
         // reset cached trajectories
