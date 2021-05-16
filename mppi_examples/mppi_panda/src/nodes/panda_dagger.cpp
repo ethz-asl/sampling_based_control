@@ -12,6 +12,7 @@
 #include <sensor_msgs/JointState.h>
 #include <actionlib/server/simple_action_server.h>
 #include <chrono>
+#include <random>
 
 #include <policy_learning/panda_expert.h>
 #include <policy_learning/hdf5_dataset.h>
@@ -36,40 +37,38 @@ class PandaDataCollector{
       std::string robot_description = 
         nh.param<std::string>("/robot_description", "");
       simulation_ = std::make_shared<PandaDynamics>(robot_description);
-
       state_publisher_ =
         nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
       ee_publisher_ =
-        nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
-
-      action_server_.registerGoalCallback(
-        std::bind(&PandaDataCollector::action_callback, this));
-      action_server_.start();      
+        nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);   
+      ee_goal_publisher_ =
+        nh.advertise<geometry_msgs::PoseStamped>("/end_effector_pose_desired", 10);
+      obstacle_publisher_ =
+        nh.advertise<geometry_msgs::PoseStamped>("/obstacle", 10);   
 
       // init the controller
       bool ok = controller_.init();
       if (!ok) {
         throw std::runtime_error("Failed to initialzied controller!");
       }
+
+      action_server_.registerGoalCallback(
+        std::bind(&PandaDataCollector::action_callback, this));
+      action_server_.start();   
     }
 
   void run(){
     set_initial_state();
+    simulation_->reset(x_);
     controller_.set_observation(x_, sim_time_);
 
+    // Somehow the first published goal is ignored, publish a dummy goal here.
+    set_obstacle_pose();
+    set_random_goal();
 
-    // TODO: decide if as fast as possible or not...
     double sim_dt = nh_.param<double>("sim_dt", 0.01);
 
     ros::Rate idle_rate(idle_frequency_);
-
-    // // helper variable to terminate episode
-    // bool terminate = false;
-    // geometry_msgs::PoseStamped final_pose =
-    //   controller.get_pose_end_effector_ros(x);
-    // double start_time = 0.0;
-    // bool reference_set;
-
 
     mppi::DynamicsBase::input_t u;
     mppi::DynamicsBase::input_t u_expert;
@@ -79,23 +78,21 @@ class PandaDataCollector{
 
     while (ros::ok()){
       if (action_active_){ 
-
-        controller_.update_reference();
+        simulation_->reset(x_);
         controller_.set_observation(x_, sim_time_);
+        controller_.update_reference();
         controller_.update_policy();
 
 
         // if (controller.get_reference_set()) {
         //   u = learner->get_action(x_); // segfault if reference in learner is not set!!!
         // }
-
         controller_.get_input(x_, u, sim_time_);
         x_ = simulation_->step(u, sim_dt);
-        
-        simulation_->reset(x_);
-        publish_ros(x_);
         sim_time_ += sim_dt;
-
+        
+        publish_ros(x_);
+        
         policy_learning::collect_rolloutFeedback feedback;
         feedback.sim_time = sim_time_;
         action_server_.publishFeedback(feedback);
@@ -138,7 +135,52 @@ class PandaDataCollector{
     void set_initial_state(){
       auto x0 = nh_.param<std::vector<double>>("initial_configuration", {});
       for (size_t i = 0; i < x0.size(); i++) x_(i) = x0[i];
-      simulation_->reset(x_);
+    }
+
+    void set_random_state(){
+      
+      std::normal_distribution<double> distribution(0, joint_state_std_dev);
+
+      set_initial_state();
+      for (size_t i = 0; i < x_.size(); i++) x_(i) += distribution(generator_);
+    }
+
+    void set_random_goal(){
+      Eigen::Quaterniond rot = Eigen::Quaterniond::UnitRandom();
+      double max_rad = 0.6;
+      double min_rad = 0.2;
+      Eigen::Vector3d center; 
+      center << 0, 0, 0.4;
+
+      Eigen::Vector3d position;
+      while (true){
+        position = max_rad * Eigen::Vector3d::Random();
+        if (position.norm() >= min_rad && position.norm() <= max_rad){
+          for (size_t i = 0; i < 3; i++) position(i) += center(i);
+          if (position(0) > 0 && position(2) > 0) break;
+        }
+      }
+      geometry_msgs::PoseStamped goal;
+      goal.header.frame_id = "world";
+      goal.pose.position.x = position(0);
+      goal.pose.position.y = position(1);
+      goal.pose.position.z = position(2);
+      goal.pose.orientation.w = rot.w();
+      goal.pose.orientation.x = rot.x();
+      goal.pose.orientation.y = rot.y();
+      goal.pose.orientation.z = rot.z();
+
+      ee_goal_publisher_.publish(goal);
+    }
+
+    void set_obstacle_pose(){
+      geometry_msgs::PoseStamped obstacle;
+      obstacle.header.frame_id = "world";
+      obstacle.pose.position.x = 100;
+      obstacle.pose.position.y = 100;
+      obstacle.pose.position.z = 100;
+
+      obstacle_publisher_.publish(obstacle);
     }
 
     void publish_ros(const Eigen::VectorXd& x){
@@ -169,9 +211,14 @@ class PandaDataCollector{
                goal->dataset_path.c_str(), goal->policy_path.c_str());
     
       timeout_ = sim_time_ + goal->timeout;
+      
+      // reset cached trajectories
       controller_.get_controller()->initialize_rollouts();
-      // reset to random state
 
+      // set state and goal at random
+      set_random_state();
+      set_random_goal();
+      set_obstacle_pose();
 
       use_policy_ = goal->use_policy;
       // Set learner and so on
@@ -216,7 +263,8 @@ class PandaDataCollector{
 
     ros::Publisher state_publisher_;
     ros::Publisher ee_publisher_;
-    ros::Publisher ee_desired_publisher_;
+    ros::Publisher ee_goal_publisher_;
+    ros::Publisher obstacle_publisher_;
 
     float idle_frequency_ = 1.0; // Hz    
 
@@ -224,13 +272,14 @@ class PandaDataCollector{
     bool use_policy_ = false;
     Eigen::VectorXd x_ = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
     double sim_time_ = 0.0;
+
     double timeout_ = INFINITY;
-
-    double time_to_shutdown = 0.5; // s
-
-    double goal_position_threshold = 0.05; // m = 5 cm
+    double time_to_shutdown = 2; // s
+    double goal_position_threshold = 0.01; // m = 1 cm
     double goal_angular_threshold = 0.087; // rad = 5 deg
+    double joint_state_std_dev = 0.5;
 
+    std::default_random_engine generator_;
 };
 
 
