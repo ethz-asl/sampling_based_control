@@ -27,20 +27,12 @@ rosidl_generate_interfaces(${PROJECT_NAME}_interfaces
 set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
 include_directories(include SYSTEM ${SYSTEM_INCLUDE_DIRECTORIES})
 
-add_library(mppi_threading
-  src/threading/Rate.cpp
-  src/threading/Worker.cpp
-  src/threading/WorkerManager.cpp)
-
 add_library(${PROJECT_NAME}
   src/controller_interface.cpp
   src/conversions.cpp
-)
-add_dependencies(${PROJECT_NAME}
-  mppi_threading
-)
-target_link_libraries(${PROJECT_NAME}
-  mppi_threading
+  src/threading/Rate.cpp
+  src/threading/Worker.cpp
+  src/threading/WorkerManager.cpp
 )
 ament_target_dependencies(${PROJECT_NAME}
   mppi
@@ -54,12 +46,15 @@ rosidl_target_interfaces(${PROJECT_NAME}
   ${PROJECT_NAME}_interfaces "rosidl_typesupport_cpp")
 
 install(
-        TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}
+        TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include)
+
+install(
+        DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION include/${PROJECT_NAME})
 
 install(PROGRAMS
   scripts/plot_experiment.py
@@ -72,8 +67,9 @@ ament_export_dependencies(rclcpp)
 ament_export_dependencies(sensor_msgs)
 ament_export_dependencies(std_msgs)
 ament_export_dependencies(rosidl_default_runtime)
-ament_export_libraries(${PROJECT_NAME})
-ament_export_include_directories(include)
 
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 
 ament_package()

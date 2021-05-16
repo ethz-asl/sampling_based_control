@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(ament_cmake REQUIRED)
 find_package(Eigen3 REQUIRED 3.3)
 
-list(APPEND AMENT_PACKAGES sensor_msgs std_msgs rclcpp mppi mppi_ros mppi_pinocchio tf2 tf2_ros)
+list(APPEND AMENT_PACKAGES sensor_msgs nav_msgs visualization_msgs std_msgs rclcpp mppi mppi_ros mppi_pinocchio tf2 tf2_ros)
 
 foreach (pkg ${AMENT_PACKAGES})
     find_package(${pkg} REQUIRED)
