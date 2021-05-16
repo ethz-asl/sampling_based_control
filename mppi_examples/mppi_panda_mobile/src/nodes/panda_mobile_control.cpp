@@ -9,8 +9,8 @@
 #include "mppi_panda_mobile/controller_interface.h"
 #include "mppi_panda_mobile/dynamics.h"
 
-#include <geometry_msgs/TransformStamped.h>
-#include <ros/ros.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <rclcpp/node.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <chrono>
@@ -19,21 +19,37 @@ using namespace panda_mobile;
 
 int main(int argc, char** argv) {
   // ros interface
-  ros::init(argc, argv, "panda_mobile_control_node");
-  ros::NodeHandle nh("~");
+  rclcpp::init(argc, argv);
+  auto node = rclcpp::Node::make_shared("panda_mobile_control");
 
-  auto sequential = nh.param<bool>("sequential", false);
-  auto max_sim_time = nh.param<double>("max_sim_time", 0.0);
+  bool sequential;
+  node->declare_parameter<bool>("sequential", false);
+  node->get_parameter<bool>("sequential", sequential);
 
-  auto controller = PandaMobileControllerInterface(nh);
+  double max_sim_time;
+  node->declare_parameter<double>("max_sim_time", 0.0);
+  node->get_parameter<double>("max_sim_time", max_sim_time);
 
-  std::string robot_description =
-      nh.param<std::string>("/robot_description", "");
+  std::vector<double> initial_configuration;
+  node->declare_parameter<std::vector<double>>("initial_configuration", {});
+  node->get_parameter<std::vector<double>>("initial_configuration", initial_configuration);
+
+  std::string robot_description;
+  node->declare_parameter<std::string>("/robot_description", "");
+  node->get_parameter<std::string>("/robot_description", robot_description);
+
+  bool static_optimization;
+  node->declare_parameter<bool>("static_optimization", false);
+  node->get_parameter<bool>("static_optimization", static_optimization);
+
+  double sim_dt;
+  node->declare_parameter<double>("sim_dt", 0.01);
+  node->get_parameter<double>("sim_dt", sim_dt);
+
+  auto controller = PandaMobileControllerInterface(node);
   auto simulation = PandaMobileDynamics(robot_description);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
-  auto initial_configuration =
-      nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < initial_configuration.size(); i++)
     x(i) = initial_configuration[i];
   simulation.reset(x);
@@ -42,9 +58,8 @@ int main(int argc, char** argv) {
   u = simulation.get_zero_input(x);
 
   // joint state publisher
-  ros::Publisher state_publisher =
-      nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  sensor_msgs::JointState joint_state;
+  auto state_publisher = node->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+  sensor_msgs::msg::JointState joint_state;
   joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
                       "panda_joint4", "panda_joint5", "panda_joint6",
                       "panda_joint7"};
@@ -52,21 +67,18 @@ int main(int argc, char** argv) {
   joint_state.header.frame_id = "base";
 
   // base tf
-  tf2_ros::TransformBroadcaster tf_broadcaster;
-  geometry_msgs::TransformStamped world_base_tf;
+  tf2_ros::TransformBroadcaster tf_broadcaster(node);
+  geometry_msgs::msg::TransformStamped world_base_tf;
   world_base_tf.header.frame_id = "world";
   world_base_tf.child_frame_id = "base";
 
-  ros::Publisher ee_publisher =
-      nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
-  geometry_msgs::PoseStamped ee_pose;
+  auto ee_publisher =
+      node->create_publisher<geometry_msgs::msg::PoseStamped>("/end_effector", 10);
+  geometry_msgs::msg::PoseStamped ee_pose;
 
-  bool static_optimization = nh.param<bool>("static_optimization", false);
-  double sim_dt = nh.param<double>("sim_dt", 0.01);
-
-  double sim_time = 0.0;
 
   // init the controller
+  double sim_time = 0.0;
   bool ok = controller.init();
   if (!ok) {
     throw std::runtime_error("Failed to initialzied controller!");
@@ -77,7 +89,7 @@ int main(int argc, char** argv) {
 
   if (!sequential) controller.start();
 
-  while (ros::ok()) {
+  while (rclcpp::ok()) {
     auto start = std::chrono::steady_clock::now();
 
     controller.set_observation(x, sim_time);
@@ -92,8 +104,8 @@ int main(int argc, char** argv) {
 
     // publish joint state
     for (size_t i = 0; i < 7; i++) joint_state.position[i] = x(i);
-    joint_state.header.stamp = ros::Time::now();
-    state_publisher.publish(joint_state);
+    joint_state.header.stamp = node->now();
+    state_publisher->publish(joint_state);
 
     if (!static_optimization) {
       x = simulation.step(u, sim_dt);
@@ -101,7 +113,7 @@ int main(int argc, char** argv) {
     }
 
     // publish base transform
-    world_base_tf.header.stamp = ros::Time::now();
+    world_base_tf.header.stamp = node->now();
     world_base_tf.transform.translation.x = x(7);
     world_base_tf.transform.translation.y = x(8);
     Eigen::Quaterniond q(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
@@ -112,21 +124,22 @@ int main(int argc, char** argv) {
     tf_broadcaster.sendTransform(world_base_tf);
 
     ee_pose = controller.get_pose_end_effector_ros(x);
-    ee_publisher.publish(ee_pose);
+    ee_publisher->publish(ee_pose);
 
     auto end = std::chrono::steady_clock::now();
-    double elapsed =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-            .count() /
-        1000.0;
-    if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
+    auto elapsed_s =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
+    double delta = sim_dt - elapsed_s;
+    if (delta > 0){
+      rclcpp::sleep_for(std::chrono::nanoseconds(int(delta*1e9)));
+    }
 
-    if (max_sim_time > 0 and sim_time > max_sim_time) {
-      ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time
+    if (max_sim_time > 0 && sim_time > max_sim_time) {
+      RCLCPP_INFO_STREAM(node->get_logger(), "Reached maximum sim time: " << max_sim_time
                                                    << "s. Exiting.");
       break;
     }
-    ros::spinOnce();
+    rclcpp::spin_some(node);
   }
 
   return 0;

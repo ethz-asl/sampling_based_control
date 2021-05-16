@@ -9,7 +9,6 @@
 #pragma once
 #include <math.h>
 #include <mppi/dynamics/dynamics_base.h>
-#include <ros/package.h>
 #include <Eigen/Core>
 #include <iostream>
 #include <stdexcept>

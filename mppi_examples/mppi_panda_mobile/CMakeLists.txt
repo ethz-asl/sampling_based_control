@@ -2,43 +2,38 @@ cmake_minimum_required(VERSION 3.10)
 project(mppi_panda_mobile)
 
 set(CMAKE_CXX_STANDARD 17)
+
+find_package(ament_cmake REQUIRED)
 find_package(Eigen3 REQUIRED 3.3)
 
-set(PACKAGE_DEPENDENCIES
-        sensor_msgs
-        std_msgs
-        roscpp
-        mppi
-        mppi_ros
-        mppi_pinocchio
-        roslib
-        tf2
-        tf2_ros
-        )
+list(APPEND AMENT_PACKAGES sensor_msgs std_msgs rclcpp mppi mppi_ros mppi_pinocchio tf2 tf2_ros)
 
-find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+foreach (pkg ${AMENT_PACKAGES})
+    find_package(${pkg} REQUIRED)
+endforeach ()
 
-catkin_package(
-        LIBRARIES ${PROJECT_NAME}
-        INCLUDE_DIRS include
-        CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-        DEPENDS )
-
-include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+include_directories(include ${EIGEN3_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRAIRES})
+ament_target_dependencies(${PROJECT_NAME} ${AMENT_PACKAGES})
 
 add_executable(panda_mobile_control src/nodes/panda_mobile_control.cpp)
-target_link_libraries(panda_mobile_control ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(panda_mobile_control ${PROJECT_NAME})
 add_dependencies(panda_mobile_control ${PROJECT_NAME})
+ament_target_dependencies(panda_mobile_control ${AMENT_PACKAGES})
 
-install(DIRECTORY launch resources
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(PROGRAMS scripts/target_generator.py
+        DESTINATION lib/${PROJECT_NAME}
         )
 
-catkin_install_python(PROGRAMS scripts/target_generator.py
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-        )
+ament_export_dependencies(Eigen3)
+foreach (pkg ${AMENT_PACKAGES})
+    ament_export_dependencies(${pkg} REQUIRED)
+endforeach ()
+ament_export_libraries(${PROJECT_NAME})
+ament_export_include_directories(include)
+
+
+ament_package()

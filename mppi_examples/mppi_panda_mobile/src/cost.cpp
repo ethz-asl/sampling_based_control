@@ -8,11 +8,8 @@
 
 #include "mppi_panda_mobile/cost.h"
 
-#include <math.h>
+#include <cmath>
 #include <mppi/cost/cost_base.h>
-#include <ros/ros.h>
-
-#include <ros/package.h>
 
 #define PANDA_UPPER_LIMITS \
   2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973

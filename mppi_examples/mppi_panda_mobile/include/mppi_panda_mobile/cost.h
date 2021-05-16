@@ -8,11 +8,7 @@
 
 #pragma once
 #include <mppi_pinocchio/model.h>
-
 #include <mppi/cost/cost_base.h>
-#include <ros/ros.h>
-
-#include <ros/package.h>
 
 namespace panda_mobile {
 
