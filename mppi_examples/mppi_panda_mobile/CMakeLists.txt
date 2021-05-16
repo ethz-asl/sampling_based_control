@@ -24,8 +24,17 @@ target_link_libraries(panda_mobile_control ${PROJECT_NAME})
 add_dependencies(panda_mobile_control ${PROJECT_NAME})
 ament_target_dependencies(panda_mobile_control ${AMENT_PACKAGES})
 
+install(TARGETS panda_mobile_control
+  DESTINATION lib/${PROJECT_NAME})
+  
 install(PROGRAMS scripts/target_generator.py
         DESTINATION lib/${PROJECT_NAME}
+        )
+
+# Install launch files.
+install(DIRECTORY
+        launch config resources
+        DESTINATION share/${PROJECT_NAME}/
         )
 
 ament_export_dependencies(Eigen3)

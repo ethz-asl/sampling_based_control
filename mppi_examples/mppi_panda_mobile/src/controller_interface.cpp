@@ -68,7 +68,7 @@ bool PandaMobileControllerInterface::set_controller(
   node_->declare_parameter<bool>("joint_limits", false);
   node_->declare_parameter<std::string>("config_file", "");
 
-  ok &= node_->get_parameter<std::string>("/robot_description", robot_description);
+  ok &= node_->get_parameter<std::string>("robot_description", robot_description);
   ok &= node_->get_parameter<double>("obstacle_radius", obstacle_radius_);
   ok &= node_->get_parameter<double>("linear_weight", linear_weight);
   ok &= node_->get_parameter<double>("angular_weight", angular_weight);

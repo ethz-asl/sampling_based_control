@@ -17,7 +17,7 @@ set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${yaml_cpp_INCLUDE_DIRS})
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 
 # Third party
-add_library(gram_savitzky_golay
+add_library(gram_savitzky_golay SHARED
         src/filters/gram_savitzky_golay.cpp)
 
 # Libraries

@@ -40,7 +40,8 @@ void ControllerRos::init_default_ros() {
       node_->create_publisher<std_msgs::msg::Float64>("/min_rollout_cost", 10);
   max_rollout_cost_publisher_ =
       node_->create_publisher<std_msgs::msg::Float64>("/max_rollout_cost", 10);
-  data_publisher_ = node_->create_publisher<mppi_ros::msg::Data>("/mppi_data", 10);
+  // TODO(giuseppe) segfault in ROS2 implementation
+  //data_publisher_ = node_->create_publisher<mppi_ros::msg::Data>("/mppi_data", 10);
 }
 
 bool ControllerRos::init() {
@@ -111,7 +112,7 @@ bool ControllerRos::update_policy() {
 
   if (controller_->config_.logging) {
     mppi_ros::to_msg(controller_->get_data(), data_ros_, node_->now());
-    data_publisher_->publish(data_ros_);
+    //data_publisher_->publish(data_ros_);
   }
   return true;
 }
@@ -123,7 +124,7 @@ bool ControllerRos::update_policy_thread(
 
   if (controller_->config_.logging) {
     mppi_ros::to_msg(controller_->get_data(), data_ros_, node_->now());
-    data_publisher_->publish(data_ros_);
+    //data_publisher_->publish(data_ros_);
   }
   return true;
 }

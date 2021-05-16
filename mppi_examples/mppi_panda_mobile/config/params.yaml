@@ -1,57 +1,18 @@
-solver:
-  rollouts: 200
-  lambda: 0.0001 #0.001
-  h: 10.0
-  step_size: 0.01
-  horizon: 1.00
+panda_mobile_control:
+  ros__parameters:
+    initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
+    linear_weight: 10.0
+    angular_weight: 1.0
+    obstacle_radius: 0.15
+    joint_limits: true
+    holonomic: true
 
-  cost_ratio: 0.2
-  caching_factor: 0.3
-  filtering: false
-  substeps: 1
+    policy_update_rate: 0.0  # 0.0 execute as fast as possible
+    reference_update_rate: 10.0
+    publish_ros: true
+    ros_publish_rate: 10.0
 
-  gradient_step_size: 1.0
-  momentum_step_size: 0.0
-
-  filter_type: 1
-  filter_order: 1
-  filter_window: 5
-
-  adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
-
-  discount_factor: 1.0
-  verbose: false
-  threads: 8
-  debug_print: false
-
-  use_tree_search: false
-  pruning_threshold: 0.05
-
-  logging: true
-
-  filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  filters_order: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-
-#  expert_types: {NORM, IMP}
-  expert_weights: [0.0, 1.0]
-  log_data: true
-
-
-initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
-linear_weight: 10.0
-angular_weight: 1.0
-obstacle_radius: 0.15
-joint_limits: true
-holonomic: false
-
-policy_update_rate: 0.0  # 0.0 execute as fast as possible
-reference_update_rate: 10.0
-publish_ros: true
-ros_publish_rate: 10.0
-
-sequential: true
-static_optimization: false
-sim_dt: 0.01
-max_sim_time: 0.0
+    sequential: true
+    static_optimization: false
+    sim_dt: 0.01
+    max_sim_time: 0.0

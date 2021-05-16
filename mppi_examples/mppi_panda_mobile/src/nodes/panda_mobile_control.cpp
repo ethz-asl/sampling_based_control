@@ -35,8 +35,8 @@ int main(int argc, char** argv) {
   node->get_parameter<std::vector<double>>("initial_configuration", initial_configuration);
 
   std::string robot_description;
-  node->declare_parameter<std::string>("/robot_description", "");
-  node->get_parameter<std::string>("/robot_description", robot_description);
+  node->declare_parameter<std::string>("robot_description", "");
+  node->get_parameter<std::string>("robot_description", robot_description);
 
   bool static_optimization;
   node->declare_parameter<bool>("static_optimization", false);
@@ -83,6 +83,7 @@ int main(int argc, char** argv) {
   if (!ok) {
     throw std::runtime_error("Failed to initialzied controller!");
   }
+  RCLCPP_INFO(node->get_logger(), "Started controller.");
 
   // set the very first observation
   controller.set_observation(x, sim_time);
@@ -130,9 +131,9 @@ int main(int argc, char** argv) {
     auto elapsed_s =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
     double delta = sim_dt - elapsed_s;
-    if (delta > 0){
-      rclcpp::sleep_for(std::chrono::nanoseconds(int(delta*1e9)));
-    }
+    // if (delta > 0){
+    //   rclcpp::sleep_for(std::chrono::nanoseconds(int(delta*1e9)));
+    // }
 
     if (max_sim_time > 0 && sim_time > max_sim_time) {
       RCLCPP_INFO_STREAM(node->get_logger(), "Reached maximum sim time: " << max_sim_time
