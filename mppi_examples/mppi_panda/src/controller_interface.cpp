@@ -128,19 +128,10 @@ bool PandaControllerInterface::set_controller(
     );
     ROS_INFO_STREAM("Using Torch script from " << torchscript_model_path);
   }
-  std::unique_ptr<Dataset> dataset_ptr = nullptr;
-  std::string learned_expert_output_path;
-  if (nh_.param<std::string>("learned_expert_output_path", 
-      learned_expert_output_path, "")) {
-    dataset_ptr = std::make_unique<Hdf5Dataset>(
-      learned_expert_output_path
-    );
-    ROS_INFO_STREAM("HDF5 output path: " << learned_expert_output_path);
-  }
 
   auto learner = std::make_shared<PandaExpert>(
     std::move(policy_ptr), 
-    std::move(dataset_ptr),
+    nullptr,
     robot_description
   );  
   // -------------------------------
