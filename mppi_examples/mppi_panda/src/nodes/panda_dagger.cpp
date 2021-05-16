@@ -34,9 +34,9 @@ class PandaDataCollector{
         throw std::runtime_error("Failed to initialzied controller!");
       }
 
-      std::string robot_description = 
+      robot_description_ = 
         nh.param<std::string>("/robot_description", "");
-      simulation_ = std::make_shared<PandaDynamics>(robot_description);
+      simulation_ = std::make_shared<PandaDynamics>(robot_description_);
       state_publisher_ =
         nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
       ee_publisher_ =
@@ -83,14 +83,17 @@ class PandaDataCollector{
         controller_.update_reference();
         controller_.update_policy();
 
+        if (learner_) u = learner_->get_action(x_); 
+        controller_.get_input(x_, u_expert, sim_time_);  
 
-        // if (controller.get_reference_set()) {
-        //   u = learner->get_action(x_); // segfault if reference in learner is not set!!!
-        // }
-        controller_.get_input(x_, u, sim_time_);
-        x_ = simulation_->step(u, sim_dt);
+        if (learner_ && learner_->collect_data()){
+          learner_->save_state_action(x_, u_expert);
+        }
+
+        if (use_policy_) x_ = simulation_->step(u, sim_dt);
+        else x_ = simulation_->step(u_expert, sim_dt);
+
         sim_time_ += sim_dt;
-        
         publish_ros(x_);
         
         policy_learning::collect_rolloutFeedback feedback;
@@ -120,7 +123,35 @@ class PandaDataCollector{
           }
           action_active_ = false;
           terminated = false;
+
+          // Force write by destructing learner... A bit hacky and ugly :(
+          learner_ = nullptr;
+          controller_.get_controller()->set_learned_expert(learner_);
         }
+      } else if (callback_received_){
+        // reset cached trajectories
+        controller_.get_controller()->initialize_rollouts();
+
+        // set state and goal at random
+        set_random_state();
+        set_random_goal();
+        set_obstacle_pose();
+
+        try {
+          learner_ = std::make_shared<PandaExpert>(
+            std::make_unique<TorchScriptPolicy>(policy_path_),
+            std::make_unique<Hdf5Dataset>(dataset_path_),
+            robot_description_
+          );
+          controller_.get_controller()->set_learned_expert(learner_);
+          action_active_ = true;
+        } catch (const std::runtime_error& error) {
+          ROS_ERROR_STREAM("Could not initialze learner: " << error.what());
+          action_server_.setAborted();
+          action_active_ = false;
+        }
+        callback_received_ = false;
+        action_active_ = true;
       } else {
         publish_ros(x_);
         idle_rate.sleep();
@@ -211,21 +242,13 @@ class PandaDataCollector{
                goal->dataset_path.c_str(), goal->policy_path.c_str());
     
       timeout_ = sim_time_ + goal->timeout;
-      
-      // reset cached trajectories
-      controller_.get_controller()->initialize_rollouts();
-
-      // set state and goal at random
-      set_random_state();
-      set_random_goal();
-      set_obstacle_pose();
-
       use_policy_ = goal->use_policy;
-      // Set learner and so on
-      // auto learner = controller.get_controller()-> get_learned_expert();
-      // controller.get_controller()->set_learned_expert(learner);
-      action_active_ = true;
-    };
+      policy_path_ = goal->policy_path;
+      dataset_path_ = goal->dataset_path;
+
+      action_active_ = false;
+      callback_received_ = true;
+    }
 
     bool goal_reached(const geometry_msgs::PoseStamped& conv_pose, 
                       const geometry_msgs::PoseStamped& current_pose) {
@@ -260,6 +283,7 @@ class PandaDataCollector{
       action_server_;
 
     mppi::DynamicsBase::dynamics_ptr simulation_;
+    std::string robot_description_;
 
     ros::Publisher state_publisher_;
     ros::Publisher ee_publisher_;
@@ -269,6 +293,7 @@ class PandaDataCollector{
     float idle_frequency_ = 1.0; // Hz    
 
     bool action_active_ = false;
+    bool callback_received_ = false;
     bool use_policy_ = false;
     Eigen::VectorXd x_ = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
     double sim_time_ = 0.0;
@@ -280,6 +305,10 @@ class PandaDataCollector{
     double joint_state_std_dev = 0.5;
 
     std::default_random_engine generator_;
+    std::shared_ptr<PandaExpert> learner_ = nullptr;  
+    std::string dataset_path_;
+    std::string policy_path_;
+    
 };
 
 
