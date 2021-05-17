@@ -3,6 +3,10 @@
 import os
 import datetime
 import torch
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import csv
 from actionlib.simple_action_client import SimpleGoalState
 
 from learning import PolicyLearner
@@ -10,6 +14,7 @@ from learning import PolicyLearner
 import rospy
 import actionlib
 from actionlib_msgs.msg import GoalStatus
+from mppi_ros.msg import Data
 import policy_learning.msg
 
 class Dagger:
@@ -24,10 +29,13 @@ class Dagger:
             datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+'_dagger')
         self.dagger_models_path = os.path.join(self.dagger_path, 'policies')
         self.dagger_datasets_path = os.path.join(self.dagger_path, 'datasets')
+        self.dagger_plots_path = os.path.join(self.dagger_path, 'plots')
         if (not os.path.isdir(self.dagger_models_path)):
             os.makedirs(self.dagger_models_path)
         if (not os.path.isdir(self.dagger_datasets_path)):
             os.makedirs(self.dagger_datasets_path)
+        if (not os.path.isdir(self.dagger_plots_path)):
+            os.makedirs(self.dagger_plots_path)
 
         # set device for policy
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -38,6 +46,17 @@ class Dagger:
         rospy.init_node('dagger_orchestrator')
         self.client = actionlib.SimpleActionClient('panda_dagger/collector',
             policy_learning.msg.collect_rolloutAction)
+
+        # subscriber to the mppi cost to track if Dagger is improving the cost
+        self.cost_subscriber = rospy.Subscriber("/mppi_data",
+                                                Data,
+                                                self.cost_callback,
+                                                queue_size=10)
+        self.data_dict = {
+            "stage_cost": [],
+            "cost_history": []
+        }
+        self.mean_costs = []
 
     def train_torch_model(self, iteration):
         """
@@ -83,8 +102,14 @@ class Dagger:
                 print(f'{i}: Goal not reached')
             else:
                 print(f'{i}: Action call failed, state {self.client.get_state()}')
+            curr_cost = np.array(self.data_dict["stage_cost"])
+            self.mean_costs.append(curr_cost.mean())
+            for iter in self.data_dict.values():
+                iter.clear()
         print('Done')
-
+        plotting_path = os.path.join(
+            self.dagger_plots_path, f'iter_{iteration}.png')
+        self.plot_mean_costs(iteration, plotting_path, n_runs)
 
         return dataset_save_dir_intermed
 
@@ -106,6 +131,31 @@ class Dagger:
             save_path = self.collect_dataset(iter)
             self.aggregate_dataset(save_path)
             self.train_torch_model(iter)
+        self.save_cost_statistics()
+
+    def cost_callback(self, data: Data):
+        if len(data.weights.array) == 0:
+            return
+        self.data_dict["stage_cost"].append(data.stage_cost)
+        self.data_dict["cost_history"].append(data.rollouts_cost.array)
+
+    def plot_mean_costs(self, dagger_it, save_dir, n_points):
+        fig, ax = plt.subplots()
+        label = 'Mean costs in ' + str(dagger_it) + ' iteration'
+        ax.plot(self.mean_costs[-n_points:], label=label)
+        ax.set_xlabel('collection iteration')
+        ax.set_ylabel('[]')
+        ax.set_title('Mean Costs')
+        ax.yaxis.grid(True)
+        ax.legend()
+        plt.savefig(save_dir)
+
+    def save_cost_statistics(self):
+        csv_path = os.path.join(self.dagger_plots_path, 'cost.csv')
+        with open(csv_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([f'{self.mean_costs[i]:5.4}' for i in range(len(self.mean_costs))])
+
 
 
 if __name__ == "__main__":
