@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import csv
+from scipy.stats import bernoulli
 from actionlib.simple_action_client import SimpleGoalState
 
 from learning import PolicyLearner
@@ -41,6 +42,10 @@ class Dagger:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         # initialise policy
         self.learner = PolicyLearner(file_path, device)
+
+        self.p = 0.9 # percentage of times we pick expert over policy
+        self.beta = self.p
+        self.randomize_policy_choice = True
 
         # init ros
         rospy.init_node('dagger_orchestrator')
@@ -86,14 +91,29 @@ class Dagger:
             f'iter_{iteration-1}.pt')
         n_runs = 50
         print(f"Collecting data for {n_runs} runs...")
+        expert_sum = 0
+        policy_sum = 0
         for i in range(n_runs):
             dataset_save_dir = os.path.join(dataset_save_dir_intermed,
                 f'run_{i}.hdf5')
-            goal = policy_learning.msg.collect_rolloutGoal(
-                timeout = 10,
-                use_policy = True,
-                policy_path = model_load_path,
-                dataset_path = dataset_save_dir)
+            if self.randomize_policy_choice:
+                r = bernoulli.rvs(self.beta, size=1)
+                use_policy = bool(1-r) # False is to use expert
+                if use_policy:
+                    policy_sum += 1
+                else:
+                    expert_sum += 1
+                goal = policy_learning.msg.collect_rolloutGoal(
+                    timeout = 10,
+                    use_policy = use_policy,
+                    policy_path = model_load_path,
+                    dataset_path = dataset_save_dir)
+            else:
+                goal = policy_learning.msg.collect_rolloutGoal(
+                    timeout = 10,
+                    use_policy = True,
+                    policy_path = model_load_path,
+                    dataset_path = dataset_save_dir)
             self.client.send_goal(goal)
             self.client.wait_for_result(timeout=rospy.Duration(30))
             if self.client.get_state() == GoalStatus.SUCCEEDED:
@@ -107,9 +127,13 @@ class Dagger:
             for iter in self.data_dict.values():
                 iter.clear()
         print('Done')
+        print('Expert percentage: ', expert_sum/(policy_sum+expert_sum))
+        print('Actual bias: ', self.beta)
         plotting_path = os.path.join(
             self.dagger_plots_path, f'iter_{iteration}.png')
         self.plot_mean_costs(iteration, plotting_path, n_runs)
+        if self.randomize_policy_choice:
+            self.beta *= self.p #exponential decrease
 
         return dataset_save_dir_intermed
 
