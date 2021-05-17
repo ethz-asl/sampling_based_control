@@ -164,14 +164,23 @@ class Dagger:
         self.data_dict["cost_history"].append(data.rollouts_cost.array)
 
     def plot_mean_costs(self, dagger_it, save_dir, n_points):
-        fig, ax = plt.subplots()
-        label = 'Mean costs in ' + str(dagger_it) + ' iteration'
-        ax.plot(self.mean_costs[-n_points:], label=label)
-        ax.set_xlabel('collection iteration')
-        ax.set_ylabel('[]')
-        ax.set_title('Mean Costs')
-        ax.yaxis.grid(True)
-        ax.legend()
+        fig, (ax1, ax2) = plt.subplots(2)
+        label = 'Mean Costs in ' + str(dagger_it) + '-th Iteration'
+        ax1.plot(self.mean_costs[-n_points:], label=label)
+        ax1.set_ylabel('cost []')
+        ax1.set_title('Mean Costs')
+        ax1.yaxis.grid(True)
+        ax1.legend()
+        total_points = len(self.mean_costs)
+        if  total_points>= 5*n_points:
+            ax2.plot(range(total_points-5*n_points, total_points),
+                self.mean_costs[-5*n_points:], label='Total')
+        else:
+            ax2.plot(self.mean_costs, label='Total')
+        ax2.yaxis.grid(True)
+        ax2.set_ylabel('cost []')
+        ax2.set_xlabel('collection sample []')
+        ax2.legend()
         plt.savefig(save_dir)
 
     def save_cost_statistics(self):
