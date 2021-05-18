@@ -45,7 +45,7 @@ class Dagger:
 
         self.p = 0.9 # percentage of times we pick expert over policy
         self.beta = self.p
-        self.randomize_policy_choice = True
+        self.randomize_policy_choice = False
 
         # init ros
         rospy.init_node('dagger_orchestrator')
@@ -89,7 +89,7 @@ class Dagger:
             os.makedirs(dataset_save_dir_intermed)
         model_load_path = os.path.join(self.dagger_models_path,
             f'iter_{iteration-1}.pt')
-        n_runs = 50
+        n_runs = 45
         print(f"Collecting data for {n_runs} runs...")
         expert_sum = 0
         policy_sum = 0
@@ -127,8 +127,9 @@ class Dagger:
             for iter in self.data_dict.values():
                 iter.clear()
         print('Done')
-        print('Expert percentage: ', expert_sum/(policy_sum+expert_sum))
-        print('Actual bias: ', self.beta)
+        if self.randomize_policy_choice:
+            print('Expert percentage: ', expert_sum/(policy_sum+expert_sum))
+            print('Actual bias: ', self.beta)
         plotting_path = os.path.join(
             self.dagger_plots_path, f'iter_{iteration}.png')
         self.plot_mean_costs(iteration, plotting_path, n_runs)
@@ -146,6 +147,8 @@ class Dagger:
         Args:
             n_iterations: Number of iterations to run the dagger algorithm in total
         """
+        print('The time at beginning is: ',
+            datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
         print('waiting for action server')
         self.client.wait_for_server()
         for iter in range(n_iterations):
@@ -155,6 +158,8 @@ class Dagger:
             save_path = self.collect_dataset(iter)
             self.aggregate_dataset(save_path)
             self.train_torch_model(iter)
+            print('After finishing iteration ', iter, ' the time is: ',
+                datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
         self.save_cost_statistics()
 
     def cost_callback(self, data: Data):
@@ -217,5 +222,5 @@ if __name__ == "__main__":
     # intiialise dagger object
     dagger = Dagger(dir_path)
     # run dagger
-    n_iterations = 10
+    n_iterations = 50
     dagger.dagger_loop(n_iterations)
