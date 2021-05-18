@@ -12,4 +12,6 @@
     <depend>mppi_pinocchio</depend>
     <depend>actionlib_msgs</depend>
     <depend>message_generation</depend>
+    <depend>sensor_msgs</depend>
+    <depend>geometry_msgs</depend>
 </package>

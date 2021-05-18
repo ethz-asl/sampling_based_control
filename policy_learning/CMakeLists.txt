@@ -16,7 +16,9 @@ find_package(HighFive REQUIRED)
 set(PACKAGE_DEPENDENCIES
         mppi
         mppi_pinocchio
-        actionlib_msgs)
+        actionlib_msgs
+        sensor_msgs
+        geometry_msgs)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
@@ -26,7 +28,7 @@ add_action_files(
 )
 
 generate_messages(
-        DEPENDENCIES actionlib_msgs
+        DEPENDENCIES actionlib_msgs sensor_msgs geometry_msgs
 )
 
 catkin_package(
@@ -46,5 +48,3 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${COMMON_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC -DDEBUG_PRINT)
-
-

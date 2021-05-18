@@ -1,8 +1,12 @@
 # goal
 bool use_policy
+bool validate
 float64 timeout
-string dataset_path 
+string dataset_path
 string policy_path
+geometry_msgs/PoseStamped goal_pose
+sensor_msgs/JointState initial_joint_pos
+
 
 ---
 
