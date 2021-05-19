@@ -33,6 +33,7 @@ bool OMAVControllerInterface::init_ros() {
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
+  cost_publisher_ = nh_.advertise<mppi_ros::Array>("/cost_parts", 10);
 }
 
 bool OMAVControllerInterface::set_controller(
@@ -54,48 +55,45 @@ bool OMAVControllerInterface::set_controller(
   // dynamics
   // -------------------------------
   mppi::DynamicsBase::dynamics_ptr dynamics;
-  std::string robot_description_raisim;
-  std::string robot_description_pinocchio;
-  std::string object_description_raisim;
 
   if (!nh_.param<std::string>("/robot_description_raisim",
-                              robot_description_raisim, "")) {
+                              robot_description_raisim_, "")) {
     throw std::runtime_error(
         "Could not parse robot_description_raisim. Is the parameter set?");
   }
   if (!nh_.param<std::string>("/object_description_raisim",
-                              object_description_raisim, "")) {
+                              object_description_raisim_, "")) {
     throw std::runtime_error(
         "Could not parse object_description_raisim. Is the parameter set?");
   }
   if (!nh_.param<std::string>("/robot_description_pinocchio",
-                              robot_description_pinocchio, "")) {
+                              robot_description_pinocchio_, "")) {
     throw std::runtime_error(
         "Could not parse robot_description_pinocchio. Is the parameter set?");
   }
 
   dynamics = std::make_shared<OMAVVelocityDynamics>(
-      robot_description_raisim, object_description_raisim, config_.step_size);
+      robot_description_raisim_, object_description_raisim_, config_.step_size);
 
   std::cout << "Done." << std::endl;
 
   // -------------------------------
   // cost
   // -------------------------------
-  OMAVInteractionCostParam cost_param;
-  if (!cost_param.parse_from_ros(nh_)) {
+
+  if (!cost_param_.parse_from_ros(nh_)) {
     ROS_ERROR("Failed to parse cost parameters.");
     return false;
   }
-  ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
-  auto cost = std::make_shared<OMAVInteractionCost>(
-      robot_description_raisim, robot_description_pinocchio,
-      object_description_raisim, cost_param);
+  ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_);
+  cost_ = std::make_shared<OMAVInteractionCost>(
+      robot_description_raisim_, robot_description_pinocchio_,
+      object_description_raisim_, &cost_param_);
 
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost_, config_);
 
   // -------------------------------
   // initialize reference
@@ -121,9 +119,14 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](7) = 0.0;
   // Initialize mode
   ref_.rr[0](8) = 0;
+
+  ref_.rr[0](9) = 1000;
   ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
+
+  // robot model
+  robot_model_.init_from_xml(robot_description_pinocchio_);
   return true;
 }
 
@@ -175,6 +178,12 @@ bool OMAVControllerInterface::update_reference() {
   return true;
 }
 
+bool OMAVControllerInterface::update_cost_param(
+    const OMAVInteractionCostParam &cost_param) {
+  cost_param_ = cost_param;
+  return false;
+}
+
 bool OMAVControllerInterface::set_reference(const observation_t &x) {
   ref_.rr[0](0) = x(0);
   ref_.rr[0](1) = x(1);
@@ -183,6 +192,15 @@ bool OMAVControllerInterface::set_reference(const observation_t &x) {
   ref_.rr[0](4) = x(4);
   ref_.rr[0](5) = x(5);
   ref_.rr[0](6) = x(6);
+  get_controller()->set_reference_trajectory(ref_);
+  return true;
+}
+
+bool OMAVControllerInterface::set_rqt_reference(
+    const Eigen::VectorXd &rqt_ref) {
+  ref_.rr[0](0) = rqt_ref(0);
+  ref_.rr[0](1) = rqt_ref(1);
+  ref_.rr[0](2) = rqt_ref(2);
   get_controller()->set_reference_trajectory(ref_);
   return true;
 }
@@ -252,10 +270,51 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   geometry_msgs::Pose current_pose_;
   optimal_rollout_array_.header.frame_id = "world";
   optimal_rollout_array_.header.stamp = ros::Time::now();
-  for (int i = 0; i < 30; i++) {
+  velocity_cost_ = 0;
+  power_cost_ = 0;
+  delta_pose_cost_ = 0;
+  torque_cost_ = 0;
+  for (int i = 0; i < optimal_rollout_states_.size(); i++) {
+    // Update robot_model for kinematic calculations
+    Eigen::VectorXd q_omav(7);
+    q_omav << optimal_rollout_states_[i].head<3>(),
+        optimal_rollout_states_[i].segment<3>(4), optimal_rollout_states_[i](3);
+    robot_model_.update_state(q_omav);
+
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
                                                      current_pose_);
     optimal_rollout_array_.poses.push_back(current_pose_);
+    // Cost publishing
+    tip_lin_velocity_ = optimal_rollout_states_[i].segment<3>(7) +
+                        optimal_rollout_states_[i].segment<3>(10).cross(
+                            robot_model_.get_pose("hook").translation -
+                            robot_model_.get_pose("omav").translation);
+    tip_velocity_ << tip_lin_velocity_,
+        optimal_rollout_states_[i].segment<3>(10);
+    float current_pose_cost;
+    velocity_cost_ +=
+        tip_velocity_.transpose() * cost_param_.Q_vel * tip_velocity_;
+    current_pose_cost = (optimal_rollout_states_[i](13) + M_PI / 2) *
+                        cost_param_.Q_object_x *
+                        (optimal_rollout_states_[i](13) + M_PI / 2);
+    delta_pose_cost_ += current_pose_cost;
+    float power_normed =
+        optimal_rollout_states_[i].segment<3>(15).normalized().dot(
+            tip_lin_velocity_.normalized());
+    power_cost_ +=
+        current_pose_cost *
+        std::min(cost_param_.Q_power,
+                 cost_param_.Q_power * (1 - std::pow(power_normed, 3)));
+    torque_ = optimal_rollout_states_[i].segment<3>(15).cross(
+        robot_model_.get_pose("hook").translation -
+        robot_model_.get_pose("omav").translation);
+    torque_cost_ += torque_.transpose() * torque_;
   }
+  mppi_ros::Array cost_array_message_;
+  cost_array_message_.array.push_back(velocity_cost_);
+  cost_array_message_.array.push_back(power_cost_);
+  cost_array_message_.array.push_back(delta_pose_cost_);
+  cost_array_message_.array.push_back(torque_cost_);
+  cost_publisher_.publish(cost_array_message_);
   optimal_rollout_publisher_.publish(optimal_rollout_array_);
 }

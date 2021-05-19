@@ -42,11 +42,18 @@ private:
   ros::Publisher obstacle_publisher_;
   ros::Publisher object_state_publisher_;
   ros::Publisher contact_forces_publisher_;
+  ros::Publisher force_dot_;
+  ros::Publisher vel_dot_;
 
   visualization_msgs::Marker goal_marker_;
   visualization_msgs::Marker omav_marker_;
   visualization_msgs::Marker obstacle_marker_;
   visualization_msgs::Marker force_marker_;
+  visualization_msgs::Marker force_dot_marker_;
+  visualization_msgs::Marker vel_dot_marker_;
   sensor_msgs::JointState object_state_;
+
+  Eigen::Vector3d force_normed_;
+  Eigen::Vector3d vel_normed_;
 };
 } // namespace omav_velocity

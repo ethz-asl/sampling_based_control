@@ -2,8 +2,9 @@
 <launch>
 
     <arg name="description_file_raisim" default="$(find mppi_omav_interaction)/data/omav_raisim_hook.urdf.xacro"/>
-    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/door.urdf.xacro"/>
+    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/objects/door.urdf.xacro"/>
     <arg name="description_robot" default="$(find mppi_omav_interaction)/data/omav_hook_visualization.urdf.xacro"/>
+    <arg name="pinocchio_robot_description" default="$(find mppi_omav_interaction)/data/omav_pinocchio_hook.urdf.xacro"/>
 
     <arg name="plot_cost" default="true"/>
 
@@ -17,6 +18,7 @@
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_robot)"/>
+    <param name="robot_description_pinocchio" command="$(find xacro)/xacro $(arg pinocchio_robot_description)"/>
     <param name="object_description_raisim" command="$(find xacro)/xacro $(arg description_file_object)"/>
     <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
 

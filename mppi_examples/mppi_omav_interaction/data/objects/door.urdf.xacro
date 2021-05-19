@@ -29,8 +29,8 @@
         <child link="hinge"/>
         <origin rpy="0 0 0" xyz="0 0.25 0.0"/>
         <axis xyz="0 0 1"/>
-        <limit effort="100.0" velocity="1.5" lower="-1.57" upper="0.1"/>
-        <dynamics damping="1.0" friction="4.0"/>
+        <limit effort="100.0" velocity="1.5" lower="-2" upper="0.0"/>
+        <dynamics damping="4.0" friction="1.0"/>
     </joint>
 
     <link name="hinge"/>

@@ -5,14 +5,14 @@ z_distance_weight: 10.0
 # Weight for the deviation from the reference orientation
 orientation_weight: 10.0
 # Weights for the deviation from the reference position
-x_object_weight: 100.0
-y_object_weight: 100.0
-z_object_weight: 100.0
+x_object_weight: 10.0
+y_object_weight: 10.0
+z_object_weight: 10.0
 # Weight for the deviation from the reference orientation
 orientation_object_weight: 100.0
 # Velocity costs
-lin_vel_weight: 0.1
-ang_vel_weight: 0.05
+lin_vel_weight: 0.0
+ang_vel_weight: 0.0
 # Cost for leafing the field
 leafing_field_cost: 10000.0
 # Negative and positive limits of the field
@@ -31,6 +31,6 @@ obstacle_position_x: 5
 obstacle_position_y: 5
 # Cost handle hook distance
 handle_hook_cost: 100
-handle_hook_threshold: 0.2
+handle_hook_threshold: 0.1
 # Force cost
-force_cost: 0.0
+power_cost: 2.0

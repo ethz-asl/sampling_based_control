@@ -22,6 +22,8 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
       nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
   contact_forces_publisher_ =
       nh_.advertise<visualization_msgs::Marker>("/contact_force", 10);
+  force_dot_ = nh_.advertise<visualization_msgs::Marker>("/dot_force", 10);
+  vel_dot_ = nh_.advertise<visualization_msgs::Marker>("/dot_vel", 10);
 
   omav_marker_.header.frame_id = "world";
   omav_marker_.id = 0;
@@ -93,6 +95,30 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   force_marker_.color.b = 0.0;
   force_marker_.color.g = 0.0;
   force_marker_.color.a = 1.0;
+
+  force_dot_marker_.type = visualization_msgs::Marker::ARROW;
+  force_dot_marker_.header.frame_id = "world";
+  force_dot_marker_.action = visualization_msgs::Marker::ADD;
+  force_dot_marker_.pose.orientation.w = 1.0;
+  force_dot_marker_.scale.x = 0.005;
+  force_dot_marker_.scale.y = 0.01;
+  force_dot_marker_.scale.z = 0.0;
+  force_dot_marker_.color.r = 1.0;
+  force_dot_marker_.color.b = 0.0;
+  force_dot_marker_.color.g = 0.0;
+  force_dot_marker_.color.a = 1.0;
+
+  vel_dot_marker_.type = visualization_msgs::Marker::ARROW;
+  vel_dot_marker_.header.frame_id = "world";
+  vel_dot_marker_.action = visualization_msgs::Marker::ADD;
+  vel_dot_marker_.pose.orientation.w = 1.0;
+  vel_dot_marker_.scale.x = 0.005;
+  vel_dot_marker_.scale.y = 0.01;
+  vel_dot_marker_.scale.z = 0.0;
+  vel_dot_marker_.color.r = 0.0;
+  vel_dot_marker_.color.b = 1.0;
+  vel_dot_marker_.color.g = 0.0;
+  vel_dot_marker_.color.a = 1.0;
 }
 
 void OMAVVelocityDynamicsRos::reset_to_default() {
@@ -126,7 +152,6 @@ void OMAVVelocityDynamicsRos::publish_ros() {
 
   // visualize contact forces
   force_t force = get_dominant_force();
-  visualization_msgs::Marker force_marker;
   force_marker_.points.resize(2);
   force_marker_.points[0].x = force.position(0);
   force_marker_.points[0].y = force.position(1);
@@ -134,8 +159,28 @@ void OMAVVelocityDynamicsRos::publish_ros() {
   force_marker_.points[1].x = force.position(0) + force.force(0) / 10;
   force_marker_.points[1].y = force.position(1) + force.force(1) / 10;
   force_marker_.points[1].z = force.position(2) + force.force(2) / 10;
-  contact_forces_publisher_.publish(force_marker_);
 
+  force_normed_ << force.force.normalized();
+  force_dot_marker_.points.resize(2);
+  force_dot_marker_.points[0].x = 0;
+  force_dot_marker_.points[0].y = 0;
+  force_dot_marker_.points[0].z = 0;
+  force_dot_marker_.points[1].x = force_normed_(0);
+  force_dot_marker_.points[1].y = force_normed_(1);
+  force_dot_marker_.points[1].z = force_normed_(2);
+
+  vel_normed_ << x_(7), x_(8), x_(9);
+  vel_dot_marker_.points.resize(2);
+  vel_dot_marker_.points[0].x = 0;
+  vel_dot_marker_.points[0].y = 0;
+  vel_dot_marker_.points[0].z = 0;
+  vel_dot_marker_.points[1].x = vel_normed_.normalized()(0);
+  vel_dot_marker_.points[1].y = vel_normed_.normalized()(1);
+  vel_dot_marker_.points[1].z = vel_normed_.normalized()(2);
+
+  force_dot_.publish(force_dot_marker_);
+  vel_dot_.publish(vel_dot_marker_);
+  contact_forces_publisher_.publish(force_marker_);
   vis_publisher_.publish(omav_marker_);
   goal_publisher_.publish(goal_marker_);
   obstacle_publisher_.publish(obstacle_marker_);

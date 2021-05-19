@@ -10,6 +10,7 @@
 
 #include "mppi_omav_interaction/ros_conversions.h"
 #include <geometry_msgs/Pose.h>
+#include <mppi_omav_interaction/cost.h>
 #include <mppi_ros/controller_interface.h>
 
 #include <mav_msgs/conversions.h>
@@ -37,7 +38,11 @@ public:
 
   bool update_reference() override;
 
+  bool update_cost_param(const OMAVInteractionCostParam &cost_param);
+
   bool set_reference(const observation_t &x);
+
+  bool set_rqt_reference(const Eigen::VectorXd &rqt_ref);
 
   bool set_reset_reference(const observation_t &x);
 
@@ -56,13 +61,17 @@ private:
 
 public:
   mppi::SolverConfig config_;
+  std::shared_ptr<OMAVInteractionCost> cost_;
 
 private:
   bool reference_set_ = false;
 
   observation_t x_0_temp;
 
+  OMAVInteractionCostParam cost_param_;
+
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
+  ros::Publisher cost_publisher_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 
@@ -70,10 +79,25 @@ private:
   ros::Subscriber mode_subscriber_;
   ros::Subscriber object_reference_subscriber_;
 
+  std::string robot_description_raisim_;
+  std::string robot_description_pinocchio_;
+  std::string object_description_raisim_;
+
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
 
   observation_array_t xx_opt;
   input_array_t uu_opt;
+
+  mppi_pinocchio::RobotModel robot_model_;
+  Eigen::Vector3d tip_lin_velocity_;
+  Eigen::Matrix<double, 6, 1> tip_velocity_;
+  Eigen::Vector3d torque_;
+  // cost floats to publish
+  float velocity_cost_;
+  float handle_hook_cost_;
+  float delta_pose_cost_;
+  float power_cost_;
+  float torque_cost_;
 };
-} // namespace omav_velocity
+} // namespace omav_interaction

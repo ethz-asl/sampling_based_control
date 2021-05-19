@@ -49,7 +49,7 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   Eigen::VectorXd p_gain(6), d_gain(6);
   p_gain << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-  d_gain << 10, 10, 10, 5, 5, 5;
+  d_gain << 10, 10, 10, 10, 10, 10;
   omav->setPdGains(p_gain, d_gain);
 }
 

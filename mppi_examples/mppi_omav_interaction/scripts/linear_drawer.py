@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     rospy.sleep(3.0)
     reference_pose.header.frame_id = "world"
-    reference_pose.pose.position.x = 0.4
+    reference_pose.pose.position.x = 0.375
     reference_pose.pose.position.y = 0.0
     reference_pose.pose.position.z = 1.0
     reference_pose.pose.orientation.w = 1.0
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     rospy.sleep(3.0)
     object_pose.header.frame_id = "world"
-    object_pose.pose.position.x = -0.4
+    object_pose.pose.position.x = -1.5708
     object_pose.pose.position.y = 0
     object_pose.pose.position.z = 0
     object_pose.pose.orientation.w = 1.0
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     object_reference_publisher.publish(object_pose)
     mode_publisher.publish(mode)
 
-    rospy.sleep(20.0)
+    rospy.sleep(30.0)
     reference_pose.header.frame_id = "odom"
     reference_pose.pose.position.x = -0.5
     reference_pose.pose.position.y = 0.0

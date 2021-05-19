@@ -47,11 +47,6 @@ struct OMAVInteractionCostParam {
   Eigen::Matrix<double, 6, 1> vel_costs;
   Eigen::Matrix<double, 6, 6> Q_vel;
 
-  double Q_force; // Force cost
-
-  Eigen::Matrix<double, 3, 1> force_costs;
-  Eigen::Matrix<double, 3, 3> Q_force_mat;
-
   double Q_leafing_field; // Leafing Field Costs
 
   double x_limit_min; // Field Limits
@@ -70,6 +65,10 @@ struct OMAVInteractionCostParam {
   double Q_handle_hook;      // Cost when handle hook distance is 1m
   double handle_hook_thresh; // threshold so that handle hook cost is 0
 
+  double Q_power;
+
+  double Q_torque;
+
   bool parse_from_ros(const ros::NodeHandle &nh);
 };
 
@@ -78,7 +77,7 @@ public:
   OMAVInteractionCost(const std::string &robot_description,
                       const std::string &robot_description_pinocchio,
                       const std::string &object_description,
-                      const OMAVInteractionCostParam &param);
+                      OMAVInteractionCostParam *param);
 
   ~OMAVInteractionCost() = default;
 
@@ -86,6 +85,7 @@ private:
   std::string robot_description_;
   std::string robot_description_pinocchio_;
   std::string object_description_;
+  OMAVInteractionCostParam *param_ptr_;
   OMAVInteractionCostParam param_;
 
   mppi_pinocchio::RobotModel robot_model_;
@@ -100,13 +100,16 @@ private:
   double obstacle_cost;
   double mode;
   Eigen::Vector3d hook_handle_vector;
+  Eigen::Vector3d tip_lin_velocity_;
+  Eigen::Matrix<double, 6, 1> tip_velocity_;
+  Eigen::Vector3d torque_;
   double distance_hook_handle;
 
 private:
   cost_ptr create() override {
-    return std::make_shared<OMAVInteractionCost>(robot_description_,
-                                                 robot_description_pinocchio_,
-                                                 object_description_, param_);
+    return std::make_shared<OMAVInteractionCost>(
+        robot_description_, robot_description_pinocchio_, object_description_,
+        param_ptr_);
   }
 
   cost_ptr clone() const override {
@@ -119,7 +122,7 @@ private:
                       const mppi::reference_t &ref, const double t) override;
 };
 
-} // namespace omav_velocity
+} // namespace omav_interaction
 
 std::ostream &
 operator<<(std::ostream &os,
