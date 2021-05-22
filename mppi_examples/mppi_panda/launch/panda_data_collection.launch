@@ -12,10 +12,12 @@
     <arg name="tf_prefix" default=""/>
     <!-- Load robot description -->
 
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
+
+    <!-- data collection args -->
     <arg name="learner_output_path" default=""/>
     <arg name="torchscript_model_path" default=""/>
-
-    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file) resources_prefix:='file://'"/>
+    <arg name="initial_condition_vector" default=""/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
@@ -28,14 +30,16 @@
     <arg name="launch_prefix" default="gdb -ex run --args" if="$(arg debug)"/>
     <arg name="launch_prefix" default="" unless="$(arg debug)"/>
 
-    <node name="panda_control" type="panda_control" pkg="mppi_panda" output="screen"
-          launch-prefix="$(arg launch_prefix)">
+    <node name="panda_data_collection" type="panda_data_collection" pkg="mppi_panda" output="screen"
+          launch-prefix="$(arg launch_prefix)" required="true">
         <rosparam command="load" file="$(find mppi_panda)/config/params.yaml"/>
         <param name="config_file" value="$(find mppi_panda)/config/params.yaml"/>
-        <param name="learned_expert_output_path" value="$(arg learner_output_path)" 
+        <param name="learned_expert_output_path" value="$(arg learner_output_path)"
             unless="$(eval arg('learner_output_path') == '')" />
-        <param name="torchscript_model_path" value="$(arg torchscript_model_path)" 
+        <param name="torchscript_model_path" value="$(arg torchscript_model_path)"
             unless="$(eval arg('torchscript_model_path') == '')"/>
+        <param name="initial_configuration" type="yaml" value="$(arg initial_condition_vector)"
+            unless="$(eval arg('initial_condition_vector') == '')"/>
     </node>
 
     <include file="$(find mppi_panda)/launch/common.launch">

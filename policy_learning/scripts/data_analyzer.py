@@ -40,7 +40,7 @@ class DataAnalyzer:
             self.actions = np.append(self.actions, f['actions'], axis=0)
 
     def load_dataset(self, path):
-        dataset = StateActionDataset(root_dir=dir_path)
+        dataset = StateActionDataset(root_dir=path)
         self.actions = dataset.action_dataset
         self.states = dataset.state_dataset
 
@@ -122,10 +122,10 @@ class DataAnalyzer:
                 plt.plot(mean)
                 legend.append("GT-action + low pass")
             if noisy_model_actions is not None:
-                plt.plot(noisy_model_actions)
+                plt.plot(noisy_model_actions[:,a])
                 legend.append("noisy NN-action")
             if model_actions is not None:
-                plt.plot(model_actions)
+                plt.plot(model_actions[:,a])
                 legend.append("NN-action")
             plt.legend(legend)
             plt.xlabel("Time step")
@@ -224,35 +224,17 @@ class DataAnalyzer:
 
 if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dir_path = task_path + "/../data/Horizon_3_Test_0419153905"
-    run_name = "/run_1.hdf5"
+    dir_path = task_path + "/../data/PandaPrivileged250_210507_172626"
+    run_name = "/test/run_234.hdf5"
     run_path = dir_path + run_name
 
-    
-
     model_path = None
-    model_path = "/home/andreas/plr_ws/src/sampling_based_control/Horizon_3_Train_0419144557.pt"
+    model_path = "/home/andreas/plr_ws/src/sampling_based_control/PandaPrivileged250_210507_172626.pt"
 
     d = DataAnalyzer()
     d.load_single_run(run_path)
-
-    model_paths = ("/home/andreas/plr_ws/src/sampling_based_control/Horizon_2_Train_0419133816.pt", 
-                   "/home/andreas/plr_ws/src/sampling_based_control/Horizon_3_Train_0419144557.pt",
-                   "/home/andreas/plr_ws/src/sampling_based_control/Horizon_4_Train_0419140234.pt")
-    run_paths = (task_path+"/../data/Horizon_2_Test_0419135518"+run_name,
-                 task_path+"/../data/Horizon_3_Test_0419153905"+run_name,
-                 task_path+"/../data/Horizon_4_Test_0419143555"+run_name)
-    names = ("Horizon 2s", "Horizon 3s", "Horizon 4s")
-        
-    d.plot_multi_actions(model_paths, run_paths, names)
-    # d.load_dataset(dir_path)
-    # d.plot_action_std_dev()
-    # d.plot_actions(model_path=model_path, add_noise=False, plot_diff=False)
-    # d.plot_actions(model_path=model_path, add_noise=False, plot_diff=False)
-    # d.plot_actions(model_path=model_path, add_noise=False, plot_diff=False)
+    # d.load_dataset(dir_path + "/train")
     # d.plot_state_PCA(2)
-    # d.plot_action_vs_state_PCA()
-    # d.plot_action_histogram()
-    # d.plot_state_histogram()
+    d.plot_actions(model_path=model_path, add_noise=False, plot_diff=False)
     # d.plot_states()
     plt.show()

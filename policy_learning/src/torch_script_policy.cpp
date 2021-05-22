@@ -50,6 +50,9 @@ bool const TorchScriptPolicy::check_sizes(size_t input_size, size_t output_size)
     error_msg << "Forward propagation in torch module failed. "
     << "Are the state and NN-input dimensions the same?";
   }
+  if (!ok) {
+    throw std::runtime_error(error_msg.str());
+  }
   return ok;
 }
 

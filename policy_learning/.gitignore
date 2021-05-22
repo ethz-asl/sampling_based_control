@@ -1,4 +1,6 @@
 data/
+runs/
+validation/
 
 # Don't commit pytorch models
 *.pth

@@ -12,19 +12,28 @@
 
 class Hdf5Dataset::Impl{
   public:
-    Impl(std::string const& file_path):
-      output_file_(file_path, H5Easy::File::Overwrite)
-    {}
+    Impl(){};
 
   public:
-    H5Easy::File output_file_;
+    std::unique_ptr<H5Easy::File> output_file_;
     std::vector<std::vector<float>> stored_states_;
     std::vector<std::vector<float>> stored_actions_;
 };
 
 Hdf5Dataset::Hdf5Dataset(std::string const& file_path) :
-  pImpl(std::make_unique<Impl>(file_path))
-{}
+  pImpl(std::make_unique<Impl>())
+{
+  try {
+    pImpl->output_file_ = std::make_unique<H5Easy::File>
+      (file_path, H5Easy::File::Overwrite);
+  } catch(const H5Easy::Exception& e) {
+    std::stringstream ss;
+    ss << "Error while loading file: ";
+    ss << file_path << ". What: ";
+    ss << e.what();
+    throw std::runtime_error(ss.str());
+  } 
+}
 
 Hdf5Dataset::~Hdf5Dataset(){
   write();
@@ -46,8 +55,12 @@ void Hdf5Dataset::clear(){
 }
 
 void Hdf5Dataset::write(){
-  std::cerr << pImpl->stored_actions_.size() << std::endl;
-  std::cerr << pImpl->stored_states_.size() << std::endl;
-  H5Easy::dump(pImpl->output_file_, "/states", pImpl->stored_states_);
-  H5Easy::dump(pImpl->output_file_, "/actions", pImpl->stored_actions_);
+  if (pImpl->output_file_ == nullptr){
+    throw std::runtime_error("Hdf5Dataset: No file loaded.");
+  }
+  if(pImpl->stored_actions_.size() > 0 &&
+     pImpl->stored_states_.size() > 0 ){ 
+    H5Easy::dump(*pImpl->output_file_, "/states", pImpl->stored_states_);
+    H5Easy::dump(*pImpl->output_file_, "/actions", pImpl->stored_actions_);
+  }
 }
