@@ -93,7 +93,7 @@ class PandaDataCollector{
         controller_.update_reference();
         controller_.update_policy();
 
-        if (learner_) u = learner_->get_action(x_); 
+        if (learner_ && use_policy_) u = learner_->get_action(x_); 
         controller_.get_input(x_, u_expert, sim_time_);  
 
         if (learner_ && learner_->collect_data()){
@@ -152,7 +152,7 @@ class PandaDataCollector{
 
         try {
           learner_ = std::make_shared<PandaExpert>(
-            std::make_unique<TorchScriptPolicy>(policy_path_),
+            use_policy_ ? std::make_unique<TorchScriptPolicy>(policy_path_): nullptr,
             std::make_unique<Hdf5Dataset>(dataset_path_),
             robot_description_
           );
