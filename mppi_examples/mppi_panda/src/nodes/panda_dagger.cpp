@@ -51,6 +51,8 @@ class PandaDataCollector{
       obstacle_publisher_ =
         nh.advertise<geometry_msgs::PoseStamped>("/obstacle", 10);   
 
+      sim_dt_ = nh_.param<double>("sim_dt", 0.01);
+
       // init the controller
       bool ok = controller_.init();
       if (!ok) {
@@ -74,7 +76,7 @@ class PandaDataCollector{
     set_obstacle_pose();
     set_random_goal();
 
-    double sim_dt = nh_.param<double>("sim_dt", 0.01);
+    
 
     ros::Rate idle_rate(idle_frequency_);
 
@@ -98,10 +100,10 @@ class PandaDataCollector{
           learner_->save_state_action(x_, u_expert);
         }
 
-        if (use_policy_) x_ = simulation_->step(u, sim_dt);
-        else x_ = simulation_->step(u_expert, sim_dt);
+        if (use_policy_) x_ = simulation_->step(u, sim_dt_);
+        else x_ = simulation_->step(u_expert, sim_dt_);
 
-        sim_time_ += sim_dt;
+        sim_time_ += sim_dt_;
         publish_ros(x_);
         
         policy_learning::collect_rolloutFeedback feedback;
@@ -113,13 +115,13 @@ class PandaDataCollector{
                          controller_.get_target_pose_ros()) &&
             !terminated) {
           terminated = true;
-          timeout_ = std::min(timeout_, sim_time_ + time_to_shutdown);
+          timeout_ = std::min(timeout_, sim_time_ + time_to_shutdown_);
           ROS_INFO("Goal reached, waiting for %f seconds before ending rollout.", 
-                   time_to_shutdown);
+                   time_to_shutdown_);
         }
 
         if (sim_time_ > timeout_ || 
-            joint_limit_violation() ||
+            severe_joint_limit_violation() ||
             action_server_.isPreemptRequested() || 
             !ros::ok()){
           policy_learning::collect_rolloutResult result;
@@ -181,7 +183,7 @@ class PandaDataCollector{
 
     void set_random_state(){
       
-      std::normal_distribution<double> distribution(0, joint_state_std_dev);
+      std::normal_distribution<double> distribution(0, joint_state_std_dev_);
 
       set_initial_state();
       for (size_t i = 0; i < x_.size(); i++) x_(i) += distribution(generator_);
@@ -225,13 +227,30 @@ class PandaDataCollector{
       obstacle_publisher_.publish(obstacle);
     }
 
-    bool joint_limit_violation(){
+    bool severe_joint_limit_violation(){
+      bool joint_limits_violated = false;
       for (size_t i = 0; i < 7; i++){
+        // Check if joint limits have been violated
         if (x_(i) < joint_limits_lower_(i) ||
             x_(i) > joint_limits_upper_(i)){
-              return true;
+          joint_limits_violated = true;
+        }
+        // Abort if joint limits are violated too much
+        if (x_(i) < tolerated_joint_limit_violation_ * joint_limits_lower_(i)||
+            x_(i) > tolerated_joint_limit_violation_ * joint_limits_upper_(i)){
+          return true;
         }
       }
+
+      // Abort if joint limits have been violated for too long
+      if (!joint_limits_violated){ // Reset accumulator
+        joint_limit_time_accumulator_ = 0;
+      } else { // Accumulate
+        joint_limit_time_accumulator_ += sim_dt_;
+      }
+      if (joint_limit_time_accumulator_ > joint_limit_timeout_){
+        return true;
+      }  
       return false;
     }
 
@@ -289,8 +308,8 @@ class PandaDataCollector{
 
       double d_angle = q_conv.angularDistance(q_current);
 
-      if (d_position < goal_position_threshold &&
-          d_angle < goal_angular_threshold) {
+      if (d_position < goal_position_threshold_ &&
+          d_angle < goal_angular_threshold_) {
         return true;
       } else {
         return false;
@@ -318,12 +337,16 @@ class PandaDataCollector{
     bool use_policy_ = false;
     Eigen::VectorXd x_ = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
     double sim_time_ = 0.0;
+    double sim_dt_;
 
     double timeout_ = INFINITY;
-    double time_to_shutdown = 2; // s
-    double goal_position_threshold = 0.01; // m = 1 cm
-    double goal_angular_threshold = 0.087; // rad = 5 deg
-    double joint_state_std_dev = 0.5;
+    double time_to_shutdown_ = 2; // s
+    double goal_position_threshold_ = 0.01; // m = 1 cm
+    double goal_angular_threshold_ = 0.087; // rad = 5 deg
+    double joint_state_std_dev_ = 0.5;
+    double joint_limit_timeout_ = 3; // s
+    double joint_limit_time_accumulator_ = 0;
+    double tolerated_joint_limit_violation_ = 1.3;
 
     std::default_random_engine generator_;
     std::shared_ptr<PandaExpert> learner_ = nullptr;  
