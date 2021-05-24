@@ -26,6 +26,18 @@ class Dagger:
 
     def __init__(self, file_path):
         # handle path to initial dataset or (TODO) flag to start from fresh (data collection)
+        self.file_path = file_path
+        if os.path.isdir(file_path):
+            # set device for policy
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            # initialise policy
+            self.learner = PolicyLearner(file_path, device)
+            self.initialize_dataset = False
+        else:
+            os.makedirs(os.path.join(file_path, 'train'))
+            os.makedirs(os.path.join(file_path, 'test'))
+            self.initialize_dataset = True
+
         self.dagger_path = os.path.join(file_path,
             datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+'_dagger')
         self.dagger_models_path = os.path.join(self.dagger_path, 'policies')
@@ -38,10 +50,6 @@ class Dagger:
         if (not os.path.isdir(self.dagger_plots_path)):
             os.makedirs(self.dagger_plots_path)
 
-        # set device for policy
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        # initialise policy
-        self.learner = PolicyLearner(file_path, device)
 
         self.p = 0.9 # percentage of times we pick expert over policy
         self.beta = self.p
@@ -74,6 +82,35 @@ class Dagger:
             f'iter_{iteration}')
         self.learner.train()
         self.learner.save_model(model_save_path)
+
+    def collect_initial_dataset(self):
+        """
+        Collect initial dataset using only the expert.
+        """
+        n_train = 200
+        n_test = 20
+
+        for i in range(n_train):
+            dataset_save_dir = os.path.join(self.file_path, 'train',
+                f'run_{i}.hdf5')
+            goal = policy_learning.msg.collect_rolloutGoal(
+                        timeout = 10,
+                        use_policy = False,
+                        policy_path = "",
+                        dataset_path = dataset_save_dir)
+            self.client.send_goal(goal)
+            self.client.wait_for_result(timeout=rospy.Duration(30))
+
+        for i in range(n_test):
+            dataset_save_dir = os.path.join(self.file_path, 'test',
+                f'run_{i}.hdf5')            
+            goal = policy_learning.msg.collect_rolloutGoal(
+                        timeout = 10,
+                        use_policy = False,
+                        policy_path = "",
+                        dataset_path = dataset_save_dir)
+            self.client.send_goal(goal)
+            self.client.wait_for_result(timeout=rospy.Duration(30))
 
     def collect_dataset(self, iteration):
         """
@@ -151,6 +188,14 @@ class Dagger:
             datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
         print('waiting for action server')
         self.client.wait_for_server()
+        if self.initialize_dataset:
+            print('Collecting initial dataset')
+            self.collect_initial_dataset()
+            # set device for policy
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            # initialise policy
+            self.learner = PolicyLearner(self.file_path, device)
+
         for iter in range(n_iterations):
             if iter == 0:
                 self.train_torch_model(iter)
@@ -217,7 +262,8 @@ if __name__ == "__main__":
 
     # Dir to dataset
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dataset_name = "Panda_R15_S5_210511_220510"
+    # dataset_name = "Panda_R15_S5_210511_220510"
+    dataset_name = "Panda_R15_S5_210522_220000"
     dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name)
     # intiialise dagger object
     dagger = Dagger(dir_path)
