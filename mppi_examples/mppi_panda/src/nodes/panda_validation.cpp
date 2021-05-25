@@ -111,17 +111,17 @@ class PandaValidator{
         action_server_.publishFeedback(feedback);
 
         // if goal is reached, wait some time until stopping
-        if (goal_reached(controller_.get_pose_end_effector_ros(x_),
-                         controller_.get_target_pose_ros()) &&
-            !terminated) {
-          terminated = true;
-          timeout_ = std::min(timeout_, sim_time_ + time_to_shutdown);
-          ROS_INFO("Goal reached, waiting for %f seconds before ending rollout.",
-                   time_to_shutdown);
-        }
+        // if (goal_reached(controller_.get_pose_end_effector_ros(x_),
+        //                  controller_.get_target_pose_ros()) &&
+        //     !terminated) {
+        //   terminated = true;
+        //   timeout_ = std::min(timeout_, sim_time_ + time_to_shutdown);
+        //   ROS_INFO("Goal reached, waiting for %f seconds before ending rollout.",
+        //            time_to_shutdown);
+        // }
 
         if (sim_time_ > timeout_ ||
-            joint_limit_violation() ||
+            //joint_limit_violation() ||
             action_server_.isPreemptRequested() ||
             !ros::ok()){
           policy_learning::collect_rolloutResult result;
