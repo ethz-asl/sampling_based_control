@@ -130,9 +130,10 @@ class Plotter:
 
     def plot_average_cost(self, aggregator, hue=None, x_label=None):
         fig, ax = plt.subplots()
-        sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
+        sns.boxplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
         ax.set_ylabel("Average stage cost")
         ax.set_xlabel(aggregator if x_label is None else x_label)
+        ax.set_yscale("log")
 
     def plot_effective_samples_per_rollout(self, tree=False):
         plt.figure()
