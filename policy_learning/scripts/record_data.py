@@ -35,6 +35,7 @@ class DataRecorder:
             "substeps": []
         }
         self.first_call = True
+        self.finish_recording = False
         self.data_subscriber = rospy.Subscriber("/mppi_data",
                                                 Data,
                                                 self.data_callback,
@@ -54,7 +55,7 @@ class DataRecorder:
 
 
     def data_callback(self, data: Data):
-        if len(data.weights.array) == 0:
+        if len(data.weights.array) == 0 or self.finish_recording:
             return
 
         current_time = rospy.get_rostime().to_sec()
@@ -64,6 +65,7 @@ class DataRecorder:
             self.first_call = False
 
         self.data_dict["id"].append(self.experiment_id)
+        self.data_dict["controller_name"].append(self.controller_name)
         self.data_dict["index"].append(self.idx)
         self.data_dict["horizon"].append(data.config.horizon)
         self.data_dict["nr_rollouts"].append(data.config.nr_rollouts)
@@ -94,6 +96,7 @@ class DataRecorder:
             l.extend([l[-1]] * (new_size - size))
 
     def postprocess(self):
+        self.finish_recording = True
         # Filtering of effective samples
         self.data_dict['effective_samples'] = gaussian_filter1d(
             self.data_dict['effective_samples'], sigma=2)
