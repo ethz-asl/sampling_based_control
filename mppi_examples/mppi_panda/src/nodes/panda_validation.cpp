@@ -33,11 +33,11 @@ class PandaValidator{
         controller_(nh),
         action_server_(nh, "validator", false)
     {
-      // ensure we don't sample any learned trajectories in expert
-      if (controller_.config_.learned_rollout_ratio != 0) {
-        ROS_ERROR_STREAM("Aborting Dagger, turn off sampling from NN in params!");
-        throw std::runtime_error("Failed to initialzied controller!");
-      }
+      // // ensure we don't sample any learned trajectories in expert
+      // if (controller_.config_.learned_rollout_ratio != 0) {
+      //   ROS_ERROR_STREAM("Aborting Dagger, turn off sampling from NN in params!");
+      //   throw std::runtime_error("Failed to initialzied controller!");
+      // }
 
       robot_description_ =
         nh.param<std::string>("/robot_description", "");
