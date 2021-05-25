@@ -13,6 +13,7 @@
     <depend>std_msgs</depend>
     <depend>sensor_msgs</depend>
     <depend>message_generation</depend>
+    <depend>rospy</depend>
 
     <exec_depend>message_runtime</exec_depend>
 </package>

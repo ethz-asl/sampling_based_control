@@ -10,9 +10,13 @@ set(PACKAGE_DEPENDENCIES
         sensor_msgs
         std_msgs
         roscpp
-        message_generation)
+        message_generation
+        rospy)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+
+# install python modules in catkin
+catkin_python_setup()
 
 # Messages
 add_message_files(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/msg
