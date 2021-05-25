@@ -1,0 +1,53 @@
+solver:
+  rollouts: 100
+  lambda: 0.001 #0.001
+  h: 20.0
+  step_size: 0.015
+  horizon: 1.0
+
+  gradient_step_size: 0.1
+  momentum_step_size: 0.5
+
+  cost_ratio: 0.2
+  caching_factor: 0.3
+  filtering: true
+  substeps: 1
+
+  filter_type: 1
+  filter_order: 1
+  filter_window: 10
+
+  filters_type: [ 1, 1, 1, 1, 1, 1 ]
+  filters_order: [ 1, 1, 1, 1, 1, 1 ]
+  filters_window: [ 10, 10, 10, 10, 10, 10 ]
+
+  bound_input: false
+  u_min: [ -2.0, -2.0, -2.0, -3.0, -3.0, -3.0 ]
+  u_max: [ 2.0, 2.0, 2.0, 3.0, 3.0, 3.0 ]
+
+  adaptive_sampling: false
+  input_variance: [ 2, 2, 0.5, 0.5, 0.5, 6]
+
+  use_tree_search: false         # if true tree structure is used
+  pruning_threshold: 0.01       # controls the structure of the tree
+  # expert_types: {NORM, IMP}
+  expert_weights: [ 0.0, 1.0 ]  # controls the weights of the different experts
+
+  discount_factor: 1.0
+  verbose: false
+  threads: 8
+  debug_print: false
+
+  logging: true
+
+policy_update_rate: 0.0  # execute as fast as possible
+reference_update_rate: 10.0
+publish_ros: true
+ros_publish_rate: 10.0
+
+sequential: true
+static_optimization: false
+running_rotors: false
+sim_dt: 0.015
+
+initial_configuration: [ 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

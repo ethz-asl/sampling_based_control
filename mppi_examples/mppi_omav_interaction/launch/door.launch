@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="description_file_raisim" default="$(find mppi_omav_interaction)/data/omav_raisim_hook.urdf.xacro"/>
+    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/objects/shelf.urdf.xacro"/>
+    <arg name="description_robot" default="$(find mppi_omav_interaction)/data/omav_hook_visualization.urdf.xacro"/>
+    <arg name="pinocchio_robot_description" default="$(find mppi_omav_interaction)/data/omav_pinocchio_hook.urdf.xacro"/>
+
+    <arg name="plot_cost" default="true"/>
+
+    <arg name="goal_position_x" default="0.0"/>
+    <arg name="goal_position_y" default="0.0"/>
+    <arg name="goal_position_z" default="0.5"/>
+    <arg name="goal_quaternion_w" default="1.0"/>
+    <arg name="goal_quaternion_x" default="0.0"/>
+    <arg name="goal_quaternion_y" default="0.0"/>
+    <arg name="goal_quaternion_z" default="0.0"/>
+
+    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_robot)"/>
+    <param name="robot_description_pinocchio" command="$(find xacro)/xacro $(arg pinocchio_robot_description)"/>
+    <param name="object_description_raisim" command="$(find xacro)/xacro $(arg description_file_object)"/>
+    <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
+
+    <node name="omav_mppi_interaction" type="omav_interaction_control" pkg="mppi_omav_interaction" output="screen" >
+        <param name="goal_position_x" value="$(arg goal_position_x)"/>
+        <param name="goal_position_y" value="$(arg goal_position_y)"/>
+        <param name="goal_position_z" value="$(arg goal_position_z)"/>
+        <param name="goal_quaternion_w" value="$(arg goal_quaternion_w)"/>
+        <param name="goal_quaternion_x" value="$(arg goal_quaternion_x)"/>
+        <param name="goal_quaternion_y" value="$(arg goal_quaternion_y)"/>
+        <param name="goal_quaternion_z" value="$(arg goal_quaternion_z)"/>
+        <param name="activation_file" value="$(env HOME)/.raisim/activation.raisim"/>
+        <rosparam command="load" file="$(find mppi_omav_interaction)/params/omav_cost.yaml"/>
+    </node>
+
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="object_description"/>
+        <remap from="joint_states" to="/object/joint_state"/>
+    </node>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/robot/joint_state"/>
+    </node>
+
+    <!-- Open Rviz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_omav_interaction)/config/config.rviz" output="screen"/>
+
+    <group>
+        <param name="/config_file" value="$(find mppi_omav_interaction)/params/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_omav_interaction)/params/params.yaml" ns="omav_mppi_interaction"/>
+    </group>
+
+    <group if="$(arg plot_cost)">
+        <arg name="mp_config" default="$(find mppi_omav_interaction)/resources/rqt_multiplot.xml"/>
+        <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot"
+              args="--multiplot-config $(arg mp_config) --multiplot-run-all"
+              output="screen"/>
+    </group>
+
+</launch>

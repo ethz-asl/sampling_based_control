@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ouzel">
+
+    <xacro:property name="mass_ouzel" value="5.0"/>
+    <xacro:property name="ixx_ouzel" value="0.12"/>
+    <xacro:property name="iyy_ouzel" value="0.14"/>
+    <xacro:property name="izz_ouzel" value="0.18"/>
+    <xacro:property name="radius_ouzel" value="0.2"/>
+    <xacro:property name="height_ouzel" value="0.3"/>
+
+    <link name="odom_omav"/>
+
+    <joint name="odom_omav_to_omav_base" type="fixed">
+        <parent link="odom_omav"/>
+        <child link="omav_base"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    </joint>
+
+    <link name="omav_base">
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 0.0"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="omav_to_rod" type="fixed">
+        <parent link="omav_base"/>
+        <child link="rod"/>
+        <origin rpy="0 0 0" xyz="0.275 0.0 0.0"/>
+    </joint>
+
+    <link name="rod">
+        <collision>
+            <origin rpy="0 1.5708 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.54"/>
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="0 1.5708 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.54"/>
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="rod_to_tip" type="fixed">
+        <parent link="rod"/>
+        <child link="tip"/>
+        <origin rpy="0 0 0" xyz="0.27 0.0 0.0"/>
+    </joint>
+
+    <link name="tip">
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <sphere radius="0.015"/>
+            </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0.0 0"/>
+            <geometry>
+                <sphere radius="0.015"/>
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="tip_to_hook" type="fixed">
+        <parent link="tip"/>
+        <child link="hook"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 -0.025"/>
+    </joint>
+
+    <link name="hook">
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1"/>
+            </material>
+        </visual>
+    </link>
+
+</robot>
