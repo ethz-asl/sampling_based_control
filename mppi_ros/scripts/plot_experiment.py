@@ -407,8 +407,8 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     plotter = Plotter(args.experiment_id)
-    plotter.plot_average_cost_per_substep()
-    plotter.plot_average_cost_per_rollout()
+    # plotter.plot_average_cost_per_substep()
+    # plotter.plot_average_cost_per_rollout()
     # plotter.plot_average_cost_per_rollout_tree()
     # plotter.plot_effective_samples_per_rollout()
     # plotter.plot_effective_samples_per_rollout_tree()
@@ -424,6 +424,7 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
+    plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
     # plotter.plot_rollout_costs(args.experiment_id[0])
     # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
