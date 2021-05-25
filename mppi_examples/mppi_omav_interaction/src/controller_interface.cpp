@@ -34,6 +34,8 @@ bool OMAVControllerInterface::init_ros() {
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
   cost_publisher_ = nh_.advertise<mppi_ros::Array>("/cost_parts", 10);
+  torque_publisher_ =
+      nh_.advertise<std_msgs::Float64>("/torque_trajectory", 10);
 }
 
 bool OMAVControllerInterface::set_controller(
@@ -127,6 +129,7 @@ bool OMAVControllerInterface::set_controller(
 
   // robot model
   robot_model_.init_from_xml(robot_description_pinocchio_);
+  object_model_.init_from_xml(object_description_raisim_);
   return true;
 }
 
@@ -274,47 +277,83 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   power_cost_ = 0;
   delta_pose_cost_ = 0;
   torque_cost_ = 0;
+  handle_hook_cost_ = 0;
+  std_msgs::Float64 torque_norm;
   for (int i = 0; i < optimal_rollout_states_.size(); i++) {
     // Update robot_model for kinematic calculations
     Eigen::VectorXd q_omav(7);
     q_omav << optimal_rollout_states_[i].head<3>(),
         optimal_rollout_states_[i].segment<3>(4), optimal_rollout_states_[i](3);
     robot_model_.update_state(q_omav);
+    Eigen::VectorXd q_object(1);
+    q_object << optimal_rollout_states_[i](13);
+    object_model_.update_state(q_object);
 
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
                                                      current_pose_);
     optimal_rollout_array_.poses.push_back(current_pose_);
     // Cost publishing
-    tip_lin_velocity_ = optimal_rollout_states_[i].segment<3>(7) +
-                        optimal_rollout_states_[i].segment<3>(10).cross(
-                            robot_model_.get_pose("hook").translation -
-                            robot_model_.get_pose("omav").translation);
+    com_hook_ = robot_model_.get_pose("omav").translation -
+                robot_model_.get_pose("tip").translation;
+    tip_lin_velocity_ =
+        optimal_rollout_states_[i].segment<3>(7) +
+        optimal_rollout_states_[i].segment<3>(10).cross(com_hook_);
     tip_velocity_ << tip_lin_velocity_,
         optimal_rollout_states_[i].segment<3>(10);
     float current_pose_cost;
     velocity_cost_ +=
         tip_velocity_.transpose() * cost_param_.Q_vel * tip_velocity_;
-    current_pose_cost = (optimal_rollout_states_[i](13) + M_PI / 2) *
-                        cost_param_.Q_object_x *
-                        (optimal_rollout_states_[i](13) + M_PI / 2);
+    current_pose_cost = cost_param_.Q_object_x *
+                        (optimal_rollout_states_[i](13) - M_PI / 2) *
+                        (optimal_rollout_states_[i](13) - M_PI / 2);
     delta_pose_cost_ += current_pose_cost;
-    float power_normed =
-        optimal_rollout_states_[i].segment<3>(15).normalized().dot(
-            tip_lin_velocity_.normalized());
+    force_normed_ = optimal_rollout_states_[i].segment<3>(15).normalized();
+    float power_normed = force_normed_.dot(tip_lin_velocity_.normalized());
     power_cost_ +=
-        current_pose_cost *
-        std::min(cost_param_.Q_power,
-                 cost_param_.Q_power * (1 - std::pow(power_normed, 3)));
-    torque_ = optimal_rollout_states_[i].segment<3>(15).cross(
-        robot_model_.get_pose("hook").translation -
-        robot_model_.get_pose("omav").translation);
-    torque_cost_ += torque_.transpose() * torque_;
+        std::min(cost_param_.Q_power, cost_param_.Q_power * (1 - power_normed));
+
+    torque_angle_ = force_normed_.dot(com_hook_.normalized());
+
+    torque_ = optimal_rollout_states_[i].segment<3>(15).cross(com_hook_);
+
+    // torque_cost_ += cost_param_.Q_torque * torque_.transpose() * torque_;
+    torque_cost_ += std::min(cost_param_.Q_torque,
+                             cost_param_.Q_torque * (1 - torque_angle_));
+    // Calculate distance between hook and handle
+    hook_handle_vector_ = robot_model_.get_pose("hook").translation -
+                          object_model_.get_pose("handle_ref").translation;
+    distance_hook_handle_ =
+        sqrt(hook_handle_vector_.transpose() * hook_handle_vector_);
+    // Handle Hook distance cost
+    handle_hook_cost_ += std::max(
+        0.0, cost_param_.Q_handle_hook / (1 - cost_param_.handle_hook_thresh) *
+                 (distance_hook_handle_ - cost_param_.handle_hook_thresh));
+    torque_norm.data = torque_.norm();
+    torque_publisher_.publish(torque_norm);
   }
   mppi_ros::Array cost_array_message_;
   cost_array_message_.array.push_back(velocity_cost_);
   cost_array_message_.array.push_back(power_cost_);
   cost_array_message_.array.push_back(delta_pose_cost_);
   cost_array_message_.array.push_back(torque_cost_);
+  cost_array_message_.array.push_back(handle_hook_cost_);
+  cost_array_message_.array.push_back(optimal_rollout_states_[1](15));
+  cost_array_message_.array.push_back(optimal_rollout_states_[1](16));
+  cost_array_message_.array.push_back(optimal_rollout_states_[1](17));
+  cost_array_message_.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).norm());
+  cost_array_message_.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
+  cost_array_message_.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
+  cost_array_message_.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
+  cost_array_message_.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
+  cost_array_message_.array.push_back(
+      acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
+          com_hook_.normalized())) *
+      180.0 / M_PI);
   cost_publisher_.publish(cost_array_message_);
   optimal_rollout_publisher_.publish(optimal_rollout_array_);
 }

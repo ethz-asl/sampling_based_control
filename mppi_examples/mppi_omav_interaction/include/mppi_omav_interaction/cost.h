@@ -69,6 +69,8 @@ struct OMAVInteractionCostParam {
 
   double Q_torque;
 
+  bool contact_bool;
+
   bool parse_from_ros(const ros::NodeHandle &nh);
 };
 
@@ -91,7 +93,7 @@ private:
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
   std::string hook_frame_ = "hook";
-  std::string handle_frame_ = "handle";
+  std::string handle_frame_ = "handle_ref";
 
   Eigen::Matrix<double, 6, 1> delta_pose;
   Eigen::Matrix<double, 6, 1> delta_pose_object;
@@ -99,10 +101,14 @@ private:
   double distance_from_savezone;
   double obstacle_cost;
   double mode;
+  double object_cost;
+  double torque_angle_;
   Eigen::Vector3d hook_handle_vector;
   Eigen::Vector3d tip_lin_velocity_;
   Eigen::Matrix<double, 6, 1> tip_velocity_;
   Eigen::Vector3d torque_;
+  Eigen::Vector3d force_normed_;
+  Eigen::Vector3d com_hook_;
   double distance_hook_handle;
 
 private:

@@ -103,8 +103,16 @@ void OmavTrajectoryGenerator::GoalParamCallback(
     mppi_omav_interaction::MPPIOmavGoalConfig &config, uint32_t level) {
   geometry_msgs::PoseStamped rqt_pose_msg;
   Eigen::VectorXd rqt_pose(7);
-  rqt_pose << config.goal_pos_x, config.goal_pos_y, config.goal_pos_z, 1, 0, 0,
-      0;
+  Eigen::Quaterniond q;
+  double euler_x = config.goal_roll * 2 * M_PI / 360;
+  double euler_y = config.goal_pitch * 2 * M_PI / 360;
+  double euler_z = config.goal_yaw * 2 * M_PI / 360;
+  Eigen::AngleAxisd rollAngle(euler_x, Eigen::Vector3d::UnitX());
+  Eigen::AngleAxisd pitchAngle(euler_y, Eigen::Vector3d::UnitY());
+  Eigen::AngleAxisd yawAngle(euler_z, Eigen::Vector3d::UnitZ());
+  q = rollAngle * pitchAngle * yawAngle;
+  rqt_pose << config.goal_pos_x, config.goal_pos_y, config.goal_pos_z, q.w(),
+      q.x(), q.y(), q.z();
   omav_interaction::conversions::PoseStampedMsgFromVector(rqt_pose,
                                                           rqt_pose_msg);
   reference_publisher_.publish(rqt_pose_msg);
@@ -144,6 +152,7 @@ void OmavTrajectoryGenerator::CostParamCallback(
   rqt_cost_.Q_power = config.power_cost;
   rqt_cost_.Q_torque = config.torque_cost;
   std::cout << rqt_cost_.Q_vel << std::endl;
+  rqt_cost_.contact_bool = config.contact_prohibitor;
   rqt_cost_bool_ = true;
 }
 

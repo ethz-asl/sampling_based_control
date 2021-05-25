@@ -76,7 +76,9 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     delta_pose = mppi_pinocchio::get_delta(current_pose, reference_pose);
     cost += delta_pose.transpose() * param_ptr_->Q_pose * delta_pose;
     // Unwanted contact cost
-    // cost += x(18) ;
+    if (param_ptr_->contact_bool) {
+      cost += 100 * x(18);
+    }
   }
 
   if (mode == 1) {
@@ -86,48 +88,41 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     distance_hook_handle =
         sqrt(hook_handle_vector.transpose() * hook_handle_vector);
 
-    // Pose Cost Object
-    mppi_pinocchio::Pose object_pose, reference_pose_object;
-    object_pose.translation = {x(13), 0, 1};
-    object_pose.rotation = {1, 0, 0, 0};
-    reference_pose_object.translation = {ref(7), 0, 1};
-    reference_pose_object.rotation = {1, 0, 0, 0};
-    delta_pose_object =
-        mppi_pinocchio::get_delta(object_pose, reference_pose_object);
-    double delta_cost = delta_pose_object.transpose() * param_ptr_->Q_object *
-                        delta_pose_object;
-
-    cost += delta_cost;
+    // Object Cost
+    object_cost = param_ptr_->Q_object_x * (x(13) - ref(7)) * (x(13) - ref(7));
+    cost += object_cost;
     // Handle Hook distance cost
     cost += std::max(
         0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
                  (distance_hook_handle - param_ptr_->handle_hook_thresh));
+    // COM Handle vector
+    com_hook_ = robot_model_.get_pose("omav").translation -
+                robot_model_.get_pose("tip").translation;
 
     // Tip velocity cost
-    tip_lin_velocity_ =
-        x.segment<3>(7) +
-        x.segment<3>(10).cross(robot_model_.get_pose(hook_frame_).translation -
-                               robot_model_.get_pose("omav").translation);
+    tip_lin_velocity_ = x.segment<3>(7) + x.segment<3>(10).cross(com_hook_);
     tip_velocity_ << tip_lin_velocity_, x.segment<3>(10);
 
     cost += tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_;
 
+    // Force Normed
+    force_normed_ = x.segment<3>(15).normalized();
     // Torque Cost
-    torque_ =
-        x.segment<3>(15).cross(robot_model_.get_pose(hook_frame_).translation -
-                               robot_model_.get_pose("omav").translation);
-    cost += param_ptr_->Q_torque * torque_.transpose() * torque_;
+    // torque_ = x.segment<3>(15).cross(com_hook_);
+    torque_angle_ = force_normed_.dot(com_hook_.normalized());
+
+    // cost += param_ptr_->Q_torque * torque_.transpose() * torque_;
+    cost += std::min(param_ptr_->Q_torque,
+                     param_ptr_->Q_torque * (1 - torque_angle_));
     // Efficiency cost
     double power_normed =
         x.segment<3>(15).normalized().dot(tip_lin_velocity_.normalized());
-    cost += delta_cost *
-            std::min(param_ptr_->Q_power,
-                     param_ptr_->Q_power * (1 - std::pow(power_normed, 3)));
+    cost +=
+        std::min(param_ptr_->Q_power, param_ptr_->Q_power * (1 - power_normed));
 
     if (false) {
       std::cout << "------------- Velocity Cost -------------" << std::endl;
-      std::cout << x.segment<6>(7).transpose() * param_ptr_->Q_vel *
-                       x.segment<6>(7)
+      std::cout << tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_
                 << std::endl;
       std::cout << "------------- Handle Hook Cost -------------" << std::endl;
       std::cout << std::max(0.0, param_ptr_->Q_handle_hook /
@@ -136,8 +131,14 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
                                       param_ptr_->handle_hook_thresh))
                 << std::endl;
       std::cout << "------------- delta_pose_cost -------------" << std::endl;
-      std::cout << delta_pose_object.transpose() * param_ptr_->Q_object *
-                       delta_pose_object
+      std::cout << object_cost << std::endl;
+      std::cout << "------------- torque angle cost -------------" << std::endl;
+      std::cout << std::min(param_ptr_->Q_torque,
+                            param_ptr_->Q_torque * (1 - torque_angle_))
+                << std::endl;
+      std::cout << "------------- efficiency cost -------------" << std::endl;
+      std::cout << std::min(param_ptr_->Q_power,
+                            param_ptr_->Q_power * (1 - power_normed))
                 << std::endl;
     }
 

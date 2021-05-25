@@ -72,6 +72,7 @@ private:
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
   ros::Publisher cost_publisher_;
+  ros::Publisher torque_publisher_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 
@@ -90,9 +91,15 @@ private:
   input_array_t uu_opt;
 
   mppi_pinocchio::RobotModel robot_model_;
+  mppi_pinocchio::RobotModel object_model_;
   Eigen::Vector3d tip_lin_velocity_;
   Eigen::Matrix<double, 6, 1> tip_velocity_;
   Eigen::Vector3d torque_;
+  Eigen::Vector3d hook_handle_vector_;
+  float distance_hook_handle_;
+  Eigen::Vector3d force_normed_;
+  Eigen::Vector3d com_hook_;
+  float torque_angle_;
   // cost floats to publish
   float velocity_cost_;
   float handle_hook_cost_;

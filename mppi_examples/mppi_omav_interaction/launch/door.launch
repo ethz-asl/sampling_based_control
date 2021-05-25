@@ -2,7 +2,7 @@
 <launch>
 
     <arg name="description_file_raisim" default="$(find mppi_omav_interaction)/data/omav_raisim_hook.urdf.xacro"/>
-    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/objects/door.urdf.xacro"/>
+    <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/objects/shelf.urdf.xacro"/>
     <arg name="description_robot" default="$(find mppi_omav_interaction)/data/omav_hook_visualization.urdf.xacro"/>
     <arg name="pinocchio_robot_description" default="$(find mppi_omav_interaction)/data/omav_pinocchio_hook.urdf.xacro"/>
 
