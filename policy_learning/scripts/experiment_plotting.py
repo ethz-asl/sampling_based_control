@@ -47,11 +47,16 @@ class ExperimentPlotter:
                                     the experiment data.
             self.n_experiment_runs  number of times a goal is visited (only
                                     needs to be set in new mode)
+            self.only_use_policy    set false if MPPI should be mixed with learned
+                                    policy according to learned_rollout_ratio
+                                    value. Set true if only the policy should be
+                                    run.
         """
         ### Set here ###
         self.controller_name = "default" # default | expert | handicapped
         self.mode = "from_file"  # new | from_file
         self.n_experiment_runs = 3
+        self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
         ################
         self.root_dir = root_dir
@@ -220,7 +225,7 @@ class ExperimentPlotter:
         elif self.mode == "from_file":
             goal = policy_learning.msg.collect_rolloutGoal(
                 timeout = 10,
-                use_policy = True,
+                use_policy = self.only_use_policy,
                 policy_path = model_load_path,
                 dataset_path = None,
                 validate = True,
