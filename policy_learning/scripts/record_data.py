@@ -115,16 +115,23 @@ class DataRecorder:
                                      len(self.data_dict["index"])),
                          decimals=3)
         self.data_dict['time'] = t_new
+        try:
+            cost_int_fun = interp1d(t_old,
+                                    self.data_dict['stage_cost'],
+                                    fill_value='extrapolate')
+            self.data_dict['stage_cost'] = cost_int_fun(t_new)
+        except:
+            return False
 
-        cost_int_fun = interp1d(t_old,
-                                self.data_dict['stage_cost'],
-                                fill_value='extrapolate')
-        self.data_dict['stage_cost'] = cost_int_fun(t_new)
+        try:
+            samples_int_fun = interp1d(t_old,
+                                       self.data_dict['effective_samples'],
+                                       fill_value='extrapolate')
+            self.data_dict['effective_samples'] = samples_int_fun(t_new)
+        except:
+            return False
 
-        samples_int_fun = interp1d(t_old,
-                                   self.data_dict['effective_samples'],
-                                   fill_value='extrapolate')
-        self.data_dict['effective_samples'] = samples_int_fun(t_new)
+        return True
 
     def save(self):
         df = pd.DataFrame(self.data_dict)

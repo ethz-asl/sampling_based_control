@@ -54,8 +54,8 @@ class ExperimentPlotter:
         """
         ### Set here ###
         self.controller_name = "default" # default | expert | handicapped
-        self.mode = "from_file"  # new | from_file
-        self.n_experiment_runs = 3
+        self.mode = "new"  # new | from_file
+        self.n_experiment_runs = 100
         self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
         ################
@@ -193,7 +193,6 @@ class ExperimentPlotter:
     def set_pose_information_from_file(self, i):
         # Initial condition
         ic_now = self.initial_joint_posS[i]
-        print(ic_now)
         for val in ic_now:
             self.initial_joint_pos.position.append(float(val))
         # Goal pos
@@ -205,7 +204,6 @@ class ExperimentPlotter:
         self.goal.pose.orientation.y = float(goal_now[4])
         self.goal.pose.orientation.z = float(goal_now[5])
         self.goal.pose.orientation.w = float(goal_now[6])
-        print(self.goal)
 
     def close_files(self):
         if self.mode == "new":
@@ -256,20 +254,21 @@ class ExperimentPlotter:
                 self.set_pose_information_from_file(i)
             goal = self.get_goal()
             self.action_sender(goal, i)
-            if self.mode == "new":
-                self.write_pose_information_to_file()
-            recorder.postprocess()
-            recorder.save()
-            exp_id = recorder.get_experiment_id()
-            self.f.write(exp_id)
-            self.f.write('\n')
+            success = recorder.postprocess()
+            if success:
+                if self.mode == "new":
+                    self.write_pose_information_to_file()
+                recorder.save()
+                exp_id = recorder.get_experiment_id()
+                self.f.write(exp_id)
+                self.f.write('\n')
         self.close_files()
 
 
 if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
     dataset_name = "Panda_R15_S5_210511_220510"
-    dagger_name = "2021_05_17_22_53_28_dagger"
+    dagger_name = "2021_05_18_23_08_18_dagger"
     dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name,
         dagger_name)
     plotter = ExperimentPlotter(dir_path)
