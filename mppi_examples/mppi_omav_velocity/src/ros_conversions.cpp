@@ -26,11 +26,11 @@ void EigenTrajectoryPointFromState(
   trajectorypoint.orientation_W_B =
       Eigen::Quaternion(states[i](3), states[i](4), states[i](5), states[i](6));
   trajectorypoint.velocity_W = states[i].segment<3>(7);
-  trajectorypoint.angular_velocity_W = states[i].tail<3>();
+  trajectorypoint.angular_velocity_W = states[i].segment<3>(10);
   trajectorypoint.acceleration_W =
       (states[i].segment<3>(7) - states[i - 1].segment<3>(7)) / dt;
   trajectorypoint.angular_acceleration_W =
-      (states[i].tail<3>() - states[i - 1].tail<3>()) / dt;
+      (states[i].segment<3>(10) - states[i - 1].segment<3>(10)) / dt;
   trajectorypoint.time_from_start_ns = ros::Duration(i * dt).toNSec();
 }
 void PoseMsgFromVector(const Eigen::VectorXd &pose,

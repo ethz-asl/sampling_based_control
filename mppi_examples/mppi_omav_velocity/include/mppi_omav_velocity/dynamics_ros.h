@@ -11,6 +11,7 @@
 #include "mppi_omav_velocity/dynamics.h"
 
 #include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 #include <string>
 #include <visualization_msgs/Marker.h>
 
@@ -20,6 +21,7 @@ class OMAVVelocityDynamicsRos : public OMAVVelocityDynamics {
 public:
   OMAVVelocityDynamicsRos(const ros::NodeHandle &nh,
                           const std::string &robot_description,
+                          const std::string &object_description,
                           const double dt);
   ~OMAVVelocityDynamicsRos() = default;
 
@@ -34,6 +36,9 @@ private:
   ros::Publisher vis_publisher_;
   ros::Publisher goal_publisher_;
   ros::Publisher obstacle_publisher_;
+  ros::Publisher object_state_publisher_;
+
+  sensor_msgs::JointState object_state_;
 
   visualization_msgs::Marker goal_marker_;
   visualization_msgs::Marker omav_marker_;

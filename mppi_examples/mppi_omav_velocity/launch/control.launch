@@ -14,6 +14,9 @@
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
 
+    <arg name="description_robot_visualization" default="$(find mppi_omav_velocity)/data/omav_hook_visualization.urdf.xacro"/>
+    <param name="robot_description_visualization" command="$(find xacro)/xacro $(arg description_robot_visualization)"/>
+
     <node name="omav_mppi_generator" type="omav_velocity_control" pkg="mppi_omav_velocity" output="screen">
         <param name="goal_position_x" value="$(arg goal_position_x)"/>
         <param name="goal_position_y" value="$(arg goal_position_y)"/>
@@ -39,5 +42,11 @@
         <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config) --multiplot-run-all"
               output="screen"/>
     </group>
+
+    <node name="robot_state_publisher_visualization" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="robot_description_visualization"/>
+        <remap from="joint_states" to="/robot_visualization/joint_state"/>
+    </node>
 
 </launch>

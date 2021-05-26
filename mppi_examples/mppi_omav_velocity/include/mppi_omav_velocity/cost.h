@@ -58,10 +58,11 @@ public:
 private:
   std::string robot_description_;
   OMAVVelocityCostParam param_;
-  Eigen::Matrix<double, 6, 1> delta_pose;
-  double distance;
-  double distance_from_savezone;
-  double obstacle_cost;
+  Eigen::Matrix<double, 6, 1> delta_pose_;
+  double distance_;
+  double distance_from_savezone_;
+  double obstacle_cost_;
+  double mode_;
 
 private:
   cost_ptr create() override {

@@ -19,17 +19,20 @@ OMAVVelocityCost::OMAVVelocityCost(const std::string &robot_description,
 
 double OMAVVelocityCost::distance_from_obstacle_cost(
     const mppi::observation_t &x, float x_obstacle, float y_obstacle) {
-  distance = std::sqrt(std::pow(x(0) - x_obstacle, 2) +
-                       std::pow(x(1) - y_obstacle, 2));
-  distance_from_savezone = (distance - (2 + 1));
-  obstacle_cost = -param_.Q_obstacle * std::min(0.0, distance_from_savezone);
-  return obstacle_cost;
+  distance_ = std::sqrt(std::pow(x(0) - x_obstacle, 2) +
+                        std::pow(x(1) - y_obstacle, 2));
+  distance_from_savezone_ = (distance_ - (2 + 1));
+  obstacle_cost_ = -param_.Q_obstacle * std::min(0.0, distance_from_savezone_);
+  return obstacle_cost_;
 }
 
 mppi::CostBase::cost_t
 OMAVVelocityCost::compute_cost(const mppi::observation_t &x,
                                const mppi::reference_t &ref, const double t) {
+  // Initialize Cost
   double cost = 0.0;
+  // Get mode
+  mode_ = ref(8);
 
   // Leafing Field Cost
   if (x(0) > param_.x_limit_max || x(1) > param_.y_limit_max ||
@@ -41,18 +44,23 @@ OMAVVelocityCost::compute_cost(const mppi::observation_t &x,
   if ((x(2) - param_.floor_thresh) < 0 && ref(7)) {
     cost += -param_.Q_floor / param_.floor_thresh * x(2) + param_.Q_floor;
   }
+  if (mode_ == 0) {
+    // Pose Cost
+    mppi_pinocchio::Pose current_pose, reference_pose;
+    current_pose.translation = x.head<3>();
+    current_pose.rotation = {x(3), x(4), x(5), x(6)};
+    reference_pose.translation = ref.head<3>();
+    reference_pose.rotation = {ref(3), ref(4), ref(5), ref(6)};
 
-  // Pose Cost
-  mppi_pinocchio::Pose current_pose, reference_pose;
-  current_pose.translation = x.head<3>();
-  current_pose.rotation = {x(3), x(4), x(5), x(6)};
-  reference_pose.translation = ref.head<3>();
-  reference_pose.rotation = {ref(3), ref(4), ref(5), ref(6)};
+    delta_pose_ = mppi_pinocchio::get_delta(current_pose, reference_pose);
+    cost += delta_pose_.transpose() * param_.Q_pose * delta_pose_;
 
-  delta_pose = mppi_pinocchio::get_delta(current_pose, reference_pose);
-  cost += delta_pose.transpose() * param_.Q_pose * delta_pose;
-
-  cost += OMAVVelocityCost::distance_from_obstacle_cost(x, ref(8), ref(9));
+    // cost += OMAVVelocityCost::distance_from_obstacle_cost(x, ref(9),
+    // ref(10));
+  }
+  if (mode_ == 1) {
+    cost += 10 * std::pow(ref(11) - x(13), 2);
+  }
 
   return cost;
 }

@@ -11,13 +11,15 @@
 namespace omav_velocity {
 OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
     const ros::NodeHandle &nh, const std::string &robot_description,
-    const double dt)
-    : OMAVVelocityDynamics(robot_description, dt) {
+    const std::string &object_description, const double dt)
+    : OMAVVelocityDynamics(robot_description, object_description, dt) {
   vis_publisher_ =
       nh_.advertise<visualization_msgs::Marker>("visualization_marker", 0);
   goal_publisher_ = nh_.advertise<visualization_msgs::Marker>("goal_marker", 0);
   obstacle_publisher_ =
       nh_.advertise<visualization_msgs::Marker>("obstacle_marker", 0);
+  object_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
 
   omav_marker_.header.frame_id = "odom";
   omav_marker_.id = 0;
@@ -74,6 +76,9 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   obstacle_marker_.pose.orientation.x = 0.0;
   obstacle_marker_.pose.orientation.y = 0.0;
   obstacle_marker_.pose.orientation.z = 0.0;
+
+  object_state_.name = {"articulation_joint"};
+  object_state_.position.resize(1);
 }
 void OMAVVelocityDynamicsRos::reset_to_default() {
   x_.setZero();
@@ -82,15 +87,10 @@ void OMAVVelocityDynamicsRos::reset_to_default() {
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
 }
 void OMAVVelocityDynamicsRos::publish_ros() {
-  // Update robot state visualization
-  omav_marker_.header.stamp = ros::Time::now();
-  omav_marker_.pose.position.x = x_(0);
-  omav_marker_.pose.position.y = x_(1);
-  omav_marker_.pose.position.z = x_(2);
-  omav_marker_.pose.orientation.w = x_(3);
-  omav_marker_.pose.orientation.x = x_(4);
-  omav_marker_.pose.orientation.y = x_(5);
-  omav_marker_.pose.orientation.z = x_(6);
+
+  object_state_.header.stamp = ros::Time::now();
+  object_state_.position[0] = x_(13);
+  object_state_publisher_.publish(object_state_);
 
   vis_publisher_.publish(omav_marker_);
   goal_publisher_.publish(goal_marker_);

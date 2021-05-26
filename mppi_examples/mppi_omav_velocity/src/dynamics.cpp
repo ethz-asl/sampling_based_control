@@ -11,30 +11,36 @@
 #include <string>
 
 namespace omav_velocity {
-OMAVVelocityDynamics::OMAVVelocityDynamics(const std::string &robot_description,
-                                           const double dt)
-    : dt_(dt), robot_description_(robot_description) {
-  initialize_world(robot_description);
+OMAVVelocityDynamics::OMAVVelocityDynamics(
+    const std::string &robot_description, const std::string &object_description,
+    const double dt)
+    : dt_(dt), robot_description_(robot_description),
+      object_description_(object_description) {
+  initialize_world(robot_description, object_description);
   initialize_pd();
 }
 
 void OMAVVelocityDynamics::initialize_world(
-    const std::string &robot_description) {
+    const std::string &robot_description,
+    const std::string &object_description) {
   // Set world and robot parameters
   sim_.setTimeStep(dt_);
   sim_.setERP(0., 0.);
   // Initialize omav
   robot_description_ = robot_description;
+  object_description_ = object_description;
   omav = sim_.addArticulatedSystem(robot_description_, "/");
+  object = sim_.addArticulatedSystem(object_description_, "/");
+  sim_.setMaterialPairProp("rubber", "rubber", 5.16, 0.05, 0.001);
   robot_dof_ = omav->getDOF();
   // Set dimensions
-  state_dimension_ =
-      13; // I_position(3), orientation(4), I_velocity(3), I_omega(3)
+  state_dimension_ = 15; // I_position(3), orientation(4), I_velocity(3),
+                         // I_omega(3), I_position_object(1),
+                         // I_velocity_object(1)
   input_dimension_ =
       6; // commanded_linear_velocity_(3) commanded_angular_velocity(3)
 
   x_ = observation_t::Zero(state_dimension_);
-  std::cout << robot_dof_ << std::endl;
 }
 
 void OMAVVelocityDynamics::initialize_pd() {
@@ -43,7 +49,7 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   Eigen::VectorXd p_gain(robot_dof_), d_gain(robot_dof_);
   p_gain << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-  d_gain << 10, 10, 10, 5, 5, 5;
+  d_gain << 10, 10, 10, 10, 10, 10;
   omav->setPdGains(p_gain, d_gain);
 }
 
@@ -60,9 +66,12 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   sim_.integrate();
 
   omav->getState(omav_pose, omav_velocity);
+  object->getState(object_pose, object_velocity);
   // Assemble state
   x_.head<7>() = omav_pose;
-  x_.tail<6>() = omav_velocity;
+  x_.segment<6>(7) = omav_velocity;
+  x_.segment<1>(13) = object_pose;
+  x_.segment<1>(14) = object_velocity;
 
   return x_;
 }
@@ -70,7 +79,8 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   // internal eigen state
   x_ = x;
   // reset omav in raisim
-  omav->setState(x_.head<7>(), x_.tail<6>());
+  omav->setState(x_.head<7>(), x_.segment<6>(7));
+  object->setState(x_.segment<1>(13), x_.segment<1>(14));
 }
 mppi::DynamicsBase::input_t
 OMAVVelocityDynamics::get_zero_input(const observation_t &x) {

@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
+find_package(catkin REQUIRED dynamic_reconfigure)
+
+generate_dynamic_reconfigure_options(cfg/mppi_omav_velocity_goal.cfg)
 
 set(PACKAGE_DEPENDENCIES
         std_msgs
@@ -17,6 +20,8 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         tf2_ros
         mav_msgs
+        tf
+        dynamic_reconfigure
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -39,6 +44,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 add_executable(omav_velocity_control src/nodes/omav_velocity_control.cpp)
 target_link_libraries(omav_velocity_control ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(omav_velocity_control ${PROJECT_NAME})
+add_dependencies(omav_velocity_control ${PROJECT_NAME}_gencfg)
 
 
 add_definitions("-DBOOST_MPL_LIMIT_LIST_SIZE=30")
@@ -47,6 +53,6 @@ install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
 
-catkin_install_python(PROGRAMS scripts/demo.py
+catkin_install_python(PROGRAMS scripts/demo.py scripts/button.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )

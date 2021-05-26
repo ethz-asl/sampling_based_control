@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ouzel_raisim">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ouzel">
 
     <xacro:property name="mass_ouzel" value="5.0"/>
     <xacro:property name="ixx_ouzel" value="0.12"/>
@@ -8,58 +8,17 @@
     <xacro:property name="radius_ouzel" value="0.3"/>
     <xacro:property name="height_ouzel" value="0.3"/>
 
-    <link name="world"/>
-    <link name="odom"/>
-    <joint name="odom_to_world" type="fixed">
-        <parent link="world"/>
-        <child link="odom"/>
-    </joint>
+    <link name="odom_omav"/>
 
-    <joint name="odom_to_omav_x" type="prismatic">
-        <parent link="odom"/>
-        <child link="omav_x"/>
+    <joint name="odom_omav_to_omav_base" type="fixed">
+        <parent link="odom_omav"/>
+        <child link="omav_base"/>
         <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="1 0 0"/>
-        <limit effort="1000.0" velocity="5.0" lower="-100" upper="100" />
     </joint>
 
-    <link name="omav_x"/>
-
-    <joint name="omav_x_to_omav_y" type="prismatic">
-        <parent link="omav_x"/>
-        <child link="omav_y"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="0 1 0"/>
-        <limit effort="1000.0" velocity="5.0" lower="-100" upper="100" />
-    </joint>
-
-    <link name="omav_y"/>
-
-    <joint name="omav_y_to_omav_z" type="prismatic">
-        <parent link="omav_y"/>
-        <child link="omav_z"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="0 0 1"/>
-        <limit effort="1000.0" velocity="5.0" lower="-100" upper="100" />
-    </joint>
-
-    <link name="omav_z"/>
-
-    <joint name="omav_z_to_omav" type="spherical">
-        <parent link="omav_z"/>
-        <child link="omav"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="0 1 0"/>
-    </joint>
-
-    <link name="omav">
-        <inertial>
-            <mass value="${mass_ouzel}"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="${ixx_ouzel}" ixy="0" ixz="0" iyy="${iyy_ouzel}" iyz="0" izz="${izz_ouzel}"/>
-        </inertial>
+    <link name="omav_base">
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.01675"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
                 <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
             </geometry>
@@ -74,8 +33,9 @@
             </material>
         </visual>
     </link>
+
     <joint name="omav_to_rod" type="fixed">
-        <parent link="omav"/>
+        <parent link="omav_base"/>
         <child link="rod"/>
         <origin rpy="0 0 0" xyz="0.275 0.0 0.0"/>
     </joint>
@@ -124,4 +84,5 @@
             </material>
         </visual>
     </link>
+
 </robot>

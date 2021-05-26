@@ -11,10 +11,16 @@ using namespace omav_velocity;
 
 OmavTrajectoryGenerator::OmavTrajectoryGenerator(
     const ros::NodeHandle &nh, const ros::NodeHandle &private_nh)
-    : nh_(nh), private_nh_(private_nh) {
+    : nh_(nh), private_nh_(private_nh),
+      goal_param_server_(ros::NodeHandle(private_nh, "Goal_parameters")) {
   initializePublishers();
   initializeSubscribers();
   goal_pose_.resize(7);
+  // setup dynamic reconfigure
+  dynamic_reconfigure::Server<
+      mppi_omav_interaction::MPPIOmavGoalConfig>::CallbackType f;
+  f = boost::bind(&OmavTrajectoryGenerator::GoalParamCallback, this, _1, _2);
+  goal_param_server_.setCallback(f);
 }
 
 OmavTrajectoryGenerator::~OmavTrajectoryGenerator() {}
@@ -133,7 +139,28 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x(3) = current_odometry_.orientation_W_B.w();
   x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
   x.segment<3>(7) = current_odometry_.getVelocityWorld();
-  x.tail<3>() = current_odometry_.angular_velocity_B;
+  x.segment<3>(10) = current_odometry_.angular_velocity_B;
+}
+
+void OmavTrajectoryGenerator::GoalParamCallback(
+    mppi_omav_interaction::MPPIOmavGoalConfig &config, uint32_t level) {
+  geometry_msgs::PoseStamped rqt_pose_msg;
+  Eigen::VectorXd rqt_pose(7);
+  Eigen::Quaterniond q;
+  double euler_x = config.goal_roll * 2 * M_PI / 360;
+  double euler_y = config.goal_pitch * 2 * M_PI / 360;
+  double euler_z = config.goal_yaw * 2 * M_PI / 360;
+  Eigen::AngleAxisd rollAngle(euler_x, Eigen::Vector3d::UnitX());
+  Eigen::AngleAxisd pitchAngle(euler_y, Eigen::Vector3d::UnitY());
+  Eigen::AngleAxisd yawAngle(euler_z, Eigen::Vector3d::UnitZ());
+  q = rollAngle * pitchAngle * yawAngle;
+  rqt_pose << config.goal_pos_x, config.goal_pos_y, config.goal_pos_z, q.w(),
+      q.x(), q.y(), q.z();
+  omav_velocity::conversions::PoseMsgFromVector(rqt_pose, rqt_pose_msg);
+  reference_publisher_.publish(rqt_pose_msg);
+  if (config.reset_object) {
+    reset_object_ = true;
+  }
 }
 
 void OmavTrajectoryGenerator::get_start_position(observation_t &x) {
@@ -155,13 +182,16 @@ int main(int argc, char **argv) {
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
   ROS_INFO_STREAM("Robot Description Raisim Loaded");
+  auto object_description_raisim =
+      nh.param<std::string>("/object_description_raisim", "");
+  ROS_INFO_STREAM("Object Description Raisim Loaded");
   // set initial state
-  observation_t x = observation_t::Zero(13);
+  observation_t x = observation_t::Zero(15);
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < x0.size(); i++)
     x(i) = x0[i];
   // Set nominal state
-  observation_t x_nom = observation_t::Zero(13);
+  observation_t x_nom = observation_t::Zero(15);
 
   // init control input
   mppi::DynamicsBase::input_t u = input_t::Zero(6);
@@ -210,6 +240,8 @@ int main(int argc, char **argv) {
       omav_trajectory_node->get_odometry(x);
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);
+      x(13) = x_nom(13);
+      x(14) = x_nom(14);
       r.sleep();
     }
 

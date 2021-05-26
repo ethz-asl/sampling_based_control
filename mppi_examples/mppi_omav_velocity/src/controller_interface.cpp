@@ -25,17 +25,27 @@ bool OMAVControllerInterface::init_ros() {
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
 
+  object_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+  object_state_.name = {"articulation_joint"};
+  object_state_.position.resize(1);
+
   reference_subscriber_ =
       nh_.subscribe("/mppi_pose_desired", 10,
                     &OMAVControllerInterface::desired_pose_callback, this);
   indicator_subscriber_ = nh_.subscribe(
       "/indicator", 10, &OMAVControllerInterface::indicator_callback, this);
+  mode_subscriber_ = nh_.subscribe(
+      "/mppi_omav_mode", 10, &OMAVControllerInterface::mode_callback, this);
   obstacle_x_sub_ = nh_.subscribe(
       "/obstacle_x", 1, &OMAVControllerInterface::obstaclexCallback, this);
   obstacle_y_sub_ = nh_.subscribe(
       "/obstacle_y", 1, &OMAVControllerInterface::obstacleyCallback, this);
   publish_bool_sub_ = nh_.subscribe(
       "/publish_bool", 1, &OMAVControllerInterface::publishBoolCallback, this);
+  object_reference_subscriber_ =
+      nh_.subscribe("/mppi_object_desired", 10,
+                    &OMAVControllerInterface::object_reference_callback, this);
 }
 
 bool OMAVControllerInterface::set_controller(
@@ -57,15 +67,19 @@ bool OMAVControllerInterface::set_controller(
   // dynamics
   // -------------------------------
   mppi::DynamicsBase::dynamics_ptr dynamics;
-  std::string robot_description_raisim;
   if (!nh_.param<std::string>("/robot_description_raisim",
-                              robot_description_raisim, "")) {
+                              robot_description_raisim_, "")) {
     throw std::runtime_error(
         "Could not parse robot_description_raisim. Is the parameter set?");
   }
+  if (!nh_.param<std::string>("/object_description_raisim",
+                              object_description_raisim_, "")) {
+    throw std::runtime_error(
+        "Could not parse object_description_raisim. Is the parameter set?");
+  }
 
-  dynamics = std::make_shared<OMAVVelocityDynamics>(robot_description_raisim,
-                                                    config_.step_size);
+  dynamics = std::make_shared<OMAVVelocityDynamics>(
+      robot_description_raisim_, object_description_raisim_, config_.step_size);
 
   std::cout << "Done." << std::endl;
 
@@ -79,7 +93,7 @@ bool OMAVControllerInterface::set_controller(
   }
   ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
   auto cost =
-      std::make_shared<OMAVVelocityCost>(robot_description_raisim, cost_param);
+      std::make_shared<OMAVVelocityCost>(robot_description_raisim_, cost_param);
 
   // -------------------------------
   // controller
@@ -99,7 +113,7 @@ bool OMAVControllerInterface::set_controller(
   nh_.param<double>("goal_quaternion_y", y_goal_quaternion, 0.0);
   nh_.param<double>("goal_quaternion_z", z_goal_quaternion, 0.0);
 
-  ref_.rr.resize(1, mppi::observation_t::Zero(10));
+  ref_.rr.resize(1, mppi::observation_t::Zero(12));
   ref_.rr[0](0) = x_goal_position;
   ref_.rr[0](1) = y_goal_position;
   ref_.rr[0](2) = z_goal_position;
@@ -108,8 +122,13 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](5) = y_goal_quaternion;
   ref_.rr[0](6) = z_goal_quaternion;
   ref_.rr[0](7) = 0;
-  ref_.rr[0](8) = 5.0;
+  // Initialize mode
+  ref_.rr[0](8) = 0;
+  // Obstacel Position
   ref_.rr[0](9) = 5.0;
+  ref_.rr[0](10) = 5.0;
+  // Object Reference
+  ref_.rr[0](11) = 0.0;
   ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
@@ -135,12 +154,12 @@ void OMAVControllerInterface::indicator_callback(const std_msgs::Int64 &msg) {
 }
 void OMAVControllerInterface::obstaclexCallback(const std_msgs::Float32 &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr[0](8) = msg.data;
+  ref_.rr[0](9) = msg.data;
   get_controller()->set_reference_trajectory(ref_);
 }
 void OMAVControllerInterface::obstacleyCallback(const std_msgs::Float32 &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr[0](9) = msg.data;
+  ref_.rr[0](10) = msg.data;
   get_controller()->set_reference_trajectory(ref_);
 }
 void OMAVControllerInterface::publishBoolCallback(
@@ -148,11 +167,27 @@ void OMAVControllerInterface::publishBoolCallback(
   publish_bool_ = publish_bool.data;
 }
 
+void OMAVControllerInterface::object_reference_callback(
+    const geometry_msgs::PoseStampedConstPtr &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](11) = msg->pose.position.x;
+  get_controller()->set_reference_trajectory(ref_);
+}
+
 bool OMAVControllerInterface::update_reference() {
   if (!reference_set_)
     get_controller()->set_reference_trajectory(ref_);
   reference_set_ = true;
   return true;
+}
+
+void OMAVControllerInterface::mode_callback(
+    const std_msgs::Int64ConstPtr &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](8) = msg->data;
+
+  get_controller()->set_reference_trajectory(ref_);
+  ROS_INFO_STREAM("Switching to mode:" << msg->data);
 }
 
 bool OMAVControllerInterface::set_reference(const observation_t &x) {
@@ -225,5 +260,21 @@ void OMAVControllerInterface::publish_optimal_rollout() {
     current_pose_.orientation.z = optimal_rollout_states_[i](6);
     optimal_rollout_array_.poses.push_back(current_pose_);
   }
+
+  static tf::TransformBroadcaster odom_broadcaster;
+  tf::Transform omav_odom;
+  omav_odom.setOrigin(tf::Vector3(optimal_rollout_states_[0](0),
+                                  optimal_rollout_states_[0](1),
+                                  optimal_rollout_states_[0](2)));
+  omav_odom.setRotation(tf::Quaternion(
+      optimal_rollout_states_[0](4), optimal_rollout_states_[0](5),
+      optimal_rollout_states_[0](6), optimal_rollout_states_[0](3)));
+  odom_broadcaster.sendTransform(
+      tf::StampedTransform(omav_odom, ros::Time::now(), "world", "odom_omav"));
+
+  object_state_.header.stamp = ros::Time::now();
+  object_state_.position[0] = optimal_rollout_states_[0](13);
+  object_state_publisher_.publish(object_state_);
+
   optimal_rollout_publisher_.publish(optimal_rollout_array_);
 }

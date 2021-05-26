@@ -25,11 +25,13 @@ namespace omav_velocity {
 
 class OMAVVelocityDynamics : public mppi::DynamicsBase {
 public:
-  OMAVVelocityDynamics(const std::string &robot_description, const double dt);
+  OMAVVelocityDynamics(const std::string &robot_description,
+                       const std::string &object_description, const double dt);
   ~OMAVVelocityDynamics() = default;
 
 private:
-  void initialize_world(const std::string &robot_description);
+  void initialize_world(const std::string &robot_description,
+                        const std::string &object_description);
   void initialize_pd();
 
 public:
@@ -37,7 +39,8 @@ public:
   size_t get_input_dimension() override { return input_dimension_; }
   size_t get_state_dimension() override { return state_dimension_; }
   dynamics_ptr create() override {
-    return std::make_shared<OMAVVelocityDynamics>(robot_description_, dt_);
+    return std::make_shared<OMAVVelocityDynamics>(robot_description_,
+                                                  object_description_, dt_);
   }
 
   dynamics_ptr clone() const override {
@@ -66,12 +69,15 @@ protected:
 private:
   double dt_;
   std::string robot_description_;
+  std::string object_description_;
 
   raisim::ArticulatedSystem *omav;
+  raisim::ArticulatedSystem *object;
 
   raisim::World sim_;
 
   Eigen::VectorXd cmd, cmdv;
   Eigen::VectorXd omav_pose, omav_velocity;
+  Eigen::VectorXd object_pose, object_velocity;
 };
 } // namespace omav_velocity

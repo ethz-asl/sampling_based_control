@@ -18,6 +18,9 @@
 #include <mav_msgs/default_topics.h>
 #include <std_srvs/Empty.h>
 
+#include <dynamic_reconfigure/server.h>
+#include <mppi_omav_interaction/MPPIOmavGoalConfig.h>
+
 namespace omav_velocity {
 class OmavTrajectoryGenerator {
 public:
@@ -27,6 +30,7 @@ public:
 
   void get_odometry(observation_t &x);
   bool odometry_bool_;
+  bool reset_object_;
   void get_start_position(observation_t &x);
 
 private:
@@ -43,6 +47,9 @@ private:
                  std_srvs::Empty::Response &response);
   bool landingSrv(std_srvs::Empty::Request &request,
                   std_srvs::Empty::Response &response);
+
+  void GoalParamCallback(mppi_omav_interaction::MPPIOmavGoalConfig &config,
+                         uint32_t level);
 
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
@@ -64,6 +71,9 @@ private:
 
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
+  // Dynamics Reconfigure
+  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavGoalConfig>
+      goal_param_server_;
 
   // Indicator Message
   std_msgs::Int64 indicator;
