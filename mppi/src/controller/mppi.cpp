@@ -157,7 +157,6 @@ void PathIntegral::update_policy() {
     copy_observation();
     prepare_rollouts();
     for (size_t i = 0; i < config_.substeps; i++) {
-      std::sort(rollouts_.begin(), rollouts_.end());
       update_reference();
 
       if (config_.use_tree_search) {
@@ -183,6 +182,7 @@ void PathIntegral::update_policy() {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
       stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
+      std::sort(rollouts_.begin(), rollouts_.end());
     }
     swap_policies();
 
