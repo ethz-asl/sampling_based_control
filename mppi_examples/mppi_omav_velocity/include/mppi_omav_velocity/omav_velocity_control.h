@@ -48,7 +48,7 @@ private:
   bool landingSrv(std_srvs::Empty::Request &request,
                   std_srvs::Empty::Response &response);
 
-  void GoalParamCallback(mppi_omav_interaction::MPPIOmavGoalConfig &config,
+  void GoalParamCallback(mppi_omav_velocity::MPPIOmavGoalConfig &config,
                          uint32_t level);
 
   ros::NodeHandle nh_;
@@ -72,7 +72,7 @@ private:
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
   // Dynamics Reconfigure
-  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavGoalConfig>
+  dynamic_reconfigure::Server<mppi_omav_velocity::MPPIOmavGoalConfig>
       goal_param_server_;
 
   // Indicator Message
