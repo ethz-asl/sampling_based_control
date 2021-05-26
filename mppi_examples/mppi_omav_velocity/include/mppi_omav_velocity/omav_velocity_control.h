@@ -19,7 +19,7 @@
 #include <std_srvs/Empty.h>
 
 #include <dynamic_reconfigure/server.h>
-#include <mppi_omav_interaction/MPPIOmavGoalConfig.h>
+#include <mppi_omav_velocity/MPPIOmavGoalConfig.h>
 
 namespace omav_velocity {
 class OmavTrajectoryGenerator {
