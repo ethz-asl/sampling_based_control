@@ -18,7 +18,7 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
   goal_pose_.resize(7);
   // setup dynamic reconfigure
   dynamic_reconfigure::Server<
-      mppi_omav_interaction::MPPIOmavGoalConfig>::CallbackType f;
+      mppi_omav_velocity::MPPIOmavGoalConfig>::CallbackType f;
   f = boost::bind(&OmavTrajectoryGenerator::GoalParamCallback, this, _1, _2);
   goal_param_server_.setCallback(f);
 }
@@ -143,7 +143,7 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
 }
 
 void OmavTrajectoryGenerator::GoalParamCallback(
-    mppi_omav_interaction::MPPIOmavGoalConfig &config, uint32_t level) {
+    mppi_omav_velocity::MPPIOmavGoalConfig &config, uint32_t level) {
   geometry_msgs::PoseStamped rqt_pose_msg;
   Eigen::VectorXd rqt_pose(7);
   Eigen::Quaterniond q;
