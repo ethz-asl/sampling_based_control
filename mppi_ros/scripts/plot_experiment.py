@@ -20,6 +20,7 @@ matplotlib.rcParams['ps.fonttype'] = 42
 class Plotter:
     def __init__(self, experiment_id="mppi_panda"):
         self.df = self.get_data(experiment_id)
+        self.experiment_id_list = experiment_id
 
     def get_data(self, experiment_id):
         csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log",
@@ -394,6 +395,47 @@ class Plotter:
         plt.xlabel("Rollout index")
         plt.ylabel("Time")
 
+    def plot_all_rollout_policy_weights(self, caching_factor):
+        weights_opt_list = []
+        weights_policy_list = []
+        cum_w_opt = []
+        cum_w_pol = []
+        fig, (ax1, ax2) = plt.subplots(2)
+        for experiment_id in self.experiment_id_list:
+            df = self.df.loc[self.df['id'].str.contains(experiment_id)]
+            # assume MPPI settings are constant over one experiment
+            lrr = df['learned_rollout_ratio'].iloc[0]
+            nr = df['nr_rollouts'].iloc[0]
+            cf = caching_factor
+            opt_idx = math.ceil(cf*nr)
+            if math.ceil(lrr*nr) == 0:
+                continue
+
+            policy_idx = math.ceil(lrr*nr) + opt_idx
+            weights_opt = []
+            weights_policy = []
+            weights_temp = df['weight_history']
+            for index, row in weights_temp.iteritems():
+                line = row[1:-1] # get rid of parentheisis first
+                w_array = [float(s) for s in line.split(',')]
+                weights_opt.append(w_array[opt_idx])
+                weights_policy.append(w_array[policy_idx])
+            weights_opt_list.append(weights_opt)
+            weights_policy_list.append(weights_policy)
+            weights_opt_array = np.array(weights_opt)
+            weights_policy_array = np.array(weights_policy)
+            cum_w_opt = [sum(n) for n in zip(cum_w_opt + [0] * (len(weights_opt) - len(cum_w_opt)), weights_opt)]
+            cum_w_pol = [sum(n) for n in zip(cum_w_pol + [0] * (len(weights_policy) - len(cum_w_pol)), weights_policy)]
+            ax1.plot(weights_opt_array)
+            ax1.set_ylabel('optimal weight [-]')
+            ax2.plot(weights_policy_array)
+            ax2.set_ylabel('policy weight [-]')
+            ax2.set_xlabel('time step')
+        mean_w_opt = np.array(cum_w_opt)/len(self.experiment_id_list)
+        mean_w_pol = np.array(cum_w_pol)/len(self.experiment_id_list)
+        ax1.plot(mean_w_opt,'k', linewidth=2)
+        ax2.plot(mean_w_pol, 'k', linewidth=2)
+
 
 
 if __name__ == "__main__":
@@ -426,6 +468,7 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
     plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
+    plotter.plot_all_rollout_policy_weights(0.3)
     # plotter.plot_rollout_costs(args.experiment_id[0])
     # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
