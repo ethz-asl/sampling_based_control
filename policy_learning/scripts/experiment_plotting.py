@@ -200,6 +200,7 @@ class ExperimentPlotter:
             self.initial_joint_pos.position.append(float(val))
         # Goal pos
         goal_now = self.goalS[i]
+        self.goal.header.frame_id = 'world'
         self.goal.pose.position.x = float(goal_now[0])
         self.goal.pose.position.y = float(goal_now[1])
         self.goal.pose.position.z = float(goal_now[2])
