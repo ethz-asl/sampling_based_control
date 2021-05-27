@@ -53,7 +53,7 @@ class ExperimentPlotter:
                                     run.
         """
         ### Set here ###
-        self.controller_name = "default" # default | expert | handicapped
+        self.experiment_name = "only_expert"
         self.mode = "new"  # new | from_file
         self.n_experiment_runs = 100
         self.only_use_policy = False
@@ -250,7 +250,7 @@ class ExperimentPlotter:
         self.client.wait_for_server()
         print('found action server')
         for i in range(self.n_experiment_runs):
-            recorder = DataRecorder(controller_name=self.controller_name)
+            recorder = DataRecorder(controller_name=self.controller_name, experiment_id=self.experiment_name)
             if self.mode == "from_file":
                 self.set_pose_information_from_file(i)
             goal = self.get_goal()
