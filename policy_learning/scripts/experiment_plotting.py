@@ -259,7 +259,7 @@ class ExperimentPlotter:
                 self.set_pose_information_from_file(i)
             goal = self.get_goal()
             self.action_sender(goal, i)
-            success = recorder.postprocess()
+            success = recorder.postprocess(time_to_goal=self.goal_reached_time)
             if success:
                 if self.mode == "new":
                     self.write_pose_information_to_file()

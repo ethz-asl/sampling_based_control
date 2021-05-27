@@ -32,7 +32,8 @@ class DataRecorder:
             "learned_rollout_ratio": [],
             "cost_history": [],
             "weight_history": [],
-            "substeps": []
+            "substeps": [],
+            "time_to_goal": []
         }
         self.first_call = True
         self.finish_recording = False
@@ -95,7 +96,7 @@ class DataRecorder:
             size = len(l)
             l.extend([l[-1]] * (new_size - size))
 
-    def postprocess(self):
+    def postprocess(self, time_to_goal='NaN'):
         self.finish_recording = True
         # Filtering of effective samples
         self.data_dict['effective_samples'] = gaussian_filter1d(
@@ -130,6 +131,9 @@ class DataRecorder:
             self.data_dict['effective_samples'] = samples_int_fun(t_new)
         except:
             return False
+
+        self.data_dict['time_to_goal'] = [time_to_goal] * (self.idx)
+
 
         return True
 
