@@ -85,6 +85,8 @@ class PandaValidator{
     u = simulation_->get_zero_input(x_);
     u_expert = simulation_->get_zero_input(x_);
     bool terminated = false;
+    bool goal_reached_var = false;
+    double rel_sim_time_to_goal_reached = 0.0;
 
     while (ros::ok()){
       if (action_active_){
@@ -119,6 +121,14 @@ class PandaValidator{
         //   ROS_INFO("Goal reached, waiting for %f seconds before ending rollout.",
         //            time_to_shutdown);
         // }
+        if (goal_reached(controller_.get_pose_end_effector_ros(x_),
+                         controller_.get_target_pose_ros()) &&
+            !goal_reached_var) {
+              rel_sim_time_to_goal_reached = sim_time_ - sim_time_action_start_;
+              goal_reached_var = true;
+              ROS_INFO("Goal reached, reaching time is %f seconds.",
+                         rel_sim_time_to_goal_reached);
+            }
 
         if (sim_time_ > timeout_ ||
             //joint_limit_violation() ||
@@ -130,16 +140,19 @@ class PandaValidator{
           learner_ = nullptr;
           controller_.get_controller()->set_learned_expert(learner_);
 
-          if (terminated){
+          if (goal_reached_var){
             result.goal_reached = true;
+            result.goal_reached_time = rel_sim_time_to_goal_reached;
             action_server_.setSucceeded(result);
           } else {
             result.goal_reached = false;
+            result.goal_reached_time = timeout_ - sim_time_action_start_;
             action_server_.setPreempted(result);
           }
 
           action_active_ = false;
           terminated = false;
+          goal_reached_var = false;
         }
       } else if (callback_received_){
         // reset cached trajectories
@@ -289,6 +302,7 @@ class PandaValidator{
                goal->validate);
 
       timeout_ = sim_time_ + goal->timeout;
+      sim_time_action_start_ = sim_time_;
       use_policy_ = goal->use_policy;
       policy_path_ = goal->policy_path;
 
@@ -355,6 +369,7 @@ class PandaValidator{
     double sim_time_ = 0.0;
 
     double timeout_ = INFINITY;
+    double sim_time_action_start_ = 0.;
     double time_to_shutdown = 2; // s
     double goal_position_threshold = 0.01; // m = 1 cm
     double goal_angular_threshold = 0.087; // rad = 5 deg

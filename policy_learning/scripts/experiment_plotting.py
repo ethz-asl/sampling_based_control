@@ -58,6 +58,7 @@ class ExperimentPlotter:
         self.n_experiment_runs = 100
         self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
+        self.timeout = 10
         ################
         self.root_dir = root_dir
         self.policies_path = os.path.join(self.root_dir, 'policies')
@@ -154,6 +155,7 @@ class ExperimentPlotter:
         self.initial_joint_pos = JointState()
 
         self.run_started = False
+        self.goal_reached_time = self.timeout
 
 
     # Callback functions
@@ -216,14 +218,14 @@ class ExperimentPlotter:
         model_load_path = self.final_policy_path
         if self.mode == "new":
             goal = policy_learning.msg.collect_rolloutGoal(
-                timeout = 10,
+                timeout = self.timeout,
                 use_policy = False,
                 policy_path = model_load_path,
                 dataset_path = None,
                 validate = False)
         elif self.mode == "from_file":
             goal = policy_learning.msg.collect_rolloutGoal(
-                timeout = 10,
+                timeout = self.timeout,
                 use_policy = self.only_use_policy,
                 policy_path = model_load_path,
                 dataset_path = None,
@@ -239,8 +241,10 @@ class ExperimentPlotter:
         self.client.wait_for_result(timeout=rospy.Duration(30))
         if self.client.get_state() == GoalStatus.SUCCEEDED:
             print(f'{i}: Goal Reached')
+            self.goal_reached_time = self.client.get_result().goal_reached_time
         elif self.client.get_state() == GoalStatus.PREEMPTED:
             print(f'{i}: Goal not reached')
+            self.goal_reached_time = self.client.get_result().goal_reached_time
         else:
             print(f'{i}: Action call failed, state {self.client.get_state()}')
         self.run_started = False

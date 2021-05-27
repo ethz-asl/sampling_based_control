@@ -12,6 +12,7 @@ sensor_msgs/JointState initial_joint_pos
 
 # result
 bool goal_reached
+float64 goal_reached_time
 
 ---
 
