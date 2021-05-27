@@ -176,6 +176,7 @@ class PandaValidator{
           action_server_.setAborted();
           action_active_ = false;
         }
+        timeout_ = sim_time_ + goal_timeout_;
         callback_received_ = false;
         action_active_ = true;
       } else {
@@ -301,8 +302,8 @@ class PandaValidator{
                goal->timeout, goal->use_policy, goal->policy_path.c_str(),
                goal->validate);
 
-      timeout_ = sim_time_ + goal->timeout;
       sim_time_action_start_ = sim_time_;
+      goal_timeout_ = goal->timeout;
       use_policy_ = goal->use_policy;
       policy_path_ = goal->policy_path;
 
@@ -379,6 +380,7 @@ class PandaValidator{
     std::shared_ptr<PandaExpert> learner_ = nullptr;
     std::string dataset_path_;
     std::string policy_path_;
+    double goal_timeout_;
 
     Eigen::Matrix<double, 7, 1> joint_limits_lower_;
     Eigen::Matrix<double, 7, 1> joint_limits_upper_;
