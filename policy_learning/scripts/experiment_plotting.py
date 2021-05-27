@@ -82,6 +82,7 @@ class ExperimentPlotter:
             self.f = open(os.path.join(self.experiment_data_save_dir, 'log.txt'), mode='w')
             # log what policy we are plotting and what the ids are
             self.f.write('Ran in from_file mode.\n')
+            self.f.write(f'Took IC and goal data from: {self.experiment_data_load_folder_name}\n')
             self.f.write('Policy taken from the follwing dir: ')
             self.f.write(self.policies_path)
             self.f.write('\n')
@@ -267,8 +268,8 @@ class ExperimentPlotter:
 
 if __name__ == "__main__":
     task_path = os.path.dirname(os.path.realpath(__file__))
-    dataset_name = "Panda_R15_S5_210511_220510"
-    dagger_name = "2021_05_18_23_08_18_dagger"
+    dataset_name = "Panda_R20_S10_210522_220000_full"
+    dagger_name = "full_no_dagger"
     dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name,
         dagger_name)
     plotter = ExperimentPlotter(dir_path)
