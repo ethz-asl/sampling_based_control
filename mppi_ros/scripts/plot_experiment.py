@@ -20,7 +20,6 @@ matplotlib.rcParams['ps.fonttype'] = 42
 class Plotter:
     def __init__(self, experiment_id="mppi_panda"):
         self.df = self.get_data(experiment_id)
-        self.experiment_id_list = experiment_id
 
     def get_data(self, experiment_id):
         csv_file = os.path.join(RosPack().get_path("mppi_ros"), "log",
@@ -396,19 +395,32 @@ class Plotter:
         plt.ylabel("Time")
 
     def plot_all_rollout_policy_weights(self, caching_factor):
-        weights_opt_list = []
-        weights_policy_list = []
         cum_w_opt = []
         cum_w_pol = []
         fig, (ax1, ax2) = plt.subplots(2)
-        for experiment_id in self.experiment_id_list:
-            df = self.df.loc[self.df['id'].str.contains(experiment_id)]
+        experiments = self.df['id'].unique()
+        no_experiments = len(experiments)
+        controller_name_old = None
+        first = True
+        for experiment_id in experiments:
+            df = self.df.loc[self.df['id'] == experiment_id]
+            controller_name = df['controller_name'].iloc[0]
+            if first:
+                controller_name_old = controller_name = df['controller_name'].iloc[0]
+                first = False
+            if controller_name != controller_name_old and not first:
+                print(f'Mixing controllers in weights plot. This plot is producing {controller_name_old} controller plots.\n')
+                print(f'It was asked to mix in {controller_name} controller run.\n')
+                print('Skipping.')
+                continue
             # assume MPPI settings are constant over one experiment
             lrr = df['learned_rollout_ratio'].iloc[0]
             nr = df['nr_rollouts'].iloc[0]
             cf = caching_factor
             opt_idx = math.ceil(cf*nr)
             if math.ceil(lrr*nr) == 0:
+                print('Plot does not make sense if no policy was active. Skipping.\n')
+                no_experiments -= 1
                 continue
 
             policy_idx = math.ceil(lrr*nr) + opt_idx
@@ -420,8 +432,6 @@ class Plotter:
                 w_array = [float(s) for s in line.split(',')]
                 weights_opt.append(w_array[opt_idx])
                 weights_policy.append(w_array[policy_idx])
-            weights_opt_list.append(weights_opt)
-            weights_policy_list.append(weights_policy)
             weights_opt_array = np.array(weights_opt)
             weights_policy_array = np.array(weights_policy)
             cum_w_opt = [sum(n) for n in zip(cum_w_opt + [0] * (len(weights_opt) - len(cum_w_opt)), weights_opt)]
@@ -431,10 +441,13 @@ class Plotter:
             ax2.plot(weights_policy_array)
             ax2.set_ylabel('policy weight [-]')
             ax2.set_xlabel('time step')
-        mean_w_opt = np.array(cum_w_opt)/len(self.experiment_id_list)
-        mean_w_pol = np.array(cum_w_pol)/len(self.experiment_id_list)
-        ax1.plot(mean_w_opt,'k', linewidth=2)
-        ax2.plot(mean_w_pol, 'k', linewidth=2)
+        mean_w_opt = np.array(cum_w_opt)/no_experiments
+        mean_w_pol = np.array(cum_w_pol)/no_experiments
+        ax1.plot(mean_w_opt,'k', linewidth=4, label='mean')
+        ax1.legend()
+        ax1.set_title(f'Weights during {no_experiments} runs.\nController settings -> {controller_name} with learned rollout ratio: {lrr}')
+        ax2.plot(mean_w_pol, 'k', linewidth=4, label='mean')
+        ax2.legend()
 
 
 
