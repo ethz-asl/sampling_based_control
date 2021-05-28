@@ -54,7 +54,7 @@ class ExperimentPlotter:
         """
         ### Set here ###
         self.experiment_name = "only_expert"
-        self.mode = "new"  # new | from_file
+        self.controller_name = "expert" # default | expert | handicapped
         self.n_experiment_runs = 100
         self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
