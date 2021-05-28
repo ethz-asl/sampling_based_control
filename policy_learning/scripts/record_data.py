@@ -37,10 +37,6 @@ class DataRecorder:
         }
         self.first_call = True
         self.finish_recording = False
-        self.data_subscriber = rospy.Subscriber("/mppi_data",
-                                                Data,
-                                                self.data_callback,
-                                                queue_size=10)
         self.initial_step_count = 0
         self.initial_time = 0
         self.idx = 0
@@ -53,6 +49,10 @@ class DataRecorder:
         rospy.loginfo("Writing to {}".format(self.csv_file))
         self.array_path = os.path.join(RosPack().get_path("mppi_ros"), "log",
                                      "record_array.npz")
+        self.data_subscriber = rospy.Subscriber("/mppi_data",
+                                                Data,
+                                                self.data_callback,
+                                                queue_size=1000)
 
 
     def data_callback(self, data: Data):

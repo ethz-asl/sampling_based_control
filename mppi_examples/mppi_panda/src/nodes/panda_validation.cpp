@@ -79,6 +79,7 @@ class PandaValidator{
     double sim_dt = nh_.param<double>("sim_dt", 0.01);
 
     ros::Rate idle_rate(idle_frequency_);
+    ros::Rate limit_publishing_rate(100);
 
     mppi::DynamicsBase::input_t u;
     mppi::DynamicsBase::input_t u_expert;
@@ -104,9 +105,9 @@ class PandaValidator{
 
         if (use_policy_) x_ = simulation_->step(u, sim_dt);
         else x_ = simulation_->step(u_expert, sim_dt);
-
         sim_time_ += sim_dt;
         publish_ros(x_);
+        limit_publishing_rate.sleep();
 
         policy_learning::collect_rolloutFeedback feedback;
         feedback.sim_time = sim_time_;
@@ -372,8 +373,8 @@ class PandaValidator{
     double timeout_ = INFINITY;
     double sim_time_action_start_ = 0.;
     double time_to_shutdown = 2; // s
-    double goal_position_threshold = 0.01; // m = 1 cm
-    double goal_angular_threshold = 0.087; // rad = 5 deg
+    double goal_position_threshold = 0.02; // m = 2 cm
+    double goal_angular_threshold = 0.174; // rad =105 deg
     double joint_state_std_dev = 0.5;
 
     std::default_random_engine generator_;

@@ -54,7 +54,7 @@ class ExperimentPlotter:
         """
         ### Set here ###
         self.experiment_name = "only_expert"
-        self.mode = "new"  # new | from_file
+        self.controller_name = "expert" # default | expert | handicapped
         self.n_experiment_runs = 100
         self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
@@ -200,6 +200,7 @@ class ExperimentPlotter:
             self.initial_joint_pos.position.append(float(val))
         # Goal pos
         goal_now = self.goalS[i]
+        self.goal.header.frame_id = 'world'
         self.goal.pose.position.x = float(goal_now[0])
         self.goal.pose.position.y = float(goal_now[1])
         self.goal.pose.position.z = float(goal_now[2])
