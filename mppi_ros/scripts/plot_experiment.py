@@ -128,12 +128,21 @@ class Plotter:
     def plot_average_cost_per_rollout_tree(self):
         self.plot_average_cost_per_rollout(tree=True)
 
-    def plot_average_cost(self, aggregator, hue=None, x_label=None):
+    def plot_average_cost(self, aggregator, hue=None, x_label=None, type='bar'):
         fig, ax = plt.subplots()
-        sns.boxplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
-        ax.set_ylabel("Average stage cost")
         ax.set_xlabel(aggregator if x_label is None else x_label)
-        ax.set_yscale("log")
+        if type == 'bar':
+            sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
+            ax.set_ylabel("Average stage cost")
+        elif type == 'box':
+            sns.boxplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
+            ax.set_yscale("log")
+            ax.set_ylabel("Stage cost")    
+        else:
+            raise NotImplementedError(f"Unknown type '{type}'")
+        
+        
+        
 
     def plot_effective_samples_per_rollout(self, tree=False):
         plt.figure()
@@ -393,6 +402,19 @@ class Plotter:
         plt.title("Rollout weights")
         plt.xlabel("Rollout index")
         plt.ylabel("Time")
+    
+    def plot_avg_time_to_goal(self, aggregator, hue=None, x_label=None, type='bar'):
+        fig, ax = plt.subplots()
+        ax.set_xlabel(aggregator if x_label is None else x_label)
+        if type == 'bar':
+            sns.barplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df)
+            ax.set_ylabel("Average time to goal")
+        elif type == 'box':
+            sns.boxplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df)
+            ax.set_yscale("log")
+            ax.set_ylabel("Time to goal")    
+        else:
+            raise NotImplementedError(f"Unknown type '{type}'")
 
     def plot_all_rollout_policy_weights(self, caching_factor):
         cum_w_opt = []
@@ -491,7 +513,10 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
     plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
-    plotter.plot_all_rollout_policy_weights(0.3)
+    plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
+    plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
+    plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
+    # plotter.plot_all_rollout_policy_weights(0.3)
     # plotter.plot_rollout_costs(args.experiment_id[0])
     # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
