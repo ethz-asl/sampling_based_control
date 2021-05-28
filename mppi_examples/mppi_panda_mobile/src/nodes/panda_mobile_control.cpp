@@ -9,11 +9,11 @@
 #include "mppi_panda_mobile/controller_interface.h"
 #include "mppi_panda_mobile/dynamics.h"
 
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <rclcpp/node.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <chrono>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <rclcpp/node.hpp>
 
 using namespace panda_mobile;
 
@@ -32,7 +32,8 @@ int main(int argc, char** argv) {
 
   std::vector<double> initial_configuration;
   node->declare_parameter<std::vector<double>>("initial_configuration", {});
-  node->get_parameter<std::vector<double>>("initial_configuration", initial_configuration);
+  node->get_parameter<std::vector<double>>("initial_configuration",
+                                           initial_configuration);
 
   std::string robot_description;
   node->declare_parameter<std::string>("robot_description", "");
@@ -50,7 +51,7 @@ int main(int argc, char** argv) {
   auto simulation = PandaMobileDynamics(robot_description);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
-  for (size_t i = 0; i < initial_configuration.size(); i++)
+  for (int i = 0; i < initial_configuration.size(); i++)
     x(i) = initial_configuration[i];
   simulation.reset(x);
 
@@ -58,24 +59,20 @@ int main(int argc, char** argv) {
   u = simulation.get_zero_input(x);
 
   // joint state publisher
-  auto state_publisher = node->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+  auto state_publisher =
+      node->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
   sensor_msgs::msg::JointState joint_state;
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
-                      "panda_joint4", "panda_joint5", "panda_joint6",
-                      "panda_joint7"};
-  joint_state.position.resize(7);
+  joint_state.name = {"x_velocity_joint", "y_velocity_joint",
+                      "w_velocity_joint", "panda_joint1",
+                      "panda_joint2",     "panda_joint3",
+                      "panda_joint4",     "panda_joint5",
+                      "panda_joint6",     "panda_joint7"};
+  joint_state.position.resize(joint_state.name.size());
   joint_state.header.frame_id = "base";
 
-  // base tf
-  tf2_ros::TransformBroadcaster tf_broadcaster(node);
-  geometry_msgs::msg::TransformStamped world_base_tf;
-  world_base_tf.header.frame_id = "world";
-  world_base_tf.child_frame_id = "base";
-
-  auto ee_publisher =
-      node->create_publisher<geometry_msgs::msg::PoseStamped>("/end_effector", 10);
+  auto ee_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>(
+      "/end_effector", 10);
   geometry_msgs::msg::PoseStamped ee_pose;
-
 
   // init the controller
   double sim_time = 0.0;
@@ -104,7 +101,8 @@ int main(int argc, char** argv) {
     }
 
     // publish joint state
-    for (size_t i = 0; i < 7; i++) joint_state.position[i] = x(i);
+    for (int i = 0; i < joint_state.position.size(); i++)
+      joint_state.position[i] = x(i);
     joint_state.header.stamp = node->now();
     state_publisher->publish(joint_state);
 
@@ -113,31 +111,23 @@ int main(int argc, char** argv) {
       sim_time += sim_dt;
     }
 
-    // publish base transform
-    world_base_tf.header.stamp = node->now();
-    world_base_tf.transform.translation.x = x(7);
-    world_base_tf.transform.translation.y = x(8);
-    Eigen::Quaterniond q(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-    world_base_tf.transform.rotation.x = q.x();
-    world_base_tf.transform.rotation.y = q.y();
-    world_base_tf.transform.rotation.z = q.z();
-    world_base_tf.transform.rotation.w = q.w();
-    tf_broadcaster.sendTransform(world_base_tf);
-
     ee_pose = controller.get_pose_end_effector_ros(x);
     ee_publisher->publish(ee_pose);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_s =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/1000.0;
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+            .count() /
+        1000.0;
     double delta = sim_dt - elapsed_s;
     // if (delta > 0){
     //   rclcpp::sleep_for(std::chrono::nanoseconds(int(delta*1e9)));
     // }
 
     if (max_sim_time > 0 && sim_time > max_sim_time) {
-      RCLCPP_INFO_STREAM(node->get_logger(), "Reached maximum sim time: " << max_sim_time
-                                                   << "s. Exiting.");
+      RCLCPP_INFO_STREAM(
+          node->get_logger(),
+          "Reached maximum sim time: " << max_sim_time << "s. Exiting.");
       break;
     }
     rclcpp::spin_some(node);

@@ -58,12 +58,7 @@ void PandaMobileCost::set_obstacle_radius(const double r) {
 
 mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
     const Eigen::VectorXd& x) {
-  mppi_pinocchio::Pose base_pose;
-  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation =
-      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose(tracked_frame_);
-  return base_pose * arm_pose;
+  return robot_model_.get_pose(tracked_frame_);
 }
 
 PandaMobileCost::cost_t PandaMobileCost::compute_cost(
@@ -72,7 +67,7 @@ PandaMobileCost::cost_t PandaMobileCost::compute_cost(
   cost_t cost;
 
   // update model
-  robot_model_.update_state(x.head<7>());
+  robot_model_.update_state(x);
 
   // target reaching cost
 
@@ -91,16 +86,17 @@ PandaMobileCost::cost_t PandaMobileCost::compute_cost(
   if (obstacle_dist < obstacle_radius_) cost += Q_obst_;
 
   // reach cost
-  if (robot_model_.get_pose(tracked_frame_).translation.head<2>().norm() > 1.0)
+  if ((robot_model_.get_pose(tracked_frame_).translation.head<2>() - x.head<2>()).norm() > 1.0)
     cost += Q_reach_;
 
   // joint limits cost
   if (joint_limits_) {
+    const int base_offset = 3;
     for (size_t i = 0; i < 7; i++) {
-      if (x(i) < joint_limits_lower_(i))
-        cost += 100 + 10 * std::pow(joint_limits_lower_(i) - x(i), 2);
-      if (x(i) > joint_limits_upper_(i))
-        cost += 100 + 10 * std::pow(x(i) - joint_limits_upper_(i), 2);
+      if (x(i+base_offset) < joint_limits_lower_(i))
+        cost += 100 + 10 * std::pow(joint_limits_lower_(i) - x(i+base_offset), 2);
+      if (x(i+base_offset) > joint_limits_upper_(i))
+        cost += 100 + 10 * std::pow(x(i+base_offset) - joint_limits_upper_(i), 2);
     }
   }
 

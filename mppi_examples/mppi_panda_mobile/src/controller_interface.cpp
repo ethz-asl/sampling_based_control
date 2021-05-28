@@ -160,13 +160,8 @@ bool PandaMobileControllerInterface::update_reference() {
 
 mppi_pinocchio::Pose PandaMobileControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-  robot_model_.update_state(x.head<7>());
-  mppi_pinocchio::Pose base_pose;
-  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation =
-      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose("panda_hand");
-  return base_pose * arm_pose;
+  robot_model_.update_state(x);
+  return robot_model_.get_pose("panda_hand");
 }
 
 geometry_msgs::msg::PoseStamped

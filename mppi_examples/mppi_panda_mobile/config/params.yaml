@@ -1,6 +1,6 @@
 panda_mobile_control:
   ros__parameters:
-    initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
+    initial_configuration: [0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
     linear_weight: 10.0
     angular_weight: 1.0
     obstacle_radius: 0.15

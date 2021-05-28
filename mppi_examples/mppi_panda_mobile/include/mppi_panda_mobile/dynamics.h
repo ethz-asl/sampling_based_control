@@ -16,8 +16,8 @@
 namespace panda_mobile {
 
 enum PandaMobileDim {
-  STATE_DIMENSION = 10,     // q, x, y, yaw
-  INPUT_DIMENSION = 10,     // q_dot, x_dot, y_dot, yaw_dot
+  STATE_DIMENSION = 10,     // x, y, yaw, q
+  INPUT_DIMENSION = 10,     // x_dot, y_dot, yaw_dot, q_dot,
   REFERENCE_DIMENSION = 10  // x_t, x_q, obstacle_t
 };
 

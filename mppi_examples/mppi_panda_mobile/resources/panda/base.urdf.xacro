@@ -2,6 +2,45 @@
 <robot name="panda_mobile" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <xacro:macro name="panda_base" params="base_link:='base'">
+        <link name="world"/>
+
+        <link name="x_link"/>
+
+        <joint name="x_velocity_joint" type="prismatic">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <axis xyz="1 0 0"/>
+            <parent link="world"/>
+            <child link="x_link"/>
+            <limit lower="-10" upper="10" effort="200" velocity="2"/>
+        </joint>
+
+        <link name="xy_link"/>
+
+        <joint name="y_velocity_joint" type="prismatic">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <axis xyz="0 1 0"/>
+            <parent link="x_link"/>
+            <child link="xy_link"/>
+            <limit lower="-10" upper="10" effort="200" velocity="2"/>
+        </joint>
+
+        <link name="xyw_link"/>
+
+        <joint name="w_velocity_joint" type="revolute">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <axis xyz="0 0 1"/>
+            <parent link="xy_link"/>
+            <child link="xyw_link"/>
+            <limit effort="200" velocity="2" upper="-30" lower="30"/>
+        </joint>
+
+
+        <joint name="base_link_joint" type="fixed">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <parent link="xyw_link"/>
+            <child link="${base_link}"/>
+        </joint>
+
         <link name="${base_link}">
             <collision>
                 <origin xyz="0 0 0" rpy="0 0 0"/>

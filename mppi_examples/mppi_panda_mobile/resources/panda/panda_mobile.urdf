@@ -4,6 +4,36 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="panda">
+  <link name="world"/>
+  <link name="x_link"/>
+  <joint name="x_velocity_joint" type="prismatic">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <parent link="world"/>
+    <child link="x_link"/>
+    <limit effort="200" lower="-10" upper="10" velocity="2"/>
+  </joint>
+  <link name="xy_link"/>
+  <joint name="y_velocity_joint" type="prismatic">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <parent link="x_link"/>
+    <child link="xy_link"/>
+    <limit effort="200" lower="-10" upper="10" velocity="2"/>
+  </joint>
+  <link name="xyw_link"/>
+  <joint name="w_velocity_joint" type="continuous">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <parent link="xy_link"/>
+    <child link="xyw_link"/>
+    <limit effort="200" velocity="2"/>
+  </joint>
+  <joint name="base_link_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="xyw_link"/>
+    <child link="base"/>
+  </joint>
   <link name="base">
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -379,7 +409,7 @@
       <!--origin rpy="0 0 0" xyz="0 0 0"/-->
       <origin rpy="0 0 0" xyz="0 0 0.0333"/>
       <geometry>
-        <!--mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/!-->
+        <!--mesh filename="file://${resources_prefix}${resources_directory}/resources/panda/meshes/collision/hand.${collision_format}"/!-->
         <box size="0.035 0.19 0.065"/>
       </geometry>
     </collision>

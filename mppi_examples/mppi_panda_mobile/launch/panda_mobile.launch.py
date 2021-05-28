@@ -46,7 +46,8 @@ def generate_launch_description():
         output="screen",
         parameters=[ros_params,
                     robot_description,
-                    {"config_file": controller_config}] #prefix=['xterm -e gdb -ex run --args']
+                    {"config_file": controller_config}],
+        prefix=['xterm -e gdb -ex run --args']
     )
     nodes.append(controller_node)
 
