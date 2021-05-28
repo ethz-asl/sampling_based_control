@@ -416,6 +416,53 @@ class Plotter:
         else:
             raise NotImplementedError(f"Unknown type '{type}'")
 
+    def make_run_cost_video(self, save_dir):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+        fig, ax = plt.subplots(figsize=(8,6))
+
+        # Those are the wall-times when the callbacks were received
+        times = self.df['time'].to_numpy()
+        dt = np.mean(times[1:] - times[:-1]) # dt to match screen capture
+        print(f"dt: {dt}")
+
+        # This is the sim-time used as x axis
+        sim_dt = 0.01
+        max_sim_time = 4
+        sim_time = self.df['index'].to_numpy() * sim_dt
+        goal_reached_time = self.df['time_to_goal'].to_numpy()[0]
+
+        stage_costs = self.df['stage_cost'].to_numpy()
+        stage_costs = stage_costs[sim_time <= max_sim_time]
+        sim_time = sim_time[sim_time <= max_sim_time]
+
+
+        sns.lineplot(x=sim_time, y=stage_costs)
+        ax.set_ylabel("Stage cost")
+        ax.set_xlabel("Sim time [s]")
+
+        # Save layout
+        plt.tight_layout()
+        x_lim = plt.xlim()
+        y_lim = plt.ylim()
+        
+        # Loop over frames
+        for i in range(len(sim_time)):
+            plt.clf()
+            sns.lineplot(x=sim_time[:i+1], y=stage_costs[:i+1])
+            plt.scatter(sim_time[i], stage_costs[i])
+            if sim_time[i] >= goal_reached_time:
+                plt.scatter(goal_reached_time, 0, marker='x', c='r')
+            plt.xlim(x_lim)
+            plt.ylim(y_lim)
+            ax = plt.gca()
+            ax.set_ylabel("Stage cost")
+            ax.set_xlabel("Sim time [s]")
+            plt.savefig(f"{save_dir}/img_{i:05}.png")
+        plt.close()
+        print("Convert to video with:")
+        print(f"ffmpeg -framerate {1/dt:.2f} -i {save_dir}/img_%05d.png -c:v libx264 -profile:v high -crf 18 -pix_fmt yuv420p {save_dir}/output.mp4")
+
     def plot_all_rollout_policy_weights(self, caching_factor):
         cum_w_opt = []
         cum_w_pol = []
@@ -512,14 +559,15 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
-    plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
-    plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
-    plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
-    plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
+    # plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
+    # plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
+    # plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
+    # plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
     # plotter.plot_all_rollout_policy_weights(0.3)
     # plotter.plot_rollout_costs(args.experiment_id[0])
     # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
     # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
+    plotter.make_run_cost_video("/home/andreas/video_tmp")
 
     plt.show()
