@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import glob
+import time
 
 # from learning import PolicyLearner
 from record_data import DataRecorder
@@ -240,7 +241,7 @@ class ExperimentPlotter:
 
     def action_sender(self, goal, i):
         self.client.send_goal(goal)
-        self.client.wait_for_result(timeout=rospy.Duration(30))
+        self.client.wait_for_result(timeout=rospy.Duration(240))
         if self.client.get_state() == GoalStatus.SUCCEEDED:
             print(f'{i}: Goal Reached')
             self.goal_reached_time = self.client.get_result().goal_reached_time
@@ -261,6 +262,7 @@ class ExperimentPlotter:
                 self.set_pose_information_from_file(i)
             goal = self.get_goal()
             self.action_sender(goal, i)
+            time.sleep(3)
             success = recorder.postprocess(time_to_goal=self.goal_reached_time)
             if success:
                 if self.mode == "new":
