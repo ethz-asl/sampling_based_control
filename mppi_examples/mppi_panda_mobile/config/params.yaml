@@ -12,7 +12,7 @@ panda_mobile_control:
     publish_ros: true
     ros_publish_rate: 10.0
 
-    sequential: true
+    sequential: false
     static_optimization: false
     sim_dt: 0.01
     max_sim_time: 0.0

@@ -24,14 +24,18 @@ target_link_libraries(panda_mobile_control ${PROJECT_NAME})
 add_dependencies(panda_mobile_control ${PROJECT_NAME})
 ament_target_dependencies(panda_mobile_control ${AMENT_PACKAGES})
 
-install(TARGETS panda_mobile_control
+add_executable(controller_node src/nodes/controller_node.cpp)
+target_link_libraries(controller_node ${PROJECT_NAME})
+add_dependencies(controller_node ${PROJECT_NAME})
+ament_target_dependencies(controller_node ${AMENT_PACKAGES})
+
+install(TARGETS panda_mobile_control controller_node
   DESTINATION lib/${PROJECT_NAME})
   
 install(PROGRAMS scripts/target_generator.py
         DESTINATION lib/${PROJECT_NAME}
         )
 
-# Install launch files.
 install(DIRECTORY
         launch config resources
         DESTINATION share/${PROJECT_NAME}/

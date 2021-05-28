@@ -120,9 +120,9 @@ int main(int argc, char** argv) {
             .count() /
         1000.0;
     double delta = sim_dt - elapsed_s;
-    // if (delta > 0){
-    //   rclcpp::sleep_for(std::chrono::nanoseconds(int(delta*1e9)));
-    // }
+     if (delta > 0){
+       rclcpp::sleep_for(std::chrono::nanoseconds(int(delta*1e9)));
+     }
 
     if (max_sim_time > 0 && sim_time > max_sim_time) {
       RCLCPP_INFO_STREAM(
