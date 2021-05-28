@@ -397,6 +397,11 @@ class Plotter:
     def plot_all_rollout_policy_weights(self, caching_factor):
         cum_w_opt = []
         cum_w_pol = []
+        time_to_goals = []
+        timeouts = []
+        #### Defect in data recording, needs to be adressed.
+        #### Until then need to set timeout duration manually
+        timeout = 10.0
         fig, (ax1, ax2) = plt.subplots(2)
         experiments = self.df['id'].unique()
         no_experiments = len(experiments)
@@ -426,6 +431,8 @@ class Plotter:
             policy_idx = math.ceil(lrr*nr) + opt_idx
             weights_opt = []
             weights_policy = []
+            time_to_goals.append(df['time_to_goal'].iloc[0]) # time to goal also the same for one run
+            timeouts.append(timeout)
             weights_temp = df['weight_history']
             for index, row in weights_temp.iteritems():
                 line = row[1:-1] # get rid of parentheisis first
@@ -441,6 +448,9 @@ class Plotter:
             ax2.plot(weights_policy_array)
             ax2.set_ylabel('policy weight [-]')
             ax2.set_xlabel('time step')
+            goal_reached_time_step = math.ceil(time_to_goals[-1]/timeouts[-1] * len(weights_policy_array))
+            ax1.plot(goal_reached_time_step, weights_opt_array[goal_reached_time_step], 'or', markersize=20)
+            ax2.plot(goal_reached_time_step, weights_policy_array[goal_reached_time_step], 'or', markersize=20)
         mean_w_opt = np.array(cum_w_opt)/no_experiments
         mean_w_pol = np.array(cum_w_pol)/no_experiments
         ax1.plot(mean_w_opt,'k', linewidth=4, label='mean')
