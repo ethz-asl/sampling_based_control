@@ -10,7 +10,7 @@ solver:
   filtering: false
   substeps: 1
 
-  gradient_step_size: 1.0
+  gradient_step_size: 0.5
   momentum_step_size: 0.0
 
   filter_type: 1
@@ -31,9 +31,13 @@ solver:
   logging: true
 
   filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  filters_order: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+  filters_order: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+  filters_window: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+
+  bound_input: true
+  u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   # expert_types: {NORM, IMP}
   expert_weights: [0.0, 1.0]
-  log_data: true
+  log_data: false

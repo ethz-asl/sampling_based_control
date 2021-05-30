@@ -76,6 +76,14 @@ bool PandaMobileControllerInterface::set_controller(
   ok &= node_->get_parameter<bool>("joint_limits", joint_limits);
   ok &= node_->get_parameter<std::string>("config_file", config_file);
 
+  RCLCPP_INFO_STREAM(node_->get_logger(), "Parameters:" 
+    << std::endl << "obstacle_radius: " << obstacle_radius_ 
+    << std::endl << "linear_weight: " << linear_weight 
+    << std::endl << "angular_weight: " << angular_weight 
+    << std::endl << "holonomic: " << holonomic 
+    << std::endl << "joint_limits: " << joint_limits 
+    << std::endl);
+  
   if (!ok) {
     RCLCPP_ERROR(node_->get_logger(), "Failed to parse parameters and set controller.");
     return false;

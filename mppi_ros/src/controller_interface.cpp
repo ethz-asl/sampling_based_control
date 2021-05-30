@@ -26,6 +26,12 @@ bool ControllerRos::init_default_params() {
   ok &= node_->get_parameter<double>("ros_publish_rate", ros_publish_rate_);
   ok &= node_->get_parameter<bool>("publish_ros", publish_ros_);
 
+  RCLCPP_INFO_STREAM(node_->get_logger(), "Mppi ros params: "
+    << std::endl << "policy_update_rate: " << policy_update_rate_
+    << std::endl << "reference_update_rate: " << reference_update_rate_
+    << std::endl << "ros_publish_rate: " << ros_publish_rate_
+    << std::endl << "publish_ros: " << publish_ros_);
+
   if (!ok) {
     RCLCPP_ERROR(node_->get_logger(), "Failed to parse default parameters.");
     return false;

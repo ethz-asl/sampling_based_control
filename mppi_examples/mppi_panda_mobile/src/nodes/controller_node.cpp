@@ -7,9 +7,11 @@
  */
 
 #include <map>
+#include <chrono>
 #include <rclcpp/rclcpp.hpp>
 #include "mppi_panda_mobile/controller_interface.h"
 #include "mppi_panda_mobile/dynamics.h"
+#include "geometry_msgs/msg/twist.hpp"
 
 using namespace panda_mobile;
 
@@ -36,27 +38,32 @@ int main(int argc, char** argv) {
   // controller
   auto controller = PandaMobileControllerInterface(node);
 
+  // command
+  geometry_msgs::msg::Twist base_cmd;
+  sensor_msgs::msg::JointState joint_cmd;
+  for (int i = 1; i < 8; i++)
+    joint_cmd.name.push_back("panda_joint" + std::to_string(i));
+  joint_cmd.position.resize(PandaMobileDim::STATE_DIMENSION - 3, 0.0);
+  joint_cmd.velocity.resize(PandaMobileDim::STATE_DIMENSION - 3, 0.0);
+
+  auto joint_cmd_publisher =
+      node->create_publisher<sensor_msgs::msg::JointState>("/velocity_cmd", 1);
+  auto base_cmd_publisher = node->create_publisher<geometry_msgs::msg::Twist>("/base_cmd_vel", 1);
+  
   // state update
+  std::atomic_bool first_reading = true;
   std::mutex state_mutex;
   auto state_callback = [&](const sensor_msgs::msg::JointState::SharedPtr msg) {
     std::unique_lock<std::mutex> lock(state_mutex);
     for (int i = 0; i < PandaMobileDim::STATE_DIMENSION; i++) {
       x(i) = msg->position[i];
+      if (first_reading) joint_cmd.position[i] = x(i);
     }
+    first_reading = false;
   };
   auto state_subscriber_ =
       node->create_subscription<sensor_msgs::msg::JointState>(
           "/joint_states", 10, state_callback);
-
-  sensor_msgs::msg::JointState joint_cmd;
-  joint_cmd.name = {"x_velocity_joint", "y_velocity_joint", "w_velocity_joint"};
-  for (int i = 1; i < 8; i++)
-    joint_cmd.name.push_back("panda_joint" + std::to_string(i));
-
-  // command
-  joint_cmd.velocity.resize(PandaMobileDim::STATE_DIMENSION, 0.0);
-  auto joint_cmd_publisher =
-      node->create_publisher<sensor_msgs::msg::JointState>("/velocity_cmd", 1);
 
   // end effector publisher
   auto ee_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>(
@@ -79,8 +86,9 @@ int main(int argc, char** argv) {
 
   // start controller threads
   controller.start();
-  rclcpp::Rate rate(100.0);
 
+  double dt=0.01;
+  rclcpp::Rate rate(1/dt);
   while (rclcpp::ok()) {
     // avoid going back in the past
     double current_time = node->get_clock()->now().seconds() - start_time;
@@ -94,9 +102,18 @@ int main(int argc, char** argv) {
     }
 
     //send command
-    for (int i = 0; i < joint_cmd.velocity.size(); i++)
-      joint_cmd.velocity[i] = u(i);
-    joint_cmd_publisher->publish(joint_cmd);
+    base_cmd.linear.x = u(0);
+    base_cmd.linear.y = u(1);
+    base_cmd.angular.z = u(2);
+    base_cmd_publisher->publish(base_cmd);
+    if (!first_reading){
+      for (int i = 0; i < joint_cmd.velocity.size(); i++){
+        joint_cmd.position[i] += u(i + 3) * dt;
+        joint_cmd.velocity[i] = u(i + 3);
+      }
+      joint_cmd.header.stamp = node->get_clock()->now();
+      joint_cmd_publisher->publish(joint_cmd);
+    }
 
     // debug
     {
@@ -105,9 +122,10 @@ int main(int argc, char** argv) {
     }
     ee_publisher->publish(ee_pose);
 
+    rate.sleep();
+
     // process callback (update new state)
     rclcpp::spin_some(node);
-    rate.sleep();
   }
 
   return 0;

@@ -2,6 +2,8 @@
 import sys
 import copy
 import rclpy
+from rclpy.duration import Duration
+from rclpy.time import Time
 
 import tf2_ros
 
@@ -36,19 +38,34 @@ class SingleMarkerBroadcaster:
         self.pose_pub = self.node.create_publisher(PoseStamped, target_pose_topic, 10)
 
     def init_pose(self):
+        self.node.get_logger().info("\n\n\n\nMarker pose to default\n\n\n\n")
         self.initial_pose = PoseStamped()
-        self.initial_pose.pose.position.x = 1.0
-        self.initial_pose.pose.position.y = 0.0
-        self.initial_pose.pose.position.z = 0.5
+        self.initial_pose.pose.position.x = 0.52
+        self.initial_pose.pose.position.y = -1.99
+        self.initial_pose.pose.position.z = 1.07
+        self.initial_pose.pose.orientation.x = 0.994
+        self.initial_pose.pose.orientation.y = 0.057
+        self.initial_pose.pose.orientation.z = -0.087
+        self.initial_pose.pose.orientation.w = -0.005
+        
+        
         self.initialized = True
 
     def init_pose_from_ros(self, frame_id):
-        max_attempts = 10
+        self.node.get_logger().info("\n\n\n\nInitializing pose from topic\n\n\n\n")
+        import time
+        time.sleep(10.0)
+        self.node.get_logger().info("go!")
+        max_attempts = 1000
         attempts = 0
         while attempts < max_attempts:
             try:
+                now = self.node.get_clock().now()
+                dur = Duration()
+                dur.sec = 10
+                dur.nsec = 0
                 transform = self.tf_buffer.lookup_transform(
-                    self.frame_id, frame_id, rclpy.Time(0), rclpy.Duration(10))
+                    self.frame_id, frame_id, now, dur)
                 self.initial_pose = PoseStamped()
                 self.initial_pose.header.frame_id = self.frame_id
                 self.initial_pose.header.stamp = self.node.get_clock().now().to_msg()
@@ -60,6 +77,7 @@ class SingleMarkerBroadcaster:
                 self.initial_pose.pose.orientation.z = transform.transform.rotation.z
                 self.initial_pose.pose.orientation.w = transform.transform.rotation.w
                 self.initialized = True
+                self.node.get_logger().info("\n\n\n\nMarker pose set from topic\n\n\n\n")
                 return True
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException,
                     tf2_ros.ExtrapolationException) as exc:
