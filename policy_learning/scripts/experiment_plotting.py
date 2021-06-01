@@ -103,7 +103,7 @@ class ExperimentPlotter:
         self.cost_subscriber = rospy.Subscriber("/mppi_data",
                                                 Data,
                                                 self.cost_callback,
-                                                queue_size=10)
+                                                queue_size=10000)
         if self.mode == "new":
             self.joint_ic_f = open(
                 os.path.join(self.experiment_data_save_dir, 'joint_ic.csv'),

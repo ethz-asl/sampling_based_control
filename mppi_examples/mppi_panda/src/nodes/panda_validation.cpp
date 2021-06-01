@@ -79,7 +79,6 @@ class PandaValidator{
     double sim_dt = nh_.param<double>("sim_dt", 0.01);
 
     ros::Rate idle_rate(idle_frequency_);
-    ros::Rate limit_publishing_rate(100);
 
     mppi::DynamicsBase::input_t u;
     mppi::DynamicsBase::input_t u_expert;
@@ -107,7 +106,6 @@ class PandaValidator{
         else x_ = simulation_->step(u_expert, sim_dt);
         sim_time_ += sim_dt;
         publish_ros(x_);
-        limit_publishing_rate.sleep();
 
         policy_learning::collect_rolloutFeedback feedback;
         feedback.sim_time = sim_time_;
