@@ -1,0 +1,52 @@
+//
+// Created by giuseppe on 31.05.21.
+//
+
+#pragma once
+
+#include <memory>
+
+#include "mppi/core/policy.h"
+#include "mppi/utils/savgol_filter.h"
+#include "mppi/utils/multivariate_normal_eigen.h"
+
+namespace mppi {
+
+class GaussianPolicy : public Policy {
+public:
+  GaussianPolicy(int nu, int ns, double dt, double horizon, std::vector<int>, std::vector<unsigned int>, const Eigen::VectorXd& sigma);
+
+  Eigen::VectorXd operator()(double t) override;
+
+  Eigen::VectorXd operator()(double t, int k) override;
+
+  void update_samples(const Eigen::VectorXd& weights, const int keep) override;
+
+  void update(const Eigen::VectorXd& weights, const double step_size) override;
+
+  void shift(const double t) override;
+
+  Eigen::VectorXd get(double t) { return (*this)(t); }
+
+  Eigen::VectorXd get_sample(double t, int k) { return (*this)(t, k); }
+
+  Eigen::VectorXd get_time() { return t_; }
+
+  void bound() override;
+
+ private:
+  double dt_;
+  double h_;
+  int ns_;
+  int nt_;
+  Eigen::ArrayXd t_;
+  std::shared_ptr<multivariate_normal> dist_;
+  std::vector<Eigen::MatrixXd> samples_;
+  Eigen::MatrixXd nominal_;
+  Eigen::MatrixXd delta_;
+  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> L_;  // matrix for shift operation of all the samples
+
+  SavGolFilter filter_;
+
+};
+}

@@ -59,10 +59,11 @@ void SavGolFilter::add_measurement(const Eigen::VectorXd& u, const double t) {
   }
 }
 
-void SavGolFilter::apply(Eigen::VectorXd& u, const double t) {
+void SavGolFilter::apply(Eigen::Ref<Eigen::VectorXd, 0, Eigen::InnerStride<>> u, const double t) {
   for (size_t i = 0; i < u.size(); i++) {
     u[i] = filters_[i].filter(windows_[i].extract(t));
   }
 }
+
 
 }  // namespace mppi

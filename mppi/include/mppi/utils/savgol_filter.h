@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <mppi/utils/gram_savitzky_golay.h>
+#include "gram_savitzky_golay.h"
 #include <boost/circular_buffer.hpp>
 #include <deque>
 #include <iomanip>
@@ -140,7 +140,7 @@ class SavGolFilter {
  public:
   void reset(const double t);
   void add_measurement(const Eigen::VectorXd& u, const double t);
-  void apply(Eigen::VectorXd& u, const double t);
+  void apply(Eigen::Ref<Eigen::VectorXd, 0, Eigen::InnerStride<> > u, const double t);
   inline std::vector<MovingExtendedWindow>& get_windows() { return windows_; }
 
  private:
