@@ -16,11 +16,13 @@ class Config;
 class Renderer;
 class Expert;
 class GaussianSampler;
+class Policy;
 
 typedef std::shared_ptr<Cost> cost_ptr;
 typedef std::shared_ptr<Dynamics> dynamics_ptr;
 typedef std::shared_ptr<Solver> solver_ptr;
 typedef std::shared_ptr<GaussianSampler> sampler_ptr;
+typedef std::shared_ptr<Policy> policy_ptr;
 typedef Config config_t;
 typedef std::shared_ptr<Renderer> renderer_ptr;
 typedef std::shared_ptr<Expert> expert_ptr;

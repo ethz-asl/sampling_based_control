@@ -10,6 +10,7 @@
 
 #include <mppi_pinocchio/ros_conversions.h>
 #include <mppi_ros/ros_params.h>
+#include <mppi/policies/gaussian_policy.h>
 #include <ros/package.h>
 
 using namespace panda_mobile;
@@ -87,6 +88,16 @@ bool PandaMobileModelTracking::setup() {
   }
 
   // -------------------------------
+  // config
+  // -------------------------------
+  std::string config_file =
+      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
+    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
+    return false;
+  }
+
+  // -------------------------------
   // internal model
   // -------------------------------
   robot_model_.init_from_xml(robot_description);
@@ -105,14 +116,11 @@ bool PandaMobileModelTracking::setup() {
                                                 obstacle_radius_, joint_limits);
 
   // -------------------------------
-  // config
+  // policy
   // -------------------------------
-  std::string config_file =
-      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)) {
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return false;
-  }
+  auto policy = std::make_shared<mppi::GaussianPolicy>(
+      int(PandaMobileDim::INPUT_DIMENSION), config_.rollouts, config_.step_size, config_.horizon,
+      config_.filters_window, config_.filters_order, config_.input_variance);
 
   // -------------------------------
   // initialize state
@@ -125,7 +133,7 @@ bool PandaMobileModelTracking::setup() {
   // -------------------------------
   // controller TODO(giuseppe) change this to the proper way
   // -------------------------------
-  init(dynamics, cost, x0, 0.0, config_);
+  init(dynamics, cost, policy, x0, 0.0, config_);
 
   // -------------------------------
   // initialize reference

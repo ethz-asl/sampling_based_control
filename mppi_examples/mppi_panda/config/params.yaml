@@ -42,9 +42,9 @@ solver:
   u_max: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
   discount_factor: 1.0          # apply a discount factor on the cost over the horizon
-  verbose: false                # more prints
+  verbose: true                # more prints
   threads: 2                    # number of threads, set to 1 to not use multithreaded sampling
-  debug_print: false            # debug print
+  debug_print: true            # debug print
   display_update_freq: true     # displays the frequency of the control loop
 
   use_tree_search: false         # if true tree structure is used
@@ -52,7 +52,7 @@ solver:
   # expert_types: {NORM, IMP}
   expert_weights: [ 0.0, 1.0 ]  # controls the weights of the different experts
 
-  logging: true
+  logging: false
 
 # custom params
 initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]

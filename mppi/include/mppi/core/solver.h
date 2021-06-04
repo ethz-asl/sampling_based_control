@@ -22,7 +22,7 @@
 #include "mppi/core/cost.h"
 #include "mppi/core/data.h"
 #include "mppi/core/dynamics.h"
-#include "mppi/core/rederer.h"
+#include "mppi/core/policy.h"
 #include "mppi/core/rollout.h"
 
 #include "mppi/utils/gaussian_sampler.h"
@@ -37,17 +37,16 @@ namespace mppi {
 
 class Solver {
  public:
-
   /**
    * @brief Path Integral Control class
    * @param dynamics: used to forward simulate the system and produce rollouts
    * @param cost: to obtain running cost as function of the stage observation
-   * @param sampler: class used to draw random samples
+   * @param policy: implementation of stochastic policy
    * @param config: the solver configuration
    * @param verbose: (bool) flag to turn on/off verbosity
    */
-  Solver(dynamics_ptr dynamics, cost_ptr cost, const config_t& config,
-         sampler_ptr sampler = nullptr, renderer_ptr renderer = nullptr);
+  Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
+         const config_t& config);
   Solver() = default;
   ~Solver() = default;
 
@@ -86,7 +85,7 @@ class Solver {
 
   /**
    * @brief Transforms the cost to go into the corresponding sample weights
-   * @return 
+   * @return
    */
   void compute_weights();
 
@@ -334,7 +333,7 @@ class Solver {
   // vector of cost functions used per each thread
   std::vector<cost_ptr> cost_v_;
   // adds optional visualization of rollouts
-  renderer_ptr renderer_;
+  policy_ptr policy_;
   // summary
   data_t data_;
   // expert class gives access to all experts implemented

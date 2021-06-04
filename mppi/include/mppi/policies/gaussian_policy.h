@@ -12,23 +12,19 @@
 
 namespace mppi {
 
-class GaussianPolicy : public Policy {
+class  GaussianPolicy : public Policy {
 public:
   GaussianPolicy(int nu, int ns, double dt, double horizon, std::vector<int>, std::vector<unsigned int>, const Eigen::VectorXd& sigma);
 
-  Eigen::VectorXd operator()(double t) override;
+  void update_samples(const std::vector<double>& weights, const int keep) override;
 
-  Eigen::VectorXd operator()(double t, int k) override;
-
-  void update_samples(const Eigen::VectorXd& weights, const int keep) override;
-
-  void update(const Eigen::VectorXd& weights, const double step_size) override;
+  void update(const std::vector<double>& weights, const double step_size) override;
 
   void shift(const double t) override;
 
-  Eigen::VectorXd get(double t) { return (*this)(t); }
+  Eigen::VectorXd nominal(double t) override;
 
-  Eigen::VectorXd get_sample(double t, int k) { return (*this)(t, k); }
+  Eigen::VectorXd sample(double t, int k) override;
 
   Eigen::VectorXd get_time() { return t_; }
 

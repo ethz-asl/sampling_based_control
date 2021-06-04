@@ -9,10 +9,11 @@ using namespace mppi_tools;
 
 void ModelTrackingController::init(mppi::dynamics_ptr dynamics,
                                    mppi::cost_ptr cost,
+                                   mppi::policy_ptr policy,
                                    const mppi::observation_t &x0,
                                    const double &t0,
                                    const mppi::config_t &config) {
-  solver_ = std::make_unique<mppi::Solver>(dynamics, cost, config);
+  solver_ = std::make_unique<mppi::Solver>(dynamics, cost, policy, config);
   model_ = dynamics->clone();
   set_initial_state(x0, t0);
 

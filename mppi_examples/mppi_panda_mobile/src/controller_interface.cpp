@@ -12,6 +12,7 @@
 
 #include <mppi_pinocchio/ros_conversions.h>
 #include <mppi_ros/ros_params.h>
+#include <mppi/policies/gaussian_policy.h>
 #include <ros/package.h>
 
 using namespace panda_mobile;
@@ -83,6 +84,16 @@ bool PandaMobileControllerInterface::set_controller(
   }
 
   // -------------------------------
+  // config
+  // -------------------------------
+  std::string config_file =
+      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
+    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
+    return false;
+  }
+
+  // -------------------------------
   // internal model
   // -------------------------------
   init_model(robot_description);
@@ -101,19 +112,17 @@ bool PandaMobileControllerInterface::set_controller(
                                                 obstacle_radius_, joint_limits);
 
   // -------------------------------
-  // config
+  // policy
   // -------------------------------
-  std::string config_file =
-      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)) {
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return false;
-  }
+  auto policy = std::make_shared<mppi::GaussianPolicy>(
+      int(PandaMobileDim::INPUT_DIMENSION), config_.rollouts, config_.step_size, config_.horizon,
+      config_.filters_window, config_.filters_order, config_.input_variance);
+
 
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
 
   // -------------------------------
   // initialize reference
