@@ -116,8 +116,9 @@ void GaussianPolicy::shift(const double t) {
     L_.setIdentity();
     std::transform(L_.indices().data(), L_.indices().data() + nt_,
                    L_.indices().data(), [this](int i) -> int {
-          return (i<time_idx_shift) ? nt_ - time_idx_shift: i-time_idx_shift;
-        });
+                     return (i < time_idx_shift) ? nt_ + i - time_idx_shift
+                                                 : i - time_idx_shift;
+                   });
 
     for (auto& sample : samples_){
       sample = L_ * sample;

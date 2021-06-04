@@ -1,4 +1,4 @@
-sequential: true           # true to run an asynchronous thread where controller optimize given the latest observation
+sequential: false           # true to run an asynchronous thread where controller optimize given the latest observation
 rendering: false            # use a custom renderer to visualize the trajectory
 
 # dynamics parameters
@@ -7,7 +7,7 @@ dynamics:
 
 # solver parameters. Check mppi/src/solver_config.cpp
 solver:
-  rollouts: 10                  # number of rollouts
+  rollouts: 100                  # number of rollouts
   lambda: 0.001 #0.001         # scaling on input/noise cost
   h: 10.0                       # scaling on exponential cost for computing rollouts' weights
   step_size: 0.01               # simulation step size
@@ -19,8 +19,8 @@ solver:
   substeps: 1                   # number of optimization substeps (never investigated)
 
   # Setting importance sampling and tree search
-  gradient_step_size: 0.15
-  momentum_step_size: 0.7
+  gradient_step_size: 1.0
+  momentum_step_size: 0.0
 
   # Setting gradient only
   #gradient_step_size: 1.0

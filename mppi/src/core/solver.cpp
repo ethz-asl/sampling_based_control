@@ -163,7 +163,6 @@ void Solver::update_policy() {
       } else {
         sample_trajectories();
       }
-
       optimize();
       // filter_input();
 

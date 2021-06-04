@@ -155,8 +155,10 @@ void RecedingHorizonSpline::shift(const double t) {
     L_.setIdentity();
     std::transform(L_.indices().data(), L_.indices().data() + n_cpoints_,
                    L_.indices().data(), [this](int i) -> int {
-          return (i<n_cpoints_shift) ? this->n_cpoints_ - n_cpoints_shift: i-n_cpoints_shift;
-        });
+                     return (i < n_cpoints_shift)
+                                ? this->n_cpoints_ + i - n_cpoints_shift
+                                : i - n_cpoints_shift;
+                   });
     N_ = L_ * N_;
 
     // set the last samples to 0

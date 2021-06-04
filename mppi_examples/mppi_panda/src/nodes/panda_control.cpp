@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   // init the controller
   bool ok = controller.init();
   if (!ok) {
-    throw std::runtime_error("Failed to initialzied controller!");
+    throw std::runtime_error("Failed to initialized controller!");
   }
 
   // set the very first observation
