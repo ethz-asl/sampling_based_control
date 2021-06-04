@@ -188,7 +188,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
 
   tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 
-  double cost = cost_v_[leaf_pos]->get_stage_cost(x, t_) *
+  double cost = cost_v_[leaf_pos]->get_stage_cost(x, u, t_) *
                 std::pow(config_.discount_factor, horizon_step);
   extensions_[leaf_pos] = std::make_pair(
       extending_leaf, node_t(extending_leaf, t_, cost, u, x, expert_type));

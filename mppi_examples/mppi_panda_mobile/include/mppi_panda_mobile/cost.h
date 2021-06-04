@@ -52,6 +52,7 @@ class PandaMobileCost : public mppi::Cost {
   void set_obstacle_radius(const double r);
   mppi_pinocchio::Pose get_current_pose(const Eigen::VectorXd& x);
   mppi::cost_t compute_cost(const mppi::observation_t& x,
+                            const mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
 };

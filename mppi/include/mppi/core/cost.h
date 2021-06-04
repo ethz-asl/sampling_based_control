@@ -29,7 +29,8 @@ class Cost {
    * @param time: stage time
    * @return the stage cost
    */
-  virtual cost_t get_stage_cost(const observation_t& x, const double t = 0);
+  virtual cost_t get_stage_cost(const observation_t& x, const input_t& u,
+                                const double t = 0);
 
   /**
    * @brief Set the reference trajectory (optionally) used in the cost function
@@ -46,8 +47,8 @@ class Cost {
    * @param t current time
    * @return
    */
-  virtual cost_t compute_cost(const observation_t& x, const reference_t& ref,
-                              const double t) = 0;
+  virtual cost_t compute_cost(const observation_t& x, const input_t& u,
+                              const reference_t& ref, const double t) = 0;
 
   /**
    * @brief Get the reference point closest to the current time.

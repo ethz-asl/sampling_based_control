@@ -173,7 +173,8 @@ void Solver::update_policy() {
       for (size_t t = 0; t < steps_; t++) {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
-      stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
+      stage_cost_ =
+          cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
     }
     swap_policies();
 
@@ -342,7 +343,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       // compute input-state stage cost
       double cost_temp;
       cost_temp = std::pow(config_.discount_factor, -t) *
-                  cost->get_stage_cost(x, ts);
+                  cost->get_stage_cost(x, rollouts_[k].uu[t], ts);
 
       if (std::isnan(cost_temp)) {
         std::stringstream ss;

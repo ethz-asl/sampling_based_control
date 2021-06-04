@@ -69,6 +69,7 @@ mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
 }
 
 mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
+                                           const mppi::input_t& u,
                                            const mppi::reference_t& ref,
                                            const double t) {
   mppi::cost_t cost;
@@ -87,6 +88,7 @@ mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
   error = mppi_pinocchio::diff(current_pose, reference_pose);
   cost += error.head<3>().transpose() * Q_linear_ * error.head<3>();
   cost += error.tail<3>().transpose() * Q_angular_ * error.tail<3>();
+  cost += 0.0 * u.squaredNorm();
 
   // obstacle avoidance cost
   double obstacle_dist = (current_pose.translation - ref.tail<3>()).norm();

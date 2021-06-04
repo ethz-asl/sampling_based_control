@@ -59,6 +59,7 @@ class PandaCost : public mppi::Cost {
   void set_obstacle_radius(const double r) { obstacle_radius_ = r; }
 
   mppi::cost_t compute_cost(const mppi::observation_t& x,
+                            const mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
 };
