@@ -470,7 +470,7 @@ class Plotter:
         timeouts = []
         #### Defect in data recording, needs to be adressed.
         #### Until then need to set timeout duration manually
-        timeout = 10.0
+        timeout = 7.5
         fig, (ax1, ax2) = plt.subplots(2)
         experiments = self.df['id'].unique()
         no_experiments = len(experiments)
@@ -517,7 +517,7 @@ class Plotter:
             ax2.plot(weights_policy_array)
             ax2.set_ylabel('policy weight [-]')
             ax2.set_xlabel('time step')
-            goal_reached_time_step = math.ceil(time_to_goals[-1]/timeouts[-1] * len(weights_policy_array))
+            goal_reached_time_step = math.floor(time_to_goals[-1]/timeouts[-1] * len(weights_policy_array))-1
             ax1.plot(goal_reached_time_step, weights_opt_array[goal_reached_time_step], 'or', markersize=20)
             ax2.plot(goal_reached_time_step, weights_policy_array[goal_reached_time_step], 'or', markersize=20)
         mean_w_opt = np.array(cum_w_opt)/no_experiments
