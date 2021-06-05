@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from rospkg import RosPack
 from matplotlib.colors import LogNorm
+from scipy.interpolate import interp1d
 import math
 sns.set_theme()
 sns.set_context("paper")
@@ -463,7 +464,7 @@ class Plotter:
         print("Convert to video with:")
         print(f"ffmpeg -framerate {1/dt:.2f} -i {save_dir}/img_%05d.png -c:v libx264 -profile:v high -crf 18 -pix_fmt yuv420p {save_dir}/output.mp4")
 
-    def plot_all_rollout_policy_weights(self, caching_factor):
+    def plot_all_rollout_policy_weights(self, caching_factor, colorful_plot=False):
         cum_w_opt = []
         cum_w_pol = []
         time_to_goals = []
@@ -471,11 +472,20 @@ class Plotter:
         #### Defect in data recording, needs to be adressed.
         #### Until then need to set timeout duration manually
         timeout = 7.5
-        fig, (ax1, ax2) = plt.subplots(2)
+        dt = 0.01
+        if colorful_plot:
+            fig, (ax1, ax2) = plt.subplots(2)
+        else:
+            fig, ax = plt.subplots()
+
         experiments = self.df['id'].unique()
         no_experiments = len(experiments)
         controller_name_old = None
         first = True
+        if not colorful_plot:
+            resolution = int(timeout / dt)
+            normalised_weights_policy = np.zeros((no_experiments, resolution))
+            i = 0
         for experiment_id in experiments:
             df = self.df.loc[self.df['id'] == experiment_id]
             controller_name = df['controller_name'].iloc[0]
@@ -508,25 +518,44 @@ class Plotter:
                 w_array = [float(s) for s in line.split(',')]
                 weights_opt.append(w_array[opt_idx])
                 weights_policy.append(w_array[policy_idx])
-            weights_opt_array = np.array(weights_opt)
-            weights_policy_array = np.array(weights_policy)
-            cum_w_opt = [sum(n) for n in zip(cum_w_opt + [0] * (len(weights_opt) - len(cum_w_opt)), weights_opt)]
-            cum_w_pol = [sum(n) for n in zip(cum_w_pol + [0] * (len(weights_policy) - len(cum_w_pol)), weights_policy)]
-            ax1.plot(weights_opt_array)
-            ax1.set_ylabel('optimal weight [-]')
-            ax2.plot(weights_policy_array)
-            ax2.set_ylabel('policy weight [-]')
-            ax2.set_xlabel('time step')
-            goal_reached_time_step = math.floor(time_to_goals[-1]/timeouts[-1] * len(weights_policy_array))-1
-            ax1.plot(goal_reached_time_step, weights_opt_array[goal_reached_time_step], 'or', markersize=20)
-            ax2.plot(goal_reached_time_step, weights_policy_array[goal_reached_time_step], 'or', markersize=20)
-        mean_w_opt = np.array(cum_w_opt)/no_experiments
-        mean_w_pol = np.array(cum_w_pol)/no_experiments
-        ax1.plot(mean_w_opt,'k', linewidth=4, label='mean')
-        ax1.legend()
-        ax1.set_title(f'Weights during {no_experiments} runs.\nController settings -> {controller_name} with learned rollout ratio: {lrr}')
-        ax2.plot(mean_w_pol, 'k', linewidth=4, label='mean')
-        ax2.legend()
+            if colorful_plot:
+                weights_opt_array = np.array(weights_opt)
+                weights_policy_array = np.array(weights_policy)
+                cum_w_opt = [sum(n) for n in zip(cum_w_opt + [0] * (len(weights_opt) - len(cum_w_opt)), weights_opt)]
+                cum_w_pol = [sum(n) for n in zip(cum_w_pol + [0] * (len(weights_policy) - len(cum_w_pol)), weights_policy)]
+                ax1.plot(weights_opt_array)
+                ax1.set_ylabel('optimal weight [-]')
+                ax2.plot(weights_policy_array)
+                ax2.set_ylabel('policy weight [-]')
+                ax2.set_xlabel('time step')
+                # goal_reached_time_step = math.floor(time_to_goals[-1]/timeouts[-1] * len(weights_policy_array))-1
+                # ax1.plot(goal_reached_time_step, weights_opt_array[goal_reached_time_step], 'or', markersize=20)
+                # ax2.plot(goal_reached_time_step, weights_policy_array[goal_reached_time_step], 'or', markersize=20)
+            else:
+                goal_reached_time_step = math.floor(time_to_goals[-1]/timeouts[-1] * len(weights_policy))-1
+                time_steps = np.linspace(0,len(weights_policy), num=len(weights_policy))
+                weight_function = interp1d(time_steps, weights_policy)
+                new_ts = np.linspace(0, goal_reached_time_step, num=resolution)
+                normalised_weights_policy[i, :] = np.array(weight_function(new_ts))
+                i += 1
+        if colorful_plot:
+            mean_w_opt = np.array(cum_w_opt)/no_experiments
+            mean_w_pol = np.array(cum_w_pol)/no_experiments
+            ax1.plot(mean_w_opt,'k', linewidth=4, label='mean')
+            ax1.legend()
+            ax1.set_title(f'Weights during {no_experiments} runs.\nController settings -> {controller_name} with learned rollout ratio: {lrr}')
+            ax2.plot(mean_w_pol, 'k', linewidth=4, label='mean')
+            ax2.legend()
+        else:
+            normalised_weights_policy = np.transpose(normalised_weights_policy)
+            x = np.linspace(0, 1, num=resolution)
+            plot_df_wide = pd.DataFrame(data=normalised_weights_policy, index=x)
+            # sns.lineplot(data=plot_df_wide, ax=ax, legend=False, palette="light:seagreen", markers=False)
+            plot_df_wide.insert(0,"normalised time", x)
+            plot_df = pd.melt(plot_df_wide, id_vars=['normalised time'])
+            sns.lineplot(data=plot_df, x="normalised time", y="value",ax=ax, ci=99)
+            ax.set_title(f'Weights during {no_experiments} runs.\nController settings -> {controller_name} with learned rollout ratio: {lrr}')
+            ax.set_ylabel('policy weight [-]')
 
     def plot_dagger_progress(self):
         # Mean and std
