@@ -61,6 +61,8 @@ class ExperimentPlotter:
         self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
         self.timeout = 10
+        self.choose_policy = True
+        self.policy_choice = 34 
         ################
         self.root_dir = root_dir
         self.policies_path = os.path.join(self.root_dir, 'policies')
@@ -218,7 +220,11 @@ class ExperimentPlotter:
         self.f.close()
 
     def get_goal(self):
-        model_load_path = self.final_policy_path
+        if self.choose_policy:
+            model_load_path = self.policies_cpp[self.policy_choice]
+            print('Chose different policy than final policy: ', self.policy_choice)
+        else:
+            model_load_path = self.final_policy_path
         if self.mode == "new":
             goal = policy_learning.msg.collect_rolloutGoal(
                 timeout = self.timeout,

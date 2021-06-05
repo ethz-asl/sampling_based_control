@@ -528,6 +528,43 @@ class Plotter:
         ax2.plot(mean_w_pol, 'k', linewidth=4, label='mean')
         ax2.legend()
 
+    def plot_dagger_progress(self):
+        # Mean and std
+        average_cost = {}
+
+        iter_list = ['expert', 'iter_0', 'iter_4', 'iter_9', 'iter_14', 'iter_19',
+        'iter_24', 'iter_29', 'iter_34']
+        for iter in iter_list:
+            df = self.df.loc[(self.df['id'].str.contains(iter))]
+            if iter not in average_cost:
+                average_cost[iter] = [df['stage_cost'].mean()]
+            else:
+                average_cost[iter].append(df['stage_cost'].mean())
+
+        average_cost_mean = [
+            np.mean(average_cost_vector)
+            for average_cost_vector in average_cost.values()
+        ]
+        average_cost_std = [
+            np.std(average_cost_vector)
+            for average_cost_vector in average_cost.values()
+        ]
+
+        # Build the plot
+        fig, ax = plt.subplots()
+        ax.bar(iter_list,
+               average_cost_mean,
+               yerr=average_cost_std,
+               align='center',
+               alpha=0.5,
+               ecolor='black',
+               capsize=10)
+        ax.set_xlabel('Dagger iterations')
+        ax.set_xticks(iter_list)
+        ax.set_title('Average cost')
+        ax.yaxis.grid(True)
+
+
 
 
 if __name__ == "__main__":
@@ -563,11 +600,12 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
     # plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
     # plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
-    # plotter.plot_all_rollout_policy_weights(0.3)
+    plotter.plot_all_rollout_policy_weights(0.3)
     # plotter.plot_rollout_costs(args.experiment_id[0])
     # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
     # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
-    plotter.make_run_cost_video("/home/andreas/video_tmp")
+    # plotter.make_run_cost_video("/home/andreas/video_tmp")
+    #plotter.plot_dagger_progress()
 
     plt.show()
