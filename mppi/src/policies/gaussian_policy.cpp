@@ -7,18 +7,16 @@
 
 using namespace mppi;
 
-GaussianPolicy::GaussianPolicy(int nu, int ns, double dt, double horizon,
-                               std::vector<int> filter_windows,
-                               std::vector<uint> filter_orders,
-                               const Eigen::VectorXd& sigma)
+GaussianPolicy::GaussianPolicy(int nu, const Config& config)
     : Policy(nu) {
-  Eigen::MatrixXd C = sigma.asDiagonal();
-  dist_ = std::make_shared<multivariate_normal>(C);
-  dt_ = dt;
-  ns_ = ns;
 
-  nt_ = static_cast<int>(std::ceil(horizon / dt_));
-  samples_.resize(ns, Eigen::MatrixXd::Zero(nt_, nu));
+  Eigen::MatrixXd C = config.input_variance.asDiagonal();
+  dist_ = std::make_shared<multivariate_normal>(C);
+  dt_ = config.step_size;
+  ns_ = config.rollouts;
+
+  nt_ = static_cast<int>(std::ceil(config.horizon / dt_));
+  samples_.resize(ns_, Eigen::MatrixXd::Zero(nt_, nu));
 
   t_ = Eigen::ArrayXd::LinSpaced(nt_, 0.0, nt_) * dt_;
   nominal_ = Eigen::MatrixXd::Zero(nt_, nu);
@@ -26,7 +24,16 @@ GaussianPolicy::GaussianPolicy(int nu, int ns, double dt, double horizon,
   L_.setIdentity(nt_);
 
   // Initialize filter
-  filter_ = SavGolFilter(nt_, nu_, filter_windows, filter_orders);
+  filter_ = SavGolFilter(nt_, nu_, config.filters_window, config.filters_order);
+
+  // initialize limits TODO(giuseppe) from params
+  max_limits_ = Eigen::MatrixXd::Ones(nt_, nu_);
+  min_limits_ = -Eigen::MatrixXd::Ones(nt_, nu_);
+
+  for (int i=0; i < ns_; i++){
+    max_limits_.row(i) = config.u_max;
+    min_limits_.row(i) = config.u_min;
+  }
 }
 
 Eigen::VectorXd GaussianPolicy::nominal(double t) {
@@ -104,7 +111,7 @@ void GaussianPolicy::shift(const double t) {
     time_idx_shift = std::distance(
         t_.data(), std::upper_bound(t_.data(), t_.data() + t_.size(), t)) - 1;
 
-    t_ = t_ + (t - t_[0]);
+    t_ += dt_ * time_idx_shift;
 
     if (time_idx_shift == nt_-1){
       Eigen::RowVectorXd last_nominal = nominal_.row(nt_-1);
@@ -126,10 +133,15 @@ void GaussianPolicy::shift(const double t) {
     }
 
     nominal_ = L_ * nominal_;
-    nominal_.bottomLeftCorner(time_idx_shift, nu_).rowwise() = nominal_.row(nt_ - time_idx_shift -1);
+    nominal_.bottomLeftCorner(time_idx_shift, nu_).setZero();
+
+    // TODO(giuseppe) investigate why this does not work
+    // .rowwise() = nominal_.row(nt_ - time_idx_shift -1);
   }
 }
 
 void GaussianPolicy::bound() {
-  //TODO(giuseppe)
+  for (auto& sample : samples_){
+    sample = sample.cwiseMax(min_limits_).cwiseMin(max_limits_);
+  }
 }

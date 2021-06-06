@@ -1,5 +1,5 @@
 solver:
-  rollouts: 200
+  rollouts: 50
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
@@ -34,6 +34,10 @@ solver:
   filters_order: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 
+  bound_input: true
+  u_min: [-2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0]
+  u_max: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+
 #  expert_types: {NORM, IMP}
   expert_weights: [0.0, 1.0]
   log_data: true
@@ -44,14 +48,15 @@ linear_weight: 10.0
 angular_weight: 1.0
 obstacle_radius: 0.15
 joint_limits: true
-holonomic: false
+holonomic: true
 
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-sequential: true
+sequential: false
+
 static_optimization: false
 sim_dt: 0.01
 max_sim_time: 0.0

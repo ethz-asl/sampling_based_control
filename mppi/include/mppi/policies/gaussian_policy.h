@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "mppi/core/config.h"
 #include "mppi/core/policy.h"
 #include "mppi/utils/savgol_filter.h"
 #include "mppi/utils/multivariate_normal_eigen.h"
@@ -14,7 +15,7 @@ namespace mppi {
 
 class  GaussianPolicy : public Policy {
 public:
-  GaussianPolicy(int nu, int ns, double dt, double horizon, std::vector<int>, std::vector<unsigned int>, const Eigen::VectorXd& sigma);
+  GaussianPolicy(int nu, const Config& config);
 
   void update_samples(const std::vector<double>& weights, const int keep) override;
 
@@ -43,6 +44,8 @@ public:
   Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> L_;  // matrix for shift operation of all the samples
 
   SavGolFilter filter_;
+  Eigen::MatrixXd max_limits_;
+  Eigen::MatrixXd min_limits_;
 
 };
 }

@@ -110,8 +110,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // policy
   // -------------------------------
   auto policy = std::make_shared<mppi::GaussianPolicy>(
-      int(PandaDim::INPUT_DIMENSION), config_.rollouts, config_.step_size, config_.horizon,
-      config_.filters_window, config_.filters_order, config_.input_variance);
+      int(PandaDim::INPUT_DIMENSION), config_);
 
   // -------------------------------
   // controller

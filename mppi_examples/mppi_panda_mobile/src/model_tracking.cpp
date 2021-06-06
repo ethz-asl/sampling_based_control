@@ -119,8 +119,7 @@ bool PandaMobileModelTracking::setup() {
   // policy
   // -------------------------------
   auto policy = std::make_shared<mppi::GaussianPolicy>(
-      int(PandaMobileDim::INPUT_DIMENSION), config_.rollouts, config_.step_size, config_.horizon,
-      config_.filters_window, config_.filters_order, config_.input_variance);
+      int(PandaMobileDim::INPUT_DIMENSION), config_);
 
   // -------------------------------
   // initialize state
