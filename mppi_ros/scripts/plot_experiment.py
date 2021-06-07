@@ -409,7 +409,7 @@ class Plotter:
         ax.set_xlabel(aggregator if x_label is None else x_label)
         if type == 'bar':
             sns.barplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df)
-            ax.set_ylabel("Average time to goal")
+            ax.set_ylabel("Average time to goal [s]")
         elif type == 'box':
             sns.boxplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df)
             ax.set_yscale("log")
@@ -463,6 +463,23 @@ class Plotter:
         plt.close()
         print("Convert to video with:")
         print(f"ffmpeg -framerate {1/dt:.2f} -i {save_dir}/img_%05d.png -c:v libx264 -profile:v high -crf 18 -pix_fmt yuv420p {save_dir}/output.mp4")
+
+    def plot_avg_rate(self, aggregator, hue=None, x_label=None):
+        experiments = self.df['id'].unique()
+        df = self.df.copy()
+        df['rate'] = 0.0
+        for experiment in experiments:
+            times = df.loc[df['id'] == experiment, 'time'].to_numpy()
+            dts = times[1:] - times[:-1]
+            dts = np.append(dts, dts[-1])
+            df.at[df['id'] == experiment, 'rate'] = 1/dts
+        
+        fig, ax = plt.subplots()
+        # ax.set_xlabel(aggregator if x_label is None else x_label)
+        p = sns.barplot(x=aggregator, y='rate', hue=hue, data=df, dodge=False)
+        p.set(xlabel=None)
+        ax.set_ylabel("Average Rate [Hz]")
+        ax.set_xticklabels(["MPPI", "L-MPPI\ndeep", "L-MPPI"])
 
     def plot_all_rollout_policy_weights(self, caching_factor, colorful_plot=False):
         cum_w_opt = []
