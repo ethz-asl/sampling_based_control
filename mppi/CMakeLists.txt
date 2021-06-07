@@ -29,6 +29,15 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
+option(PYTHON_BINDINGS "Build the python bindings" ON)
+if (${PYTHON_BINDINGS})
+    add_subdirectory(../submodules/pybind11 ../submodules/pybind11)
+
+    pybind11_add_module(pymppi python/python.cpp)
+    target_link_libraries(pymppi PUBLIC ${PROJECT_NAME})
+    add_dependencies(pymppi ${PROJECT_NAME})
+endif()
+
 if (CATKIN_ENABLE_TESTING)
     find_package(PythonLibs 2.7 REQUIRED)
     catkin_add_gtest(filter_test unittest/filter_test.cpp)

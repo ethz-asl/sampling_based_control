@@ -4,17 +4,20 @@
 
 #pragma once
 
+#include "mppi/core/config.h"
 #include "mppi/core/policy.h"
 #include "mppi/policies/receding_horizon_spline.h"
 
 namespace mppi {
 class SplinePolicy : public Policy {
  public:
-  SplinePolicy(int nu);
+  SplinePolicy(int nu, const Config& config);
 
   Eigen::VectorXd nominal(double t) override;
 
   Eigen::VectorXd sample(double t, int k) override;
+
+  Eigen::VectorXd get_time() { return policies_[0].get_time(); }
 
   void update_samples(const std::vector<double>& weights, const int keep) override;
 

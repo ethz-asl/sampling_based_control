@@ -53,6 +53,27 @@ Eigen::ArrayXd mppi::B2(const Eigen::ArrayXd &x, int k, int i,
   return c1 * c1 + c2 * c2 + 2 * c1 * c2;
 }
 
+void control_points::reset(double t) { times_ = times_ - times_[0] + t; }
+
+void control_points::shift_back(int i) {
+  double last_value = values_(size_ - 1);
+  double last_time = times_(size_ - 1);
+  double dt = times_(size_ - 1) - times_(size_ - 2);  // infer time delta
+
+  std::rotate(times_.data(), times_.data() + i, times_.data() + size_);
+  std::rotate(values_.data(), values_.data() + i, values_.data() + size_);
+
+  // TODO(giuseppe) filling with zeros is based on the heuristics that 0 is a
+  // stable policy -> this should be problem dependent std::fill(values_.data()
+  // + size_ - i, values_.data() + size_, last_value);
+  std::fill(values_.data() + size_ - i, values_.data() + size_, 0.0);
+
+  for (int k = i; k > 0; k--) {
+    last_time += dt;
+    times_(size_ - k) = last_time;
+  }
+}
+
 RecedingHorizonSpline::RecedingHorizonSpline(const BSplinePolicyConfig &cfg) {
   n_ = cfg.degree;
   m_ = n_ + 1;
@@ -66,6 +87,14 @@ RecedingHorizonSpline::RecedingHorizonSpline(const BSplinePolicyConfig &cfg) {
   n_knots_ = n_knots_ + 1;
   n_cpoints_ = n_knots_ - m_;
   cp_dt_ = horizon_ / n_steps_;
+
+  // bounds
+  max_value_ = cfg.max_value;
+  min_value_ = cfg.min_value;
+  max_value_matrix_ =
+      Eigen::MatrixXd::Ones(n_cpoints_, n_samples_) * max_value_;
+  min_value_matrix_ =
+      Eigen::MatrixXd::Ones(n_cpoints_, n_samples_) * min_value_;
 
   t_start_ = 0.0;
   t0_ = 0.0;
@@ -84,6 +113,7 @@ RecedingHorizonSpline::RecedingHorizonSpline(const BSplinePolicyConfig &cfg) {
   gen_control_points();
 
   // normal distribution
+  sigma_ = cfg.sigma;
   Eigen::MatrixXd C = cfg.sigma * Eigen::VectorXd::Ones(n_cpoints_).asDiagonal();
   dist_ = std::make_shared<multivariate_normal>(C);
 
@@ -93,7 +123,7 @@ RecedingHorizonSpline::RecedingHorizonSpline(const BSplinePolicyConfig &cfg) {
   V_ = Eigen::MatrixXd::Zero(t_.size(), t_.size());
   P_ = Eigen::MatrixXd::Zero(t_.size(), n_samples_);
   Pn_ = Eigen::VectorXd::Zero(t_.size());
-  S_ = Eigen::VectorXd::Ones(n_cpoints_).asDiagonal() * cfg.sigma;
+  Sinv_ = Eigen::VectorXd::Ones(n_cpoints_).asDiagonal() * (1.0 / cfg.sigma);
   L_.setIdentity(n_cpoints_);
   O_.setIdentity(n_samples_);
   dist_->setRandom(N_);
@@ -114,6 +144,8 @@ void RecedingHorizonSpline::gen_control_points() {
   c_points_.resize(n_cpoints_);
   c_points_.times_ = knots_.head(n_cpoints_) * cp_dt_ - time_shift_;
   c_points_.values_.setRandom();
+  c_points_.values_ =
+      c_points_.values_.cwiseMax(min_value_).cwiseMin(max_value_);
 }
 
 Eigen::ArrayXd RecedingHorizonSpline::compute(const control_points &c,
@@ -142,31 +174,46 @@ Eigen::ArrayXd RecedingHorizonSpline::get_variance() {
 
 void RecedingHorizonSpline::shift(const double t) {
   if (t < t0_) throw std::runtime_error("Trying to shift back in time!");
-  if (t > t_start_ + horizon_)
-    throw std::runtime_error("Trying to shift further than the horizon");
 
   static int n_cpoints_shift;
-  n_cpoints_shift = static_cast<int>(std::floor((t - t_start_) / cp_dt_));
-  if (n_cpoints_shift > 0) {
-    c_points_.shift_back(n_cpoints_shift);
+  if (t > t_start_ + horizon_) {
+    std::cout << t
+              << " beyond horizon: shifting all control points. (t start = "
+              << t_start_ << ")" << std::endl;
+    c_points_.reset(t);
+    std::cout << "control points reset to t = " << t << std::endl;
     t_start_ = t;
 
-    // permute noise matrix
-    L_.setIdentity();
-    std::transform(L_.indices().data(), L_.indices().data() + n_cpoints_,
-                   L_.indices().data(), [this](int i) -> int {
-                     return (i < n_cpoints_shift)
-                                ? this->n_cpoints_ + i - n_cpoints_shift
-                                : i - n_cpoints_shift;
-                   });
-    N_ = L_ * N_;
+    // throw std::runtime_error("Trying to shift further than the horizon");
+  } else {
+    n_cpoints_shift = static_cast<int>(std::floor((t - t_start_) / cp_dt_));
+    if (n_cpoints_shift > 0) {
+      c_points_.shift_back(n_cpoints_shift);
+      t_start_ = c_points_.times_[0];
 
-    // set the last samples to 0
-    // start row, start col, block rows, block cols
-    N_.block(n_cpoints_ - n_cpoints_shift, 0, n_cpoints_shift, n_samples_).setZero();
+      // permute noise matrix
+      L_.setIdentity();
+      std::transform(L_.indices().data(), L_.indices().data() + n_cpoints_,
+                     L_.indices().data(), [this](int i) -> int {
+                       return (i < n_cpoints_shift)
+                                  ? this->n_cpoints_ + i - n_cpoints_shift
+                                  : i - n_cpoints_shift;
+                     });
+      N_ = L_ * N_;
+
+      // set the last samples to 0
+      // start row, start col, block rows, block cols
+      N_.block(n_cpoints_ - n_cpoints_shift, 0, n_cpoints_shift, n_samples_)
+          .setZero();
+    }
   }
+
   t0_ = t;
   t_ = t_ + (t0_ - t_(0));  // shift also all fine control times
+
+  // update nominal policy and samples
+  Pn_ = compute_nominal();
+  P_ = compute(N_, t_).colwise() + Pn_.matrix();
 }
 
 Eigen::ArrayXd RecedingHorizonSpline::map_time_to_knots(const Eigen::ArrayXd &t) {
@@ -213,23 +260,29 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
   // Keep one sample noise-free
   N_.col(n_samples_-1).setZero();
 
-  // Compute new samples (including nominal traj as last sample)
+  // TODO(giuseppe) make this more efficient
+  // Constrain samples
+  N_.colwise() += c_points_.values_.matrix();
+  N_ = N_.cwiseMax(min_value_matrix_).cwiseMin(max_value_matrix_);
+  N_.colwise() -= c_points_.values_.matrix();
+
+  // Compute new samples (including nominal trajectory as last sample)
   P_ = compute(N_, t_).colwise() + compute_nominal().matrix();
 }
 
 Eigen::MatrixXd RecedingHorizonSpline::get_gradients() {
-  V_ = get_variance().matrix().asDiagonal();
-  return compute(N_, t_).transpose() * V_ * M_ * S_;
+  V_ = get_variance().cwiseInverse().matrix().asDiagonal();
+  return compute(N_, t_).transpose() * V_ * M_ * Sinv_;
 }
 
 Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
-  return V_ * M_ * S_;
+  return V_ * M_ * Sinv_;
 }
 
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
   Eigen::ArrayXd delta =
-      step_size * (weights.transpose() * get_gradients()).array();
+      sigma_ * step_size * (weights.transpose() * get_gradients()).array();
   c_points_.values_ += delta;
   N_.colwise() -= delta.matrix();  // the noise wrt to the current newly defined
   // control polygon

@@ -9,6 +9,8 @@ using namespace mppi;
 
 GaussianPolicy::GaussianPolicy(int nu, const Config& config)
     : Policy(nu) {
+  std::cout << "Initializing policy from config: " << std::endl;
+  std::cout << config;
 
   Eigen::MatrixXd C = config.input_variance.asDiagonal();
   dist_ = std::make_shared<multivariate_normal>(C);
@@ -16,11 +18,15 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   ns_ = config.rollouts;
 
   nt_ = static_cast<int>(std::ceil(config.horizon / dt_));
+  std::cout << "resizing samples" << std::endl;
   samples_.resize(ns_, Eigen::MatrixXd::Zero(nt_, nu));
+  std::cout << "resized samples" << std::endl;
 
   t_ = Eigen::ArrayXd::LinSpaced(nt_, 0.0, nt_) * dt_;
   nominal_ = Eigen::MatrixXd::Zero(nt_, nu);
   delta_ = Eigen::MatrixXd::Zero(nt_, nu);
+  std::cout << "here" << std::endl;
+
   L_.setIdentity(nt_);
 
   // Initialize filter

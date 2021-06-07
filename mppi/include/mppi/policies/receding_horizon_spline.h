@@ -29,6 +29,8 @@ struct BSplinePolicyConfig {
   double dt = 0.1;
   double sigma = 1.0;
   bool verbose = false;
+  double max_value;
+  double min_value;
 };
 
 struct control_points {
@@ -42,20 +44,9 @@ struct control_points {
 
   size_t size() const { return size_; }
 
-  void shift_back(int i) {
-    double last_value = values_(size_ - 1);
-    double last_time = times_(size_ - 1);
-    double dt = times_(size_ - 1) - times_(size_ - 2);  // infer time delta
+  void reset(double t);
 
-    std::rotate(times_.data(), times_.data() + i, times_.data() + size_);
-    std::rotate(values_.data(), values_.data() + i, values_.data() + size_);
-
-    std::fill(values_.data() + size_ - i, values_.data() + size_, last_value);
-    for (int k = i; k > 0; k--) {
-      last_time += dt;
-      times_(size_ - k) = last_time;
-    }
-  }
+  void shift_back(int i);
 
   size_t size_;
   Eigen::ArrayXd times_;
@@ -109,6 +100,8 @@ class RecedingHorizonSpline {
                           const Eigen::ArrayXd &time);
 
  public:
+  void print_sample() { std::cout << P_ << std::endl; }
+
   Eigen::MatrixXd
       P_;  // matrix of the policy for each time and sample (nt x ns)
   Eigen::ArrayXd Pn_;  // vector of the nominal policy (nt)
@@ -125,6 +118,11 @@ class RecedingHorizonSpline {
   int n_knots_;
   int n_cpoints_;
   int n_samples_;
+  double sigma_;
+  double max_value_;
+  double min_value_;
+  Eigen::MatrixXd max_value_matrix_;
+  Eigen::MatrixXd min_value_matrix_;
 
   Eigen::ArrayXd knots_;
   control_points c_points_;
@@ -134,17 +132,23 @@ class RecedingHorizonSpline {
   Eigen::ArrayXd t_;
   Eigen::ArrayXd v_;
 
-  Eigen::MatrixXd
-      N_;  // matrix of sample control points additive noise (nc x ns)
-  Eigen::MatrixXd
-      M_;  // matrix of allocation coefficients for the b-splines (nt x nc)
-  Eigen::MatrixXd S_;  // matrix of inverse variance per control point (nc x nc)
-  Eigen::MatrixXd
-      V_;  // matrix of variance weights per time step (diagonal) (nt x nt)
-  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic>
-      L_;  // matrix for shift operation of all the samples
-  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic>
-      O_;  // matrix for ordering best samples
+  // matrix of sample control points additive noise (nc x ns)
+  Eigen::MatrixXd N_;
+
+  // matrix of allocation coefficients for the b-splines (nt x nc)
+  Eigen::MatrixXd M_;
+
+  // matrix of inverse variance per control point (nc x nc)
+  Eigen::MatrixXd Sinv_;
+
+  // matrix of variance weights per time step (diagonal) (nt x nt)
+  Eigen::MatrixXd V_;
+
+  // matrix for shift operation of all the samples
+  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> L_;
+
+  // matrix for ordering best samples
+  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> O_;
 
   // sampler
   std::shared_ptr<multivariate_normal> dist_;

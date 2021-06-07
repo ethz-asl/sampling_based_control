@@ -7,9 +7,22 @@
 using namespace mppi;
 
 // Spline Policy
-SplinePolicy::SplinePolicy(int nu) : Policy(nu) {
+// TODO(giuseppe) take params from config
+SplinePolicy::SplinePolicy(int nu, const Config& config) : Policy(nu) {
   BSplinePolicyConfig cfg; // TODO(giuseppe) pass and initialize config properly
-  policies_.resize(nu, RecedingHorizonSpline(cfg));
+  cfg.horizon = config.horizon;
+  cfg.dt = config.step_size;
+  cfg.samples = config.rollouts;
+  cfg.degree = 3;
+  cfg.cp_dt = 0.15;
+  cfg.verbose = false;
+
+  for (int i = 0; i < nu; i++) {
+    cfg.sigma = config.input_variance[i];
+    cfg.max_value = config.u_max[i];
+    cfg.min_value = config.u_min[i];
+    policies_.emplace_back(cfg);
+  }
 }
 
 void SplinePolicy::shift(const double t) {
@@ -19,8 +32,10 @@ void SplinePolicy::shift(const double t) {
 void SplinePolicy::update_samples(const std::vector<double> &weights, const int keep) {
   Eigen::VectorXd v = Eigen::VectorXd::Zero((int)weights.size()); // TODO this can be made more efficient
   for (int i=0; i<weights.size(); i++) v(i) = weights[i];
-  for (auto policy : policies_)
+
+  for (auto& policy : policies_) {
     policy.update_samples(v, keep);
+  }
 }
 
 Eigen::VectorXd SplinePolicy::sample(double t, int k) {
