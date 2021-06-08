@@ -32,10 +32,10 @@ namespace mppi {
 
 Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
                const Config& config)
-    : cost_(std::move(cost)),
+    : config_(config),
+      cost_(std::move(cost)),
       dynamics_(std::move(dynamics)),
       policy_(std::move(policy)),
-      config_(config),
       expert_(config_, dynamics_),
       tree_manager_(dynamics_, cost_, sampler_, config_, &expert_) {
   init_data();
@@ -61,7 +61,7 @@ void Solver::init_data() {
   opt_roll_ = Rollout(steps_, nu_, nx_);
   opt_roll_cache_ = Rollout(steps_, nu_, nx_);
 
-  weights_.resize(config_.rollouts, 0.0);
+  weights_.resize(config_.rollouts, 1.0 / config_.rollouts);
   rollouts_.resize(config_.rollouts, Rollout(steps_, nu_, nx_));
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
 
@@ -379,6 +379,9 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
 
 void Solver::sample_trajectories() {
   policy_->shift(t0_internal_);
+  std::cout << "(solver) Updating samples with weights: " << std::endl;
+  for (auto w : weights_) std::cout << w << " ";
+  std::cout << std::endl;
   policy_->update_samples(weights_, cached_rollouts_);
 
   if (config_.threads == 1) {
@@ -415,6 +418,7 @@ void Solver::compute_weights() {
   for (size_t k = 0; k < config_.rollouts; k++) {
     if (rollouts_[k].valid) {
       const double& cost = rollouts_[k].total_cost;
+      std::cout << "Cost [" << k << "] = " << cost << std::endl;
       min_cost = (cost < min_cost) ? cost : min_cost;
       max_cost = (cost > max_cost) ? cost : max_cost;
 //      rollouts_cost_.push_back(rollouts_[k].total_cost);
@@ -425,11 +429,15 @@ void Solver::compute_weights() {
   min_cost_ = min_cost;   //*std::min_element(rollouts_cost_.begin(), rollouts_cost_.end());
   max_cost_ = max_cost;   //*std::max_element(rollouts_cost_.begin(), rollouts_cost_.end());
 
+  std::cout << "Min cost: " << min_cost_ << std::endl;
+  std::cout << "Max cost: " << max_cost_ << std::endl;
+
   double sum = 0.0;
   for (int k=0; k<config_.rollouts; k++){
     weights_[k] = rollouts_[k].valid ? std::exp(-config_.h * (rollouts_[k].total_cost - min_cost_) /
                            (max_cost_ - min_cost_)) : 0;
     sum += weights_[k];
+    std::cout << "weight[" << k << "]=" << weights_[k] << std::endl;
   }
   std::transform(weights_.begin(), weights_.end(), weights_.begin(),
                  [&sum](double v) -> double { return v / sum; });

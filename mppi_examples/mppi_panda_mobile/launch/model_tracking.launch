@@ -26,13 +26,13 @@
     </node>
 
     <!-- Publish robot state (joints) as TF -->
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <param name="use_tf_static" value="true"/>
-        <param name="tf_prefix" value="$(arg tf_prefix)"/>
-        <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states" to="/joint_states"/>
-    </node>
+<!--    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">-->
+<!--        <param name="publish_frequency" value="100"/>-->
+<!--        <param name="use_tf_static" value="true"/>-->
+<!--        <param name="tf_prefix" value="$(arg tf_prefix)"/>-->
+<!--        <remap from="robot_description" to="robot_description"/>-->
+<!--        <remap from="joint_states" to="/joint_states"/>-->
+<!--    </node>-->
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_mobile)/config/config.rviz" output="screen"/>

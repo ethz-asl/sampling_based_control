@@ -55,6 +55,7 @@ struct control_points {
 
 class RecedingHorizonSpline {
  public:
+  RecedingHorizonSpline() = delete;
   RecedingHorizonSpline(const BSplinePolicyConfig &cfg);
 
   Eigen::ArrayXd get_time() { return t_; }
@@ -106,6 +107,11 @@ class RecedingHorizonSpline {
       P_;  // matrix of the policy for each time and sample (nt x ns)
   Eigen::ArrayXd Pn_;  // vector of the nominal policy (nt)
 
+  // TODO(giuseppe) make private again
+ public:
+  double sigma_;
+  control_points c_points_;
+
  private:
   int n_;
   int m_;
@@ -118,14 +124,12 @@ class RecedingHorizonSpline {
   int n_knots_;
   int n_cpoints_;
   int n_samples_;
-  double sigma_;
   double max_value_;
   double min_value_;
   Eigen::MatrixXd max_value_matrix_;
   Eigen::MatrixXd min_value_matrix_;
 
   Eigen::ArrayXd knots_;
-  control_points c_points_;
 
   // output times and values
   double time_shift_;

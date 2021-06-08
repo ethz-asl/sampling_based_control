@@ -22,7 +22,7 @@ catkin_package(
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 
 file(GLOB_RECURSE SRCS src/*.cpp)
-add_library(${PROJECT_NAME} ${SRCS})
+add_library(${PROJECT_NAME} ${SRCS} src/policies/spline_policy.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} yaml-cpp)
 
 if(OpenMP_CXX_FOUND)

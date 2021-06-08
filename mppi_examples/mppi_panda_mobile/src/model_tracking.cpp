@@ -126,6 +126,7 @@ bool PandaMobileModelTracking::setup() {
     policy = std::make_shared<mppi::GaussianPolicy>(
         int(PandaMobileDim::INPUT_DIMENSION), config_);
   } else {
+    std::cout << "Creating policy in this fucking node" << std::endl;
     policy = std::make_shared<mppi::SplinePolicy>(
         int(PandaMobileDim::INPUT_DIMENSION), config_);
   }

@@ -262,9 +262,9 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
 
   // TODO(giuseppe) make this more efficient
   // Constrain samples
-  N_.colwise() += c_points_.values_.matrix();
-  N_ = N_.cwiseMax(min_value_matrix_).cwiseMin(max_value_matrix_);
-  N_.colwise() -= c_points_.values_.matrix();
+  // N_.colwise() += c_points_.values_.matrix();
+  // N_ = N_.cwiseMax(min_value_matrix_).cwiseMin(max_value_matrix_);
+  // N_.colwise() -= c_points_.values_.matrix();
 
   // Compute new samples (including nominal trajectory as last sample)
   P_ = compute(N_, t_).colwise() + compute_nominal().matrix();
@@ -281,8 +281,8 @@ Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
 
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
-  Eigen::ArrayXd delta =
-      sigma_ * step_size * (weights.transpose() * get_gradients()).array();
+  Eigen::ArrayXd delta = 0.01 * sigma_ * step_size *
+                         (weights.transpose() * get_gradients()).array();
   c_points_.values_ += delta;
   N_.colwise() -= delta.matrix();  // the noise wrt to the current newly defined
   // control polygon

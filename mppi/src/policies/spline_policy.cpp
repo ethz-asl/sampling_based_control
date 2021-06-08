@@ -17,16 +17,34 @@ SplinePolicy::SplinePolicy(int nu, const Config& config) : Policy(nu) {
   cfg.cp_dt = 0.15;
   cfg.verbose = false;
 
+  std::cout << "\n\n\n\n\n\n Creating fucking policies \n\n\n\n\n\n"
+            << std::endl;
+  policies_.clear();
+  policies_.resize(nu_, RecedingHorizonSpline(cfg));
+
   for (int i = 0; i < nu; i++) {
     cfg.sigma = config.input_variance[i];
     cfg.max_value = config.u_max[i];
     cfg.min_value = config.u_min[i];
-    policies_.emplace_back(cfg);
+    policies_[i] = RecedingHorizonSpline(cfg);
+    std::cout << "Control points for " << i << ":" << std::endl;
+    std::cout << policies_[i].c_points_ << std::endl;
   }
 }
 
 void SplinePolicy::shift(const double t) {
-  for (auto& policy : policies_) policy.shift(t);
+  for (auto& policy : policies_) {
+    std::cout << "Sample matrix: " << std::endl;
+    std::cout << policy.P_ << std::endl;
+    std::cout << "Nominal matrix: " << std::endl;
+    std::cout << policy.Pn_.transpose() << std::endl;
+    std::cout << "Shifting policies" << std::endl;
+    policy.shift(t);
+    std::cout << "Sample matrix after shift: " << std::endl;
+    std::cout << policy.P_ << std::endl;
+    std::cout << "Nominal matrix after shift: " << std::endl;
+    std::cout << policy.Pn_.transpose() << std::endl;
+  }
 }
 
 void SplinePolicy::update_samples(const std::vector<double> &weights, const int keep) {
@@ -55,8 +73,23 @@ Eigen::VectorXd SplinePolicy::nominal(double t){
 }
 
 void SplinePolicy::update(const std::vector<double> &weights, const double step_size) {
+  std::cout << "Updating samples!" << std::endl;
+  std::cout << "Received weights (policy) = ";
+  for (auto w : weights) std::cout << w << " ";
+  std::cout << std::endl;
+
   Eigen::VectorXd v = Eigen::VectorXd::Zero((int)weights.size());
-  for (int i=0; i<weights.size(); i++) v(i) = weights[i];
-  for (auto & policy : policies_)
+  std::cout << "Before filling vector with weights: " << v.transpose()
+            << std::endl;
+  for (int i = 0; i < weights.size(); i++) v(i) = weights[i];
+
+  std::cout << "Weights are: " << v.transpose() << std::endl;
+  std::cout << "Updating with step size: " << step_size << std::endl;
+  for (auto& policy : policies_) {
     policy.update(v, step_size);
+    std::cout << "Sample matrix after update: " << std::endl;
+    std::cout << policy.P_ << std::endl;
+    std::cout << "Nominal matrix after update: " << std::endl;
+    std::cout << policy.Pn_.transpose() << std::endl;
+  }
 }
