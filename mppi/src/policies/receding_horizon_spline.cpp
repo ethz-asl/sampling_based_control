@@ -281,6 +281,7 @@ Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
 
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
+  // TODO(giuseppe) remove this magic number and parse from params
   Eigen::ArrayXd delta = 0.01 * sigma_ * step_size *
                          (weights.transpose() * get_gradients()).array();
   c_points_.values_ += delta;
