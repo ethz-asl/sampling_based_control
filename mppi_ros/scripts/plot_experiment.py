@@ -9,6 +9,7 @@ from rospkg import RosPack
 from matplotlib.colors import LogNorm
 from scipy.interpolate import interp1d
 import math
+import uuid
 sns.set_theme()
 sns.set_context("paper")
 sns.set(font_scale=2)
@@ -32,17 +33,16 @@ class Plotter:
                                                     if x else "Monte Carlo")
         df = df.rename(columns={'tree_search': 'Sampling Strategy'})
 
+        df['experiment'] = ""
         if type(experiment_id) in [list, tuple]:
-            df['experiment'] = ""
             print("Looking for experiments with ids: ")
             for exp in experiment_id:
                 print("  - " + exp)
-                df.loc[df['id'].str.contains(exp), 'experiment'] = exp
-
-            df = df.loc[df['experiment'] != ""]
+                df.loc[df['id'].str.match(exp + "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), 'experiment'] = exp
         else:
             print("Looking for experiments with id: {}".format(experiment_id))
-            df = df[df['id'].str.contains(experiment_id)]
+            df.loc[df['id'].str.match(experiment_id + "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), 'experiment'] = experiment_id
+        df = df.loc[df['experiment'] != ""]
         print("Found {}".format(len(df)))
         return df
 
