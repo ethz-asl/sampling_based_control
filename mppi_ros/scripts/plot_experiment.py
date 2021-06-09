@@ -565,14 +565,15 @@ class Plotter:
             ax2.legend()
         else:
             normalised_weights_policy = np.transpose(normalised_weights_policy)
+            
+            weights_min = np.min(normalised_weights_policy, axis=1)
+            weights_max = np.max(normalised_weights_policy, axis=1)
+            weights_avg = np.average(normalised_weights_policy, axis=1)
             x = np.linspace(0, 1, num=resolution)
-            plot_df_wide = pd.DataFrame(data=normalised_weights_policy, index=x)
-            # sns.lineplot(data=plot_df_wide, ax=ax, legend=False, palette="light:seagreen", markers=False)
-            plot_df_wide.insert(0,"normalised time", x)
-            plot_df = pd.melt(plot_df_wide, id_vars=['normalised time'])
-            sns.lineplot(data=plot_df, x="normalised time", y="value",ax=ax, ci=99)
-            ax.set_title(f'Weights during {no_experiments} runs.\nController settings -> {controller_name} with learned rollout ratio: {lrr}')
-            ax.set_ylabel('policy weight [-]')
+            ax.fill_between(x, weights_max, weights_min, alpha=0.3)
+            ax.plot(x, weights_avg, linewidth=2)
+            ax.set_ylabel('policy weight')
+            ax.set_xlabel('normalized time')
 
     def plot_dagger_progress(self):
         # Mean and std
