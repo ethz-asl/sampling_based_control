@@ -612,6 +612,72 @@ class Plotter:
         ax.yaxis.grid(True)
 
 
+    def plot_normalized_stage_cost(self, reference):
+        # First find all reference runs
+        reference_run_ids = self.df.loc[self.df['experiment'] == reference, 'id'].unique()
+        print(f"Found {len(reference_run_ids)} runs that match the reference name '{reference}'")
+
+        # Find all runs that correspond to one experiment
+        experiments = self.df['experiment'].unique()
+        experiments = experiments[experiments != reference] # we compare to the reference, so don't plot it
+        exp_run_dict = {}
+        n_runs = len(reference_run_ids)
+        for exp in experiments:
+            exp_run_dict[exp] = self.df.loc[self.df['experiment'] == exp, 'id'].unique()
+            print(f"{len(exp_run_dict[exp])} runs for experiment '{exp}'")
+            if len(exp_run_dict[exp]) < n_runs:
+                print(f"Too few runs in experiment '{exp}' Reducing total number of runs!")
+            n_runs = min(n_runs, len(exp_run_dict[exp]))
+            # assert(len(exp_run_dict[exp]) == len(reference_run_ids))
+
+        dt = 0.01
+        n_support = 1000
+
+        exp_norm_costs = np.zeros((len(experiments), n_support, n_runs))
+        ref_norm_costs = np.zeros((n_support, n_runs))
+
+        for i in range(n_runs): # Iterate over all runs as they have identical start and stop positions
+            ref_run = self.df.loc[self.df['id'] == reference_run_ids[i]]
+            ref_time_to_goal = ref_run.iloc[0].at['time_to_goal']
+            ref_run_times = ref_run['index'].to_numpy() * dt
+            ref_run_costs = ref_run['stage_cost'].to_numpy()
+
+            # Make sure that last element is larger or equal to the ref_time_to_goal
+            if np.max(ref_run_times) < ref_time_to_goal:
+                ref_run_times = np.append(ref_run_times, ref_time_to_goal)
+                ref_run_costs = np.append(ref_run_costs, ref_run_costs[-1])
+
+            f_ref = interp1d(ref_run_times/ref_time_to_goal, ref_run_costs)
+            norm_ref_run_costs = f_ref(np.linspace(0, 1, n_support))
+
+
+            for e, exp in enumerate(experiments):
+                exp_run = self.df.loc[self.df['id'] == exp_run_dict[exp][i]] # i'th run of experiment exp
+                times = exp_run['index'].to_numpy() * dt
+                costs = exp_run['stage_cost'].to_numpy()
+
+                # Make sure that last element is larger or equal to the ref_time_to_goal
+                if np.max(times) < ref_time_to_goal:
+                    times = np.append(times, ref_time_to_goal)
+                    costs = np.append(costs, ref_run_costs[-1])
+                f = interp1d(times/ref_time_to_goal, costs)
+                norm_costs = f(np.linspace(0, 1, n_support))
+
+                exp_norm_costs[e, :, i] = norm_costs# - norm_ref_run_costs
+            ref_norm_costs[:,i] = norm_ref_run_costs
+
+        plt.figure("Normalized Stage Cost")
+        norm_time = np.linspace(0, 1, n_support)
+        plt.plot(norm_time, np.mean(ref_norm_costs,axis=1))
+        plt.fill_between(norm_time, np.quantile(ref_norm_costs, 0.75, axis=1), np.quantile(ref_norm_costs, 0.25, axis=1), alpha=0.3)
+        for e, exp in enumerate(experiments):
+            c = exp_norm_costs[e, :,:]
+            plt.plot(norm_time, np.mean(c, axis=1))
+            plt.fill_between(norm_time, np.quantile(c, 0.75, axis=1), np.quantile(c, 0.25, axis=1), alpha=0.3)
+
+        plt.xlabel("Normalized time")
+        plt.ylabel("Stage cost")
+        plt.legend(["default", *experiments])
 
 
 if __name__ == "__main__":
@@ -654,5 +720,6 @@ if __name__ == "__main__":
     # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
     # plotter.make_run_cost_video("/home/andreas/video_tmp")
     #plotter.plot_dagger_progress()
+    plotter.plot_normalized_stage_cost('default')
 
     plt.show()
