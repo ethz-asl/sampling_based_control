@@ -18,15 +18,20 @@ bool OMAVControllerInterface::init_ros() {
   // Initialize publisher
   optimal_rollout_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
-  cmd_multi_dof_joint_trajectory_pub_ = nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
-  mppi_reference_publisher_ = nh_.advertise<geometry_msgs::Pose>("/mppi_reference", 1);
+  cmd_multi_dof_joint_trajectory_pub_ =
+      nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
+          mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
+  mppi_reference_publisher_ =
+      nh_.advertise<geometry_msgs::Pose>("/mppi_reference", 1);
   detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
   if (detailed_publishing_) {
-      trajectory_publisher_ =
-              nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1);
+    trajectory_publisher_ =
+        nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1);
 
-      cost_publisher_ = nh_.advertise<mppi_ros::Array>("/cost_parts", 10);
-      normalized_force_publisher_ = nh_.advertise<visualization_msgs::MarkerArray>("/normalized_forces", 10);
+    cost_publisher_ = nh_.advertise<mppi_ros::Array>("/cost_parts", 10);
+    normalized_force_publisher_ =
+        nh_.advertise<visualization_msgs::MarkerArray>("/normalized_forces",
+                                                       10);
   }
 
   // Initialize subscriber
@@ -65,8 +70,7 @@ bool OMAVControllerInterface::set_controller(
     throw std::runtime_error(
         "Could not parse robot_description_raisim. Is the parameter set?");
   }
-  if (!nh_.param<std::string>("/object_description",
-                              object_description_, "")) {
+  if (!nh_.param<std::string>("/object_description", object_description_, "")) {
     throw std::runtime_error(
         "Could not parse object_description. Is the parameter set?");
   }
@@ -243,63 +247,63 @@ void OMAVControllerInterface::publish_optimal_rollout() {
                                                      current_pose);
     optimal_rollout_array_.poses.push_back(current_pose);
     if (detailed_publishing_) {
-        // Cost publishing
-        cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
-        // Velocity Cost
-        velocity_cost_ += cost_->tip_velocity_cost_;
-        // Efficiency Cost
-        power_cost_ += cost_->efficiency_cost_;
-        // Object Cost
-        object_cost_ += cost_->object_cost_;
-        // Torque Cost
-        torque_cost_ += cost_->torque_cost_;
-        // Handle Hook Cost
-        handle_hook_cost_ += cost_->handle_hook_cost_;
-        // Pose Cost
-        pose_cost_ += cost_->pose_cost_;
-        overall_cost_ += cost_->cost_;
+      // Cost publishing
+      cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
+      // Velocity Cost
+      velocity_cost_ += cost_->tip_velocity_cost_;
+      // Efficiency Cost
+      power_cost_ += cost_->efficiency_cost_;
+      // Object Cost
+      object_cost_ += cost_->object_cost_;
+      // Torque Cost
+      torque_cost_ += cost_->torque_cost_;
+      // Handle Hook Cost
+      handle_hook_cost_ += cost_->handle_hook_cost_;
+      // Pose Cost
+      pose_cost_ += cost_->pose_cost_;
+      overall_cost_ += cost_->cost_;
 
-        force_normed_ = optimal_rollout_states_[i].segment<3>(15).normalized();
+      force_normed_ = optimal_rollout_states_[i].segment<3>(15).normalized();
 
-        force_marker.points[0].x = cost_->hook_pos_(0);
-        force_marker.points[0].y = cost_->hook_pos_(1);
-        force_marker.points[0].z = cost_->hook_pos_(2);
-        force_marker.points[1].x = cost_->hook_pos_(0) + force_normed_(0);
-        force_marker.points[1].y = cost_->hook_pos_(1) + force_normed_(1);
-        force_marker.points[1].z = cost_->hook_pos_(2) + force_normed_(2);
-        force_marker.id = i;
+      force_marker.points[0].x = cost_->hook_pos_(0);
+      force_marker.points[0].y = cost_->hook_pos_(1);
+      force_marker.points[0].z = cost_->hook_pos_(2);
+      force_marker.points[1].x = cost_->hook_pos_(0) + force_normed_(0);
+      force_marker.points[1].y = cost_->hook_pos_(1) + force_normed_(1);
+      force_marker.points[1].z = cost_->hook_pos_(2) + force_normed_(2);
+      force_marker.id = i;
 
-        force_marker_array.markers.push_back(force_marker);
+      force_marker_array.markers.push_back(force_marker);
     }
   }
   if (detailed_publishing_) {
-      mppi_ros::Array cost_array_message_;
-      cost_array_message_.array.push_back(velocity_cost_);
-      cost_array_message_.array.push_back(power_cost_);
-      cost_array_message_.array.push_back(object_cost_);
-      cost_array_message_.array.push_back(torque_cost_);
-      cost_array_message_.array.push_back(handle_hook_cost_);
-      cost_array_message_.array.push_back(optimal_rollout_states_[1](15));
-      cost_array_message_.array.push_back(optimal_rollout_states_[1](16));
-      cost_array_message_.array.push_back(optimal_rollout_states_[1](17));
-      cost_array_message_.array.push_back(
-              optimal_rollout_states_[1].segment<3>(15).norm());
-      cost_array_message_.array.push_back(
-              optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
-      cost_array_message_.array.push_back(
-              optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
-      cost_array_message_.array.push_back(
-              optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
-      cost_array_message_.array.push_back(
-              optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
-      cost_array_message_.array.push_back(
-              acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
-                      com_hook_.normalized())) *
-              180.0 / M_PI);
-      cost_array_message_.array.push_back(pose_cost_);
-      cost_array_message_.array.push_back(overall_cost_);
-      cost_publisher_.publish(cost_array_message_);
-      normalized_force_publisher_.publish(force_marker_array);
+    mppi_ros::Array cost_array_message_;
+    cost_array_message_.array.push_back(velocity_cost_);
+    cost_array_message_.array.push_back(power_cost_);
+    cost_array_message_.array.push_back(object_cost_);
+    cost_array_message_.array.push_back(torque_cost_);
+    cost_array_message_.array.push_back(handle_hook_cost_);
+    cost_array_message_.array.push_back(optimal_rollout_states_[1](15));
+    cost_array_message_.array.push_back(optimal_rollout_states_[1](16));
+    cost_array_message_.array.push_back(optimal_rollout_states_[1](17));
+    cost_array_message_.array.push_back(
+        optimal_rollout_states_[1].segment<3>(15).norm());
+    cost_array_message_.array.push_back(
+        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
+    cost_array_message_.array.push_back(
+        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
+    cost_array_message_.array.push_back(
+        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
+    cost_array_message_.array.push_back(
+        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
+    cost_array_message_.array.push_back(
+        acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
+            com_hook_.normalized())) *
+        180.0 / M_PI);
+    cost_array_message_.array.push_back(pose_cost_);
+    cost_array_message_.array.push_back(overall_cost_);
+    cost_publisher_.publish(cost_array_message_);
+    normalized_force_publisher_.publish(force_marker_array);
   }
   mppi_reference.position.x = ref_.rr[0](0);
   mppi_reference.position.y = ref_.rr[0](1);
@@ -312,6 +316,5 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_publisher_.publish(optimal_rollout_array_);
   mppi_reference_publisher_.publish(mppi_reference);
 }
-
 
 // namespace omav_interaction

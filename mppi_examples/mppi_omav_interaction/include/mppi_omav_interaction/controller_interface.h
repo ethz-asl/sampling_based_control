@@ -8,18 +8,18 @@
 
 #pragma once
 
+#include "mppi_omav_interaction/dynamics.h"
 #include "mppi_omav_interaction/ros_conversions.h"
 #include <geometry_msgs/Pose.h>
 #include <mppi_omav_interaction/cost.h>
-#include "mppi_omav_interaction/dynamics.h"
 #include <mppi_ros/controller_interface.h>
 
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <memory>
 #include <std_msgs/Int64.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace omav_interaction {
 

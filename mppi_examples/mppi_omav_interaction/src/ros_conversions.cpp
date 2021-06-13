@@ -28,19 +28,36 @@ void EigenTrajectoryPointFromState(
   const size_t m = 3;
   // Polynomial Order
   const size_t n = 2;
-  // Initial Point Smoothing (ie evaluate polynomial at first point in the window)
+  // Initial Point Smoothing (ie evaluate polynomial at first point in the
+  // window)
   // Points are defined in range [-m;m]
   const size_t t = m;
-  // Derivation order? 0: no derivation, 1: first derivative, 2: second derivative...
+  // Derivation order? 0: no derivation, 1: first derivative, 2: second
+  // derivative...
   const int d = 1;
   gram_sg::SavitzkyGolayFilter filter(m, t, n, d);
 
-  std::vector<double> lin_vel_x = {states[i](7), states[i+1](7),states[i+2](7),states[i+3](7),states[i+4](7),states[i+5](7), states[i+6](7)};
-  std::vector<double> lin_vel_y = {states[i](8), states[i+1](8),states[i+2](8),states[i+3](8),states[i+4](8),states[i+5](8), states[i+6](8)};
-  std::vector<double> lin_vel_z = {states[i](9), states[i+1](9),states[i+2](9),states[i+3](9),states[i+4](9),states[i+5](9), states[i+6](9)};
-  std::vector<double> ang_vel_x = {states[i](10), states[i+1](10),states[i+2](10),states[i+3](10),states[i+4](10),states[i+5](10), states[i+6](10)};
-  std::vector<double> ang_vel_y = {states[i](11), states[i+1](11),states[i+2](11),states[i+3](11),states[i+4](11),states[i+5](11), states[i+6](11)};
-  std::vector<double> ang_vel_z = {states[i](12), states[i+1](12),states[i+2](12),states[i+3](12),states[i+4](12),states[i+5](12), states[i+6](12)};
+  std::vector<double> lin_vel_x = {
+      states[i](7),     states[i + 1](7), states[i + 2](7), states[i + 3](7),
+      states[i + 4](7), states[i + 5](7), states[i + 6](7)};
+  std::vector<double> lin_vel_y = {
+      states[i](8),     states[i + 1](8), states[i + 2](8), states[i + 3](8),
+      states[i + 4](8), states[i + 5](8), states[i + 6](8)};
+  std::vector<double> lin_vel_z = {
+      states[i](9),     states[i + 1](9), states[i + 2](9), states[i + 3](9),
+      states[i + 4](9), states[i + 5](9), states[i + 6](9)};
+  std::vector<double> ang_vel_x = {states[i](10),     states[i + 1](10),
+                                   states[i + 2](10), states[i + 3](10),
+                                   states[i + 4](10), states[i + 5](10),
+                                   states[i + 6](10)};
+  std::vector<double> ang_vel_y = {states[i](11),     states[i + 1](11),
+                                   states[i + 2](11), states[i + 3](11),
+                                   states[i + 4](11), states[i + 5](11),
+                                   states[i + 6](11)};
+  std::vector<double> ang_vel_z = {states[i](12),     states[i + 1](12),
+                                   states[i + 2](12), states[i + 3](12),
+                                   states[i + 4](12), states[i + 5](12),
+                                   states[i + 6](12)};
 
   double lin_acc_x = filter.filter(lin_vel_x);
   double lin_acc_y = filter.filter(lin_vel_y);
@@ -48,7 +65,6 @@ void EigenTrajectoryPointFromState(
   double ang_acc_x = filter.filter(ang_vel_x);
   double ang_acc_y = filter.filter(ang_vel_y);
   double ang_acc_z = filter.filter(ang_vel_z);
-
 
   trajectorypoint.position_W = states[i].head<3>();
   trajectorypoint.orientation_W_B =
@@ -90,19 +106,19 @@ void PoseMsgFromVector(const Eigen::VectorXd &pose,
 
 void arrow_initialization(visualization_msgs::Marker &arrow_marker) {
 
-    arrow_marker.type = visualization_msgs::Marker::ARROW;
-    arrow_marker.header.frame_id = "world";
-    arrow_marker.action = visualization_msgs::Marker::ADD;
-    arrow_marker.pose.orientation.w = 1.0;
-    arrow_marker.scale.x = 0.005;
-    arrow_marker.scale.y = 0.01;
-    arrow_marker.scale.z = 0.0;
-    arrow_marker.color.r = 1.0;
-    arrow_marker.color.b = 0.0;
-    arrow_marker.color.g = 0.0;
-    arrow_marker.color.a = 1.0;
+  arrow_marker.type = visualization_msgs::Marker::ARROW;
+  arrow_marker.header.frame_id = "world";
+  arrow_marker.action = visualization_msgs::Marker::ADD;
+  arrow_marker.pose.orientation.w = 1.0;
+  arrow_marker.scale.x = 0.005;
+  arrow_marker.scale.y = 0.01;
+  arrow_marker.scale.z = 0.0;
+  arrow_marker.color.r = 1.0;
+  arrow_marker.color.b = 0.0;
+  arrow_marker.color.g = 0.0;
+  arrow_marker.color.a = 1.0;
 
-    arrow_marker.points.resize(2);
+  arrow_marker.points.resize(2);
 }
 
-}  // namespace omav_velocity::conversions
+} // namespace omav_velocity::conversions

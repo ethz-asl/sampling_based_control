@@ -7,11 +7,11 @@
 #include "mppi_ros/controller_interface.h"
 
 #include <mav_msgs/conversions.h>
+#include <mppi/filters/gram_savitzky_golay.h>
 #include <std_msgs/Duration.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 #include <trajectory_msgs/MultiDOFJointTrajectoryPoint.h>
 #include <visualization_msgs/Marker.h>
-#include <mppi/filters/gram_savitzky_golay.h>
 
 namespace omav_interaction::conversions {
 void to_trajectory_msg(

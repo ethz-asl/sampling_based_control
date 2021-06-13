@@ -51,7 +51,8 @@ private:
 
   void objectCallback(const sensor_msgs::JointState &object_msg);
 
-  void ReferenceParamCallback(mppi_omav_interaction::MPPIOmavReferenceConfig &config,
+  void
+  ReferenceParamCallback(mppi_omav_interaction::MPPIOmavReferenceConfig &config,
                          uint32_t level);
 
   void CostParamCallback(mppi_omav_interaction::MPPIOmavCostConfig &config,
@@ -79,6 +80,6 @@ private:
 
   observation_t rqt_odometry;
 };
-}  // namespace omav_interaction
+} // namespace omav_interaction
 
 #endif // MPPI_OMAV_VELOCITY_OMAV_VELOCITY_CONTROL_H_

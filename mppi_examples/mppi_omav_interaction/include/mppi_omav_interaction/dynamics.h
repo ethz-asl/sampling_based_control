@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 #include <raisim/World.hpp>
 #include <raisim/configure.hpp>
-#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 
 #include <Eigen/Core>
 #include <cmath>

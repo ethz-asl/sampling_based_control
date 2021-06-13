@@ -31,7 +31,7 @@ struct OMAVInteractionCostParam {
   Eigen::Matrix<double, 6, 6>
       Q_pose; // Pose cost, is constructed from Q_distance and Q_orientation
 
-  double Q_object;  // Object Cost
+  double Q_object; // Object Cost
 
   double Q_lin_vel; // Velocity Costs
   double Q_ang_vel;
@@ -103,18 +103,18 @@ private:
   double distance_hook_handle_;
 
 public:
-    double floor_cost_;
-    double pose_cost_;
-    double object_cost_;
-    double handle_hook_cost_;
-    double tip_velocity_cost_;
-    double torque_cost_;
-    double efficiency_cost_;
-    double cost_;
-    Eigen::Vector3d hook_pos_;
+  double floor_cost_;
+  double pose_cost_;
+  double object_cost_;
+  double handle_hook_cost_;
+  double tip_velocity_cost_;
+  double torque_cost_;
+  double efficiency_cost_;
+  double cost_;
+  Eigen::Vector3d hook_pos_;
 
-    cost_t compute_cost(const mppi::observation_t &x,
-                        const mppi::reference_t &ref, const double t) override;
+  cost_t compute_cost(const mppi::observation_t &x,
+                      const mppi::reference_t &ref, const double t) override;
 
 private:
   cost_ptr create() override {
@@ -131,11 +131,13 @@ private:
 
   void compute_floor_cost(const double &omav_z);
 
-  void compute_pose_cost(const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference);
+  void compute_pose_cost(const Eigen::VectorXd &omav_state,
+                         const Eigen::VectorXd &omav_reference);
 
   void compute_handle_hook_cost();
 
-  void compute_object_cost(const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference);
+  void compute_object_cost(const Eigen::VectorXd &omav_state,
+                           const Eigen::VectorXd &omav_reference);
 
   void compute_vectors();
 

@@ -110,7 +110,7 @@ force_t OMAVVelocityDynamics::get_contact_forces() {
       continue;
 
     force.force += contact.getContactFrame().e().transpose() *
-                  contact.getImpulse()->e() / sim_.getTimeStep();
+                   contact.getImpulse()->e() / sim_.getTimeStep();
     force.position = contact.getPosition().e();
   }
   return force;
@@ -143,4 +143,4 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   }
   return force;
 }
-}  // namespace omav_interaction
+} // namespace omav_interaction

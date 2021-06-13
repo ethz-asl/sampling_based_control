@@ -8,6 +8,7 @@
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>eigen</depend>
+    <depend>eigen_conversions</depend>
     <depend>mppi</depend>
     <depend>mppi_ros</depend>
     <depend>mppi_pinocchio</depend>
@@ -17,6 +18,7 @@
     <depend>mav_msgs</depend>
     <depend>tf2_ros</depend>
     <depend>tf</depend>
+    <depend>kdl_parser</depend>
     <depend>dynamic_reconfigure</depend>
 
 </package>
