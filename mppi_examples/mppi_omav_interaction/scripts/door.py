@@ -38,8 +38,8 @@ if __name__ == "__main__":
     rospy.sleep(3.0)
     reference_pose.header.frame_id = "world"
     reference_pose.pose.position.x = 0.3
-    reference_pose.pose.position.y = -0.85
-    reference_pose.pose.position.z = 1.3
+    reference_pose.pose.position.y = -0.8
+    reference_pose.pose.position.z = 1.24
     reference_pose.pose.orientation.w = 1.0
     reference_pose.pose.orientation.x = 0.0
     reference_pose.pose.orientation.y = 0.0
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     rospy.sleep(15.0)
     reference_pose.header.frame_id = "odom"
-    reference_pose.pose.position.x = -0.5
+    reference_pose.pose.position.x = -1
     reference_pose.pose.position.y = 0.0
     reference_pose.pose.position.z = 1.0
     reference_pose.pose.orientation.w = 1.0

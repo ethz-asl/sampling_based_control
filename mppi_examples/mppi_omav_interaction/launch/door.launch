@@ -10,7 +10,7 @@
 
     <arg name="goal_position_x" default="0.0"/>
     <arg name="goal_position_y" default="0.0"/>
-    <arg name="goal_position_z" default="0.5"/>
+    <arg name="goal_position_z" default="1.0"/>
     <arg name="goal_quaternion_w" default="1.0"/>
     <arg name="goal_quaternion_x" default="0.0"/>
     <arg name="goal_quaternion_y" default="0.0"/>
@@ -19,7 +19,6 @@
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file_raisim)"/>
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_robot)"/>
     <param name="robot_description_pinocchio" command="$(find xacro)/xacro $(arg pinocchio_robot_description)"/>
-    <param name="object_description_raisim" command="$(find xacro)/xacro $(arg description_file_object)"/>
     <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
 
     <node name="omav_mppi_interaction" type="omav_interaction_control" pkg="mppi_omav_interaction" output="screen" >

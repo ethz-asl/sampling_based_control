@@ -43,6 +43,13 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
                                   const double t) {
   // Initialize Cost
   double cost = 0.0;
+  floor_cost_ = 0.0;
+  pose_cost_ = 0.0;
+  handle_hook_cost_ = 0.0;
+  object_cost_ = 0.0;
+  tip_velocity_cost_ = 0.0;
+  torque_cost_ = 0,0;
+  efficiency_cost_ = 0.0;
 
   // Get mode from reference vector
   mode = ref(8);
@@ -62,19 +69,13 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     cost += param_ptr_->Q_leafing_field;
   }
   // Too close to the floor cost
-  if ((x(2) - param_ptr_->floor_thresh) < 0) {
-    cost += -param_ptr_->Q_floor / param_ptr_->floor_thresh * x(2) +
-            param_ptr_->Q_floor;
-  }
+  compute_floor_cost(x(2));
+  cost += floor_cost_;
+
   if (mode == 0) {
     // Pose Cost
-    mppi_pinocchio::Pose current_pose, reference_pose;
-    current_pose.translation = x.head<3>();
-    current_pose.rotation = {x(3), x(4), x(5), x(6)};
-    reference_pose.translation = ref.head<3>();
-    reference_pose.rotation = {ref(3), ref(4), ref(5), ref(6)};
-    delta_pose = mppi_pinocchio::get_delta(current_pose, reference_pose);
-    cost += delta_pose.transpose() * param_ptr_->Q_pose * delta_pose;
+    compute_pose_cost(x, ref);
+    cost += pose_cost_;
     // Unwanted contact cost
     if (param_ptr_->contact_bool) {
       cost += 100 * x(18);
@@ -82,69 +83,89 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
   }
 
   if (mode == 1) {
-    // Calculate distance between hook and handle
-    hook_handle_vector = robot_model_.get_pose(hook_frame_).translation -
-                         object_model_.get_pose(handle_frame_).translation;
-    distance_hook_handle =
-        sqrt(hook_handle_vector.transpose() * hook_handle_vector);
-
+    // Calculate all the necessary vectors
+    compute_vectors();
+    // Handle Hook Cost
+    compute_handle_hook_cost();
+    cost += handle_hook_cost_;
     // Object Cost
-    object_cost = param_ptr_->Q_object_x * (x(13) - ref(7)) * (x(13) - ref(7));
-    cost += object_cost;
-    // Handle Hook distance cost
-    cost += std::max(
-        0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
-                 (distance_hook_handle - param_ptr_->handle_hook_thresh));
-    // COM Handle vector
-    com_hook_ = robot_model_.get_pose("omav").translation -
-                robot_model_.get_pose("tip").translation;
-
-    // Tip velocity cost
-    tip_lin_velocity_ = x.segment<3>(7) + x.segment<3>(10).cross(com_hook_);
-    tip_velocity_ << tip_lin_velocity_, x.segment<3>(10);
-
-    cost += tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_;
-
-    // Force Normed
-    force_normed_ = x.segment<3>(15).normalized();
+    compute_object_cost(x, ref);
+    cost += object_cost_;
+    // Tip Velocity Cost
+    compute_tip_velocity_cost(x);
+    cost += tip_velocity_cost_;
     // Torque Cost
-    // torque_ = x.segment<3>(15).cross(com_hook_);
-    torque_angle_ = force_normed_.dot(com_hook_.normalized());
-
-    // cost += param_ptr_->Q_torque * torque_.transpose() * torque_;
-    cost += std::min(param_ptr_->Q_torque,
-                     param_ptr_->Q_torque * (1 - torque_angle_));
+    compute_torque_cost(x);
+    cost += torque_cost_;
     // Efficiency cost
-    double power_normed =
-        x.segment<3>(15).normalized().dot(tip_lin_velocity_.normalized());
-    cost +=
-        std::min(param_ptr_->Q_power, param_ptr_->Q_power * (1 - power_normed));
-
-    if (false) {
-      std::cout << "------------- Velocity Cost -------------" << std::endl;
-      std::cout << tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_
-                << std::endl;
-      std::cout << "------------- Handle Hook Cost -------------" << std::endl;
-      std::cout << std::max(0.0, param_ptr_->Q_handle_hook /
-                                     (1 - param_ptr_->handle_hook_thresh) *
-                                     (distance_hook_handle -
-                                      param_ptr_->handle_hook_thresh))
-                << std::endl;
-      std::cout << "------------- delta_pose_cost -------------" << std::endl;
-      std::cout << object_cost << std::endl;
-      std::cout << "------------- torque angle cost -------------" << std::endl;
-      std::cout << std::min(param_ptr_->Q_torque,
-                            param_ptr_->Q_torque * (1 - torque_angle_))
-                << std::endl;
-      std::cout << "------------- efficiency cost -------------" << std::endl;
-      std::cout << std::min(param_ptr_->Q_power,
-                            param_ptr_->Q_power * (1 - power_normed))
-                << std::endl;
-    }
-
+    compute_efficiency_cost(x);
+    cost += efficiency_cost_;
   }
+  cost_ = cost;
 
   return cost;
+}
+
+void OMAVInteractionCost::compute_floor_cost(const double &omav_z) {
+    if ((omav_z - param_ptr_->floor_thresh) < 0) {
+        floor_cost_ = -param_ptr_->Q_floor / param_ptr_->floor_thresh * omav_z + param_ptr_->Q_floor;
+    }
+}
+
+void OMAVInteractionCost::compute_pose_cost(const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
+    mppi_pinocchio::Pose current_pose, reference_pose;
+    current_pose.translation = omav_state.head<3>();
+    current_pose.rotation = {omav_state(3), omav_state(4), omav_state(5), omav_state(6)};
+    reference_pose.translation = omav_reference.head<3>();
+    reference_pose.rotation = {omav_reference(3), omav_reference(4), omav_reference(5), omav_reference(6)};
+    delta_pose_ = mppi_pinocchio::get_delta(current_pose, reference_pose);
+    pose_cost_ = delta_pose_.transpose() * param_ptr_->Q_pose * delta_pose_;
+}
+
+void OMAVInteractionCost::compute_handle_hook_cost() {
+    // Calculate distance between hook and handle
+    distance_hook_handle_ = sqrt(hook_handle_vector_.transpose() * hook_handle_vector_);
+    // Handle Hook distance cost
+    handle_hook_cost_ = std::max(0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
+                 (distance_hook_handle_ - param_ptr_->handle_hook_thresh));
+}
+
+void OMAVInteractionCost::compute_object_cost(const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
+    object_cost_ = param_ptr_->Q_object * (omav_state(13) - omav_reference(7)) * (omav_state(13) - omav_reference(7));
+}
+
+void OMAVInteractionCost::compute_vectors() {
+    // Vector from hook to handle
+    hook_handle_vector_ = robot_model_.get_pose(hook_frame_).translation -
+                          object_model_.get_pose(handle_frame_).translation;
+    // Vector from hook to omav
+    com_hook_vector_ = robot_model_.get_pose("omav").translation -
+                robot_model_.get_pose("tip").translation;
+    // Vector from handle ref to handle link eg. orthogonal to door panel
+    handle_orthogonal_vector_ = object_model_.get_pose("handle_link").translation -
+                         object_model_.get_pose("handle_ref").translation;
+
+    hook_pos_ = robot_model_.get_pose(hook_frame_).translation;
+}
+
+void OMAVInteractionCost::compute_tip_velocity_cost(const Eigen::VectorXd &omav_state) {
+    // Tip velocity cost
+    tip_lin_velocity_ = omav_state.segment<3>(7) + omav_state.segment<3>(10).cross(com_hook_vector_);
+    tip_velocity_ << tip_lin_velocity_, omav_state.segment<3>(10);
+
+    tip_velocity_cost_ = tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_;
+}
+
+void OMAVInteractionCost::compute_torque_cost(const Eigen::VectorXd &omav_state) {
+    torque_angle_ = handle_orthogonal_vector_.normalized().dot(com_hook_vector_.normalized());
+
+    torque_cost_ = std::min(param_ptr_->Q_torque, param_ptr_->Q_torque * (1 - torque_angle_));
+}
+
+void OMAVInteractionCost::compute_efficiency_cost(const Eigen::VectorXd &omav_state) {
+    double power_normed =
+            handle_orthogonal_vector_.normalized().dot(tip_lin_velocity_.normalized());
+    efficiency_cost_ = std::min(param_ptr_->Q_power, param_ptr_->Q_power * (1 - power_normed));
 }
 
 bool OMAVInteractionCostParam::parse_from_ros(const ros::NodeHandle &nh) {
@@ -164,23 +185,11 @@ bool OMAVInteractionCostParam::parse_from_ros(const ros::NodeHandle &nh) {
     ROS_ERROR("Failed to parse orientation_cost or invalid!");
     return false;
   }
-  if (!nh.getParam("x_object_weight", Q_object_x) || Q_object_x < 0) {
+  if (!nh.getParam("object_weight", Q_object) || Q_object < 0) {
     ROS_ERROR("Failed to parse x_object_weight or invalid!");
     return false;
   }
-  if (!nh.getParam("y_object_weight", Q_object_y) || Q_object_y < 0) {
-    ROS_ERROR("Failed to parse y_object_cost or invalid!");
-    return false;
-  }
-  if (!nh.getParam("z_object_weight", Q_object_z) || Q_object_z < 0) {
-    ROS_ERROR("Failed to parse z_object_cost or invalid!");
-    return false;
-  }
-  if (!nh.getParam("orientation_object_weight", Q_object_orientation) ||
-      Q_object_orientation < 0) {
-    ROS_ERROR("Failed to parse orientation_object_weight or invalid!");
-    return false;
-  }
+
   if (!nh.getParam("lin_vel_weight", Q_lin_vel) || Q_lin_vel < 0) {
     ROS_ERROR("Failed to parse lin_vel_weight or invalid!");
     return false;
@@ -246,17 +255,17 @@ bool OMAVInteractionCostParam::parse_from_ros(const ros::NodeHandle &nh) {
     ROS_ERROR("Failed to parse power_cost or invalid!");
     return false;
   }
+  if (!nh.getParam("torque_cost", Q_torque) || Q_torque < 0) {
+      ROS_ERROR("Failed to parse power_cost or invalid!");
+      return false;
+  }
 
   // Construction of the cost matrices
   pose_costs << Q_distance_x, Q_distance_y, Q_distance_z, Q_orientation,
       Q_orientation, Q_orientation;
   Q_pose = pose_costs.asDiagonal();
 
-  object_costs << Q_object_x, Q_object_y, Q_object_z, Q_object_orientation,
-      Q_object_orientation, Q_object_orientation;
-  Q_object = object_costs.asDiagonal();
-
-  vel_costs << Q_lin_vel, Q_lin_vel, Q_lin_vel, Q_ang_vel, Q_ang_vel, 0;
+  vel_costs << Q_lin_vel, Q_lin_vel, Q_lin_vel, Q_ang_vel, Q_ang_vel, Q_ang_vel;
   Q_vel = vel_costs.asDiagonal();
   return true;
 }
@@ -271,6 +280,8 @@ operator<<(std::ostream &os,
     os << " x_distance_weight: " << param.Q_distance_x << std::endl;
     os << " y_distance_weight: " << param.Q_distance_y << std::endl;
     os << " z_distance_weight: " << param.Q_distance_z << std::endl;
+    os << " orientation_weight: " << param.Q_orientation << std::endl;
+    os << " object_weight: " << param.Q_object << std::endl;
     os << " leafing_field_cost: " << param.Q_leafing_field << std::endl;
     os << " field_limit_x_min: " << param.x_limit_min << std::endl;
     os << " field_limit_x_max: " << param.x_limit_max << std::endl;
@@ -279,10 +290,15 @@ operator<<(std::ostream &os,
     os << " field_limit_z_max: " << param.z_limit_max << std::endl;
     os << " floor_threshold: " << param.floor_thresh << std::endl;
     os << " floor_cost: " << param.Q_floor << std::endl;
-    os << " orientation_cost: " << param.Q_orientation << std::endl;
-    os << " obstacle_cost: " << param.Q_obstacle << std::endl;
+    os << " obstacle_weight: " << param.Q_obstacle << std::endl;
     os << " obstacle_position_x: " << param.x_obstacle << std::endl;
     os << " obstacle_position_y: " << param.y_obstacle << std::endl;
+    os << " handle_hook_threshold: " << param.handle_hook_thresh << std::endl;
+    os << " handle_hook_weight: " << param.Q_handle_hook << std::endl;
+    os << " lin_vel_weight: " << param.Q_lin_vel << std::endl;
+    os << " ang_vel_weight: " << param.Q_ang_vel << std::endl;
+    os << " efficiency_weight: " << param.Q_power << std::endl;
+    os << " torque_weight: " << param.Q_torque << std::endl;
 
     return os;
 }

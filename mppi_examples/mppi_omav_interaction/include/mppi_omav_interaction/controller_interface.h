@@ -11,10 +11,13 @@
 #include "mppi_omav_interaction/ros_conversions.h"
 #include <geometry_msgs/Pose.h>
 #include <mppi_omav_interaction/cost.h>
+#include "mppi_omav_interaction/dynamics.h"
 #include <mppi_ros/controller_interface.h>
 
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <memory>
 #include <std_msgs/Int64.h>
 
@@ -32,7 +35,7 @@ public:
 
   void publish_ros() override;
 
-  void publish_trajectories() override;
+  void publish_all_trajectories() override;
 
   void publish_optimal_rollout() override;
 
@@ -40,13 +43,7 @@ public:
 
   bool update_cost_param(const OMAVInteractionCostParam &cost_param);
 
-  bool set_reference(const observation_t &x);
-
-  bool set_rqt_reference(const Eigen::VectorXd &rqt_ref);
-
-  bool set_reset_reference(const observation_t &x);
-
-  bool set_object_reference();
+  bool set_initial_reference(const observation_t &x);
 
 private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
@@ -65,6 +62,7 @@ public:
 
 private:
   bool reference_set_ = false;
+  bool detailed_publishing_;
 
   observation_t x_0_temp;
 
@@ -73,6 +71,8 @@ private:
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
   ros::Publisher cost_publisher_;
   ros::Publisher torque_publisher_;
+  ros::Publisher normalized_force_publisher_;
+  ros::Publisher mppi_reference_publisher_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 
@@ -82,7 +82,7 @@ private:
 
   std::string robot_description_raisim_;
   std::string robot_description_pinocchio_;
-  std::string object_description_raisim_;
+  std::string object_description_;
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
@@ -103,8 +103,10 @@ private:
   // cost floats to publish
   float velocity_cost_;
   float handle_hook_cost_;
-  float delta_pose_cost_;
+  float object_cost_;
   float power_cost_;
   float torque_cost_;
+  float pose_cost_;
+  float overall_cost_;
 };
 } // namespace omav_interaction

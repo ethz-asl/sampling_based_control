@@ -9,6 +9,7 @@
 #pragma once
 
 #include "mppi_omav_interaction/dynamics.h"
+#include <mppi_omav_interaction/ros_conversions.h>
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
@@ -55,5 +56,7 @@ private:
 
   Eigen::Vector3d force_normed_;
   Eigen::Vector3d vel_normed_;
+
+  bool detailed_publishing_;
 };
 } // namespace omav_velocity

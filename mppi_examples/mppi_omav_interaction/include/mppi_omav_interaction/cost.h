@@ -31,15 +31,7 @@ struct OMAVInteractionCostParam {
   Eigen::Matrix<double, 6, 6>
       Q_pose; // Pose cost, is constructed from Q_distance and Q_orientation
 
-  double Q_object_x; // Distance to reference Cost
-  double Q_object_y;
-  double Q_object_z;
-
-  double Q_object_orientation; // Orientation Cost
-
-  Eigen::Matrix<double, 6, 1> object_costs;
-  Eigen::Matrix<double, 6, 6>
-      Q_object; // Object cost, is constructed from Q_distance and Q_orientation
+  double Q_object;  // Object Cost
 
   double Q_lin_vel; // Velocity Costs
   double Q_ang_vel;
@@ -82,7 +74,6 @@ public:
                       OMAVInteractionCostParam *param);
 
   ~OMAVInteractionCost() = default;
-
 private:
   std::string robot_description_;
   std::string robot_description_pinocchio_;
@@ -95,21 +86,35 @@ private:
   std::string hook_frame_ = "hook";
   std::string handle_frame_ = "handle_ref";
 
-  Eigen::Matrix<double, 6, 1> delta_pose;
+  Eigen::Matrix<double, 6, 1> delta_pose_;
   Eigen::Matrix<double, 6, 1> delta_pose_object;
   double distance;
   double distance_from_savezone;
   double obstacle_cost;
   double mode;
-  double object_cost;
   double torque_angle_;
-  Eigen::Vector3d hook_handle_vector;
+  Eigen::Vector3d hook_handle_vector_;
   Eigen::Vector3d tip_lin_velocity_;
   Eigen::Matrix<double, 6, 1> tip_velocity_;
   Eigen::Vector3d torque_;
   Eigen::Vector3d force_normed_;
-  Eigen::Vector3d com_hook_;
-  double distance_hook_handle;
+  Eigen::Vector3d com_hook_vector_;
+  Eigen::Vector3d handle_orthogonal_vector_;
+  double distance_hook_handle_;
+
+public:
+    double floor_cost_;
+    double pose_cost_;
+    double object_cost_;
+    double handle_hook_cost_;
+    double tip_velocity_cost_;
+    double torque_cost_;
+    double efficiency_cost_;
+    double cost_;
+    Eigen::Vector3d hook_pos_;
+
+    cost_t compute_cost(const mppi::observation_t &x,
+                        const mppi::reference_t &ref, const double t) override;
 
 private:
   cost_ptr create() override {
@@ -124,8 +129,21 @@ private:
 
   double distance_from_obstacle_cost(const mppi::observation_t &x);
 
-  cost_t compute_cost(const mppi::observation_t &x,
-                      const mppi::reference_t &ref, const double t) override;
+  void compute_floor_cost(const double &omav_z);
+
+  void compute_pose_cost(const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference);
+
+  void compute_handle_hook_cost();
+
+  void compute_object_cost(const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference);
+
+  void compute_vectors();
+
+  void compute_tip_velocity_cost(const Eigen::VectorXd &omav_state);
+
+  void compute_torque_cost(const Eigen::VectorXd &omav_state);
+
+  void compute_efficiency_cost(const Eigen::VectorXd &omav_state);
 };
 
 } // namespace omav_interaction

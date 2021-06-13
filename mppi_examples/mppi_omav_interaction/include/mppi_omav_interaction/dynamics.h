@@ -10,6 +10,7 @@
 
 #include <raisim/World.hpp>
 #include <raisim/configure.hpp>
+#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 
 #include <Eigen/Core>
 #include <cmath>
@@ -68,7 +69,7 @@ public:
 
   const observation_t get_state() const override { return x_; }
 
-  std::vector<force_t> get_contact_forces();
+  force_t get_contact_forces();
   force_t get_dominant_force();
 
   raisim::World *get_world() { return &sim_; }

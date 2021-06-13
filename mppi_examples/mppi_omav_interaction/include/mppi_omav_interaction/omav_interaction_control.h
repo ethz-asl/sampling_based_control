@@ -17,12 +17,11 @@
 
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
-#include <mppi_omav_interaction/CostParam.h>
 #include <std_srvs/Empty.h>
 
 #include <dynamic_reconfigure/server.h>
 #include <mppi_omav_interaction/MPPIOmavCostConfig.h>
-#include <mppi_omav_interaction/MPPIOmavGoalConfig.h>
+#include <mppi_omav_interaction/MPPIOmavReferenceConfig.h>
 
 namespace omav_interaction {
 
@@ -37,9 +36,9 @@ public:
 
   bool odometry_bool_;
 
-  bool rqt_cost_bool_;
+  bool rqt_cost_bool_ = false;
 
-  bool reset_object_;
+  bool reset_object_ = false;
 
   OMAVInteractionCostParam rqt_cost_;
 
@@ -50,16 +49,9 @@ private:
 
   void odometryCallback(const nav_msgs::OdometryConstPtr &odometry_msg);
 
-  bool takeOffSrv(std_srvs::Empty::Request &request,
-                  std_srvs::Empty::Response &response);
+  void objectCallback(const sensor_msgs::JointState &object_msg);
 
-  bool executeTrajectorySrv(std_srvs::Empty::Request &request,
-                            std_srvs::Empty::Response &response);
-
-  bool homingSrv(std_srvs::Empty::Request &request,
-                 std_srvs::Empty::Response &response);
-
-  void GoalParamCallback(mppi_omav_interaction::MPPIOmavGoalConfig &config,
+  void ReferenceParamCallback(mppi_omav_interaction::MPPIOmavReferenceConfig &config,
                          uint32_t level);
 
   void CostParamCallback(mppi_omav_interaction::MPPIOmavCostConfig &config,
@@ -70,23 +62,23 @@ private:
 
   // subscribers
   ros::Subscriber odometry_sub_;
+  ros::Subscriber object_state_sub_;
 
   // publishers
   ros::Publisher reference_publisher_;
 
-  // Services:
-  ros::ServiceServer take_off_srv_;
-  ros::ServiceServer execute_trajectory_srv_;
-  ros::ServiceServer homing_srv_;
-
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
+  // Object State Variable
+  Eigen::Vector2d object_state_;
   // Dynamics Reconfigure
-  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavGoalConfig>
-      goal_param_server_;
+  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavReferenceConfig>
+      reference_param_server_;
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostConfig>
       cost_param_server_;
+
+  observation_t rqt_odometry;
 };
-} // namespace omav_velocity
+}  // namespace omav_interaction
 
 #endif // MPPI_OMAV_VELOCITY_OMAV_VELOCITY_CONTROL_H_

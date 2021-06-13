@@ -37,6 +37,12 @@
         </joint>
     </xacro:if>
 
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/shelf</robotNamespace>
+            <robotParam>urdf_object </robotParam>
+        </plugin>
+    </gazebo>
     <link name="shelf">
         <xacro:box_inertia m="5" x="${door_width}" y="${door_length}" z="${shelf_z}"/>
         <visual>
@@ -48,12 +54,6 @@
                 <color rgba="0.0 1.0 1.0 1"/>
             </material>
         </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 -${door_length/2} ${-shelf_z/2}"/>
-            <geometry>
-                <box size="${door_width} ${door_length} ${shelf_z}"/>
-            </geometry>
-        </collision>
     </link>
 
     <link name="door">
@@ -78,15 +78,26 @@
         </collision>
     </link>
 
-    <link name="door_hinge"/>
+    <link name="door_hinge">
+        <inertial>
+            <mass value="0.01"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
     <joint name="door_hinge_joint" type="fixed">
         <parent link="shelf"/>
         <child link="door_hinge"/>
-        <dynamics damping="2.0" friction="8.0"/>
         <origin xyz="0 -${door_length} ${door_height/2}"/>
     </joint>
 
-    <link name="axis_link"/>
+    <link name="axis_link">
+        <inertial>
+            <mass value="0.01"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
     <joint name="axis_joint" type="fixed">
         <parent link="door_hinge"/>
         <child link="axis_link"/>
@@ -96,7 +107,7 @@
     <joint name="articulation_joint" type="revolute">
         <parent link="axis_link"/>
         <child link="measured_joint_link"/>
-        <dynamics damping="2.0" friction="4.0"/>
+        <dynamics damping="2.0" friction="0.5"/>
         <origin xyz="0 0 0"/>
         <axis xyz="0 0 -1"/>
         <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
@@ -116,7 +127,7 @@
             <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
         </inertial>
         <visual>
-            <origin rpy="1.57 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
                 <box size="0.01 0.01 ${handle_length+0.01}"/>
             </geometry>
@@ -125,7 +136,7 @@
             </material>
         </visual>
         <collision>
-            <origin rpy="1.57 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
                 <box size="0.01 0.01 ${handle_length+0.01}"/>
             </geometry>
@@ -150,8 +161,6 @@
                 <color rgba="0.0 0.0 0.0 1"/>
             </material>
         </visual>
-
-        <!--
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
@@ -161,7 +170,6 @@
                 <contact name="steel"/>
             </material>
         </collision>
-        -->
     </link>
 
     <link name="handle_support_right">
@@ -179,7 +187,6 @@
                 <color rgba="0.0 0.0 0.0 1"/>
             </material>
         </visual>
-        <!--
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
@@ -189,7 +196,6 @@
                 <contact name="steel"/>
             </material>
         </collision>
-        -->
     </link>
 
     <joint name="handle_joint" type="fixed">
@@ -206,28 +212,57 @@
                 rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
     </joint>
 
-    <link name="handle_ref"/>
+    <link name="handle_ref">
+        <inertial>
+            <mass value="0.01"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
 
     <joint name="handle_support_left_joint" type="fixed">
         <parent link="handle_link"/>
         <child link="handle_support_left"/>
-        <origin xyz="-${handle_height/2} -${handle_length/2} 0" rpy="0 0 0"/>
+        <origin xyz="-${handle_height/2} 0 -${handle_length/2}" rpy="0 0 0"/>
     </joint>
 
     <joint name="handle_support_right_joint" type="fixed">
         <parent link="handle_link"/>
         <child link="handle_support_right"/>
-        <origin xyz="-${handle_height/2} ${handle_length/2} 0" rpy="0 0 0"/>
+        <origin xyz="-${handle_height/2} 0 ${handle_length/2}" rpy="0 0 0"/>
     </joint>
 
-    <link name="measured_joint_link"/>
+    <link name="measured_joint_link">
+        <inertial>
+            <mass value="0.01"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
 
-    <link name="measured_joint_link_test"/>
+    <link name="measured_joint_link_test">
+        <inertial>
+            <mass value="0.01"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
     <joint name="measured_test_handle_joint" type="fixed">
         <parent link="handle_link"/>
         <child link="measured_joint_link_test"/>
         <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
     </joint>
 
-    
+    <transmission name="hinge">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="articulation_joint">
+            <hardwareInterface>EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor1">
+            <hardwareInterface>EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+
 </robot>

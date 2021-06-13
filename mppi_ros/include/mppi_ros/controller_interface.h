@@ -82,7 +82,7 @@ class ControllerRos {
                        const double& t);
   bool publish_ros_default();
   virtual void publish_optimal_rollout(){};
-  virtual void publish_trajectories(){};
+  virtual void publish_all_trajectories(){};
 
 private:
   void init_default_ros();

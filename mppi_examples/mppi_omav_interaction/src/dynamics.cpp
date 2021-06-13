@@ -7,7 +7,6 @@
  */
 
 #include "mppi_omav_interaction/dynamics.h"
-#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 #include <string>
 
 namespace omav_interaction {
@@ -27,11 +26,10 @@ void OMAVVelocityDynamics::initialize_world(
   sim_.setTimeStep(dt_);
   sim_.setERP(0., 0.);
   // Initialize omav
-  robot_description_ = robot_description;
   omav = sim_.addArticulatedSystem(robot_description_, "/");
   object = sim_.addArticulatedSystem(object_description_, "/");
   ground = sim_.addGround(0.0, "steel");
-  sim_.setMaterialPairProp("rubber", "rubber", 0.0001, 0.05, 0.001);
+  sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
   robot_dof_ = omav->getDOF();
   // Set dimensions
   state_dimension_ = 19; // I_position(3), orientation(4), I_velocity(3),
@@ -47,7 +45,7 @@ void OMAVVelocityDynamics::initialize_pd() {
   cmd.setZero(robot_dof_);
   cmdv.setZero(robot_dof_);
   omav->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
-  Eigen::VectorXd p_gain(6), d_gain(6);
+  Eigen::VectorXd p_gain(robot_dof_), d_gain(robot_dof_);
   p_gain << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   d_gain << 10, 10, 10, 10, 10, 10;
   omav->setPdGains(p_gain, d_gain);
@@ -77,7 +75,7 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
     break;
   }
 
-  contact_force = get_dominant_force();
+  contact_force = get_contact_forces();
 
   // Assemble state
   x_.head<7>() = omav_pose;
@@ -102,21 +100,20 @@ OMAVVelocityDynamics::get_zero_input(const observation_t &x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
 }
 
-std::vector<force_t> OMAVVelocityDynamics::get_contact_forces() {
-  std::vector<force_t> forces;
+force_t OMAVVelocityDynamics::get_contact_forces() {
+  force_t force;
   for (const auto contact : omav->getContacts()) {
     if (contact.skip())
       continue; /// if the contact is internal, one contact point is set to
     /// 'skip'
     if (contact.isSelfCollision())
       continue;
-    force_t force;
-    force.force = contact.getContactFrame().e().transpose() *
+
+    force.force += contact.getContactFrame().e().transpose() *
                   contact.getImpulse()->e() / sim_.getTimeStep();
     force.position = contact.getPosition().e();
-    forces.push_back(force);
   }
-  return forces;
+  return force;
 }
 
 force_t OMAVVelocityDynamics::get_dominant_force() {
@@ -146,4 +143,4 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   }
   return force;
 }
-} // namespace omav_interaction
+}  // namespace omav_interaction

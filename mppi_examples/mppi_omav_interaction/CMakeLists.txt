@@ -8,7 +8,7 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
 find_package(catkin REQUIRED dynamic_reconfigure)
 
-generate_dynamic_reconfigure_options(cfg/mppi_omav_goal.cfg cfg/mppi_omav_cost.cfg)
+generate_dynamic_reconfigure_options(cfg/mppi_omav_reference.cfg cfg/mppi_omav_cost.cfg)
 
 set(PACKAGE_DEPENDENCIES
         std_msgs

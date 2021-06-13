@@ -132,6 +132,7 @@ bool OmavTrajectoryGenerator::landingSrv(std_srvs::Empty::Request &request,
   reference_publisher_.publish(landing_pose_msg);
   indicator.data = 0;
   indicator_publisher_.publish(indicator);
+  return true;
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
