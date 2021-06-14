@@ -132,14 +132,14 @@
     <joint name="tip_to_thick" type="fixed">
         <parent link="tip"/>
         <child link="thick"/>
-        <origin rpy="0 0 0" xyz="-0.0175 0.0 0.0"/>
+        <origin rpy="0 0 0" xyz="-0.02 0.0 0.0"/>
     </joint>
 
     <link name="thick">
         <collision>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.015" length="0.05"/>
+                <cylinder radius="0.015" length="0.055"/>
             </geometry>
             <material name="">
                 <contact name="rubber"/>
@@ -148,7 +148,7 @@
         <visual>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.015" length="0.05"/>
+                <cylinder radius="0.015" length="0.055"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
