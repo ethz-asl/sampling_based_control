@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+    <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
 
     <node name="object_state_publisher_" pkg="robot_state_publisher" type="robot_state_publisher">
         <remap from="robot_description" to="object_description"/>
