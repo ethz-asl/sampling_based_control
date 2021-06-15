@@ -48,14 +48,14 @@
     <joint name="omav_to_rod" type="fixed">
         <parent link="omav"/>
         <child link="rod"/>
-        <origin rpy="0 0 0" xyz="0.275 0.0 0.0"/>
+        <origin rpy="0 0 0" xyz="0.31 0.0 0.0"/>
     </joint>
 
     <link name="rod">
         <collision>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.015" length="0.54"/>
+                <cylinder radius="0.015" length="0.62"/>
             </geometry>
             <material name="">
                 <contact name="rubber"/>
@@ -64,7 +64,7 @@
         <visual>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.015" length="0.54"/>
+                <cylinder radius="0.015" length="0.62"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -75,7 +75,7 @@
     <joint name="rod_to_tip" type="fixed">
         <parent link="rod"/>
         <child link="tip"/>
-        <origin rpy="0 0 0" xyz="0.27 0.0 0.0"/>
+        <origin rpy="0 0 0" xyz="0.31 0.0 0.0"/>
     </joint>
 
     <link name="tip">
