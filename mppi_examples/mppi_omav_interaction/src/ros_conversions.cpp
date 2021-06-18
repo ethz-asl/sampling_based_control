@@ -121,4 +121,24 @@ void arrow_initialization(visualization_msgs::Marker &arrow_marker) {
   arrow_marker.points.resize(2);
 }
 
+void RPYtoQuaterniond(double roll, double pitch, double yaw,
+                      Eigen::Quaterniond &q) {
+  // convert deg to rad
+  double roll_rad = roll * 2 * M_PI / 360;
+  double pitch_rad = pitch * 2 * M_PI / 360;
+  double yaw_rad = yaw * 2 * M_PI / 360;
+
+  double cy = cos(yaw_rad * 0.5);
+  double sy = sin(yaw_rad * 0.5);
+  double cp = cos(pitch_rad * 0.5);
+  double sp = sin(pitch_rad * 0.5);
+  double cr = cos(roll_rad * 0.5);
+  double sr = sin(roll_rad * 0.5);
+
+  q.w() = cr * cp * cy + sr * sp * sy;
+  q.x() = sr * cp * cy - cr * sp * sy;
+  q.y() = cr * sp * cy + sr * cp * sy;
+  q.z() = cr * cp * sy - sr * sp * cy;
+}
+
 } // namespace omav_velocity::conversions

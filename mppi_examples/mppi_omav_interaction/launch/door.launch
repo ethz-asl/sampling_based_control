@@ -21,6 +21,11 @@
     <param name="robot_description_pinocchio" command="$(find xacro)/xacro $(arg pinocchio_robot_description)"/>
     <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
 
+    <group>
+        <param name="/config_file" value="$(find mppi_omav_interaction)/params/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_omav_interaction)/params/params.yaml" ns="omav_mppi_interaction"/>
+    </group>
+
     <node name="omav_mppi_interaction" type="omav_interaction_control" pkg="mppi_omav_interaction" output="screen" >
         <param name="goal_position_x" value="$(arg goal_position_x)"/>
         <param name="goal_position_y" value="$(arg goal_position_y)"/>
@@ -47,11 +52,6 @@
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_omav_interaction)/config/config.rviz" output="screen"/>
-
-    <group>
-        <param name="/config_file" value="$(find mppi_omav_interaction)/params/params.yaml"/>
-        <rosparam command="load" file="$(find mppi_omav_interaction)/params/params.yaml" ns="omav_mppi_interaction"/>
-    </group>
 
     <group if="$(arg plot_cost)">
         <arg name="mp_config" default="$(find mppi_omav_interaction)/resources/rqt_multiplot.xml"/>

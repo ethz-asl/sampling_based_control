@@ -33,12 +33,15 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
 OmavTrajectoryGenerator::~OmavTrajectoryGenerator() {}
 
 void OmavTrajectoryGenerator::initializeSubscribers() {
-  odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
+  odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 10,
                                 &OmavTrajectoryGenerator::odometryCallback,
                                 this, ros::TransportHints().tcpNoDelay());
-  object_state_sub_ = nh_.subscribe("/observer/object/joint_state", 10,
-                                    &OmavTrajectoryGenerator::objectCallback,
-                                    this, ros::TransportHints().tcpNoDelay());
+  if (true) {
+    ROS_INFO_STREAM("Subscribed to shelf/joint_state");
+    object_state_sub_ = nh_.subscribe("/shelf/joint_states", 10,
+                                      &OmavTrajectoryGenerator::objectCallback,
+                                      this, ros::TransportHints().tcpNoDelay());
+  }
   ROS_INFO_STREAM("Subscribers initialized");
   odometry_bool_ = true;
 }
@@ -51,7 +54,7 @@ void OmavTrajectoryGenerator::initializePublishers() {
 void OmavTrajectoryGenerator::odometryCallback(
     const nav_msgs::OdometryConstPtr &odometry_msg) {
   mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
-  ROS_INFO_ONCE("MPPI got first odometry message");
+  ROS_INFO_ONCE("MPPI got odometry message");
   odometry_bool_ = false;
 }
 
@@ -69,6 +72,7 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x.segment<3>(7) = current_odometry_.getVelocityWorld();
   x.segment<3>(10) = current_odometry_.angular_velocity_B;
   x.segment<2>(13) = object_state_;
+  ROS_INFO_ONCE("MPPI got first state message");
 }
 
 void OmavTrajectoryGenerator::ReferenceParamCallback(
@@ -83,27 +87,21 @@ void OmavTrajectoryGenerator::ReferenceParamCallback(
     config.ref_roll = euler_angles(0) * 360 / (2 * M_PI);
     config.ref_pitch = euler_angles(1) * 360 / (2 * M_PI);
     config.ref_yaw = euler_angles(2) * 360 / (2 * M_PI);
-  } else {
-    geometry_msgs::PoseStamped rqt_pose_msg;
-    Eigen::VectorXd rqt_pose(7);
-    Eigen::Quaterniond q;
-    double euler_x = config.ref_roll * 2 * M_PI / 360;
-    double euler_y = config.ref_pitch * 2 * M_PI / 360;
-    double euler_z = config.ref_yaw * 2 * M_PI / 360;
-    Eigen::AngleAxisd rollAngle(euler_x, Eigen::Vector3d::UnitX());
-    Eigen::AngleAxisd pitchAngle(euler_y, Eigen::Vector3d::UnitY());
-    Eigen::AngleAxisd yawAngle(euler_z, Eigen::Vector3d::UnitZ());
-    q = rollAngle * pitchAngle * yawAngle;
-    rqt_pose << config.ref_pos_x, config.ref_pos_y, config.ref_pos_z, q.w(),
-        q.x(), q.y(), q.z();
-    omav_interaction::conversions::PoseStampedMsgFromVector(rqt_pose,
-                                                            rqt_pose_msg);
-    reference_publisher_.publish(rqt_pose_msg);
+  }
+  geometry_msgs::PoseStamped rqt_pose_msg;
+  Eigen::VectorXd rqt_pose(7);
+  Eigen::Quaterniond q;
+  omav_interaction::conversions::RPYtoQuaterniond(
+      config.ref_roll, config.ref_pitch, config.ref_yaw, q);
+  rqt_pose << config.ref_pos_x, config.ref_pos_y, config.ref_pos_z, q.w(),
+      q.x(), q.y(), q.z();
+  omav_interaction::conversions::PoseStampedMsgFromVector(rqt_pose,
+                                                          rqt_pose_msg);
+  reference_publisher_.publish(rqt_pose_msg);
 
-    if (config.reset_object) {
-      reset_object_ = true;
-      config.reset_object = false;
-    }
+  if (config.reset_object) {
+    reset_object_ = true;
+    config.reset_object = false;
   }
 }
 
@@ -167,7 +165,7 @@ int main(int argc, char **argv) {
   for (size_t i = 0; i < x0.size(); i++)
     x(i) = x0[i];
   // Set nominal state
-  observation_t x_nom = observation_t::Zero(18);
+  observation_t x_nom = observation_t::Zero(simulation->get_state_dimension());
 
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);

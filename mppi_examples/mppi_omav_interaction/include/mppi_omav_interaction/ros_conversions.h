@@ -27,5 +27,8 @@ void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,
 void PoseMsgFromVector(const Eigen::VectorXd &pose,
                        geometry_msgs::Pose &pose_msg);
 void arrow_initialization(visualization_msgs::Marker &arrow_marker);
+// Roll, Pitch and Yaw in deg
+void RPYtoQuaterniond(double roll, double pitch, double yaw,
+                      Eigen::Quaterniond &q);
 
 } // namespace omav_velocity::conversions
