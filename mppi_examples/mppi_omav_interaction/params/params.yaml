@@ -21,12 +21,12 @@ solver:
   filters_order: [ 1, 1, 1, 1, 1, 1 ]
   filters_window: [ 10, 10, 10, 10, 10, 10 ]
 
-  bound_input: false
-  u_min: [ -2.0, -2.0, -2.0, -3.0, -3.0, -3.0 ]
-  u_max: [ 2.0, 2.0, 2.0, 3.0, 3.0, 3.0 ]
+  bound_input: true
+  u_min: [ -0.5, -0.5, -0.5, -3.0, -3.0, -3.0 ]
+  u_max: [ 0.5, 0.5, 0.5, 3.0, 3.0, 3.0 ]
 
   adaptive_sampling: false
-  input_variance: [ 1.5, 1.5, 1.5, 3, 3, 3]
+  input_variance: [0.5, 0.5, 0.5, 1.5, 1.5, 1.5]
 
   use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.01       # controls the structure of the tree
@@ -43,7 +43,7 @@ solver:
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
-ros_publish_rate: 50.0
+ros_publish_rate: 10.0
 
 sequential: false
 static_optimization: false

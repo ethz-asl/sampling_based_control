@@ -20,6 +20,8 @@
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <sensor_msgs/JointState.h>
+#include <tf/transform_broadcaster.h>
 
 namespace omav_interaction {
 
@@ -54,7 +56,7 @@ private:
 
   void object_reference_callback(const geometry_msgs::PoseStampedConstPtr &msg);
 
-  void publish_trajectory(const mppi::observation_array_t &x_opt);
+  void publish_trajectory(const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt);
 
 public:
   mppi::SolverConfig config_;
@@ -70,7 +72,7 @@ private:
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
   ros::Publisher cost_publisher_;
-  ros::Publisher torque_publisher_;
+  ros::Publisher object_state_publisher_;
   ros::Publisher normalized_force_publisher_;
   ros::Publisher mppi_reference_publisher_;
 
@@ -108,5 +110,7 @@ private:
   float torque_cost_;
   float pose_cost_;
   float overall_cost_;
+
+  sensor_msgs::JointState object_state_;
 };
 } // namespace omav_interaction

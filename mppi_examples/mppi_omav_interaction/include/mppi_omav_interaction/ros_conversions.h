@@ -15,11 +15,11 @@
 
 namespace omav_interaction::conversions {
 void to_trajectory_msg(
-    const mppi::observation_array_t &x_opt,
+    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg);
 
 void EigenTrajectoryPointFromState(
-    const mppi::observation_array_t &state, int i,
+    const mppi::observation_array_t &state, const mppi::input_array_t &input, int i,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt);
 
 void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,

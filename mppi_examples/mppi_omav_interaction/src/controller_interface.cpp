@@ -23,6 +23,8 @@ bool OMAVControllerInterface::init_ros() {
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
   mppi_reference_publisher_ =
       nh_.advertise<geometry_msgs::Pose>("/mppi_reference", 1);
+  object_state_publisher_ =
+            nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
   detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
   if (detailed_publishing_) {
     trajectory_publisher_ =
@@ -43,6 +45,9 @@ bool OMAVControllerInterface::init_ros() {
   object_reference_subscriber_ =
       nh_.subscribe("/mppi_object_desired", 10,
                     &OMAVControllerInterface::object_reference_callback, this);
+
+  object_state_.name = {"articulation_joint"};
+  object_state_.position.resize(1);
   return true;
 }
 
@@ -188,13 +193,23 @@ bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
 
 void OMAVControllerInterface::publish_ros() {
   get_controller()->get_optimal_rollout(xx_opt, uu_opt);
-  OMAVControllerInterface::publish_trajectory(xx_opt);
+  OMAVControllerInterface::publish_trajectory(xx_opt, uu_opt);
   OMAVControllerInterface::publish_optimal_rollout();
+    static tf::TransformBroadcaster odom_broadcaster;
+    tf::Transform omav_odom;
+    omav_odom.setOrigin(tf::Vector3(xx_opt[0](0), xx_opt[0](1), xx_opt[0](2)));
+    omav_odom.setRotation(tf::Quaternion(xx_opt[0](4), xx_opt[0](5), xx_opt[0](6), xx_opt[0](3)));
+    odom_broadcaster.sendTransform(tf::StampedTransform(
+            omav_odom, ros::Time::now(), "world", "odom_omav"));
+    // update object state visualization
+    object_state_.header.stamp = ros::Time::now();
+    object_state_.position[0] = xx_opt[0](13);
+    object_state_publisher_.publish(object_state_);
 }
 
 void OMAVControllerInterface::publish_trajectory(
-    const mppi::observation_array_t &x_opt) {
-  omav_interaction::conversions::to_trajectory_msg(x_opt,
+    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt) {
+  omav_interaction::conversions::to_trajectory_msg(x_opt, u_opt,
                                                    current_trajectory_msg_);
   current_trajectory_msg_.header.stamp = ros::Time::now();
   cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);

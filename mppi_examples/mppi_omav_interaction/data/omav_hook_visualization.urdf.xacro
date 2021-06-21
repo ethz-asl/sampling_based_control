@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omav_hook_visualization">
 
+    <!-- Properties -->
+    <xacro:property name="manipulator_length" value="0.62"/>   <!-- [m] -->
+    <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
+
+    <xacro:property name="tool_length" value="0.05"/>         <!-- [m] -->
+    <xacro:property name="tool_radius" value="0.0075"/>         <!-- [m] -->
+
     <xacro:property name="mass_ouzel" value="5.0"/>
     <xacro:property name="ixx_ouzel" value="0.12"/>
     <xacro:property name="iyy_ouzel" value="0.14"/>
@@ -29,7 +36,7 @@
                 <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
             </geometry>
             <material name="">
-                <color rgba="1 1 1 0.0"/>
+                <color rgba="1 1 1 1.0"/>
             </material>
         </visual>
     </link>
@@ -37,20 +44,20 @@
     <joint name="omav_to_rod" type="fixed">
         <parent link="omav_base"/>
         <child link="rod"/>
-        <origin rpy="0 0 0" xyz="0.31 0.0 0.0"/>
+        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
     </joint>
 
     <link name="rod">
         <collision>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.0075" length="0.62"/>
+                <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
             </geometry>
         </collision>
         <visual>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.0075" length="0.62"/>
+                <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -61,7 +68,7 @@
     <joint name="rod_to_tip" type="fixed">
         <parent link="rod"/>
         <child link="tip"/>
-        <origin rpy="0 0 0" xyz="0.31 0.0 0.0"/>
+        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
     </joint>
 
     <joint name="tip_to_thick" type="fixed">
@@ -95,7 +102,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <sphere radius="0.015"/>
+                <sphere radius="${tool_radius}"/>
             </geometry>
             <material name="">
                 <contact name="rubber"/>
@@ -104,7 +111,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0.0 0"/>
             <geometry>
-                <sphere radius="0.0075"/>
+                <sphere radius="${tool_radius}"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -115,14 +122,14 @@
     <joint name="tip_to_hook" type="fixed">
         <parent link="tip"/>
         <child link="hook"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 -0.025"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 -${tool_length/2}"/>
     </joint>
 
     <link name="hook">
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.0075" length="0.05"/>
+                <cylinder radius="${tool_radius}" length="${tool_length}"/>
             </geometry>
             <material name="">
                 <contact name="rubber"/>
@@ -131,7 +138,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder radius="0.0075" length="0.05"/>
+                <cylinder radius="${tool_radius}" length="${tool_length}"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
