@@ -66,6 +66,10 @@ struct Config {
   std::vector<ExpertTypes> expert_types = {ExpertTypes::NORM, ExpertTypes::IMP};
   Eigen::VectorXd expert_weights;
 
+  int spline_degree = 3;
+  double spline_dt = 0.15;
+  double spline_verbose = false;
+
   bool display_update_freq = false;
 
   bool init_from_file(const std::string& file);

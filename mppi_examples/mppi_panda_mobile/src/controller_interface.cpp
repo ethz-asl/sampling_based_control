@@ -10,9 +10,10 @@
 #include "mppi_panda_mobile/cost.h"
 #include "mppi_panda_mobile/dynamics.h"
 
+#include <mppi/policies/gaussian_policy.h>
+#include <mppi/policies/spline_policy.h>
 #include <mppi_pinocchio/ros_conversions.h>
 #include <mppi_ros/ros_params.h>
-#include <mppi/policies/gaussian_policy.h>
 #include <ros/package.h>
 
 using namespace panda_mobile;
@@ -70,6 +71,7 @@ bool PandaMobileControllerInterface::set_controller(
   double angular_weight;
   bool holonomic;
   bool joint_limits;
+  bool gaussian_policy;
 
   bool ok = true;
   ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
@@ -78,6 +80,7 @@ bool PandaMobileControllerInterface::set_controller(
   ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
   ok &= mppi_ros::getBool(nh_, "holonomic", holonomic);
   ok &= mppi_ros::getBool(nh_, "joint_limits", joint_limits);
+  ok &= mppi_ros::getBool(nh_, "gaussian_policy", gaussian_policy);
   if (!ok) {
     ROS_ERROR("Failed to parse parameters and set controller.");
     return false;
@@ -114,9 +117,14 @@ bool PandaMobileControllerInterface::set_controller(
   // -------------------------------
   // policy
   // -------------------------------
-  auto policy = std::make_shared<mppi::GaussianPolicy>(
-      int(PandaMobileDim::INPUT_DIMENSION), config_);
-
+  std::shared_ptr<mppi::Policy> policy;
+  if (gaussian_policy) {
+    policy = std::make_shared<mppi::GaussianPolicy>(
+        int(PandaMobileDim::INPUT_DIMENSION), config_);
+  } else {
+    policy = std::make_shared<mppi::SplinePolicy>(
+        int(PandaMobileDim::INPUT_DIMENSION), config_);
+  }
 
   // -------------------------------
   // controller

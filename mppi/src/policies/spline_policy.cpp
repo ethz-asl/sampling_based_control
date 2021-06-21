@@ -9,19 +9,20 @@ using namespace mppi;
 // Spline Policy
 // TODO(giuseppe) take params from config
 SplinePolicy::SplinePolicy(int nu, const Config& config) : Policy(nu) {
-  BSplinePolicyConfig cfg; // TODO(giuseppe) pass and initialize config properly
+  BSplinePolicyConfig cfg;  // TODO(giuseppe) better config
   cfg.horizon = config.horizon;
   cfg.dt = config.step_size;
   cfg.samples = config.rollouts;
-  cfg.degree = 3;
-  cfg.cp_dt = 0.15;
-  cfg.verbose = false;
+  cfg.degree = config.spline_degree;
+  cfg.cp_dt = config.spline_dt;
+  cfg.verbose = config.spline_verbose;
 
   policies_.clear();
   policies_.resize(nu_, RecedingHorizonSpline(cfg));
 
   for (int i = 0; i < nu; i++) {
     cfg.sigma = config.input_variance[i];
+    cfg.apply_bounds = config.bound_input;
     cfg.max_value = config.u_max[i];
     cfg.min_value = config.u_min[i];
     policies_[i] = RecedingHorizonSpline(cfg);

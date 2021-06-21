@@ -62,6 +62,10 @@ bool Config::init_from_file(const std::string& file) {
   pruning_threshold = parse_key_quiet<double>(solver_options, "pruning_threshold").value_or(pruning_threshold);
   expert_weights   = parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
   expert_types 	   = {NORM, IMP};
+  spline_degree = parse_key_quiet<int>(solver_options, "spline_degree").value_or(spline_degree);
+  spline_dt = parse_key_quiet<double>(solver_options, "spline_dt").value_or(spline_dt);
+  spline_verbose = parse_key_quiet<double>(solver_options, "spline_verbose").value_or(spline_verbose);
+  
   display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
   //clang-format on
 
@@ -94,6 +98,11 @@ std::ostream &operator<<(std::ostream &os, const mppi::Config &config) {
   os << " bound input: " << config.bound_input << std::endl;
   os << " u min: " << config.u_min.transpose() << std::endl;
   os << " u max: " << config.u_max.transpose() << std::endl;
+  
+  os << "Spline policy: " << std::endl;
+  os << " degree:  " << config.spline_degree << std::endl;
+  os << " dt:      " << config.spline_dt << std::endl;
+  os << " verbose: " << config.spline_verbose << std::endl;
   
   os << "Filter: " << std::endl;
   os << " filter type:      " << config.filter_type << std::endl;

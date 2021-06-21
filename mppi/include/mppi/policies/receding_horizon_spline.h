@@ -29,6 +29,7 @@ struct BSplinePolicyConfig {
   double dt = 0.1;
   double sigma = 1.0;
   bool verbose = false;
+  bool apply_bounds = false;
   double max_value;
   double min_value;
 };
@@ -124,6 +125,7 @@ class RecedingHorizonSpline {
   int n_knots_;
   int n_cpoints_;
   int n_samples_;
+  bool apply_bounds_;
   double max_value_;
   double min_value_;
   Eigen::MatrixXd max_value_matrix_;

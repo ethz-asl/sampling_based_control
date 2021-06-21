@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
         1000.0;
     if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
 
-    if (max_sim_time > 0 and sim_time > max_sim_time) {
+    if (max_sim_time > 0 && sim_time > max_sim_time) {
       ROS_INFO_STREAM("Reached maximum sim time: " << max_sim_time
                                                    << "s. Exiting.");
       break;

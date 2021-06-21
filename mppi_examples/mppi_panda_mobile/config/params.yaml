@@ -34,9 +34,12 @@ solver:
   filters_order: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 
+  spline_degree: 3
+  spline_dt: 0.2
+
   bound_input: true
-  u_min: [-2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0]
-  u_max: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+  u_min: [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5] #[-2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0]
+  u_max: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5] #[2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
 #  expert_types: {NORM, IMP}
   expert_weights: [0.0, 1.0]
@@ -49,7 +52,7 @@ angular_weight: 1.0
 obstacle_radius: 0.15
 joint_limits: true
 holonomic: true
-gaussian_policy: false
+gaussian_policy: true
 
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0

@@ -89,6 +89,7 @@ RecedingHorizonSpline::RecedingHorizonSpline(const BSplinePolicyConfig &cfg) {
   cp_dt_ = horizon_ / n_steps_;
 
   // bounds
+  apply_bounds_ = cfg.apply_bounds;
   max_value_ = cfg.max_value;
   min_value_ = cfg.min_value;
   max_value_matrix_ =
@@ -260,13 +261,14 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
   // Keep one sample noise-free
   N_.col(n_samples_-1).setZero();
 
-  // TODO(giuseppe) make this more efficient
-  // Constrain samples
-  // N_.colwise() += c_points_.values_.matrix();
-  // N_ = N_.cwiseMax(min_value_matrix_).cwiseMin(max_value_matrix_);
-  // N_.colwise() -= c_points_.values_.matrix();
-
   // Compute new samples (including nominal trajectory as last sample)
+  // Compute capped control points
+  if (apply_bounds_) {
+    N_.colwise() += c_points_.values_.matrix();
+    N_ = N_.cwiseMax(min_value_matrix_).cwiseMin(max_value_matrix_);
+    N_.colwise() -= c_points_.values_.matrix();
+  }
+
   P_ = compute(N_, t_).colwise() + compute_nominal().matrix();
 }
 
@@ -284,8 +286,10 @@ void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
   // TODO(giuseppe) remove this magic number and parse from params
   Eigen::ArrayXd delta = 0.01 * sigma_ * step_size *
                          (weights.transpose() * get_gradients()).array();
+
   c_points_.values_ += delta;
   N_.colwise() -= delta.matrix();  // the noise wrt to the current newly defined
+                                   // control poligon
   // control polygon
   Pn_ = compute_nominal();
 }
