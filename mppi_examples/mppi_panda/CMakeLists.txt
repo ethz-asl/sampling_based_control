@@ -35,14 +35,6 @@ add_executable(panda_control src/nodes/panda_control.cpp)
 target_link_libraries(panda_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_control ${PROJECT_NAME})
 
-add_executable(panda_data_collection src/nodes/panda_data_collection.cpp)
-target_link_libraries(panda_data_collection ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_data_collection ${PROJECT_NAME})
-
-add_executable(panda_tuning src/nodes/panda_tuning.cpp)
-target_link_libraries(panda_tuning ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_tuning ${PROJECT_NAME})
-
 add_executable(panda_dagger src/nodes/panda_dagger.cpp)
 target_link_libraries(panda_dagger ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_dagger ${PROJECT_NAME})
