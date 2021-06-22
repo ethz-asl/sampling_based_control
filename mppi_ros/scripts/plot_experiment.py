@@ -131,16 +131,19 @@ class Plotter:
 
     def plot_average_cost(self, aggregator, hue=None, x_label=None, type='bar'):
         fig, ax = plt.subplots()
-        ax.set_xlabel(aggregator if x_label is None else x_label)
         if type == 'bar':
-            sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
+            p = sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df, dodge=False)
             ax.set_ylabel("Average stage cost")
         elif type == 'box':
-            sns.boxplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
+            p = sns.boxplot(x=aggregator, y="stage_cost", hue=hue, data=self.df, dodge=False)
             ax.set_yscale("log")
             ax.set_ylabel("Stage cost")    
         else:
             raise NotImplementedError(f"Unknown type '{type}'")
+        if x_label is None:
+            p.set(xlabel=None)
+        else:
+            ax.set_xlabel(x_label)      
         
         
         
@@ -406,16 +409,20 @@ class Plotter:
     
     def plot_avg_time_to_goal(self, aggregator, hue=None, x_label=None, type='bar'):
         fig, ax = plt.subplots()
-        ax.set_xlabel(aggregator if x_label is None else x_label)
         if type == 'bar':
-            sns.barplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df)
+            p = sns.barplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df, dodge=False)
             ax.set_ylabel("Average time to goal [s]")
         elif type == 'box':
-            sns.boxplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df)
+            p = sns.boxplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df, dodge=False)
             ax.set_yscale("log")
-            ax.set_ylabel("Time to goal")    
+            ax.set_ylabel("Time to goal [s]")    
         else:
             raise NotImplementedError(f"Unknown type '{type}'")
+
+        if x_label is None:
+            p.set(xlabel=None)
+        else:
+            ax.set_xlabel(x_label)      
 
     def make_run_cost_video(self, save_dir):
         if not os.path.isdir(save_dir):
@@ -475,11 +482,12 @@ class Plotter:
             df.at[df['id'] == experiment, 'rate'] = 1/dts
         
         fig, ax = plt.subplots()
-        # ax.set_xlabel(aggregator if x_label is None else x_label)
         p = sns.barplot(x=aggregator, y='rate', hue=hue, data=df, dodge=False)
-        p.set(xlabel=None)
+        if x_label is None:
+            p.set(xlabel=None)
+        else:
+            ax.set_xlabel(x_label)        
         ax.set_ylabel("Average Rate [Hz]")
-        ax.set_xticklabels(["MPPI", "L-MPPI\ndeep", "L-MPPI"])
 
     def plot_all_rollout_policy_weights(self, caching_factor, colorful_plot=False):
         cum_w_opt = []
@@ -615,6 +623,7 @@ class Plotter:
     def plot_normalized_stage_cost(self, reference):
         # First find all reference runs
         reference_run_ids = self.df.loc[self.df['experiment'] == reference, 'id'].unique()
+        ref_controller_name = self.df.loc[self.df['experiment'] == reference, 'controller_name'].unique()[0]
         print(f"Found {len(reference_run_ids)} runs that match the reference name '{reference}'")
 
         # Find all runs that correspond to one experiment
@@ -622,8 +631,11 @@ class Plotter:
         experiments = experiments[experiments != reference] # we compare to the reference, so don't plot it
         exp_run_dict = {}
         n_runs = len(reference_run_ids)
+
+        exp_controller_names = []
         for exp in experiments:
             exp_run_dict[exp] = self.df.loc[self.df['experiment'] == exp, 'id'].unique()
+            exp_controller_names.append(self.df.loc[self.df['experiment'] == exp, 'controller_name'].unique()[0])
             print(f"{len(exp_run_dict[exp])} runs for experiment '{exp}'")
             if len(exp_run_dict[exp]) < n_runs:
                 print(f"Too few runs in experiment '{exp}' Reducing total number of runs!")
@@ -677,7 +689,7 @@ class Plotter:
 
         plt.xlabel("Normalized time")
         plt.ylabel("Stage cost")
-        plt.legend(["default", *experiments])
+        plt.legend([ref_controller_name, *exp_controller_names])
 
 
 if __name__ == "__main__":
