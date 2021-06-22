@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from rospkg import RosPack
 from matplotlib.colors import LogNorm
+from scipy.interpolate import interp1d
 import math
+import uuid
 sns.set_theme()
 sns.set_context("paper")
 sns.set(font_scale=2)
@@ -31,17 +33,16 @@ class Plotter:
                                                     if x else "Monte Carlo")
         df = df.rename(columns={'tree_search': 'Sampling Strategy'})
 
+        df['experiment'] = ""
         if type(experiment_id) in [list, tuple]:
-            df['experiment'] = ""
             print("Looking for experiments with ids: ")
             for exp in experiment_id:
                 print("  - " + exp)
-                df.loc[df['id'].str.contains(exp), 'experiment'] = exp
-
-            df = df.loc[df['experiment'] != ""]
+                df.loc[df['id'].str.match(exp + "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), 'experiment'] = exp
         else:
             print("Looking for experiments with id: {}".format(experiment_id))
-            df = df[df['id'].str.contains(experiment_id)]
+            df.loc[df['id'].str.match(experiment_id + "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), 'experiment'] = experiment_id
+        df = df.loc[df['experiment'] != ""]
         print("Found {}".format(len(df)))
         return df
 
@@ -128,11 +129,24 @@ class Plotter:
     def plot_average_cost_per_rollout_tree(self):
         self.plot_average_cost_per_rollout(tree=True)
 
-    def plot_average_cost(self, aggregator, hue=None, x_label=None):
+    def plot_average_cost(self, aggregator, hue=None, x_label=None, type='bar'):
         fig, ax = plt.subplots()
-        sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df)
-        ax.set_ylabel("Average stage cost")
-        ax.set_xlabel(aggregator if x_label is None else x_label)
+        if type == 'bar':
+            p = sns.barplot(x=aggregator, y="stage_cost", hue=hue, data=self.df, dodge=False)
+            ax.set_ylabel("Average stage cost")
+        elif type == 'box':
+            p = sns.boxplot(x=aggregator, y="stage_cost", hue=hue, data=self.df, dodge=False)
+            ax.set_yscale("log")
+            ax.set_ylabel("Stage cost")    
+        else:
+            raise NotImplementedError(f"Unknown type '{type}'")
+        if x_label is None:
+            p.set(xlabel=None)
+        else:
+            ax.set_xlabel(x_label)      
+        
+        
+        
 
     def plot_effective_samples_per_rollout(self, tree=False):
         plt.figure()
@@ -392,7 +406,290 @@ class Plotter:
         plt.title("Rollout weights")
         plt.xlabel("Rollout index")
         plt.ylabel("Time")
+    
+    def plot_avg_time_to_goal(self, aggregator, hue=None, x_label=None, type='bar'):
+        fig, ax = plt.subplots()
+        if type == 'bar':
+            p = sns.barplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df, dodge=False)
+            ax.set_ylabel("Average time to goal [s]")
+        elif type == 'box':
+            p = sns.boxplot(x=aggregator, y='time_to_goal', hue=hue, data=self.df, dodge=False)
+            ax.set_yscale("log")
+            ax.set_ylabel("Time to goal [s]")    
+        else:
+            raise NotImplementedError(f"Unknown type '{type}'")
 
+        if x_label is None:
+            p.set(xlabel=None)
+        else:
+            ax.set_xlabel(x_label)      
+
+    def make_run_cost_video(self, save_dir):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+        fig, ax = plt.subplots(figsize=(8,6))
+
+        # Those are the wall-times when the callbacks were received
+        times = self.df['time'].to_numpy()
+        dt = np.mean(times[1:] - times[:-1]) # dt to match screen capture
+        print(f"dt: {dt}")
+
+        # This is the sim-time used as x axis
+        sim_dt = 0.01
+        max_sim_time = 4
+        sim_time = self.df['index'].to_numpy() * sim_dt
+        goal_reached_time = self.df['time_to_goal'].to_numpy()[0]
+
+        stage_costs = self.df['stage_cost'].to_numpy()
+        stage_costs = stage_costs[sim_time <= max_sim_time]
+        sim_time = sim_time[sim_time <= max_sim_time]
+
+
+        sns.lineplot(x=sim_time, y=stage_costs)
+        ax.set_ylabel("Stage cost")
+        ax.set_xlabel("Sim time [s]")
+
+        # Save layout
+        plt.tight_layout()
+        x_lim = plt.xlim()
+        y_lim = plt.ylim()
+        
+        # Loop over frames
+        for i in range(len(sim_time)):
+            plt.clf()
+            sns.lineplot(x=sim_time[:i+1], y=stage_costs[:i+1])
+            plt.scatter(sim_time[i], stage_costs[i])
+            if sim_time[i] >= goal_reached_time:
+                plt.scatter(goal_reached_time, 0, marker='x', c='r')
+            plt.xlim(x_lim)
+            plt.ylim(y_lim)
+            ax = plt.gca()
+            ax.set_ylabel("Stage cost")
+            ax.set_xlabel("Sim time [s]")
+            plt.savefig(f"{save_dir}/img_{i:05}.png")
+        plt.close()
+        print("Convert to video with:")
+        print(f"ffmpeg -framerate {1/dt:.2f} -i {save_dir}/img_%05d.png -c:v libx264 -profile:v high -crf 18 -pix_fmt yuv420p {save_dir}/output.mp4")
+
+    def plot_avg_rate(self, aggregator, hue=None, x_label=None):
+        experiments = self.df['id'].unique()
+        df = self.df.copy()
+        df['rate'] = 0.0
+        for experiment in experiments:
+            times = df.loc[df['id'] == experiment, 'time'].to_numpy()
+            dts = times[1:] - times[:-1]
+            dts = np.append(dts, dts[-1])
+            df.at[df['id'] == experiment, 'rate'] = 1/dts
+        
+        fig, ax = plt.subplots()
+        p = sns.barplot(x=aggregator, y='rate', hue=hue, data=df, dodge=False)
+        if x_label is None:
+            p.set(xlabel=None)
+        else:
+            ax.set_xlabel(x_label)        
+        ax.set_ylabel("Average Rate [Hz]")
+
+    def plot_all_rollout_policy_weights(self, caching_factor, colorful_plot=False):
+        cum_w_opt = []
+        cum_w_pol = []
+        time_to_goals = []
+        timeouts = []
+        #### Defect in data recording, needs to be adressed.
+        #### Until then need to set timeout duration manually
+        timeout = 7.5
+        dt = 0.01
+        if colorful_plot:
+            fig, (ax1, ax2) = plt.subplots(2)
+        else:
+            fig, ax = plt.subplots()
+
+        experiments = self.df['id'].unique()
+        no_experiments = len(experiments)
+        controller_name_old = None
+        first = True
+        if not colorful_plot:
+            resolution = int(timeout / dt)
+            normalised_weights_policy = np.zeros((no_experiments, resolution))
+            i = 0
+        for experiment_id in experiments:
+            df = self.df.loc[self.df['id'] == experiment_id]
+            controller_name = df['controller_name'].iloc[0]
+            if first:
+                controller_name_old = controller_name = df['controller_name'].iloc[0]
+                first = False
+            if controller_name != controller_name_old and not first:
+                print(f'Mixing controllers in weights plot. This plot is producing {controller_name_old} controller plots.\n')
+                print(f'It was asked to mix in {controller_name} controller run.\n')
+                print('Skipping.')
+                continue
+            # assume MPPI settings are constant over one experiment
+            lrr = df['learned_rollout_ratio'].iloc[0]
+            nr = df['nr_rollouts'].iloc[0]
+            cf = caching_factor
+            opt_idx = math.ceil(cf*nr)
+            if math.ceil(lrr*nr) == 0:
+                print('Plot does not make sense if no policy was active. Skipping.\n')
+                no_experiments -= 1
+                continue
+
+            policy_idx = math.ceil(lrr*nr) + opt_idx
+            weights_opt = []
+            weights_policy = []
+            time_to_goals.append(df['time_to_goal'].iloc[0]) # time to goal also the same for one run
+            timeouts.append(timeout)
+            weights_temp = df['weight_history']
+            for index, row in weights_temp.iteritems():
+                line = row[1:-1] # get rid of parentheisis first
+                w_array = [float(s) for s in line.split(',')]
+                weights_opt.append(w_array[opt_idx])
+                weights_policy.append(w_array[policy_idx])
+            if colorful_plot:
+                weights_opt_array = np.array(weights_opt)
+                weights_policy_array = np.array(weights_policy)
+                cum_w_opt = [sum(n) for n in zip(cum_w_opt + [0] * (len(weights_opt) - len(cum_w_opt)), weights_opt)]
+                cum_w_pol = [sum(n) for n in zip(cum_w_pol + [0] * (len(weights_policy) - len(cum_w_pol)), weights_policy)]
+                ax1.plot(weights_opt_array)
+                ax1.set_ylabel('optimal weight [-]')
+                ax2.plot(weights_policy_array)
+                ax2.set_ylabel('policy weight [-]')
+                ax2.set_xlabel('time step')
+                # goal_reached_time_step = math.floor(time_to_goals[-1]/timeouts[-1] * len(weights_policy_array))-1
+                # ax1.plot(goal_reached_time_step, weights_opt_array[goal_reached_time_step], 'or', markersize=20)
+                # ax2.plot(goal_reached_time_step, weights_policy_array[goal_reached_time_step], 'or', markersize=20)
+            else:
+                goal_reached_time_step = math.floor(time_to_goals[-1]/timeouts[-1] * len(weights_policy))-1
+                time_steps = np.linspace(0,len(weights_policy), num=len(weights_policy))
+                weight_function = interp1d(time_steps, weights_policy)
+                new_ts = np.linspace(0, goal_reached_time_step, num=resolution)
+                normalised_weights_policy[i, :] = np.array(weight_function(new_ts))
+                i += 1
+        if colorful_plot:
+            mean_w_opt = np.array(cum_w_opt)/no_experiments
+            mean_w_pol = np.array(cum_w_pol)/no_experiments
+            ax1.plot(mean_w_opt,'k', linewidth=4, label='mean')
+            ax1.legend()
+            ax1.set_title(f'Weights during {no_experiments} runs.\nController settings -> {controller_name} with learned rollout ratio: {lrr}')
+            ax2.plot(mean_w_pol, 'k', linewidth=4, label='mean')
+            ax2.legend()
+        else:
+            normalised_weights_policy = np.transpose(normalised_weights_policy)
+            
+            weights_min = np.min(normalised_weights_policy, axis=1)
+            weights_max = np.max(normalised_weights_policy, axis=1)
+            weights_avg = np.average(normalised_weights_policy, axis=1)
+            x = np.linspace(0, 1, num=resolution)
+            ax.fill_between(x, weights_max, weights_min, alpha=0.3)
+            ax.plot(x, weights_avg, linewidth=2)
+            ax.set_ylabel('policy weight')
+            ax.set_xlabel('normalized time')
+
+    def plot_dagger_progress(self):
+        # Mean and std
+        average_cost = {}
+
+        iter_list = ['expert', 'iter_0', 'iter_4', 'iter_9', 'iter_14', 'iter_19',
+        'iter_24', 'iter_29', 'iter_34']
+        for iter in iter_list:
+            df = self.df.loc[(self.df['id'].str.contains(iter))]
+            if iter not in average_cost:
+                average_cost[iter] = [df['stage_cost'].mean()]
+            else:
+                average_cost[iter].append(df['stage_cost'].mean())
+
+        average_cost_mean = [
+            np.mean(average_cost_vector)
+            for average_cost_vector in average_cost.values()
+        ]
+        average_cost_std = [
+            np.std(average_cost_vector)
+            for average_cost_vector in average_cost.values()
+        ]
+
+        # Build the plot
+        fig, ax = plt.subplots()
+        ax.bar(iter_list,
+               average_cost_mean,
+               yerr=average_cost_std,
+               align='center',
+               alpha=0.5,
+               ecolor='black',
+               capsize=10)
+        ax.set_xlabel('Dagger iterations')
+        ax.set_xticks(iter_list)
+        ax.set_title('Average cost')
+        ax.yaxis.grid(True)
+
+
+    def plot_normalized_stage_cost(self, reference):
+        # First find all reference runs
+        reference_run_ids = self.df.loc[self.df['experiment'] == reference, 'id'].unique()
+        ref_controller_name = self.df.loc[self.df['experiment'] == reference, 'controller_name'].unique()[0]
+        print(f"Found {len(reference_run_ids)} runs that match the reference name '{reference}'")
+
+        # Find all runs that correspond to one experiment
+        experiments = self.df['experiment'].unique()
+        experiments = experiments[experiments != reference] # we compare to the reference, so don't plot it
+        exp_run_dict = {}
+        n_runs = len(reference_run_ids)
+
+        exp_controller_names = []
+        for exp in experiments:
+            exp_run_dict[exp] = self.df.loc[self.df['experiment'] == exp, 'id'].unique()
+            exp_controller_names.append(self.df.loc[self.df['experiment'] == exp, 'controller_name'].unique()[0])
+            print(f"{len(exp_run_dict[exp])} runs for experiment '{exp}'")
+            if len(exp_run_dict[exp]) < n_runs:
+                print(f"Too few runs in experiment '{exp}' Reducing total number of runs!")
+            n_runs = min(n_runs, len(exp_run_dict[exp]))
+            # assert(len(exp_run_dict[exp]) == len(reference_run_ids))
+
+        dt = 0.01
+        n_support = 1000
+
+        exp_norm_costs = np.zeros((len(experiments), n_support, n_runs))
+        ref_norm_costs = np.zeros((n_support, n_runs))
+
+        for i in range(n_runs): # Iterate over all runs as they have identical start and stop positions
+            ref_run = self.df.loc[self.df['id'] == reference_run_ids[i]]
+            ref_time_to_goal = ref_run.iloc[0].at['time_to_goal']
+            ref_run_times = ref_run['index'].to_numpy() * dt
+            ref_run_costs = ref_run['stage_cost'].to_numpy()
+
+            # Make sure that last element is larger or equal to the ref_time_to_goal
+            if np.max(ref_run_times) < ref_time_to_goal:
+                ref_run_times = np.append(ref_run_times, ref_time_to_goal)
+                ref_run_costs = np.append(ref_run_costs, ref_run_costs[-1])
+
+            f_ref = interp1d(ref_run_times/ref_time_to_goal, ref_run_costs)
+            norm_ref_run_costs = f_ref(np.linspace(0, 1, n_support))
+
+
+            for e, exp in enumerate(experiments):
+                exp_run = self.df.loc[self.df['id'] == exp_run_dict[exp][i]] # i'th run of experiment exp
+                times = exp_run['index'].to_numpy() * dt
+                costs = exp_run['stage_cost'].to_numpy()
+
+                # Make sure that last element is larger or equal to the ref_time_to_goal
+                if np.max(times) < ref_time_to_goal:
+                    times = np.append(times, ref_time_to_goal)
+                    costs = np.append(costs, ref_run_costs[-1])
+                f = interp1d(times/ref_time_to_goal, costs)
+                norm_costs = f(np.linspace(0, 1, n_support))
+
+                exp_norm_costs[e, :, i] = norm_costs# - norm_ref_run_costs
+            ref_norm_costs[:,i] = norm_ref_run_costs
+
+        plt.figure("Normalized Stage Cost")
+        norm_time = np.linspace(0, 1, n_support)
+        plt.plot(norm_time, np.mean(ref_norm_costs,axis=1))
+        plt.fill_between(norm_time, np.quantile(ref_norm_costs, 0.75, axis=1), np.quantile(ref_norm_costs, 0.25, axis=1), alpha=0.3)
+        for e, exp in enumerate(experiments):
+            c = exp_norm_costs[e, :,:]
+            plt.plot(norm_time, np.mean(c, axis=1))
+            plt.fill_between(norm_time, np.quantile(c, 0.75, axis=1), np.quantile(c, 0.25, axis=1), alpha=0.3)
+
+        plt.xlabel("Normalized time")
+        plt.ylabel("Stage cost")
+        plt.legend([ref_controller_name, *exp_controller_names])
 
 
 if __name__ == "__main__":
@@ -407,8 +704,8 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     plotter = Plotter(args.experiment_id)
-    plotter.plot_average_cost_per_substep()
-    plotter.plot_average_cost_per_rollout()
+    # plotter.plot_average_cost_per_substep()
+    # plotter.plot_average_cost_per_rollout()
     # plotter.plot_average_cost_per_rollout_tree()
     # plotter.plot_effective_samples_per_rollout()
     # plotter.plot_effective_samples_per_rollout_tree()
@@ -424,9 +721,17 @@ if __name__ == "__main__":
     # plotter.plot_average_cost('learning_factor', hue='experiment', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('learning_factor', x_label='Fraction of MPPI rollouts informed by learning')
     # plotter.plot_average_cost('horizon', x_label="Horizon [s]")
+    # plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
+    # plotter.plot_average_cost('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
+    # plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type')
+    # plotter.plot_avg_time_to_goal('controller_name', hue='learned_rollout_ratio', x_label='Controller Type', type='box')
+    plotter.plot_all_rollout_policy_weights(0.3)
     # plotter.plot_rollout_costs(args.experiment_id[0])
     # plotter.plot_rollout_weights(args.experiment_id[0])
     # plotter.plot_cost('learned_rollout_ratio')
     # plotter.plot_effective_samples('learned_rollout_ratio', col='experiment')
+    # plotter.make_run_cost_video("/home/andreas/video_tmp")
+    #plotter.plot_dagger_progress()
+    plotter.plot_normalized_stage_cost('default')
 
     plt.show()

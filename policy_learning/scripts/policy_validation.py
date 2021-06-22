@@ -59,7 +59,7 @@ class PolicyValidater:
         self.cost_subscriber = rospy.Subscriber("/mppi_data",
                                                 Data,
                                                 self.cost_callback,
-                                                queue_size=10)
+                                                queue_size=10000)
         self.goal_pose_subscriber = rospy.Subscriber("/end_effector_pose_desired",
                                                     PoseStamped,
                                                     self.goal_pose_callback,

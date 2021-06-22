@@ -33,11 +33,11 @@ class PandaValidator{
         controller_(nh),
         action_server_(nh, "validator", false)
     {
-      // ensure we don't sample any learned trajectories in expert
-      if (controller_.config_.learned_rollout_ratio != 0) {
-        ROS_ERROR_STREAM("Aborting Dagger, turn off sampling from NN in params!");
-        throw std::runtime_error("Failed to initialzied controller!");
-      }
+      // // ensure we don't sample any learned trajectories in expert
+      // if (controller_.config_.learned_rollout_ratio != 0) {
+      //   ROS_ERROR_STREAM("Aborting Dagger, turn off sampling from NN in params!");
+      //   throw std::runtime_error("Failed to initialzied controller!");
+      // }
 
       robot_description_ =
         nh.param<std::string>("/robot_description", "");
@@ -85,6 +85,8 @@ class PandaValidator{
     u = simulation_->get_zero_input(x_);
     u_expert = simulation_->get_zero_input(x_);
     bool terminated = false;
+    bool goal_reached_var = false;
+    double rel_sim_time_to_goal_reached = 0.0;
 
     while (ros::ok()){
       if (action_active_){
@@ -102,7 +104,6 @@ class PandaValidator{
 
         if (use_policy_) x_ = simulation_->step(u, sim_dt);
         else x_ = simulation_->step(u_expert, sim_dt);
-
         sim_time_ += sim_dt;
         publish_ros(x_);
 
@@ -111,17 +112,25 @@ class PandaValidator{
         action_server_.publishFeedback(feedback);
 
         // if goal is reached, wait some time until stopping
+        // if (goal_reached(controller_.get_pose_end_effector_ros(x_),
+        //                  controller_.get_target_pose_ros()) &&
+        //     !terminated) {
+        //   terminated = true;
+        //   timeout_ = std::min(timeout_, sim_time_ + time_to_shutdown);
+        //   ROS_INFO("Goal reached, waiting for %f seconds before ending rollout.",
+        //            time_to_shutdown);
+        // }
         if (goal_reached(controller_.get_pose_end_effector_ros(x_),
                          controller_.get_target_pose_ros()) &&
-            !terminated) {
-          terminated = true;
-          timeout_ = std::min(timeout_, sim_time_ + time_to_shutdown);
-          ROS_INFO("Goal reached, waiting for %f seconds before ending rollout.",
-                   time_to_shutdown);
-        }
+            !goal_reached_var) {
+              rel_sim_time_to_goal_reached = sim_time_ - sim_time_action_start_;
+              goal_reached_var = true;
+              ROS_INFO("Goal reached, reaching time is %f seconds.",
+                         rel_sim_time_to_goal_reached);
+            }
 
         if (sim_time_ > timeout_ ||
-            joint_limit_violation() ||
+            //joint_limit_violation() ||
             action_server_.isPreemptRequested() ||
             !ros::ok()){
           policy_learning::collect_rolloutResult result;
@@ -130,16 +139,19 @@ class PandaValidator{
           learner_ = nullptr;
           controller_.get_controller()->set_learned_expert(learner_);
 
-          if (terminated){
+          if (goal_reached_var){
             result.goal_reached = true;
+            result.goal_reached_time = rel_sim_time_to_goal_reached;
             action_server_.setSucceeded(result);
           } else {
             result.goal_reached = false;
+            result.goal_reached_time = timeout_ - sim_time_action_start_;
             action_server_.setPreempted(result);
           }
 
           action_active_ = false;
           terminated = false;
+          goal_reached_var = false;
         }
       } else if (callback_received_){
         // reset cached trajectories
@@ -163,6 +175,7 @@ class PandaValidator{
           action_server_.setAborted();
           action_active_ = false;
         }
+        timeout_ = sim_time_ + goal_timeout_;
         callback_received_ = false;
         action_active_ = true;
       } else {
@@ -288,7 +301,8 @@ class PandaValidator{
                goal->timeout, goal->use_policy, goal->policy_path.c_str(),
                goal->validate);
 
-      timeout_ = sim_time_ + goal->timeout;
+      sim_time_action_start_ = sim_time_;
+      goal_timeout_ = goal->timeout;
       use_policy_ = goal->use_policy;
       policy_path_ = goal->policy_path;
 
@@ -355,15 +369,17 @@ class PandaValidator{
     double sim_time_ = 0.0;
 
     double timeout_ = INFINITY;
+    double sim_time_action_start_ = 0.;
     double time_to_shutdown = 2; // s
-    double goal_position_threshold = 0.01; // m = 1 cm
-    double goal_angular_threshold = 0.087; // rad = 5 deg
+    double goal_position_threshold = 0.02; // m = 2 cm
+    double goal_angular_threshold = 0.174; // rad =105 deg
     double joint_state_std_dev = 0.5;
 
     std::default_random_engine generator_;
     std::shared_ptr<PandaExpert> learner_ = nullptr;
     std::string dataset_path_;
     std::string policy_path_;
+    double goal_timeout_;
 
     Eigen::Matrix<double, 7, 1> joint_limits_lower_;
     Eigen::Matrix<double, 7, 1> joint_limits_upper_;
