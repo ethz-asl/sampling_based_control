@@ -47,7 +47,7 @@ ros_publish_rate: 10.0
 
 sequential: false
 static_optimization: false
-running_rotors: true
+running_rotors: false
 door_in_sim: false
 detailed_publishing: true
 sim_dt: 0.015

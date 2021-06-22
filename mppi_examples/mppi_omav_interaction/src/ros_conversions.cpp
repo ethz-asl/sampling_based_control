@@ -13,7 +13,8 @@ void to_trajectory_msg(
   mav_msgs::EigenTrajectoryPointVector current_trajectory;
 
   for (int i = 0; i < (x_opt.size() - 6); i++) {
-    EigenTrajectoryPointFromState(x_opt, u_opt, i, current_trajectory_point, dt);
+    EigenTrajectoryPointFromState(x_opt, u_opt, i, current_trajectory_point,
+                                  dt);
     current_trajectory.push_back(current_trajectory_point);
   }
   mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
@@ -41,23 +42,20 @@ void EigenTrajectoryPointFromState(
       inputs[i](0),     inputs[i + 1](0), inputs[i + 2](0), inputs[i + 3](0),
       inputs[i + 4](0), inputs[i + 5](0), inputs[i + 6](0)};
   std::vector<double> lin_vel_y = {
-          inputs[i](1),     inputs[i + 1](1), inputs[i + 2](1), inputs[i + 3](1),
-          inputs[i + 4](1), inputs[i + 5](1), inputs[i + 6](1)};
+      inputs[i](1),     inputs[i + 1](1), inputs[i + 2](1), inputs[i + 3](1),
+      inputs[i + 4](1), inputs[i + 5](1), inputs[i + 6](1)};
   std::vector<double> lin_vel_z = {
-          inputs[i](2),     inputs[i + 1](2), inputs[i + 2](2), inputs[i + 3](2),
-          inputs[i + 4](2), inputs[i + 5](2), inputs[i + 6](2)};
-  std::vector<double> ang_vel_x = {inputs[i](3),     inputs[i + 1](3),
-                                   inputs[i + 2](3), inputs[i + 3](3),
-                                   inputs[i + 4](3), inputs[i + 5](3),
-                                   inputs[i + 6](3)};
-  std::vector<double> ang_vel_y = {inputs[i](4),     inputs[i + 1](4),
-                                   inputs[i + 2](4), inputs[i + 3](4),
-                                   inputs[i + 4](4), inputs[i + 5](4),
-                                   inputs[i + 6](4)};
-  std::vector<double> ang_vel_z = {inputs[i](5),     inputs[i + 1](5),
-                                   inputs[i + 2](5), inputs[i + 3](5),
-                                   inputs[i + 4](5), inputs[i + 5](5),
-                                   inputs[i + 6](5)};
+      inputs[i](2),     inputs[i + 1](2), inputs[i + 2](2), inputs[i + 3](2),
+      inputs[i + 4](2), inputs[i + 5](2), inputs[i + 6](2)};
+  std::vector<double> ang_vel_x = {
+      inputs[i](3),     inputs[i + 1](3), inputs[i + 2](3), inputs[i + 3](3),
+      inputs[i + 4](3), inputs[i + 5](3), inputs[i + 6](3)};
+  std::vector<double> ang_vel_y = {
+      inputs[i](4),     inputs[i + 1](4), inputs[i + 2](4), inputs[i + 3](4),
+      inputs[i + 4](4), inputs[i + 5](4), inputs[i + 6](4)};
+  std::vector<double> ang_vel_z = {
+      inputs[i](5),     inputs[i + 1](5), inputs[i + 2](5), inputs[i + 3](5),
+      inputs[i + 4](5), inputs[i + 5](5), inputs[i + 6](5)};
 
   double lin_acc_x = filter.filter(lin_vel_x);
   double lin_acc_y = filter.filter(lin_vel_y);

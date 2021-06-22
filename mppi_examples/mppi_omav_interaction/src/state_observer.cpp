@@ -8,6 +8,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/JointState.h>
 
+#include <Eigen/Dense>
 #include <Eigen/Geometry>
 
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -118,6 +119,38 @@ namespace object_observer {
                 (theta_new - object_state_.position[0]) / (current_time - previous_time_);
         object_state_.position[0] = theta_new;
         previous_time_ = current_time;
+    }
+
+    bool StateObserver::estimateCenter() {
+      tf::StampedTransform transform;
+
+      Eigen::MatrixXf regressor = Eigen::MatrixXf::Zero(20, 3);
+      Eigen::VectorXf y = Eigen::VectorXf::Zero(20);
+      Eigen::Vector3f params;
+      listener.waitForTransform("/world", "/handle_link", ros::Time(0),
+                                ros::Duration(3.0));
+      int i = 0;
+      while (i < 20) {
+        listener.lookupTransform("/world", "/handle_link", ros::Time(0),
+                                 transform);
+        if (transform.getOrigin().y() > -0.9) {
+          regressor.row(i) << 2 * transform.getOrigin().x(),
+              2 * transform.getOrigin().y(), 1;
+          y(i) = transform.getOrigin().x() * transform.getOrigin().x() +
+                 transform.getOrigin().y() * transform.getOrigin().y();
+          ros::Duration(0.2).sleep();
+          i += 1;
+        }
+      }
+      params =
+          regressor.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(y);
+      std::cout << "XM = " << params(0) << std::endl;
+      std::cout << "YM = " << params(1) << std::endl;
+      std::cout << "Param(2)" << params(2) << std::endl;
+      std::cout << "Radius = "
+                << std::sqrt(params(2) + pow(params(0), 2) + pow(params(1), 2))
+                << std::endl;
+      return true;
     }
 
     void StateObserver::publish() {

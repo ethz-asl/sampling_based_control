@@ -19,8 +19,8 @@ void to_trajectory_msg(
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg);
 
 void EigenTrajectoryPointFromState(
-    const mppi::observation_array_t &state, const mppi::input_array_t &input, int i,
-    mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt);
+    const mppi::observation_array_t &state, const mppi::input_array_t &input,
+    int i, mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt);
 
 void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,
                               geometry_msgs::PoseStamped &pose_msg);

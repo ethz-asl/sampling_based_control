@@ -24,7 +24,7 @@ bool OMAVControllerInterface::init_ros() {
   mppi_reference_publisher_ =
       nh_.advertise<geometry_msgs::Pose>("/mppi_reference", 1);
   object_state_publisher_ =
-            nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
   detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
   if (detailed_publishing_) {
     trajectory_publisher_ =
@@ -195,16 +195,17 @@ void OMAVControllerInterface::publish_ros() {
   get_controller()->get_optimal_rollout(xx_opt, uu_opt);
   OMAVControllerInterface::publish_trajectory(xx_opt, uu_opt);
   OMAVControllerInterface::publish_optimal_rollout();
-    static tf::TransformBroadcaster odom_broadcaster;
-    tf::Transform omav_odom;
-    omav_odom.setOrigin(tf::Vector3(xx_opt[0](0), xx_opt[0](1), xx_opt[0](2)));
-    omav_odom.setRotation(tf::Quaternion(xx_opt[0](4), xx_opt[0](5), xx_opt[0](6), xx_opt[0](3)));
-    odom_broadcaster.sendTransform(tf::StampedTransform(
-            omav_odom, ros::Time::now(), "world", "odom_omav"));
-    // update object state visualization
-    object_state_.header.stamp = ros::Time::now();
-    object_state_.position[0] = xx_opt[0](13);
-    object_state_publisher_.publish(object_state_);
+  static tf::TransformBroadcaster odom_broadcaster;
+  tf::Transform omav_odom;
+  omav_odom.setOrigin(tf::Vector3(xx_opt[0](0), xx_opt[0](1), xx_opt[0](2)));
+  omav_odom.setRotation(
+      tf::Quaternion(xx_opt[0](4), xx_opt[0](5), xx_opt[0](6), xx_opt[0](3)));
+  odom_broadcaster.sendTransform(
+      tf::StampedTransform(omav_odom, ros::Time::now(), "world", "odom_omav"));
+  // update object state visualization
+  object_state_.header.stamp = ros::Time::now();
+  object_state_.position[0] = xx_opt[0](13);
+  object_state_publisher_.publish(object_state_);
 }
 
 void OMAVControllerInterface::publish_trajectory(

@@ -13,6 +13,8 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
 
+#include <tf/transform_listener.h>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -31,8 +33,9 @@ namespace object_observer {
     public:
         bool initialize();
         void publish();
+        bool estimateCenter();
 
-    private:
+      private:
         void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
 
 
@@ -50,6 +53,7 @@ namespace object_observer {
         bool articulation_first_computation_;
         sensor_msgs::JointState object_state_;
         ros::Publisher object_state_publisher_;
+        tf::TransformListener listener;
 
         // Calibration tf
         Eigen::Affine3d T_handle0_shelf_;

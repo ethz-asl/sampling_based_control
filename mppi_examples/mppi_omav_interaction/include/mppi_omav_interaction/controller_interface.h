@@ -17,11 +17,11 @@
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
 #include <memory>
+#include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
+#include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <sensor_msgs/JointState.h>
-#include <tf/transform_broadcaster.h>
 
 namespace omav_interaction {
 
@@ -56,7 +56,8 @@ private:
 
   void object_reference_callback(const geometry_msgs::PoseStampedConstPtr &msg);
 
-  void publish_trajectory(const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt);
+  void publish_trajectory(const mppi::observation_array_t &x_opt,
+                          const mppi::input_array_t &u_opt);
 
 public:
   mppi::SolverConfig config_;
