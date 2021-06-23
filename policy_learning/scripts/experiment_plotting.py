@@ -54,8 +54,8 @@ class ExperimentPlotter:
                                     run.
         """
         ### Set here ###
-        self.experiment_name = "only_expert"
-        self.controller_name = "expert" # default | expert | handicapped
+        self.experiment_name = "default"
+        self.controller_name = "MPPI"
         self.mode = "from_file"  # new | from_file
         self.n_experiment_runs = 100
         self.only_use_policy = False
@@ -96,7 +96,7 @@ class ExperimentPlotter:
 
         # init ros
         rospy.init_node('experiment_plotter')
-        self.client = actionlib.SimpleActionClient('panda_validation/validator',
+        self.client = actionlib.SimpleActionClient('panda_dagger/collector',
             policy_learning.msg.collect_rolloutAction)
 
         # subscriber to the mppi cost to track if Dagger is improving the cost
@@ -112,14 +112,6 @@ class ExperimentPlotter:
                 os.path.join(self.experiment_data_save_dir, 'goal_pose.csv'),
                 mode='w')
 
-            self.goal_pose_subscriber = rospy.Subscriber("/end_effector_pose_desired",
-                                                        PoseStamped,
-                                                        self.goal_pose_callback,
-                                                        queue_size=10)
-            self.initial_joint_position_subscriber = rospy.Subscriber("/initial_state",
-                                                        JointState,
-                                                        self.initial_joint_position_callback,
-                                                        queue_size=10)
         elif self.mode == "from_file":
             self.goalS = [] # Goal values list of list
             self.initial_joint_posS = [] # Joint state values list of list
@@ -143,10 +135,10 @@ class ExperimentPlotter:
                 print("Error occured, lengths not the same!")
 
         # write current active params to log file
-        lrr = rospy.get_param("/panda_validation/solver/learned_rollout_ratio")
-        nr = rospy.get_param("/panda_validation/solver/rollouts")
-        ss = rospy.get_param("/panda_validation/solver/substeps")
-        hrz = rospy.get_param("/panda_validation/solver/horizon")
+        lrr = rospy.get_param("/panda_dagger/solver/learned_rollout_ratio")
+        nr = rospy.get_param("/panda_dagger/solver/rollouts")
+        ss = rospy.get_param("/panda_dagger/solver/substeps")
+        hrz = rospy.get_param("/panda_dagger/solver/horizon")
         self.f.write('The following params were set:\n')
         self.f.write(f'learned_rollout_ratio: {lrr}\n')
         self.f.write(f'rollouts: {nr}\n')
@@ -168,15 +160,7 @@ class ExperimentPlotter:
             return
         else:
             self.run_started = True
-
-    def goal_pose_callback(self, pose: PoseStamped):
-        self.goal = pose
-        print('Received expert goal pose')
-
-    def initial_joint_position_callback(self, state: JointState):
-        self.initial_joint_pos = state
-        print('Recieved expert joint initial position')
-
+            
     def read_policy(self):
         self.policies_cpp = sorted(glob.glob(self.policies_path + '/*.pt'),
             key=lambda f: int(''.join(filter(str.isdigit, f))))
@@ -231,16 +215,18 @@ class ExperimentPlotter:
                 use_policy = False,
                 policy_path = model_load_path,
                 dataset_path = None,
-                validate = False)
+                random_goal = True,
+                random_joint_pos = True)
         elif self.mode == "from_file":
             goal = policy_learning.msg.collect_rolloutGoal(
                 timeout = self.timeout,
                 use_policy = self.only_use_policy,
                 policy_path = model_load_path,
                 dataset_path = None,
-                validate = True,
                 initial_joint_pos = self.initial_joint_pos,
-                goal_pose = self.goal)
+                goal_pose = self.goal,
+                random_goal = False,
+                random_joint_pos = False)
         else:
             print('No condition reached. Error!')
         return goal
@@ -251,9 +237,13 @@ class ExperimentPlotter:
         if self.client.get_state() == GoalStatus.SUCCEEDED:
             print(f'{i}: Goal Reached')
             self.goal_reached_time = self.client.get_result().goal_reached_time
+            self.goal = self.client.get_result().goal_pose
+            self.initial_joint_pos = self.client.get_result().initial_joint_pos
         elif self.client.get_state() == GoalStatus.PREEMPTED:
             print(f'{i}: Goal not reached')
             self.goal_reached_time = self.client.get_result().goal_reached_time
+            self.goal = self.client.get_result().goal_pose
+            self.initial_joint_pos = self.client.get_result().initial_joint_pos
         else:
             print(f'{i}: Action call failed, state {self.client.get_state()}')
         self.run_started = False
