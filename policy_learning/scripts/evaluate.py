@@ -20,7 +20,7 @@ import policy_learning.msg
 
 
 
-class ExperimentPlotter:
+class Evaluator:
     """
     Class to handle the generation of experimental data. It is able to run a
     specified controller either using new random generated IC and goal pose data
@@ -278,5 +278,5 @@ if __name__ == "__main__":
     dagger_name = "full_no_dagger"
     dir_path = os.path.join(task_path, os.pardir, 'data', dataset_name,
         dagger_name)
-    plotter = ExperimentPlotter(dir_path)
+    plotter = Evaluator(dir_path)
     plotter.run_experiment_loop()
