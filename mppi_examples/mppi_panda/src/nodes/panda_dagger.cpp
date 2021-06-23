@@ -109,7 +109,8 @@ class PandaDataCollector{
         action_server_.publishFeedback(feedback);
 
         // if goal is reached, wait some time until stopping
-        if (goal_reached(controller_.get_pose_end_effector_ros(x_),
+        if (!validate_ &&
+            goal_reached(controller_.get_pose_end_effector_ros(x_),
                          controller_.get_target_pose_ros()) &&
             !terminated) {
           terminated = true;
@@ -119,7 +120,7 @@ class PandaDataCollector{
         }
 
         if (sim_time_ > timeout_ || 
-            severe_joint_limit_violation() ||
+            (!validate_ && severe_joint_limit_violation()) ||
             action_server_.isPreemptRequested() || 
             !ros::ok()){
 
@@ -295,6 +296,7 @@ class PandaDataCollector{
       use_policy_ = goal->use_policy;
       policy_path_ = goal->policy_path;
       dataset_path_ = goal->dataset_path;
+      validate_ = goal->validate;
 
       random_goal_ = goal->random_goal;
       random_initial_pose_ = goal->random_joint_pos;
@@ -360,6 +362,7 @@ class PandaDataCollector{
     sensor_msgs::JointState initial_joint_position_;
     bool random_goal_ = true;
     geometry_msgs::PoseStamped goal_pose_;
+    bool validate_ = false;
 
     double timeout_ = INFINITY;
     double time_to_shutdown_ = 2; // s

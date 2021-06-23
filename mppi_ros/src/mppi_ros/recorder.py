@@ -52,7 +52,7 @@ class DataRecorder:
         self.data_subscriber = rospy.Subscriber("/mppi_data",
                                                 Data,
                                                 self.data_callback,
-                                                queue_size=1000)
+                                                queue_size=10000)
 
 
     def data_callback(self, data: Data):

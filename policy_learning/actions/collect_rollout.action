@@ -7,7 +7,7 @@ bool random_goal
 geometry_msgs/PoseStamped goal_pose
 bool random_joint_pos
 sensor_msgs/JointState initial_joint_pos
-
+bool validate
 
 ---
 

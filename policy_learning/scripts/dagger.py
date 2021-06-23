@@ -99,7 +99,8 @@ class Dagger:
                         policy_path = "",
                         dataset_path = dataset_save_dir,
                         random_joint_pos = True,
-                        random_goal = True)
+                        random_goal = True,
+                        validate = False)
             self.client.send_goal(goal)
             self.client.wait_for_result(timeout=rospy.Duration(30))
 
@@ -112,7 +113,8 @@ class Dagger:
                         policy_path = "",
                         dataset_path = dataset_save_dir,
                         random_joint_pos = True,
-                        random_goal = True)
+                        random_goal = True,
+                        validate = False)
             self.client.send_goal(goal)
             self.client.wait_for_result(timeout=rospy.Duration(30))
 
@@ -150,7 +152,8 @@ class Dagger:
                     policy_path = model_load_path,
                     dataset_path = dataset_save_dir,
                     random_joint_pos = True,
-                    random_goal = True)
+                    random_goal = True,
+                    validate = False)
             else:
                 goal = policy_learning.msg.collect_rolloutGoal(
                     timeout = 10,
@@ -158,7 +161,8 @@ class Dagger:
                     policy_path = model_load_path,
                     dataset_path = dataset_save_dir,
                     random_joint_pos = True,
-                    random_goal = True)
+                    random_goal = True,
+                    validate = False)
             self.client.send_goal(goal)
             self.client.wait_for_result(timeout=rospy.Duration(30))
             if self.client.get_state() == GoalStatus.SUCCEEDED:

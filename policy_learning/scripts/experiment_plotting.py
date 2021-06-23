@@ -216,7 +216,8 @@ class ExperimentPlotter:
                 policy_path = model_load_path,
                 dataset_path = None,
                 random_goal = True,
-                random_joint_pos = True)
+                random_joint_pos = True,
+                validate = True)
         elif self.mode == "from_file":
             goal = policy_learning.msg.collect_rolloutGoal(
                 timeout = self.timeout,
@@ -226,7 +227,8 @@ class ExperimentPlotter:
                 initial_joint_pos = self.initial_joint_pos,
                 goal_pose = self.goal,
                 random_goal = False,
-                random_joint_pos = False)
+                random_joint_pos = False,
+                validate = True)
         else:
             print('No condition reached. Error!')
         return goal
