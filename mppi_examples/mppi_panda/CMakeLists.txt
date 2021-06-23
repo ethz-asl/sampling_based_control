@@ -39,10 +39,6 @@ add_executable(panda_dagger src/nodes/panda_dagger.cpp)
 target_link_libraries(panda_dagger ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_dagger ${PROJECT_NAME})
 
-add_executable(panda_validation src/nodes/panda_validation.cpp)
-target_link_libraries(panda_validation ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(panda_validation ${PROJECT_NAME})
-
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
