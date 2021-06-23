@@ -8,7 +8,7 @@ import glob
 import time
 
 # from learning import PolicyLearner
-from record_data import DataRecorder
+from mppi_ros.recorder import DataRecorder
 
 import rospy
 import actionlib
@@ -57,10 +57,10 @@ class ExperimentPlotter:
         self.experiment_name = "default"
         self.controller_name = "MPPI"
         self.mode = "from_file"  # new | from_file
-        self.n_experiment_runs = 100
+        self.n_experiment_runs = 2
         self.only_use_policy = False
         self.experiment_data_load_folder_name = "2021_05_25_14_11_00"
-        self.timeout = 10
+        self.timeout = 7.5
         self.choose_policy = True
         self.policy_choice = 34 
         ################
