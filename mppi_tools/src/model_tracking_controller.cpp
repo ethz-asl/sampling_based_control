@@ -41,19 +41,19 @@ void ModelTrackingController::step() {
   if (!initialized_) return;
 
   // sim + control
-  if (gui_.should_pause()){
-    if (gui_.step_simulation()){
+  if (gui_.should_pause()) {
+    if (gui_.step_simulation()) {
       solver_->set_observation(x_, t_);
       solver_->get_input(x_, u_, t_);
       x_ = model_->step(u_, solver_->config_.step_size);
       t_ += solver_->config_.step_size;
       gui_.step_simulation() = false;
     }
-    if (gui_.step_controller()){
+    if (gui_.step_controller()) {
       solver_->update_policy();
       gui_.step_controller() = false;
     }
-    if (gui_.step_all()){
+    if (gui_.step_all()) {
       solver_->set_observation(x_, t_);
       solver_->update_policy();
       solver_->get_input(x_, u_, t_);
@@ -61,15 +61,13 @@ void ModelTrackingController::step() {
       t_ += solver_->config_.step_size;
       gui_.step_all() = false;
     }
-  }
-  else {
+  } else {
     solver_->set_observation(x_, t_);
     solver_->update_policy();
     solver_->get_input(x_, u_, t_);
     x_ = model_->step(u_, solver_->config_.step_size);
     t_ += solver_->config_.step_size;
   }
-
 
   // gui
   gui_.reset_rollouts(solver_->rollouts_);

@@ -31,7 +31,6 @@ class ControlGui {
   bool& step_controller() { return step_controller_; };
   bool& step_all() { return step_all_; };
 
-
  private:
   bool setup_glfw();
 

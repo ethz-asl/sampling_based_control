@@ -39,25 +39,29 @@ class RecedingHorizonSplineTest : public ::testing::Test {
 TEST_F(RecedingHorizonSplineTest, VerboseRun) {
   int n_cpoints = spline_->c_points_.values_.size();
   std::vector<Eigen::ArrayXd> control_polygons;
-  for (int i=0; i<config_.samples; i++){
+  for (int i = 0; i < config_.samples; i++) {
     control_polygons.push_back(spline_->get_sample_control_polygon(i));
   }
 
   // shifting less then discretization dt should not change the control polygon
   double delta_time = 0.000001;
   spline_->shift(delta_time);
-  for (int i=0; i<config_.samples; i++){
-    ASSERT_TRUE(control_polygons[i].isApprox(spline_->get_sample_control_polygon(i)));
+  for (int i = 0; i < config_.samples; i++) {
+    ASSERT_TRUE(
+        control_polygons[i].isApprox(spline_->get_sample_control_polygon(i)));
   }
 
   // shifting more should shift c-polygon of one point only
   spline_->shift(config_.cp_dt + delta_time);
-  for (int i=0; i<config_.samples; i++){
-    ASSERT_TRUE(control_polygons[i].tail(n_cpoints-1).isApprox(spline_->get_sample_control_polygon(i).head(n_cpoints-1)));
+  for (int i = 0; i < config_.samples; i++) {
+    ASSERT_TRUE(control_polygons[i]
+                    .tail(n_cpoints - 1)
+                    .isApprox(spline_->get_sample_control_polygon(i).head(
+                        n_cpoints - 1)));
   }
 }
 
-//TEST_F(PathIntegralTest, AsyncRun) {
+// TEST_F(PathIntegralTest, AsyncRun) {
 //  Eigen::Vector2d x0{0.0, 0.0};
 //  Eigen::VectorXd u = Eigen::VectorXd::Zero(1);
 //
