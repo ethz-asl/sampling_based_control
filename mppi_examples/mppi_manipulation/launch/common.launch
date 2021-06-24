@@ -1,42 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="plot_cost" default="true"/>
-    <arg name="plot_input" default="true"/>
-    <arg name="plot_state" default="false"/>
+    <arg name="plot" default="false"/>
     <arg name="enable_obstacle" default="false"/>
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>
 
     <!--    Plot cost and other info-->
-    <group if="$(arg plot_cost)">
-        <arg name="mp_config" default="$(find mppi_panda)/resources/rqt_multiplot.xml"/>
-        <node name="rqt_multiplot_cost" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config) --multiplot-run-all"
+    <group if="$(arg plot)">
+        <arg name="plotjuggler_layout" default="$(find mppi_manipulation)/config/pj/layout_mobile.xml"/>
+        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
+              args="--layout $(arg plotjuggler_layout)"
               output="screen"/>
-    </group>
-
-    <!--    Plot input-->
-    <group if="$(arg plot_input)">
-        <arg name="mp_config_input" default="$(find mppi_manipulation)/config/multiplot/rqt_multiplot.xml"/>
-        <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_input)"
-              output="screen"/>
-    </group>
-
-    <!--    Plot base state -->
-    <group if="$(arg plot_state)">
-        <arg name="mp_config_nominal" default="$(find mppi_manipulation)/config/multiplot/base_nominal.xml"/>
-        <node name="rqt_multiplot_nominal" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_nominal)  --multiplot-run-all"
-              output="screen"/>
-
-        <arg name="mp_config_measured" default="$(find mppi_manipulation)/config/multiplot/base_measured.xml"/>
-        <node name="rqt_multiplot_measured" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_measured)  --multiplot-run-all"
-              output="screen"/>
-
     </group>
 
     <!--        Interactive marker to command the end effector-->
