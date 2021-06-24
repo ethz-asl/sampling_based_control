@@ -16,6 +16,7 @@ SplinePolicy::SplinePolicy(int nu, const Config& config) : Policy(nu) {
   cfg.degree = config.spline_degree;
   cfg.cp_dt = config.spline_dt;
   cfg.verbose = config.spline_verbose;
+  cfg.step_size = config.spline_step_size;
 
   policies_.clear();
   policies_.resize(nu_, RecedingHorizonSpline(cfg));

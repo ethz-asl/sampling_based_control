@@ -65,6 +65,7 @@ bool Config::init_from_file(const std::string& file) {
   spline_degree = parse_key_quiet<int>(solver_options, "spline_degree").value_or(spline_degree);
   spline_dt = parse_key_quiet<double>(solver_options, "spline_dt").value_or(spline_dt);
   spline_verbose = parse_key_quiet<double>(solver_options, "spline_verbose").value_or(spline_verbose);
+  spline_step_size = parse_key_quiet<double>(solver_options, "spline_step_size").value_or(spline_step_size);
   
   display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
   //clang-format on
@@ -103,6 +104,8 @@ std::ostream &operator<<(std::ostream &os, const mppi::Config &config) {
   os << " degree:  " << config.spline_degree << std::endl;
   os << " dt:      " << config.spline_dt << std::endl;
   os << " verbose: " << config.spline_verbose << std::endl;
+  os << " step_size: " << config.spline_step_size << std::endl;
+  
   
   os << "Filter: " << std::endl;
   os << " filter type:      " << config.filter_type << std::endl;

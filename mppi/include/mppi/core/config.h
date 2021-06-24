@@ -69,6 +69,7 @@ struct Config {
   int spline_degree = 3;
   double spline_dt = 0.15;
   double spline_verbose = false;
+  double spline_step_size = 0.1;
 
   bool display_update_freq = false;
 

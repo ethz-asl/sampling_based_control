@@ -115,8 +115,10 @@ RecedingHorizonSpline::RecedingHorizonSpline(const BSplinePolicyConfig &cfg) {
 
   // normal distribution
   sigma_ = cfg.sigma;
+  sigma_max_ = cfg.sigma;
   Eigen::MatrixXd C = cfg.sigma * Eigen::VectorXd::Ones(n_cpoints_).asDiagonal();
   dist_ = std::make_shared<multivariate_normal>(C);
+  step_size_ = cfg.step_size;
 
   // allocate memory for sampling
   N_ = Eigen::MatrixXd::Zero(n_cpoints_, n_samples_);
@@ -283,9 +285,46 @@ Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
 
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
-  // TODO(giuseppe) remove this magic number and parse from params
-  Eigen::ArrayXd delta = 0.01 * sigma_ * step_size *
-                         (weights.transpose() * get_gradients()).array();
+  Eigen::ArrayXd delta =
+      step_size_ * sigma_ * (weights.transpose() * get_gradients()).array();
+
+  // update variance
+  bool update_variance = false;
+
+  if (update_variance) {
+    V_ = get_variance().cwiseInverse().matrix().asDiagonal();
+    // std::cout << "variance matrix is: \n" << V_ << std::endl;
+    // Eigen::MatrixXd noise_matrix = compute(N_, t_);
+    // std::cout << "noise matrix is: \n" << noise_matrix << std::endl;
+
+    Eigen::MatrixXd Eps2 = compute(N_, t_).array().pow(2).matrix();
+    // std::cout << "noise squared matrix is: \n" << Eps2 << std::endl;
+    // std::cout << "weights are: \n" << weights.transpose() << std::endl;
+    // std::cout << "weighted noise matrix is: \n" << V_ * Eps2 * weights <<
+    // std::endl; std::cout << "summing up: \n" <<
+    // Eigen::VectorXd::Ones(t_.size()).transpose() * V_ * Eps2 * weights <<
+    // std::endl;
+
+    auto weighted_sigma = 1. / t_.size() *
+                          Eigen::VectorXd::Ones(t_.size()).transpose() * V_ *
+                          Eps2 * weights;
+    auto empiric_sigma =
+        1. / t_.size() * Eigen::VectorXd::Ones(t_.size()).transpose() * V_ *
+        Eps2 * Eigen::VectorXd::Ones(t_.size()) * 1.0 / n_samples_;
+
+    std::cout << "weighted sigma: " << weighted_sigma << std::endl;
+    std::cout << "empiric sigma: " << empiric_sigma << std::endl;
+    std::cout << "delta sigma: " << sigma_ - weighted_sigma[0] << std::endl;
+    double sigma_inv = 1.0 / sigma_;
+    sigma_inv = sigma_inv + sigma_inv * (sigma_ - weighted_sigma[0]);
+    sigma_inv = std::min(std::max(sigma_inv, 1. / sigma_max_),
+                         100.0);  // corresponindg to min sigma = 0.001
+    sigma_ = 1.0 / sigma_inv;
+
+    // dist_->set_covariance(sigma_ *
+    // Eigen::VectorXd::Ones(n_cpoints_).asDiagonal());
+    std::cout << "New sigma is: " << 1. / sigma_inv << std::endl;
+  }
 
   c_points_.values_ += delta;
   N_.colwise() -= delta.matrix();  // the noise wrt to the current newly defined

@@ -32,6 +32,7 @@ struct BSplinePolicyConfig {
   bool apply_bounds = false;
   double max_value;
   double min_value;
+  double step_size;
 };
 
 struct control_points {
@@ -110,6 +111,7 @@ class RecedingHorizonSpline {
 
   // TODO(giuseppe) make private again
  public:
+  double sigma_max_;
   double sigma_;
   control_points c_points_;
 
@@ -158,5 +160,6 @@ class RecedingHorizonSpline {
 
   // sampler
   std::shared_ptr<multivariate_normal> dist_;
+  double step_size_;
 };
 }
