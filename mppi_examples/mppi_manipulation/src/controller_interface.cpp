@@ -18,6 +18,9 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <mppi/policies/gaussian_policy.h>
+#include <mppi/policies/spline_policy.h>
+
 using namespace manipulation;
 
 bool PandaControllerInterface::init_ros() {
@@ -158,9 +161,23 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
                                           cost_param, fixed_base_);
 
   // -------------------------------
+  // policy
+  // -------------------------------
+  std::shared_ptr<mppi::Policy> policy;
+  bool gaussian_policy = false;
+  nh_.param<bool>("gaussian_policy", gaussian_policy, true);
+  if (gaussian_policy) {
+    policy = std::make_shared<mppi::GaussianPolicy>(
+        dynamics->get_input_dimension(), config_);
+  } else {
+    policy = std::make_shared<mppi::SplinePolicy>(
+        dynamics->get_input_dimension(), config_);
+  }
+
+  // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
 
   // -------------------------------
   // initialize reference

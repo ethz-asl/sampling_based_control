@@ -6,7 +6,7 @@ solver:
   horizon: 1.0
 
   cost_ratio: 0.2
-  caching_factor: 0.3
+  caching_factor: 0.0
   filtering: false
   substeps: 1
 
@@ -18,7 +18,7 @@ solver:
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25] # [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] #
+  input_variance: [ 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025] #
 
   discount_factor: 1.0
   verbose: false
@@ -35,11 +35,12 @@ solver:
   filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 
   spline_degree: 3
-  spline_dt: 0.2
+  spline_dt: 0.25
+  spline_step_size: 0.01
 
   bound_input: true
-  u_min: [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5] #[-2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0]
-  u_max: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5] #[2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+  u_min: [-2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0]
+  u_max: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
 #  expert_types: {NORM, IMP}
   expert_weights: [0.0, 1.0]
@@ -52,7 +53,7 @@ angular_weight: 1.0
 obstacle_radius: 0.15
 joint_limits: true
 holonomic: true
-gaussian_policy: true
+gaussian_policy: false
 
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0

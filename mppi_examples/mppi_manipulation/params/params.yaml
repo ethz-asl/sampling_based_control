@@ -45,6 +45,7 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
+gaussian_policy: true
 sequential: true
 static_optimization: false
 sim_dt: 0.015

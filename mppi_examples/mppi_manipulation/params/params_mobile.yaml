@@ -25,6 +25,10 @@ solver:
   u_min: [-0.2, -0.2, -0.2, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
   u_max: [0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
+  spline_degree: 3
+  spline_dt: 0.1
+  spline_step_size: 0.01
+
   adaptive_sampling: false
   input_variance: [0.05, 0.05, 0.05, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
@@ -45,7 +49,8 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-sequential: false
+gaussian_policy: true
+sequential: true
 static_optimization: false
 sim_dt: 0.015
 
