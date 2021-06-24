@@ -32,16 +32,7 @@ SplinePolicy::SplinePolicy(int nu, const Config& config) : Policy(nu) {
 
 void SplinePolicy::shift(const double t) {
   for (auto& policy : policies_) {
-    // std::cout << "Sample matrix: " << std::endl;
-    // std::cout << policy.P_ << std::endl;
-    // std::cout << "Nominal matrix: " << std::endl;
-    // std::cout << policy.Pn_.transpose() << std::endl;
-    // std::cout << "Shifting policies" << std::endl;
     policy.shift(t);
-    // std::cout << "Sample matrix after shift: " << std::endl;
-    // std::cout << policy.P_ << std::endl;
-    // std::cout << "Nominal matrix after shift: " << std::endl;
-    // std::cout << policy.Pn_.transpose() << std::endl;
   }
 }
 
@@ -74,12 +65,7 @@ void SplinePolicy::update(const std::vector<double> &weights, const double step_
   Eigen::VectorXd v = Eigen::VectorXd::Zero((int)weights.size());
   for (int i = 0; i < weights.size(); i++) v(i) = weights[i];
 
-  // std::cout << "Weights are: " << v.transpose() << std::endl;
   for (auto& policy : policies_) {
     policy.update(v, step_size);
-    // std::cout << "Sample matrix after update: " << std::endl;
-    // std::cout << policy.P_ << std::endl;
-    // std::cout << "Nominal matrix after update: " << std::endl;
-    // std::cout << policy.Pn_.transpose() << std::endl;
   }
 }

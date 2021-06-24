@@ -56,7 +56,6 @@ Eigen::ArrayXd mppi::B2(const Eigen::ArrayXd &x, int k, int i,
 void control_points::reset(double t) { times_ = times_ - times_[0] + t; }
 
 void control_points::shift_back(int i) {
-  double last_value = values_(size_ - 1);
   double last_time = times_(size_ - 1);
   double dt = times_(size_ - 1) - times_(size_ - 2);  // infer time delta
 

@@ -163,6 +163,15 @@ void ControlGui::draw() {
   ImGui::Text("Step:");
   ImGui::SameLine();
 
+  step_simulation_ = ImGui::Button("Step Simulation");
+  ImGui::SameLine();
+
+  step_controller_ = ImGui::Button("Step Controller");
+  ImGui::SameLine();
+
+  step_all_ = ImGui::Button("Step All");
+  ImGui::SameLine();
+
   // Arrow buttons with Repeater
   static int counter = 0;
   float spacing = ImGui::GetStyle().ItemInnerSpacing.x;

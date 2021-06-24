@@ -27,6 +27,10 @@ class ControlGui {
   void reset_weights(const std::vector<double>& weights);
 
   bool should_pause() const { return pause; }
+  bool& step_simulation() { return step_simulation_; };
+  bool& step_controller() { return step_controller_; };
+  bool& step_all() { return step_all_; };
+
 
  private:
   bool setup_glfw();
@@ -36,6 +40,9 @@ class ControlGui {
 
   // control
   bool pause = false;
+  bool step_simulation_ = false;
+  bool step_controller_ = false;
+  bool step_all_ = false;
 
   // mppi data
   mppi::Config config_;
