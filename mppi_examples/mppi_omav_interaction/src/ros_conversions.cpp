@@ -25,6 +25,16 @@ void EigenTrajectoryPointFromState(
     const observation_array_t &states, const input_array_t &inputs, int i,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt) {
 
+  trajectorypoint.position_W = states[i].head<3>();
+  trajectorypoint.orientation_W_B =
+      Eigen::Quaternion(states[i](3), states[i](4), states[i](5), states[i](6));
+  trajectorypoint.velocity_W = inputs[i].head<3>();
+  Eigen::Matrix3d R_W_B_des =
+      trajectorypoint.orientation_W_B.toRotationMatrix();
+  // Angluar velocities and accelerations need to be represented in body frame
+  trajectorypoint.angular_velocity_W =
+      R_W_B_des.transpose() * inputs[i].tail<3>();
+  // Filter the velocities to calculate the desired accelerations
   // Window size is 2*m+1
   const size_t m = 3;
   // Polynomial Order
@@ -64,17 +74,15 @@ void EigenTrajectoryPointFromState(
   double ang_acc_y = filter.filter(ang_vel_y);
   double ang_acc_z = filter.filter(ang_vel_z);
 
-  trajectorypoint.position_W = states[i].head<3>();
-  trajectorypoint.orientation_W_B =
-      Eigen::Quaternion(states[i](3), states[i](4), states[i](5), states[i](6));
-  trajectorypoint.velocity_W = inputs[i].head<3>();
-  trajectorypoint.angular_velocity_W = inputs[i].tail<3>();
-  trajectorypoint.acceleration_W.x() = lin_acc_x / dt;
-  trajectorypoint.acceleration_W.y() = lin_acc_y / dt;
-  trajectorypoint.acceleration_W.z() = lin_acc_z / dt;
-  trajectorypoint.angular_acceleration_W.x() = ang_acc_x / dt;
-  trajectorypoint.angular_acceleration_W.y() = ang_acc_y / dt;
-  trajectorypoint.angular_acceleration_W.z() = ang_acc_z / dt;
+  Eigen::Matrix<double, 3, 1> linear_acceleration;
+  linear_acceleration << lin_acc_x / dt, lin_acc_y / dt, lin_acc_z / dt;
+
+  Eigen::Matrix<double, 3, 1> angular_acceleration_W;
+  angular_acceleration_W << ang_acc_x / dt, ang_acc_y / dt, ang_acc_z / dt;
+
+  trajectorypoint.acceleration_W = linear_acceleration;
+  trajectorypoint.angular_acceleration_W =
+      R_W_B_des.transpose() * angular_acceleration_W;
   trajectorypoint.time_from_start_ns = ros::Duration(i * dt).toNSec();
 }
 
