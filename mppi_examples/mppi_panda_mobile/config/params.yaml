@@ -23,7 +23,7 @@ controller_node:
     linear_weight: 10.0
     angular_weight: 1.0
     obstacle_radius: 0.0
-    joint_limits: false
+    joint_limits: true
     holonomic: true
 
     policy_update_rate: 0.0  # 0.0 execute as fast as possible

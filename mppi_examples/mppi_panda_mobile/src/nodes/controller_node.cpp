@@ -14,6 +14,8 @@
 #include "geometry_msgs/msg/twist.hpp"
 
 using namespace panda_mobile;
+using namespace sensor_msgs::msg;
+using namespace geometry_msgs::msg;
 
 int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
@@ -26,10 +28,6 @@ int main(int argc, char** argv) {
   x.setZero();
   u.setZero();
 
-  // timing
-  double start_time = node->get_clock()->now().seconds();
-  double previous_time = 0.0;
-
   // robot description
   std::string robot_description;
   node->declare_parameter<std::string>("robot_description", "");
@@ -41,34 +39,43 @@ int main(int argc, char** argv) {
   // command
   geometry_msgs::msg::Twist base_cmd;
   sensor_msgs::msg::JointState joint_cmd;
-  for (int i = 1; i < 8; i++)
+  
+  for (int i = 1; i < 8; i++){
     joint_cmd.name.push_back("panda_joint" + std::to_string(i));
-  joint_cmd.position.resize(PandaMobileDim::STATE_DIMENSION - 3, 0.0);
-  joint_cmd.velocity.resize(PandaMobileDim::STATE_DIMENSION - 3, 0.0);
+    joint_cmd.position.push_back(0.0);
+    joint_cmd.velocity.push_back(0.0);    
+  }
 
-  auto joint_cmd_publisher =
-      node->create_publisher<sensor_msgs::msg::JointState>("/velocity_cmd", 1);
-  auto base_cmd_publisher = node->create_publisher<geometry_msgs::msg::Twist>("/base_cmd_vel", 1);
+
+  auto joint_cmd_publisher = node->create_publisher<JointState>("/velocity_cmd", 1);
+  auto base_cmd_publisher = node->create_publisher<Twist>("/base_cmd_vel", 1);
   
   // state update
-  std::atomic_bool first_reading = true;
-  std::mutex state_mutex;
-  auto state_callback = [&](const sensor_msgs::msg::JointState::SharedPtr msg) {
-    std::unique_lock<std::mutex> lock(state_mutex);
+  std::mutex observation_mutex;
+  double observation_time = 0.0;
+  double last_command_time = 0.0;
+  std::atomic_bool first_observation = true;
+
+  auto state_callback = [&](const JointState::SharedPtr msg) {
+    std::unique_lock<std::mutex> lock(observation_mutex);
+    observation_time = rclcpp::Time(msg->header.stamp).seconds();
     for (int i = 0; i < PandaMobileDim::STATE_DIMENSION; i++) {
       x(i) = msg->position[i];
-      if (first_reading) joint_cmd.position[i] = x(i);
+      if (first_observation && i>2) 
+        joint_cmd.position[i-3] = x(i);
     }
-    first_reading = false;
+    if (first_observation){
+      last_command_time = observation_time;
+      RCLCPP_INFO_STREAM(node->get_logger(), "Received first observation: " << x.transpose());
+    }
+    first_observation = false;
   };
-  auto state_subscriber_ =
-      node->create_subscription<sensor_msgs::msg::JointState>(
-          "/joint_states", 10, state_callback);
+
+  auto state_subscriber_ = node->create_subscription<JointState>("/joint_states", 10, state_callback);
 
   // end effector publisher
-  auto ee_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>(
-      "/end_effector", 10);
-  geometry_msgs::msg::PoseStamped ee_pose;
+  auto ee_publisher = node->create_publisher<PoseStamped>("/end_effector", 10);
+  PoseStamped ee_pose;
 
   // init the controller
   bool ok = controller.init();
@@ -80,25 +87,20 @@ int main(int argc, char** argv) {
 
   // set first observation
   {
-    std::unique_lock<std::mutex> lock(state_mutex);
-    controller.set_observation(x, 0.0);
+    std::unique_lock<std::mutex> lock(observation_mutex);
+    controller.set_observation(x, observation_time);
   }
 
   // start controller threads
   controller.start();
-
-  double dt=0.01;
-  rclcpp::Rate rate(1/dt);
+ 
+  std::array<double, 7> sign{1, -1, 1, 1, -1, 1, 1};
+  rclcpp::Rate rate(100);
   while (rclcpp::ok()) {
-    // avoid going back in the past
-    double current_time = node->get_clock()->now().seconds() - start_time;
-    previous_time =
-       (current_time < previous_time) ? previous_time : current_time;
-
     {
-      std::unique_lock<std::mutex> lock(state_mutex);
-      controller.set_observation(x, previous_time);
-      controller.get_input(x, u, previous_time);
+      std::unique_lock<std::mutex> lock(observation_mutex);
+      controller.set_observation(x, observation_time);
+      controller.get_input(x, u, observation_time);
     }
 
     //send command
@@ -106,18 +108,19 @@ int main(int argc, char** argv) {
     base_cmd.linear.y = u(1);
     base_cmd.angular.z = u(2);
     base_cmd_publisher->publish(base_cmd);
-    if (!first_reading){
+    if (!first_observation){
       for (int i = 0; i < joint_cmd.velocity.size(); i++){
-        joint_cmd.position[i] += u(i + 3) * dt;
-        joint_cmd.velocity[i] = u(i + 3);
+        joint_cmd.position[i] += u(i + 3) * (observation_time - last_command_time) * sign[i];
+        joint_cmd.velocity[i] = u(i + 3) * sign[i];
       }
-      joint_cmd.header.stamp = node->get_clock()->now();
+      joint_cmd.header.stamp = rclcpp::Time((int64_t)(observation_time*1e9));
       joint_cmd_publisher->publish(joint_cmd);
     }
+    last_command_time = observation_time;
 
     // debug
     {
-      std::unique_lock<std::mutex> lock(state_mutex);
+      std::unique_lock<std::mutex> lock(observation_mutex);
       ee_pose = controller.get_pose_end_effector_ros(x);
     }
     ee_publisher->publish(ee_pose);

@@ -10,7 +10,7 @@ solver:
   filtering: false
   substeps: 1
 
-  gradient_step_size: 0.5
+  gradient_step_size: 1.0
   momentum_step_size: 0.0
 
   filter_type: 1
@@ -18,7 +18,8 @@ solver:
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  #input_variance: [0.001, 0.001, 0.001, 0.001, 0.25, 0.001, 0.25, 0.001, 0.001, 0.001]
+  input_variance: [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025]
 
   discount_factor: 1.0
   verbose: false
@@ -32,9 +33,12 @@ solver:
 
   filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   filters_order: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-  filters_window: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+  filters_window: [50, 50, 50, 10, 10, 10, 10, 10, 10, 10]
 
   bound_input: true
+  # sign: [1, 1, 1, x, -1, 1, x, x, x, x]
+  #u_min: [-0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1]
+  #u_max: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
   u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
   u_max: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
