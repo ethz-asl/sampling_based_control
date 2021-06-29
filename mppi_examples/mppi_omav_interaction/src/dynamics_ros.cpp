@@ -98,7 +98,8 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
 
 void OMAVVelocityDynamicsRos::reset_to_default() {
   x_.setZero();
-  x_(9) = 1.0;
+  x_(3) = 1.0;
+  x_(22) = 1.0;
   reset(x_);
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
 }

@@ -74,8 +74,10 @@ public:
 
   raisim::World *get_world() { return &sim_; }
 
-  raisim::ArticulatedSystem *get_omav() { return omav; }
-  raisim::ArticulatedSystem *get_object() { return object; }
+  raisim::ArticulatedSystem *get_omav() { return omav_; }
+  raisim::ArticulatedSystem *get_object() { return object_; }
+  raisim::ArticulatedSystem *get_omav_des() { return omav_des_; }
+  raisim::ArticulatedSystem *get_object_des() { return object_des_; }
 
 protected:
   size_t input_dimension_;
@@ -89,15 +91,23 @@ private:
   std::string robot_description_;
   std::string object_description_;
 
-  raisim::ArticulatedSystem *omav;
-  raisim::ArticulatedSystem *object;
+  // Objects in desired simulation
+  raisim::ArticulatedSystem *omav_des_;
+  raisim::ArticulatedSystem *object_des_;
+
+  // Objects in odometry simulation
+  raisim::ArticulatedSystem *omav_;
+  raisim::ArticulatedSystem *object_;
   raisim::Ground *ground;
 
   raisim::World sim_;
+  raisim::World sim_desired_;
 
-  Eigen::VectorXd cmd, cmdv;
-  Eigen::VectorXd omav_pose, omav_velocity;
-  Eigen::VectorXd object_pose, object_velocity;
-  force_t contact_force;
+  Eigen::VectorXd cmd_, cmdv_;
+  Eigen::VectorXd omav_pose_, omav_velocity_, omav_pose_des_,
+      omav_velocity_des_;
+  Eigen::VectorXd object_pose_, object_velocity_, object_pose_des_,
+      object_velocity_des_;
+  force_t contact_force_;
 };
-} // namespace omav_velocity
+} // namespace omav_interaction

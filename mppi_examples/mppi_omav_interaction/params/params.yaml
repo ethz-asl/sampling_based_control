@@ -22,8 +22,8 @@ solver:
   filters_window: [ 10, 10, 10, 10, 10, 10 ]
 
   bound_input: true
-  u_min: [ -0.5, -0.5, -0.5, -3.0, -3.0, -3.0 ]
-  u_max: [ 0.5, 0.5, 0.5, 3.0, 3.0, 3.0 ]
+  u_min: [ -1.0, -1.0, -1.0, -3.0, -3.0, -3.0 ]
+  u_max: [ 1.0, 1.0, 1.0, 3.0, 3.0, 3.0 ]
 
   adaptive_sampling: false
   input_variance: [0.75, 0.75, 0.75, 1.5, 1.5, 1.5]
@@ -52,4 +52,15 @@ door_in_sim: false
 detailed_publishing: true
 sim_dt: 0.015
 
-initial_configuration: [ 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+initial_configuration: [ 0.0, 0.0, 1.0,     # Position OMAV
+                         1.0, 0.0, 0.0, 0.0, # Orientation OMAV
+                         0.0, 0.0, 0.0, # Linear Velocity OMAV
+                         0.0, 0.0, 0.0, # Angular Velocity OMAV
+                         0.0, 0.0, # Position & Velocity Object
+                         0.0, 0.0, 0.0, # Force
+                         0.0, # Contatc State
+                         0.0, 0.0, 1.0, # Position OMAV_des
+                         1.0, 0.0, 0.0, 0.0, # Orientation OMAV_des
+                         0.0, 0.0, 0.0, # Linear Velocity OMAV_des
+                         0.0, 0.0, 0.0, # Angular Velocity OMAV_des
+                         0.0, 0.0] # Position & Velocity Object_des

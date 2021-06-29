@@ -232,6 +232,7 @@ int main(int argc, char **argv) {
       if (running_rotors) {
         omav_trajectory_node->get_odometry(x);
       }
+      std::cout << x.transpose() << std::endl;
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);
       r.sleep();

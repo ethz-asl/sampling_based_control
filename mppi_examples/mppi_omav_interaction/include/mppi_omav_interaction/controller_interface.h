@@ -72,6 +72,7 @@ private:
   OMAVInteractionCostParam cost_param_;
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
+  ros::Publisher optimal_rollout_des_publisher_;
   ros::Publisher cost_publisher_;
   ros::Publisher object_state_publisher_;
   ros::Publisher normalized_force_publisher_;
