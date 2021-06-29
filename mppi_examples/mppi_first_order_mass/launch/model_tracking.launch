@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="plot_cost" default="false"/>
+
+    <!--  Run the test node-->
+    <node name="model_tracking" type="model_tracking" pkg="mppi_first_order_mass" output="screen">
+        <rosparam command="load" file="$(find mppi_first_order_mass)/config/params.yaml"/>
+        <param name="config_file" value="$(find mppi_first_order_mass)/config/params.yaml"/>
+    </node>
+
+    <arg name="plotjuggler_layout" default="$(find mppi_first_order_mass)/config/layout.xml"/>
+    <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
+          args="--layout $(arg plotjuggler_layout)"
+          output="screen"/>
+
+</launch>

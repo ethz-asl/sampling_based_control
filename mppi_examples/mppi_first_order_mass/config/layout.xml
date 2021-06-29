@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root version="2.3.8">
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab tab_name="Trajectory" containers="1">
+   <Container>
+    <DockSplitter count="1" orientation="-" sizes="1">
+     <DockArea name="...">
+      <plot style="Lines" mode="XYPlot">
+       <range right="2.833052" bottom="-1.200000" top="1.200000" left="-0.833472"/>
+       <limitY min="-1.2" max="1.2"/>
+       <curve curve_x="/state/x" name="/state/trajectory" curve_y="/state/y" color="#1ac938"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Input" containers="1">
+   <Container>
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockArea name="...">
+      <plot style="Lines" mode="TimeSeries">
+       <range right="122.500057" bottom="-0.149231" top="0.145181" left="72.599886"/>
+       <limitY/>
+       <curve name="/input/data.0" color="#ff2d0e"/>
+      </plot>
+     </DockArea>
+     <DockArea name="...">
+      <plot style="Lines" mode="TimeSeries">
+       <range right="122.500057" bottom="-0.141062" top="0.155752" left="72.599886"/>
+       <limitY/>
+       <curve name="/input/data.1" color="#4c53f1"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Cost" containers="1">
+   <Container>
+    <DockSplitter count="1" orientation="-" sizes="1">
+     <DockArea name="...">
+      <plot style="Lines" mode="TimeSeries">
+       <range right="121.999899" bottom="-0.100000" top="0.100000" left="71.999955"/>
+       <limitY/>
+       <curve name="/max_rollout_cost/data" color="#9467bd"/>
+       <curve name="/min_rollout_cost/data" color="#d62728"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <default time_axis=""/>
+  </plugin>
+  <plugin ID="DataLoad ROS bags">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="LSL Subscriber"/>
+  <plugin ID="MQTT Subscriber"/>
+  <plugin ID="ROS Topic Subscriber">
+   <use_header_stamp value="true"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin ID="CSV Exporter" status="idle"/>
+  <plugin ID="ROS /rosout Visualization" status="idle"/>
+  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>
+
