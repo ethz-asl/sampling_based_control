@@ -145,7 +145,7 @@ void RecedingHorizonSpline::gen_knots() {
 void RecedingHorizonSpline::gen_control_points() {
   c_points_.resize(n_cpoints_);
   c_points_.times_ = knots_.head(n_cpoints_) * cp_dt_ - time_shift_;
-  c_points_.values_.setRandom();
+  c_points_.values_.setZero();
   c_points_.values_ =
       c_points_.values_.cwiseMax(min_value_).cwiseMin(max_value_);
 }
@@ -252,6 +252,7 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
   }
   else{
     std::vector<size_t> sorted_idxs = sort_indexes(weights);
+
     O_.setIdentity();
     std::transform(O_.indices().data(), O_.indices().data() + n_samples_, O_.indices().data(),
                    [&](int i) { return sorted_idxs[i]; });
@@ -261,6 +262,9 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
 
   // Keep one sample noise-free
   N_.col(n_samples_-1).setZero();
+
+  // Set one sample completely to zero (when summed with control points)
+  N_.col(n_samples_ - 2) = -c_points_.values_;
 
   // Compute new samples (including nominal trajectory as last sample)
   // Compute capped control points
@@ -284,7 +288,8 @@ Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
 
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
-  Eigen::ArrayXd delta =
+  Eigen::ArrayXd c_points_temp = c_points_.values_;
+  Eigen::ArrayXd delta_temp =
       step_size_ * sigma_ * (weights.transpose() * get_gradients()).array();
 
   // update variance
@@ -325,9 +330,25 @@ void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
     std::cout << "New sigma is: " << 1. / sigma_inv << std::endl;
   }
 
-  c_points_.values_ += delta;
-  N_.colwise() -= delta.matrix();  // the noise wrt to the current newly defined
-                                   // control poligon
+  //  std::cout << "=====================================" << std::endl;
+  //  std::cout << "c_points temp: " << c_points_temp.transpose() << std::endl;
+  //  std::cout << "delta temp: " << delta_temp.transpose() << std::endl;
+
+  c_points_temp += delta_temp;
+  //  std::cout << "c_points temp + delta: " << c_points_temp.transpose() <<
+  //  std::endl;
+
+  // make sure that control points stay within bounds
+  c_points_.values_ = c_points_temp.cwiseMin(max_value_).cwiseMax(min_value_);
+  //  std::cout << "c_points clamped: " << c_points_.values_.transpose() <<
+  //  std::endl;
+
+  Eigen::ArrayXd delta = delta_temp - (c_points_temp - c_points_.values_);
+  //  std::cout << "max delta: " << delta.transpose() << std::endl;
+
+  // update noise (deviation) wrt to new control polygon
+  N_.colwise() -= delta.matrix();
+
   // control polygon
   Pn_ = compute_nominal();
 }

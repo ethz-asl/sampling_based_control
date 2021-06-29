@@ -18,7 +18,7 @@ solver:
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [ 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025] #
+  input_variance: [ 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25] #
 
   discount_factor: 1.0
   verbose: false
@@ -35,8 +35,8 @@ solver:
   filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 
   spline_degree: 3
-  spline_dt: 0.25
-  spline_step_size: 0.01
+  spline_dt: 0.1
+  spline_step_size: 0.02
 
   bound_input: true
   u_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]

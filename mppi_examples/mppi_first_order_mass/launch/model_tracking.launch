@@ -9,9 +9,9 @@
         <param name="config_file" value="$(find mppi_first_order_mass)/config/params.yaml"/>
     </node>
 
-    <arg name="plotjuggler_layout" default="$(find mppi_first_order_mass)/config/layout.xml"/>
-    <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
-          args="--layout $(arg plotjuggler_layout)"
-          output="screen"/>
+<!--    <arg name="plotjuggler_layout" default="$(find mppi_first_order_mass)/config/layout.xml"/>-->
+<!--    <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"-->
+<!--          args="&#45;&#45;layout $(arg plotjuggler_layout)"-->
+<!--          output="screen"/>-->
 
 </launch>
