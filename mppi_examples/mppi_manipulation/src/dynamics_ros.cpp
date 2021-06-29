@@ -4,6 +4,7 @@
 
 #include "mppi_manipulation/dynamics_ros.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Float64.h>
 
 namespace manipulation {
 
@@ -23,6 +24,9 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   ee_publisher_ =
       nh_.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   handle_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/handle", 10);
+  tau_ext_publisher_ =
+      nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
+  power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
 
   if (fixed_base) {
     joint_state_.name = {
@@ -53,6 +57,8 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   force_marker_.color.b = 0.0;
   force_marker_.color.g = 0.0;
   force_marker_.color.a = 1.0;
+
+  tau_ext_msg_.data.resize(get_panda()->getDOF());
 }
 
 void ManipulatorDynamicsRos::reset_to_default() {
@@ -95,6 +101,18 @@ void ManipulatorDynamicsRos::publish_ros() {
     force_markers.markers.push_back(force_marker_);
   }
   contact_forces_publisher_.publish(force_markers);
+
+  // publish external torques
+  get_external_torque(tau_ext_);
+  for (size_t i = 0; i < get_panda()->getDOF(); i++) {
+    tau_ext_msg_.data[i] = tau_ext_[i];
+  }
+  tau_ext_publisher_.publish(tau_ext_msg_);
+
+  // publish power exchanged
+  std_msgs::Float64 power;
+  power.data = tau_ext_.transpose() * joint_v;
+  power_publisher_.publish(power);
 
   // publish end effector pose
   Eigen::Vector3d ee_position;

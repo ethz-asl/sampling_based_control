@@ -30,6 +30,7 @@ void PandaRaisimDynamics::initialize_world(
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+  tau_ext_ = Eigen::VectorXd::Zero(panda->getDOF());
 
   /// create raisim objects
   object_description_ = object_description;
@@ -213,6 +214,19 @@ std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
     forces.push_back(force);
   }
   return forces;
+}
+
+void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
+  Eigen::MatrixXd J(6, panda->getDOF());
+  J.setZero();
+  tau.setZero();
+  for (const auto contact : panda->getContacts()) {
+    if (!contact.skip() && !contact.isSelfCollision()) {
+      panda->getDenseJacobian(contact.getlocalBodyIndex(),
+                              contact.getPosition(), J);
+      tau += J.transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
+    }
+  }
 }
 
 double PandaRaisimDynamics::get_object_displacement() const {

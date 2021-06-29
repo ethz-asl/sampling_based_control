@@ -73,6 +73,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void get_handle_pose(Eigen::Vector3d& position,
                        Eigen::Quaterniond& orientation);
   double get_object_displacement() const;
+  void get_external_torque(Eigen::VectorXd& tau_ext);
 
  protected:
   bool fixed_base_;
@@ -81,6 +82,8 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   size_t state_dimension_;
 
   mppi::observation_t x_;
+  Eigen::VectorXd tau_ext_;
+  Eigen::VectorXd joint_p, joint_v;
 
  private:
   double dt_;
@@ -94,7 +97,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
 
   Eigen::VectorXd object_p, object_v;
   Eigen::VectorXd cmd, cmdv;
-  Eigen::VectorXd joint_p, joint_v;
   Eigen::VectorXd joint_p_gain, joint_d_gain;
   Eigen::VectorXd joint_p_desired, joint_v_desired;
 
