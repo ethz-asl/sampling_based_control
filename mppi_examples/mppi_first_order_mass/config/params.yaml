@@ -22,16 +22,16 @@ solver:
   u_min: [-1.0, -1.0]
   u_max: [1.0, 1.0]
 
-  spline_degree: 3
+  spline_degree: 5
   spline_dt: 0.1
-  spline_step_size: 0.25
+  spline_step_size: 0.01
 
   adaptive_sampling: false
   input_variance: [0.01, 0.01]
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 8
   debug_print: false
 
   use_tree_search: false

@@ -191,7 +191,7 @@ void RecedingHorizonSpline::shift(const double t) {
     n_cpoints_shift = static_cast<int>(std::floor((t - t_start_) / cp_dt_));
     if (n_cpoints_shift > 0) {
       c_points_.shift_back(n_cpoints_shift);
-      t_start_ = c_points_.times_[0];
+      t_start_ = t;  // c_points_.times_[0];
 
       // permute noise matrix
       L_.setIdentity();
@@ -289,8 +289,8 @@ Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
   Eigen::ArrayXd c_points_temp = c_points_.values_;
-  Eigen::ArrayXd delta_temp =
-      step_size_ * sigma_ * (weights.transpose() * get_gradients()).array();
+  Eigen::ArrayXd delta_temp = step_size * step_size_ * sigma_ *
+                              (weights.transpose() * get_gradients()).array();
 
   // update variance
   bool update_variance = false;
