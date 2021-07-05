@@ -14,9 +14,10 @@
 #include <ros/package.h>
 
 #define PANDA_UPPER_LIMITS \
-  2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
-#define PANDA_LOWER_LIMITS \
-  -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973
+  2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973
+#define PANDA_LOWER_LIMITS                                                 \
+  -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, \
+      -2.8973
 
 namespace panda_mobile {
 
@@ -60,12 +61,7 @@ void PandaMobileCost::set_obstacle_radius(const double r) {
 
 mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
     const Eigen::VectorXd& x) {
-  mppi_pinocchio::Pose base_pose;
-  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation =
-      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose(tracked_frame_);
-  return base_pose * arm_pose;
+  return robot_model_.get_pose(tracked_frame_);
 }
 
 mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
@@ -75,7 +71,7 @@ mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
   mppi::cost_t cost;
 
   // update model
-  robot_model_.update_state(x.head<7>());
+  robot_model_.update_state(x);
 
   // target reaching cost
 
@@ -95,12 +91,19 @@ mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
   if (obstacle_dist < obstacle_radius_) cost += Q_obst_;
 
   // reach cost
-  if (robot_model_.get_pose(tracked_frame_).translation.head<2>().norm() > 1.0)
-    cost += Q_reach_;
+  if (Q_reach_ > 0) {
+    double reach = (robot_model_.get_pose(tracked_frame_).translation -
+                    robot_model_.get_pose("panda_link0").translation)
+                       .head<2>()
+                       .norm();
+    if (reach > 1.0) {
+      cost += Q_reach_;
+    }
+  }
 
   // joint limits cost
   if (joint_limits_) {
-    for (size_t i = 0; i < 7; i++) {
+    for (int i = 0; i < x.size(); i++) {
       if (x(i) < joint_limits_lower_(i))
         cost += 100 + 10 * std::pow(joint_limits_lower_(i) - x(i), 2);
       if (x(i) > joint_limits_upper_(i))

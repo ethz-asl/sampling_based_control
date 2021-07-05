@@ -22,6 +22,7 @@
     <node name="panda_mobile_control" type="panda_mobile_control" pkg="mppi_panda_mobile" output="screen"
           launch-prefix="$(arg launch_prefix)">
         <rosparam command="load" file="$(find mppi_panda_mobile)/config/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_panda_mobile)/config/filter_params.yaml"/>
         <param name="config_file" value="$(find mppi_panda_mobile)/config/params.yaml"/>
     </node>
 

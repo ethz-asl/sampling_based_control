@@ -40,8 +40,8 @@ class PandaMobileCost : public mppi::Cost {
   double Q_reach_ = 100000;
   bool obstacle_set_ = false;
 
-  Eigen::Matrix<double, 7, 1> joint_limits_lower_;
-  Eigen::Matrix<double, 7, 1> joint_limits_upper_;
+  Eigen::Matrix<double, 10, 1> joint_limits_lower_;
+  Eigen::Matrix<double, 10, 1> joint_limits_upper_;
 
  public:
   mppi::cost_ptr create() override;

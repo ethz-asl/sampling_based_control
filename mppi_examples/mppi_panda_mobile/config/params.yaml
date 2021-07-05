@@ -1,5 +1,5 @@
 solver:
-  rollouts: 100
+  rollouts: 200
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.01
@@ -18,11 +18,11 @@ solver:
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [ 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25] #
+  input_variance: [ 0.25, 0.25, 0.0025, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25] #
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 8
   debug_print: false
 
   use_tree_search: false
@@ -32,7 +32,7 @@ solver:
 
   filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   filters_order: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  filters_window: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+  filters_window: [30, 30, 30, 10, 10, 10, 10, 10, 10, 10]
 
   spline_degree: 3
   spline_dt: 0.1
@@ -47,13 +47,13 @@ solver:
   log_data: true
 
 
-initial_configuration: [0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
+initial_configuration: [0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]
 linear_weight: 10.0
 angular_weight: 1.0
 obstacle_radius: 0.15
-joint_limits: true
+joint_limits: false
 holonomic: true
-gaussian_policy: false
+gaussian_policy: true
 
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0
@@ -61,6 +61,8 @@ publish_ros: true
 ros_publish_rate: 10.0
 
 sequential: false
+
+apply_safety_filter: true
 
 static_optimization: false
 sim_dt: 0.01
