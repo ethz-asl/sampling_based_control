@@ -59,9 +59,6 @@ class PandaMobileModelTracking : public mppi_tools::ModelTrackingController {
   ros::Subscriber ee_pose_desired_subscriber_;
   ros::Publisher state_publisher_;
 
-  tf2_ros::TransformBroadcaster tf_broadcaster_;
-  geometry_msgs::TransformStamped world_base_tf_;
-
   sensor_msgs::JointState joint_state_;
   nav_msgs::Path optimal_path_;
   geometry_msgs::PoseStamped obstacle_pose_;

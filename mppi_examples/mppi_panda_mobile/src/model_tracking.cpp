@@ -37,15 +37,12 @@ bool PandaMobileModelTracking::init_ros() {
 
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  joint_state_.name = {"panda_joint1", "panda_joint2", "panda_joint3",
+  joint_state_.name = {"x_base_joint", "y_base_joint", "w_base_joint",
+                       "panda_joint1", "panda_joint2", "panda_joint3",
                        "panda_joint4", "panda_joint5", "panda_joint6",
                        "panda_joint7"};
-  joint_state_.position.resize(7);
+  joint_state_.position.resize(10);
   joint_state_.header.frame_id = "base";
-
-  // base tf
-  world_base_tf_.header.frame_id = "world";
-  world_base_tf_.child_frame_id = "base";
 
   if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_))
     return false;
@@ -222,18 +219,7 @@ void PandaMobileModelTracking::publish_ros() {
   optimal_trajectory_publisher_.publish(optimal_path_);
 
   // publish joint state
-  for (size_t i = 0; i < 7; i++) joint_state_.position[i] = x_(i + 3);
+  for (size_t i = 0; i < 10; i++) joint_state_.position[i] = x_(i );
   joint_state_.header.stamp = ros::Time::now();
   state_publisher_.publish(joint_state_);
-
-  // publish base transform
-  world_base_tf_.header.stamp = ros::Time::now();
-  world_base_tf_.transform.translation.x = x_(0);
-  world_base_tf_.transform.translation.y = x_(1);
-  Eigen::Quaterniond q(Eigen::AngleAxisd(x_(2), Eigen::Vector3d::UnitZ()));
-  world_base_tf_.transform.rotation.x = q.x();
-  world_base_tf_.transform.rotation.y = q.y();
-  world_base_tf_.transform.rotation.z = q.z();
-  world_base_tf_.transform.rotation.w = q.w();
-  tf_broadcaster_.sendTransform(world_base_tf_);
 }
