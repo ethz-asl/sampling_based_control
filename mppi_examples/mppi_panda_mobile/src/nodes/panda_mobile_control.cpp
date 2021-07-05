@@ -8,10 +8,10 @@
 
 #include "mppi_panda_mobile/controller_interface.h"
 #include "mppi_panda_mobile/dynamics.h"
+#include "mppi_panda_mobile/safety_filter/safety_filter.hpp"
 
 #include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
-#include <tf2_ros/transform_broadcaster.h>
 #include <chrono>
 
 using namespace panda_mobile;
@@ -24,11 +24,24 @@ int main(int argc, char** argv) {
   auto sequential = nh.param<bool>("sequential", false);
   auto max_sim_time = nh.param<double>("max_sim_time", 0.0);
 
-  auto controller = PandaMobileControllerInterface(nh);
-
   std::string robot_description =
       nh.param<std::string>("/robot_description", "");
   auto simulation = PandaMobileDynamics(robot_description);
+
+  bool apply_safety_filter;
+  nh.param<bool>("apply_safety_filter", apply_safety_filter, false);
+
+  PandaMobileSafetyFilterSettings filter_settings;
+  if (!filter_settings.init_from_ros(nh) && apply_safety_filter) {
+    ROS_ERROR("Failed to initialize the safety filter!");
+    return 0;
+  }
+
+  PandaMobileSafetyFilter filter(robot_description, filter_settings);
+  Eigen::VectorXd u_opt;
+  u_opt.setZero(PandaMobileDim::INPUT_DIMENSION);
+
+  auto controller = PandaMobileControllerInterface(nh);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
   auto initial_configuration =
@@ -44,21 +57,12 @@ int main(int argc, char** argv) {
   ros::Publisher state_publisher =
       nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
+  joint_state.name = {"x_base_joint", "y_base_joint", "w_base_joint",
+                      "panda_joint1", "panda_joint2", "panda_joint3",
                       "panda_joint4", "panda_joint5", "panda_joint6",
                       "panda_joint7"};
-  joint_state.position.resize(7);
-  joint_state.header.frame_id = "base";
-
-  // base tf
-  tf2_ros::TransformBroadcaster tf_broadcaster;
-  geometry_msgs::TransformStamped world_base_tf;
-  world_base_tf.header.frame_id = "world";
-  world_base_tf.child_frame_id = "base";
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
-                      "panda_joint4", "panda_joint5", "panda_joint6",
-                      "panda_joint7"};
-  joint_state.position.resize(7);
+  joint_state.position.resize(10);
+  joint_state.header.frame_id = "world";
 
   ros::Publisher ee_publisher =
       nh.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
@@ -72,7 +76,7 @@ int main(int argc, char** argv) {
   // init the controller
   bool ok = controller.init();
   if (!ok) {
-    throw std::runtime_error("Failed to initialzied controller!");
+    throw std::runtime_error("Failed to initialize the controller!");
   }
 
   // set the very first observation
@@ -94,25 +98,20 @@ int main(int argc, char** argv) {
     }
 
     // publish joint state
-    for (size_t i = 0; i < 7; i++) joint_state.position[i] = x(i);
+    for (size_t i = 0; i < 10; i++) joint_state.position[i] = x(i);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 
-    if (!static_optimization) {
-      x = simulation.step(u, sim_dt);
-      sim_time += sim_dt;
+    if (apply_safety_filter) {
+      filter.apply(x, u, u_opt);
+    } else {
+      u_opt = u;
     }
 
-    // publish base transform
-    world_base_tf.header.stamp = ros::Time::now();
-    world_base_tf.transform.translation.x = x(7);
-    world_base_tf.transform.translation.y = x(8);
-    Eigen::Quaterniond q(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-    world_base_tf.transform.rotation.x = q.x();
-    world_base_tf.transform.rotation.y = q.y();
-    world_base_tf.transform.rotation.z = q.z();
-    world_base_tf.transform.rotation.w = q.w();
-    tf_broadcaster.sendTransform(world_base_tf);
+    if (!static_optimization) {
+      x = simulation.step(u_opt, sim_dt);
+      sim_time += sim_dt;
+    }
 
     ee_pose = controller.get_pose_end_effector_ros(x);
     ee_publisher.publish(ee_pose);

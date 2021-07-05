@@ -187,13 +187,8 @@ void PandaMobileModelTracking::obstacle_callback(
 
 mppi_pinocchio::Pose PandaMobileModelTracking::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-  robot_model_.update_state(x.head<7>());
-  mppi_pinocchio::Pose base_pose;
-  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation =
-      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose("panda_hand");
-  return base_pose * arm_pose;
+  robot_model_.update_state(x);
+  return robot_model_.get_pose("panda_hand");
 }
 
 geometry_msgs::PoseStamped PandaMobileModelTracking::get_pose_end_effector_ros(
@@ -227,15 +222,15 @@ void PandaMobileModelTracking::publish_ros() {
   optimal_trajectory_publisher_.publish(optimal_path_);
 
   // publish joint state
-  for (size_t i = 0; i < 7; i++) joint_state_.position[i] = x_(i);
+  for (size_t i = 0; i < 7; i++) joint_state_.position[i] = x_(i + 3);
   joint_state_.header.stamp = ros::Time::now();
   state_publisher_.publish(joint_state_);
 
   // publish base transform
   world_base_tf_.header.stamp = ros::Time::now();
-  world_base_tf_.transform.translation.x = x_(7);
-  world_base_tf_.transform.translation.y = x_(8);
-  Eigen::Quaterniond q(Eigen::AngleAxisd(x_(9), Eigen::Vector3d::UnitZ()));
+  world_base_tf_.transform.translation.x = x_(0);
+  world_base_tf_.transform.translation.y = x_(1);
+  Eigen::Quaterniond q(Eigen::AngleAxisd(x_(2), Eigen::Vector3d::UnitZ()));
   world_base_tf_.transform.rotation.x = q.x();
   world_base_tf_.transform.rotation.y = q.y();
   world_base_tf_.transform.rotation.z = q.z();
