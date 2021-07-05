@@ -25,9 +25,6 @@
 #include "mppi/utils/logging.h"
 #include "mppi/utils/savgol_filter.h"
 
-#include "mppi/tree_search/experts/expert.h"
-#include "mppi/tree_search/tree/tree_manager.h"
-
 namespace mppi {
 
 Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
@@ -35,18 +32,9 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
     : config_(config),
       cost_(std::move(cost)),
       dynamics_(std::move(dynamics)),
-      policy_(std::move(policy)),
-      expert_(config_, dynamics_),
-      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_) {
+      policy_(std::move(policy)) {
   init_data();
-  //init_filter();
-  if (!config_.use_tree_search) {
-    init_threading();
-  }
-
-  if (config_.use_tree_search) {
-    init_tree_manager_dynamics();
-  }
+  init_threading();
 
   if (config_.display_update_freq) {
     start_time_ = std::chrono::high_resolution_clock::now();
@@ -132,12 +120,6 @@ void Solver::init_threading() {
   }
 }
 
-void Solver::init_tree_manager_dynamics() {
-  for (size_t i = 0; i < config_.rollouts; i++) {
-    tree_dynamics_v_.push_back(dynamics_->create());
-  }
-}
-
 void Solver::update_policy() {
   if (!observation_set_) {
     log_warning_throttle(1.0,
@@ -150,19 +132,7 @@ void Solver::update_policy() {
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
       update_reference();
-
-      if (config_.use_tree_search) {
-        timer_.reset();
-        update_experts();
-        timer_.add_interval("update_experts");
-        sample_trajectories_via_tree();
-        timer_.add_interval("sample_trajectories_via_tree");
-        overwrite_rollouts();
-        timer_.add_interval("overwrite_rollouts");
-        timer_.print_intervals(100);
-      } else {
-        sample_trajectories();
-      }
+      sample_trajectories();
       optimize();
       // filter_input();
 
@@ -301,9 +271,6 @@ void Solver::update_reference() {
     for (auto& cost : cost_v_) cost->set_reference_trajectory(rr_tt_ref_);
   }
 
-  if (config_.use_tree_search) {
-    tree_manager_.set_reference_trajectory(rr_tt_ref_);
-  }
 }
 
 void Solver::sample_noise(input_t& noise) { sampler_->get_sample(noise); }
@@ -396,15 +363,6 @@ void Solver::sample_trajectories() {
 
     for (size_t i = 0; i < config_.threads; i++) futures_[i].get();
   }
-}
-
-void Solver::sample_trajectories_via_tree() {
-  tree_manager_.build_new_tree(x0_internal_, t0_internal_, opt_roll_);
-}
-
-void Solver::overwrite_rollouts() {
-  rollouts_ = tree_manager_.get_rollouts();
-  rollouts_cost_ = tree_manager_.get_rollouts_cost();
 }
 
 void Solver::compute_weights() {
@@ -595,8 +553,6 @@ bool Solver::get_optimal_rollout(observation_array_t& xx, input_array_t& uu) {
                      opt_roll_cache_.uu.end());
   return true;
 }
-
-void Solver::update_experts() { expert_.update_expert(1, opt_roll_.uu); };
 
 void Solver::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);

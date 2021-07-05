@@ -30,9 +30,6 @@
 #include "mppi/utils/thread_pool.h"
 #include "mppi/utils/timer.h"
 
-#include "mppi/tree_search/experts/expert.h"
-#include "mppi/tree_search/tree/tree_manager.h"
-
 namespace mppi {
 
 class Solver {
@@ -66,11 +63,6 @@ class Solver {
    * 1)
    */
   void init_threading();
-
-  /**
-   * @brief Initializes the variables for the tree manager
-   */
-  void init_tree_manager_dynamics();
 
   /**
    * @brief Calculates and displays the frequency of the control loop
@@ -121,19 +113,6 @@ class Solver {
   void sample_trajectories();
 
   /**
-   * @brief Samples multiple control trajectories using a FD-MCTS. Based on a
-   * pruning threshold the structure of the tree can be controlled. The last
-   * optimal rollout is always fully propagated through the tree.
-   */
-  void sample_trajectories_via_tree();
-
-  /**
-   * @brief Overwrites the rollouts, since the tree has no direct access to the
-   * Solver class.
-   */
-  void overwrite_rollouts();
-
-  /**
    * @brief Use the data collected from rollouts and return the optimal input
    */
   void optimize();
@@ -179,11 +158,6 @@ class Solver {
    * @brief Initializes rollouts for the first time
    */
   void initialize_rollouts();
-
-  /**
-   * @brief Update the experts based on data from last iteration
-   */
-  void update_experts();
 
   /**
    * @brief Fill the optimized policy cache with the latest policy and set flags
@@ -336,12 +310,6 @@ class Solver {
   policy_ptr policy_;
   // summary
   data_t data_;
-  // expert class gives access to all experts implemented
-  Expert expert_;
-  // tree_manager class controls the building of the tree
-  TreeManager tree_manager_;
-  // vector of dynamics functions (dim = n_rollouts) for multithreading
-  std::vector<dynamics_ptr> tree_dynamics_v_;
   // stage_cost used for logging
   double stage_cost_ = 0;
   // time to measure the frequency of the control loop
