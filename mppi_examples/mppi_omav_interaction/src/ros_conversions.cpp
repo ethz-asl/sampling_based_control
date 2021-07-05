@@ -25,14 +25,12 @@ void EigenTrajectoryPointFromState(
     const observation_array_t &states, const input_array_t &inputs, int i,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt) {
 
-  trajectorypoint.position_W = states[i].head<3>();
-  trajectorypoint.orientation_W_B =
-      Eigen::Quaternion(states[i](3), states[i](4), states[i](5), states[i](6));
-  trajectorypoint.velocity_W = inputs[i].head<3>();
-  Eigen::Matrix3d R_W_B_des =
-      trajectorypoint.orientation_W_B.toRotationMatrix();
+  trajectorypoint.position_W = states[i].segment<3>(19);
+  trajectorypoint.orientation_W_B = Eigen::Quaternion(
+      states[i](22), states[i](23), states[i](24), states[i](25));
+  trajectorypoint.velocity_W = states[i].segment<3>(26);
   // Angluar velocities and accelerations need to be represented in body frame
-  trajectorypoint.angular_velocity_W = inputs[i].tail<3>();
+  trajectorypoint.angular_velocity_W = states[i].segment<3>(29);
   // Filter the velocities to calculate the desired accelerations
   // Window size is 2*m+1
   const size_t m = 3;
@@ -47,24 +45,30 @@ void EigenTrajectoryPointFromState(
   const int d = 1;
   gram_sg::SavitzkyGolayFilter filter(m, t, n, d);
 
-  std::vector<double> lin_vel_x = {
-      inputs[i](0),     inputs[i + 1](0), inputs[i + 2](0), inputs[i + 3](0),
-      inputs[i + 4](0), inputs[i + 5](0), inputs[i + 6](0)};
-  std::vector<double> lin_vel_y = {
-      inputs[i](1),     inputs[i + 1](1), inputs[i + 2](1), inputs[i + 3](1),
-      inputs[i + 4](1), inputs[i + 5](1), inputs[i + 6](1)};
-  std::vector<double> lin_vel_z = {
-      inputs[i](2),     inputs[i + 1](2), inputs[i + 2](2), inputs[i + 3](2),
-      inputs[i + 4](2), inputs[i + 5](2), inputs[i + 6](2)};
-  std::vector<double> ang_vel_x = {
-      inputs[i](3),     inputs[i + 1](3), inputs[i + 2](3), inputs[i + 3](3),
-      inputs[i + 4](3), inputs[i + 5](3), inputs[i + 6](3)};
-  std::vector<double> ang_vel_y = {
-      inputs[i](4),     inputs[i + 1](4), inputs[i + 2](4), inputs[i + 3](4),
-      inputs[i + 4](4), inputs[i + 5](4), inputs[i + 6](4)};
-  std::vector<double> ang_vel_z = {
-      inputs[i](5),     inputs[i + 1](5), inputs[i + 2](5), inputs[i + 3](5),
-      inputs[i + 4](5), inputs[i + 5](5), inputs[i + 6](5)};
+  std::vector<double> lin_vel_x = {states[i](26),     states[i + 1](26),
+                                   states[i + 2](26), states[i + 3](26),
+                                   states[i + 4](26), states[i + 5](26),
+                                   states[i + 6](26)};
+  std::vector<double> lin_vel_y = {states[i](27),     states[i + 1](27),
+                                   states[i + 2](27), states[i + 3](27),
+                                   states[i + 4](27), states[i + 5](27),
+                                   states[i + 6](27)};
+  std::vector<double> lin_vel_z = {states[i](28),     states[i + 1](28),
+                                   states[i + 2](28), states[i + 3](28),
+                                   states[i + 4](28), states[i + 5](28),
+                                   states[i + 6](28)};
+  std::vector<double> ang_vel_x = {states[i](29),     states[i + 1](29),
+                                   states[i + 2](29), states[i + 3](29),
+                                   states[i + 4](29), states[i + 5](29),
+                                   states[i + 6](29)};
+  std::vector<double> ang_vel_y = {states[i](30),     states[i + 1](30),
+                                   states[i + 2](30), states[i + 3](30),
+                                   states[i + 4](30), states[i + 5](30),
+                                   states[i + 6](30)};
+  std::vector<double> ang_vel_z = {states[i](31),     states[i + 1](31),
+                                   states[i + 2](31), states[i + 3](31),
+                                   states[i + 4](31), states[i + 5](31),
+                                   states[i + 6](31)};
 
   double lin_acc_x = filter.filter(lin_vel_x);
   double lin_acc_y = filter.filter(lin_vel_y);

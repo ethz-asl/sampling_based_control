@@ -17,6 +17,8 @@
 
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
+#include <mavros_msgs/AttitudeTarget.h>
+#include <mavros_msgs/PositionTarget.h>
 #include <std_srvs/Empty.h>
 
 #include <dynamic_reconfigure/server.h>
@@ -51,6 +53,9 @@ private:
 
   void objectCallback(const sensor_msgs::JointState &object_msg);
 
+  void TargetCallback(
+      const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg);
+
   void
   ReferenceParamCallback(mppi_omav_interaction::MPPIOmavReferenceConfig &config,
                          uint32_t level);
@@ -64,12 +69,16 @@ private:
   // subscribers
   ros::Subscriber odometry_sub_;
   ros::Subscriber object_state_sub_;
+  ros::Subscriber position_target_sub_;
+  ros::Subscriber attitude_target_sub_;
 
   // publishers
   ros::Publisher reference_publisher_;
 
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
+  // Target Variables
+  mav_msgs::EigenTrajectoryPoint target_state_;
   // Object State Variable
   Eigen::Vector2d object_state_;
   // Dynamics Reconfigure

@@ -17,6 +17,7 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
       cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")) {
   initializePublishers();
   initializeSubscribers();
+  // Initialize data to prevent problems
   object_state_ << 0, 0;
   // setup dynamic reconfigure
   dynamic_reconfigure::Server<
@@ -36,6 +37,10 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
   odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 10,
                                 &OmavTrajectoryGenerator::odometryCallback,
                                 this, ros::TransportHints().tcpNoDelay());
+  position_target_sub_ = nh_.subscribe(
+      "command/current_reference", 10, &OmavTrajectoryGenerator::TargetCallback,
+      this, ros::TransportHints().tcpNoDelay());
+
   if (true) {
     ROS_INFO_STREAM("Subscribed to shelf/joint_state");
     object_state_sub_ = nh_.subscribe("/shelf/joint_states", 10,
@@ -65,6 +70,12 @@ void OmavTrajectoryGenerator::objectCallback(
   ROS_INFO_ONCE("MPPI got first object state message");
 }
 
+void OmavTrajectoryGenerator::TargetCallback(
+    const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg) {
+  mav_msgs::eigenTrajectoryPointFromMsg(position_target_msg.points.front(),
+                                        &target_state_);
+}
+
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x.head<3>() = current_odometry_.position_W;
   x(3) = current_odometry_.orientation_W_B.w();
@@ -72,6 +83,12 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x.segment<3>(7) = current_odometry_.getVelocityWorld();
   x.segment<3>(10) = current_odometry_.angular_velocity_B;
   x.segment<2>(13) = object_state_;
+  x.segment<3>(19) = target_state_.position_W;
+  x(22) = target_state_.orientation_W_B.w();
+  x.segment<3>(23) = target_state_.orientation_W_B.vec();
+  x.segment<3>(26) = target_state_.velocity_W;
+  x.segment<3>(29) = target_state_.angular_velocity_W;
+  x.segment<2>(32) = object_state_;
   ROS_INFO_ONCE("MPPI got first state message");
 }
 
@@ -203,7 +220,7 @@ int main(int argc, char **argv) {
   // do some timing
   double elapsed;
   std::chrono::time_point<std::chrono::steady_clock> start, end;
-
+  ros::Rate r(250);
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
     if (omav_trajectory_node->rqt_cost_bool_) {
@@ -217,7 +234,6 @@ int main(int argc, char **argv) {
       omav_trajectory_node->reset_object_ = false;
       ROS_INFO_STREAM("Reset Object");
     }
-    ros::Rate r(200);
     if (sequential) {
       controller.update_reference();
       controller.set_observation(x, sim_time);
@@ -232,11 +248,9 @@ int main(int argc, char **argv) {
       if (running_rotors) {
         omav_trajectory_node->get_odometry(x);
       }
-      std::cout << x.transpose() << std::endl;
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);
       r.sleep();
-      sim_time += 1 / 200;
     }
     if (!running_rotors) {
       x = simulation->step(u, sim_dt);
