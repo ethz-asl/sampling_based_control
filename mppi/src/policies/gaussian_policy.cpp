@@ -8,8 +8,7 @@
 using namespace mppi;
 
 GaussianPolicy::GaussianPolicy(int nu, const Config& config)
-    : Policy(nu) {
-
+    : Policy(nu), config_(config) {
   Eigen::MatrixXd C = config.input_variance.asDiagonal();
   dist_ = std::make_shared<multivariate_normal>(C);
   dt_ = config.step_size;
@@ -25,7 +24,10 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   L_.setIdentity(nt_);
 
   // Initialize filter
-  filter_ = SavGolFilter(nt_, nu_, config.filters_window, config.filters_order);
+  if (config_.filtering) {
+    filter_ =
+        SavGolFilter(nt_, nu_, config.filters_window, config.filters_order);
+  }
 
   // initialize limits
   max_limits_ = Eigen::MatrixXd::Ones(nt_, nu_);
@@ -88,12 +90,14 @@ void GaussianPolicy::update(const std::vector<double>& weights,
     nominal_ += step_size * samples_[i] * weights[i];
   }
 
-  filter_.reset(t_[0]);
-  for (size_t i = 0; i < t_.size(); i++) {
-    filter_.add_measurement(nominal_.row(i), t_(i));
-  }
-  for (size_t i = 0; i < t_.size(); i++) {
-    filter_.apply(nominal_.row(i), t_(i));
+  if (config_.filtering) {
+    filter_.reset(t_[0]);
+    for (size_t i = 0; i < t_.size(); i++) {
+      filter_.add_measurement(nominal_.row(i), t_(i));
+    }
+    for (size_t i = 0; i < t_.size(); i++) {
+      filter_.apply(nominal_.row(i), t_(i));
+    }
   }
 
   // update noise to current nominal trajectory

@@ -266,6 +266,9 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
   // Set one sample completely to zero (when summed with control points)
   N_.col(n_samples_ - 2) = -c_points_.values_;
 
+  // Freeze cpoints that control the first interval
+  N_.topRows(m_).setZero();
+
   // Compute new samples (including nominal trajectory as last sample)
   // Compute capped control points
   if (apply_bounds_) {
@@ -288,9 +291,13 @@ Eigen::MatrixXd RecedingHorizonSpline::get_gradients_matrix() const {
 
 void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
                                    const double step_size) {
-  Eigen::ArrayXd c_points_temp = c_points_.values_;
-  Eigen::ArrayXd delta_temp = step_size * step_size_ * sigma_ *
-                              (weights.transpose() * get_gradients()).array();
+  Eigen::VectorXd c_points_temp = c_points_.values_;
+  Eigen::VectorXd delta_temp = /*step_size * */ step_size_ * sigma_ *
+                               (weights.transpose() * get_gradients()).array();
+  std::cout << "delta temp is: " << delta_temp.transpose() << std::endl;
+
+  // TODO(giuseppe) for now controlling gradients using normalization
+  // delta_temp.normalize();
 
   // update variance
   bool update_variance = false;
@@ -334,6 +341,9 @@ void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
   //  std::cout << "c_points temp: " << c_points_temp.transpose() << std::endl;
   //  std::cout << "delta temp: " << delta_temp.transpose() << std::endl;
 
+  // TODO(giuseppe) attempt to enforce smoothness
+  // delta_temp.head(m_+1).setZero();
+
   c_points_temp += delta_temp;
   //  std::cout << "c_points temp + delta: " << c_points_temp.transpose() <<
   //  std::endl;
@@ -343,11 +353,12 @@ void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
   //  std::cout << "c_points clamped: " << c_points_.values_.transpose() <<
   //  std::endl;
 
-  Eigen::ArrayXd delta = delta_temp - (c_points_temp - c_points_.values_);
+  Eigen::VectorXd delta =
+      delta_temp - (c_points_temp - c_points_.values_.matrix());
   //  std::cout << "max delta: " << delta.transpose() << std::endl;
 
   // update noise (deviation) wrt to new control polygon
-  N_.colwise() -= delta.matrix();
+  N_.colwise() -= delta;
 
   // control polygon
   Pn_ = compute_nominal();

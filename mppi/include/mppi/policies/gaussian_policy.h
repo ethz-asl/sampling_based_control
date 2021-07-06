@@ -32,6 +32,7 @@ public:
   void bound() override;
 
  private:
+  Config config_;
   double dt_;
   double h_;
   int ns_;

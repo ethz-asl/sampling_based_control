@@ -14,7 +14,7 @@ solver:
   filter_order: 2
   filter_window: 10
 
-  filters_type: [1, 1]
+  filters_type: [0, 0]
   filters_order: [1, 1]
   filters_window: [5, 5]
 
@@ -22,9 +22,9 @@ solver:
   u_min: [-1.0, -1.0]
   u_max: [1.0, 1.0]
 
-  spline_degree: 5
+  spline_degree: 3
   spline_dt: 0.1
-  spline_step_size: 0.01
+  spline_step_size: 0.1 #0.01
 
   adaptive_sampling: false
   input_variance: [0.01, 0.01]
