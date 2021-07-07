@@ -7,7 +7,9 @@
  */
 
 #include "mppi_pole_cart/controller_interface.h"
-#include "policy_learning/offline_pytorch_expert.h"
+#include "policy_learning/pole_cart_expert.h"
+#include "policy_learning/hdf5_dataset.h"
+#include "policy_learning/torch_script_policy.h"
 
 #include <ros/package.h>
 
@@ -47,22 +49,29 @@ bool PoleCartControllerInterface::set_controller(
   // -------------------------------
   // learner
   // -------------------------------
-  auto learner = std::make_shared<OfflinePytorchExpert>(
-    dynamics->get_state_dimension(), 
-    dynamics->get_input_dimension());
+  std::unique_ptr<Policy> policy_ptr = nullptr;
   std::string torchscript_model_path;
   if (nh_.param<std::string>("torchscript_model_path", 
       torchscript_model_path, "")) {
-    learner->load_torch_module(torchscript_model_path);
-    ROS_INFO_STREAM("Loaded learned expert");
+    policy_ptr = std::make_unique<TorchScriptPolicy>(
+      torchscript_model_path
+    );
+    ROS_INFO_STREAM("Using Torch script from " << torchscript_model_path);
   }
+  std::unique_ptr<Dataset> dataset_ptr = nullptr;
   std::string learned_expert_output_path;
   if (nh_.param<std::string>("learned_expert_output_path", 
       learned_expert_output_path, "")) {
-    learner->set_output_path(learned_expert_output_path);
-    ROS_INFO_STREAM("Set learning output path");
+    dataset_ptr = std::make_unique<Hdf5Dataset>(
+      learned_expert_output_path
+    );
+    ROS_INFO_STREAM("HDF5 output path: " << learned_expert_output_path);
   }
-  
+
+  auto learner = std::make_shared<PoleCartExpert>(
+    std::move(policy_ptr), 
+    std::move(dataset_ptr)
+  );  
 
   // -------------------------------
   // controller

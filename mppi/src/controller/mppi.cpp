@@ -155,9 +155,8 @@ void PathIntegral::update_policy() {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
     copy_observation();
-
+    prepare_rollouts();
     for (size_t i = 0; i < config_.substeps; i++) {
-      prepare_rollouts();
       update_reference();
 
       if (config_.use_tree_search) {
@@ -183,6 +182,7 @@ void PathIntegral::update_policy() {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
       stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
+      std::sort(rollouts_.begin(), rollouts_.end());
     }
     swap_policies();
 
@@ -308,6 +308,10 @@ void PathIntegral::update_reference() {
   if (config_.use_tree_search) {
     tree_manager_.set_reference_trajectory(rr_tt_ref_);
   }
+
+  if(learned_expert_){
+    learned_expert_->set_reference_trajectory(rr_tt_ref_);
+  }
 }
 
 void PathIntegral::sample_noise(input_t& noise) { sampler_->get_sample(noise); }
@@ -404,8 +408,10 @@ void PathIntegral::overwrite_rollouts() {
 }
 
 void PathIntegral::compute_exponential_cost() {
+  Eigen::ArrayXd sorted_costs = rollouts_cost_;
+  std::sort(sorted_costs.data(), sorted_costs.data() + sorted_costs.size());
   min_cost_ = rollouts_cost_.minCoeff();
-  max_cost_ = rollouts_cost_.maxCoeff();
+  max_cost_ = sorted_costs[(int) (sorted_costs.size() * config_.max_cost_quantile)];
 
   if (config_.debug_print) print_cost_histogram();
 
@@ -508,9 +514,6 @@ void PathIntegral::get_input(const observation_t& x, input_t& u,
       coeff = (t - *(lower - 1)) / (*lower - *(lower - 1));
       u = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
           coeff * opt_roll_cache_.uu[idx];
-    }
-    if(learned_expert_ && learned_expert_->collect_data()) {
-      learned_expert_->save_state_action(x, u);
     }
   }
 }

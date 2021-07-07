@@ -35,6 +35,8 @@ int main(int argc, char** argv) {
   x(2) = 0.1;
   simulation.reset(x);
 
+  double evaluation_time = 10.0;
+
   mppi::DynamicsBase::input_t u;
   u = simulation.get_zero_input(x);
   std::cout << "First input: " << u.transpose() << std::endl;
@@ -65,12 +67,8 @@ int main(int argc, char** argv) {
     // start controller
   bool sequential;
   nh.param<bool>("sequential", sequential, false);
-  bool fix_length;
-  float runtime;
-  nh.param<bool>("fix_length", fix_length, false);
-  nh.param<float>("runtime", runtime, 5.);
   if (!sequential) controller.start();
-  while (ros::ok()) {
+  while (ros::ok() && sim_time < evaluation_time) {
     auto start = std::chrono::steady_clock::now();
     if (sequential) {
       controller.update_reference();
@@ -96,14 +94,11 @@ int main(int argc, char** argv) {
     auto end = std::chrono::steady_clock::now();
     double elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-            .count() /
+            .count() *
         1000;
     if (sim_dt - elapsed > 0) ros::Duration(sim_dt - elapsed).sleep();
-
-    if (sim_time > runtime && fix_length){
-      ros::shutdown();
-    }
-
     ros::spinOnce();
   }
+  ros::shutdown();
 }
+

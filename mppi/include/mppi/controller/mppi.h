@@ -278,6 +278,9 @@ class PathIntegral {
   inline const Rollout& get_optimal_rollout_cache() { return opt_roll_cache_; }
   inline observation_t get_current_observation() { return x0_internal_; }
   inline data_t get_data() { return data_; }
+  inline learned_expert_ptr get_learned_expert() {return learned_expert_; }
+
+  inline void set_learned_expert(learned_expert_ptr learned_expert) {learned_expert_ = learned_expert;}
 
  public:
   /**

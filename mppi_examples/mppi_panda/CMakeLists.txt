@@ -13,6 +13,8 @@ set(PACKAGE_DEPENDENCIES
     mppi_pinocchio
     roslib
     roscpp
+    policy_learning
+    actionlib
 )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -32,6 +34,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
 add_executable(panda_control src/nodes/panda_control.cpp)
 target_link_libraries(panda_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(panda_control ${PROJECT_NAME})
+
+add_executable(panda_dagger src/nodes/panda_dagger.cpp)
+target_link_libraries(panda_dagger ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_dagger ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

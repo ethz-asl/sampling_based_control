@@ -45,3 +45,6 @@ ros_publish_rate: 10.0
 sequential: true
 static_optimization: false
 sim_dt: 0.01
+
+fix_length: true
+runtime: 10.0

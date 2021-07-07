@@ -1,0 +1,23 @@
+# goal
+bool use_policy
+float64 timeout
+string dataset_path
+string policy_path
+bool random_goal
+geometry_msgs/PoseStamped goal_pose
+bool random_joint_pos
+sensor_msgs/JointState initial_joint_pos
+bool validate
+
+---
+
+# result
+bool goal_reached
+float64 goal_reached_time
+geometry_msgs/PoseStamped goal_pose
+sensor_msgs/JointState initial_joint_pos
+
+---
+
+# feedback
+float64 sim_time
