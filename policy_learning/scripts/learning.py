@@ -37,7 +37,7 @@ class PolicyLearner:
         """
         # Model parameters
         n_nodes = 32
-        n_hidden_layers = 3
+        n_hidden_layers = 2
         self.model = LinReLu(self.n_states, self.n_actions,
                              n_nodes=n_nodes, n_hidden_layers=n_hidden_layers).to(self.device)
 

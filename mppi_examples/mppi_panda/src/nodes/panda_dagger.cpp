@@ -1,9 +1,9 @@
 /*!
- * @file     panda_control.cpp
- * @author   Giuseppe Rizzi
- * @date     11.06.2020
+ * @file     panda_dagger.cpp
+ * @author   Andreas Voigt
+ * @date     15.05.2021
  * @version  1.0
- * @brief    description
+ * @brief    Node that handles data collection for dagger and validation
  */
 #include "mppi_panda/controller_interface.h"
 #include "mppi_panda/dynamics.h"
@@ -68,15 +68,13 @@ class PandaDataCollector{
     }
 
   void run(){
-    set_initial_state();
+    set_nominal_state();
     simulation_->reset(x_);
     controller_.set_observation(x_, sim_time_);
 
     // Somehow the first published goal is ignored, publish a dummy goal here.
     set_obstacle_pose();
-    set_random_goal();
-
-    
+    set_goal();
 
     ros::Rate idle_rate(idle_frequency_);
 
@@ -111,7 +109,8 @@ class PandaDataCollector{
         action_server_.publishFeedback(feedback);
 
         // if goal is reached, wait some time until stopping
-        if (goal_reached(controller_.get_pose_end_effector_ros(x_),
+        if (!validate_ &&
+            goal_reached(controller_.get_pose_end_effector_ros(x_),
                          controller_.get_target_pose_ros()) &&
             !terminated) {
           terminated = true;
@@ -121,14 +120,17 @@ class PandaDataCollector{
         }
 
         if (sim_time_ > timeout_ || 
-            severe_joint_limit_violation() ||
+            (!validate_ && severe_joint_limit_violation()) ||
             action_server_.isPreemptRequested() || 
             !ros::ok()){
-          policy_learning::collect_rolloutResult result;
 
           // Force write by destructing learner... A bit hacky and ugly :(
           learner_ = nullptr;
           controller_.get_controller()->set_learned_expert(learner_);
+
+          policy_learning::collect_rolloutResult result;
+          result.goal_pose = goal_pose_;
+          result.initial_joint_pos = initial_joint_position_;
 
           if (terminated){
             result.goal_reached = true;
@@ -145,15 +147,15 @@ class PandaDataCollector{
         // reset cached trajectories
         controller_.get_controller()->initialize_rollouts();
 
-        // set state and goal at random
-        set_random_state();
-        set_random_goal();
+        // set state and goal at random or to given value
+        set_state();
+        set_goal();
         set_obstacle_pose();
 
         try {
           learner_ = std::make_shared<PandaExpert>(
             use_policy_ ? std::make_unique<TorchScriptPolicy>(policy_path_): nullptr,
-            std::make_unique<Hdf5Dataset>(dataset_path_),
+            dataset_path_ != "" ? std::make_unique<Hdf5Dataset>(dataset_path_): nullptr,
             robot_description_
           );
           controller_.get_controller()->set_learned_expert(learner_);
@@ -177,45 +179,53 @@ class PandaDataCollector{
   }
 
   private:
-    void set_initial_state(){
+    void set_nominal_state(){
       auto x0 = nh_.param<std::vector<double>>("initial_configuration", {});
       for (size_t i = 0; i < x0.size(); i++) x_(i) = x0[i];
     }
 
-    void set_random_state(){
-      
-      std::normal_distribution<double> distribution(0, joint_state_std_dev_);
-
-      set_initial_state();
-      for (size_t i = 0; i < x_.size(); i++) x_(i) += distribution(generator_);
-    }
-
-    void set_random_goal(){
-      Eigen::Quaterniond rot = Eigen::Quaterniond::UnitRandom();
-      double max_rad = 0.6;
-      double min_rad = 0.2;
-      Eigen::Vector3d center; 
-      center << 0, 0, 0.4;
-
-      Eigen::Vector3d position;
-      while (true){
-        position = max_rad * Eigen::Vector3d::Random();
-        if (position.norm() >= min_rad && position.norm() <= max_rad){
-          for (size_t i = 0; i < 3; i++) position(i) += center(i);
-          if (position(0) > 0 && position(2) > 0) break;
+    void set_state(){
+      if (random_initial_pose_) {
+        std::normal_distribution<double> distribution(0, joint_state_std_dev_);
+        set_nominal_state();
+        initial_joint_position_.position.resize(7);
+        for (size_t i = 0; i < 7; i++) {
+          x_(i) += distribution(generator_);
+          initial_joint_position_.position[i] = x_(i);
+        } 
+      } else {
+        for (size_t i = 0; i < 7; i++) {
+          x_(i) = initial_joint_position_.position[i];
         }
       }
-      geometry_msgs::PoseStamped goal;
-      goal.header.frame_id = "world";
-      goal.pose.position.x = position(0);
-      goal.pose.position.y = position(1);
-      goal.pose.position.z = position(2);
-      goal.pose.orientation.w = rot.w();
-      goal.pose.orientation.x = rot.x();
-      goal.pose.orientation.y = rot.y();
-      goal.pose.orientation.z = rot.z();
+    }
 
-      ee_goal_publisher_.publish(goal);
+    void set_goal(){
+      if (random_goal_) {
+        Eigen::Quaterniond rot = Eigen::Quaterniond::UnitRandom();
+        double max_rad = 0.6;
+        double min_rad = 0.2;
+        Eigen::Vector3d center; 
+        center << 0, 0, 0.4;
+
+        Eigen::Vector3d position;
+        while (true){
+          position = max_rad * Eigen::Vector3d::Random();
+          if (position.norm() >= min_rad && position.norm() <= max_rad){
+            for (size_t i = 0; i < 3; i++) position(i) += center(i);
+            if (position(0) > 0 && position(2) > 0) break;
+          }
+        }
+        goal_pose_.header.frame_id = "world";
+        goal_pose_.pose.position.x = position(0);
+        goal_pose_.pose.position.y = position(1);
+        goal_pose_.pose.position.z = position(2);
+        goal_pose_.pose.orientation.w = rot.w();
+        goal_pose_.pose.orientation.x = rot.x();
+        goal_pose_.pose.orientation.y = rot.y();
+        goal_pose_.pose.orientation.z = rot.z();
+      }
+      ee_goal_publisher_.publish(goal_pose_);
     }
 
     void set_obstacle_pose(){
@@ -286,6 +296,14 @@ class PandaDataCollector{
       use_policy_ = goal->use_policy;
       policy_path_ = goal->policy_path;
       dataset_path_ = goal->dataset_path;
+      validate_ = goal->validate;
+
+      random_goal_ = goal->random_goal;
+      random_initial_pose_ = goal->random_joint_pos;
+
+      // Ignored if we use random initial positions or goal, respectively
+      goal_pose_ = goal->goal_pose;
+      initial_joint_position_ = goal->initial_joint_pos;
 
       action_active_ = false;
       callback_received_ = true;
@@ -339,6 +357,12 @@ class PandaDataCollector{
     Eigen::VectorXd x_ = Eigen::VectorXd::Zero(PandaDim::STATE_DIMENSION);
     double sim_time_ = 0.0;
     double sim_dt_;
+
+    bool random_initial_pose_ = true;
+    sensor_msgs::JointState initial_joint_position_;
+    bool random_goal_ = true;
+    geometry_msgs::PoseStamped goal_pose_;
+    bool validate_ = false;
 
     double timeout_ = INFINITY;
     double time_to_shutdown_ = 2; // s

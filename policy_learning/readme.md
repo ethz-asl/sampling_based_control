@@ -1,5 +1,7 @@
 # Policy Learning
-This package contains most of the code for the PLR project *Learn How to Explore*. The goal of the project is to use imitation learning offline to train a NN (the policy). The policy tries to imitate a version of the MPPI controller that can do much more costly optimizations because it is used offline, thus no real-time capabilities are needed. The learned policy is then in the normal MPPI controller (the one that can run real-time) to generate a part of the rollouts. Hopefully, this allows to inject the better solutions found beforehand to the real-time system. 
+This package contains most of the code for the PLR project *Learn How to Explore*. The goal of the project is to use imitation learning offline to train a NN (the policy). The policy tries to imitate a version of the MPPI controller that can do much more costly optimizations because it is used offline, thus no real-time capabilities are needed. The learned policy is then in the normal MPPI controller (the one that can run real-time) to generate a part of the rollouts. This allows to inject the better solutions found beforehand to the real-time system. 
+
+**!! Currently, only `mppi_panda` is supported. !!**
 
 ## Installation
 ### LibTorch
@@ -20,9 +22,29 @@ make install
 ```
 - Add the following line to your `~/.bashrc`: `export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:<HIGH_FIVE_INSTALL>`
 
-Currently, only `mppi_manipulation` and `mppi_pole_cart` are supported. Launch it with desired paths:
-`roslaunch <PACKAGE> <CONTROL>.launch fixed_base:=false learner_output_path:=<PATH> torchscript_model_path:=<PATH>`
-Leaving out one of two paths will disable the repective function (either no output or no loaded model).
-
 ### Python libraries
-TODO.
+
+See  `requirements.txt`. A lot of the listed packages are needed to use rospy in a virtual environment. If you don't care about virtual environments it should be sufficient to install ROS (noetic), pytorch and h5py. 
+
+## Run with trained policy
+
+`roslaunch mppi_panda panda_control.launch learner_output_path:=<PATH> torchscript_model_path:=<PATH>`
+Leaving out one of two paths will disable the repective function (either no output or no loaded model). Make sure that the parameter `learned_rollout_ratio` is set to a positive value, e.g. 0.1. 
+
+## Train new Policy with DAGGER
+Tune the MPPI parameters to get the desired performance, this will be the privileged expert that the policy will learn to imitate. Set the desired parameters for the training in `dagger.py` and if needed adapt the network architecture in `learning.py`.
+
+In one terminal:
+`roslaunch mppi_panda panda_dagger.launch`
+
+In another terminal:
+`roscd policy_learning; cd scripts; python3 dagger.py`
+
+## Evaluate the Controllers
+Set the desired MPPI parameters for the controller you want to evaluate. Adapt the parameters in `evaluate.py`, e.g. to select a policy or to specify a list of start-end poses.
+
+In one terminal:
+`roslaunch mppi_panda panda_dagger.launch`
+
+In another terminal:
+`roscd policy_learning; cd scripts; python3 evaluate.py`
