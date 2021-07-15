@@ -202,13 +202,13 @@ void PandaRaisimDynamics::get_handle_pose(Eigen::Vector3d& position,
 
 std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
   std::vector<force_t> forces;
-  for (const auto contact : object->getContacts()) {
+  for (const auto contact : panda->getContacts()) {
     if (contact.skip())
       continue;  /// if the contact is internal, one contact point is set to
                  /// 'skip'
     if (contact.isSelfCollision()) continue;
     force_t force;
-    force.force = contact.getContactFrame().e() * contact.getImpulse()->e() /
+    force.force = -contact.getContactFrame().e() * contact.getImpulse()->e() /
                   sim_.getTimeStep();
     force.position = contact.getPosition().e();
     forces.push_back(force);
@@ -224,7 +224,7 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
     if (!contact.skip() && !contact.isSelfCollision()) {
       panda->getDenseJacobian(contact.getlocalBodyIndex(),
                               contact.getPosition(), J);
-      tau += J.transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
+      tau -= J.transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
     }
   }
 }

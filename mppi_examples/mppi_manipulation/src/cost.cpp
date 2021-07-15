@@ -52,6 +52,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
     if (x.tail<1>()(0) > 0) cost += param_.Qc;
   }
+
   // reach the handle with open gripper
   else if (mode == 1) {
     object_model_.update_state(
