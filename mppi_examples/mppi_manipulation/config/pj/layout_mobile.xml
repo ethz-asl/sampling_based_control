@@ -1,88 +1,88 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root version="2.3.8">
- <tabbed_widget name="Main Window" parent="main_window">
+ <tabbed_widget parent="main_window" name="Main Window">
   <Tab tab_name="State" containers="1">
    <Container>
-    <DockSplitter sizes="1" count="1" orientation="-">
-     <DockSplitter sizes="0.5;0.5" count="2" orientation="|">
-      <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-       <DockSplitter sizes="0.325269;0.349462;0.325269" count="3" orientation="|">
+    <DockSplitter count="1" sizes="1" orientation="-">
+     <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
+      <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
+       <DockSplitter count="3" sizes="0.325;0.35;0.325" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="0.309984" top="0.313749"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/observer/state/base_pose/x" color="#1f77b4"/>
+          <curve color="#1f77b4" name="/observer/state/base_pose/x"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.529203" top="-0.524600"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/observer/state/base_pose/y" color="#d62728"/>
+          <curve color="#d62728" name="/observer/state/base_pose/y"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.180956" top="-0.170326"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/observer/state/base_pose/z" color="#1ac938"/>
+          <curve color="#1ac938" name="/observer/state/base_pose/z"/>
          </plot>
         </DockArea>
        </DockSplitter>
-       <DockSplitter sizes="0.323925;0.352151;0.323925" count="3" orientation="|">
+       <DockSplitter count="3" sizes="0.325;0.35;0.325" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.923914" top="-0.910924"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.2" color="#9467bd"/>
+          <curve color="#9467bd" name="/observer/state/arm_state/position.2"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-2.615223" top="-2.606734"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="-1.685000" left="0.000228" right="4.993345" bottom="-1.885000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.3" color="#17becf"/>
+          <curve color="#17becf" name="/observer/state/arm_state/position.3"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="1.209974" top="1.221865"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.4" color="#bcbd22"/>
+          <curve color="#bcbd22" name="/observer/state/arm_state/position.4"/>
          </plot>
         </DockArea>
        </DockSplitter>
       </DockSplitter>
-      <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-       <DockSplitter sizes="0.500671;0.499329" count="2" orientation="|">
+      <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
+       <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.000599" top="0.012227"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.0" color="#ff7f0e"/>
+          <curve color="#ff7f0e" name="/observer/state/arm_state/position.0"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.906918" top="-0.899987"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="-0.420000" left="0.000228" right="4.993345" bottom="-0.620000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.1" color="#f14cc1"/>
+          <curve color="#f14cc1" name="/observer/state/arm_state/position.1"/>
          </plot>
         </DockArea>
        </DockSplitter>
-       <DockSplitter sizes="0.500671;0.499329" count="2" orientation="|">
+       <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="2.414180" top="2.428947"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="1.200000" left="0.000228" right="4.993345" bottom="1.000000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.5" color="#1f77b4"/>
+          <curve color="#1f77b4" name="/observer/state/arm_state/position.5"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-1.250412" top="-1.242613"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.790000" left="0.000228" right="4.993345" bottom="0.590000"/>
           <limitY/>
-          <curve name="/observer/state/arm_state/position.6" color="#d62728"/>
+          <curve color="#d62728" name="/observer/state/arm_state/position.6"/>
          </plot>
         </DockArea>
        </DockSplitter>
@@ -93,17 +93,17 @@
   </Tab>
   <Tab tab_name="Mppi" containers="1">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+    <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
      <DockArea name="...">
-      <plot mode="TimeSeries" style="Lines">
-       <range left="-4.602493" right="0.391174" bottom="0.003613" top="0.013539"/>
+      <plot style="Lines" mode="TimeSeries">
+       <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
        <limitY/>
-       <curve name="/mppi_data/stage_cost" color="#1ac938"/>
+       <curve color="#1ac938" name="/mppi_data/stage_cost"/>
       </plot>
      </DockArea>
      <DockArea name="...">
-      <plot mode="TimeSeries" style="Lines">
-       <range left="0.000000" right="1.000000" bottom="0.000000" top="1.000000"/>
+      <plot style="Lines" mode="TimeSeries">
+       <range top="1.000000" left="0.000000" right="1.000000" bottom="0.000000"/>
        <limitY/>
       </plot>
      </DockArea>
@@ -112,92 +112,92 @@
   </Tab>
   <Tab tab_name="Input" containers="1">
    <Container>
-    <DockSplitter sizes="1" count="1" orientation="-">
-     <DockSplitter sizes="0.758043;0.241957" count="2" orientation="|">
-      <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-       <DockSplitter sizes="0.33481;0.330381;0.33481" count="3" orientation="|">
+    <DockSplitter count="1" sizes="1" orientation="-">
+     <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
+      <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
+       <DockSplitter count="3" sizes="0.325;0.35;0.325" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.005796" top="0.007054"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.0" color="#ff7f0e"/>
+          <curve color="#ff7f0e" name="/input/data.0"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.007807" top="0.007953"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.1" color="#f14cc1"/>
+          <curve color="#f14cc1" name="/input/data.1"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="0.000000" right="1.000000" bottom="0.000000" top="1.000000"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="1.000000" left="0.000000" right="1.000000" bottom="0.000000"/>
           <limitY/>
          </plot>
         </DockArea>
        </DockSplitter>
-       <DockSplitter sizes="0.33481;0.330381;0.33481" count="3" orientation="|">
+       <DockSplitter count="3" sizes="0.325;0.35;0.325" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.042726" top="0.035541"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.5" color="#1f77b4"/>
-          <curve name="/observer/state/arm_state/velocity.2" color="#bcbd22"/>
+          <curve color="#1f77b4" name="/input/data.5"/>
+          <curve color="#bcbd22" name="/observer/state/arm_state/velocity.2"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.037966" top="0.041759"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.6" color="#d62728"/>
-          <curve name="/observer/state/arm_state/velocity.3" color="#1f77b4"/>
+          <curve color="#d62728" name="/input/data.6"/>
+          <curve color="#1f77b4" name="/observer/state/arm_state/velocity.3"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.057440" top="0.047654"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.7" color="#1ac938"/>
-          <curve name="/observer/state/arm_state/velocity.4" color="#d62728"/>
+          <curve color="#1ac938" name="/input/data.7"/>
+          <curve color="#d62728" name="/observer/state/arm_state/velocity.4"/>
          </plot>
         </DockArea>
        </DockSplitter>
       </DockSplitter>
-      <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-       <DockSplitter sizes="0.502778;0.497222" count="2" orientation="|">
+      <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
+       <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.019498" top="0.027632"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.2" color="#9467bd"/>
-          <curve name="/observer/state/arm_state/velocity.0" color="#9467bd"/>
+          <curve color="#9467bd" name="/input/data.2"/>
+          <curve color="#9467bd" name="/observer/state/arm_state/velocity.0"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.045916" top="0.033806"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.4" color="#bcbd22"/>
-          <curve name="/observer/state/arm_state/velocity.1" color="#17becf"/>
+          <curve color="#bcbd22" name="/input/data.4"/>
+          <curve color="#17becf" name="/observer/state/arm_state/velocity.1"/>
          </plot>
         </DockArea>
        </DockSplitter>
-       <DockSplitter sizes="0.502778;0.497222" count="2" orientation="|">
+       <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.033110" top="0.041014"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.8" color="#ff7f0e"/>
-          <curve name="/observer/state/arm_state/velocity.5" color="#1ac938"/>
+          <curve color="#ff7f0e" name="/input/data.8"/>
+          <curve color="#1ac938" name="/observer/state/arm_state/velocity.5"/>
          </plot>
         </DockArea>
         <DockArea name="...">
-         <plot mode="TimeSeries" style="Lines">
-          <range left="-4.602493" right="0.391174" bottom="-0.043991" top="0.042952"/>
+         <plot style="Lines" mode="TimeSeries">
+          <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
           <limitY/>
-          <curve name="/input/data.9" color="#f14cc1"/>
-          <curve name="/observer/state/arm_state/velocity.6" color="#ff7f0e"/>
+          <curve color="#f14cc1" name="/input/data.9"/>
+          <curve color="#ff7f0e" name="/observer/state/arm_state/velocity.6"/>
          </plot>
         </DockArea>
        </DockSplitter>
@@ -208,36 +208,49 @@
   </Tab>
   <Tab tab_name="Tau ext" containers="1">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+    <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
      <DockArea name="...">
-      <plot mode="TimeSeries" style="Lines">
-       <range left="3.137307" right="8.123682" bottom="-0.100000" top="0.100000"/>
+      <plot style="Lines" mode="TimeSeries">
+       <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
        <limitY/>
-       <curve name="/tau_ext/data.0" color="#1f77b4"/>
-       <curve name="/tau_ext/data.1" color="#d62728"/>
-       <curve name="/tau_ext/data.10" color="#1ac938"/>
-       <curve name="/tau_ext/data.11" color="#ff7f0e"/>
-       <curve name="/tau_ext/data.2" color="#f14cc1"/>
-       <curve name="/tau_ext/data.3" color="#9467bd"/>
-       <curve name="/tau_ext/data.4" color="#17becf"/>
-       <curve name="/tau_ext/data.5" color="#bcbd22"/>
-       <curve name="/tau_ext/data.6" color="#1f77b4"/>
-       <curve name="/tau_ext/data.7" color="#d62728"/>
-       <curve name="/tau_ext/data.8" color="#1ac938"/>
-       <curve name="/tau_ext/data.9" color="#ff7f0e"/>
+       <curve color="#1f77b4" name="/tau_ext/data.0"/>
+       <curve color="#d62728" name="/tau_ext/data.1"/>
+       <curve color="#1ac938" name="/tau_ext/data.10"/>
+       <curve color="#ff7f0e" name="/tau_ext/data.11"/>
+       <curve color="#f14cc1" name="/tau_ext/data.2"/>
+       <curve color="#9467bd" name="/tau_ext/data.3"/>
+       <curve color="#17becf" name="/tau_ext/data.4"/>
+       <curve color="#bcbd22" name="/tau_ext/data.5"/>
+       <curve color="#1f77b4" name="/tau_ext/data.6"/>
+       <curve color="#d62728" name="/tau_ext/data.7"/>
+       <curve color="#1ac938" name="/tau_ext/data.8"/>
+       <curve color="#ff7f0e" name="/tau_ext/data.9"/>
       </plot>
      </DockArea>
      <DockArea name="...">
-      <plot mode="TimeSeries" style="Lines">
-       <range left="3.137346" right="8.123724" bottom="-0.100000" top="0.100000"/>
+      <plot style="Lines" mode="TimeSeries">
+       <range top="0.100000" left="0.000228" right="4.993345" bottom="-0.100000"/>
        <limitY/>
-       <curve name="/power/data" color="#f14cc1"/>
+       <curve color="#f14cc1" name="/power/data"/>
       </plot>
      </DockArea>
     </DockSplitter>
    </Container>
   </Tab>
-  <currentTabIndex index="3"/>
+  <Tab tab_name="Tank" containers="1">
+   <Container>
+    <DockSplitter count="1" sizes="1" orientation="-">
+     <DockArea name="...">
+      <plot style="Lines" mode="TimeSeries">
+       <range top="2.606950" left="107.944219" right="127.801117" bottom="2.405110"/>
+       <limitY/>
+       <curve color="#1f77b4" name="/tank_energy/data"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="4"/>
  </tabbed_widget>
  <use_relative_time_offset enabled="1"/>
  <!-- - - - - - - - - - - - - - - -->
@@ -264,9 +277,9 @@
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
   <plugin ID="ZMQ Subscriber"/>
-  <plugin ID="CSV Exporter" status="idle"/>
-  <plugin ID="ROS /rosout Visualization" status="idle"/>
-  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
+  <plugin status="idle" ID="CSV Exporter"/>
+  <plugin status="idle" ID="ROS /rosout Visualization"/>
+  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
  <previouslyLoaded_Datafiles/>

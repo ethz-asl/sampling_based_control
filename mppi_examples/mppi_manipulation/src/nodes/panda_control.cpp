@@ -69,6 +69,10 @@ int main(int argc, char** argv) {
   u_f.setZero(10);
   u_opt.setZero(10);
 
+  std_msgs::Float64 tank_energy;
+  ros::Publisher tank_energy_publisher =
+      nh.advertise<std_msgs::Float64>("/tank_energy", 1);
+
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0
   observation_t x = observation_t::Zero(simulation->get_state_dimension());
@@ -130,6 +134,8 @@ int main(int argc, char** argv) {
       filter.apply(x_f, u_f, u_opt);
       u.head<10>() = u_opt;
       filter.passivity_constraint()->integrate_tank(u_opt.head<10>());
+      tank_energy.data = filter.passivity_constraint()->get_tank_energy();
+      tank_energy_publisher.publish(tank_energy);
     }
 
     if (!static_optimization) {
