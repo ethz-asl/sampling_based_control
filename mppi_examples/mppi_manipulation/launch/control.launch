@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+    <arg name="debug" default="false"/>
+    <arg name="launch_prefix" value="" unless="$(arg debug)"/>
+    <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
+
     <arg name="fixed_base" default="true"/>
     <arg name="object" default="shelf"/>
     <arg name="plot" default="false"/>
@@ -49,7 +53,7 @@
         <rosparam command="load" file="$(find mppi_manipulation)/params/params_mobile.yaml" ns="manipulation_control"/>
     </group>
 
-    <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen">
+    <node name="manipulation_control" type="manipulation_control" pkg="mppi_manipulation" output="screen" launch-prefix="$(arg launch_prefix)">
         <param name="fixed_base" value="$(arg fixed_base)"/>
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>

@@ -219,7 +219,7 @@ std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
 void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
   Eigen::MatrixXd J(6, panda->getDOF());
   J.setZero();
-  tau.setZero();
+  tau.setZero(panda->getDOF());
   for (const auto contact : panda->getContacts()) {
     if (!contact.skip() && !contact.isSelfCollision()) {
       panda->getDenseJacobian(contact.getlocalBodyIndex(),

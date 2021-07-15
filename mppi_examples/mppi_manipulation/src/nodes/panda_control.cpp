@@ -12,6 +12,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
+#include <mppi_panda_mobile/safety_filter/safety_filter.hpp>
 
 using namespace manipulation;
 
@@ -37,6 +38,36 @@ int main(int argc, char** argv) {
   auto simulation = std::make_shared<ManipulatorDynamicsRos>(
       nh, robot_description_raisim, object_description_raisim, 0.015,
       fixed_base);
+
+  // Safety filter
+  bool apply_safety_filter;
+  nh.param<bool>("apply_safety_filter", apply_safety_filter, false);
+
+  if (apply_safety_filter && fixed_base) {
+    ROS_ERROR("Safety filter only support moving base for the moment being.");
+    return 0;
+  }
+
+  panda_mobile::PandaMobileSafetyFilterSettings filter_settings;
+  if (!filter_settings.init_from_ros(nh) && apply_safety_filter) {
+    ROS_ERROR("Failed to initialize the safety filter!");
+    return 0;
+  }
+
+  std::string robot_description_sf;
+  if (!nh.param<std::string>("/robot_description_safety_filter",
+                             robot_description_sf, "")) {
+    ROS_ERROR("No /robot_description_safety_filter found on the param server.");
+    return 0;
+  }
+
+  panda_mobile::PandaMobileSafetyFilter filter(robot_description_sf,
+                                               filter_settings);
+  Eigen::VectorXd x_f, u_f, u_opt;
+  Eigen::VectorXd torque_ext;
+  x_f.setZero(10);  // optimizing only base and arm velocities
+  u_f.setZero(10);
+  u_opt.setZero(10);
 
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0
@@ -88,6 +119,17 @@ int main(int argc, char** argv) {
     } else {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
+    }
+
+    if (apply_safety_filter) {
+      x_f = x.head<10>();
+      u_f = u.head<10>();
+      simulation->get_external_torque(torque_ext);
+      filter.passivity_constraint()->update_passivity_constraint(
+          torque_ext.head<10>());
+      filter.apply(x_f, u_f, u_opt);
+      u.head<10>() = u_opt;
+      filter.passivity_constraint()->integrate_tank(u_opt.head<10>());
     }
 
     if (!static_optimization) {

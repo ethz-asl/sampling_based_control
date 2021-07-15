@@ -3,6 +3,10 @@
 //
 
 #include "mppi_panda_mobile/safety_filter/safety_filter.hpp"
+#include "safety_filter/constraints/cartesian_limit.hpp"
+#include "safety_filter/constraints/constraints_manager.hpp"
+#include "safety_filter/constraints/input_limits.hpp"
+#include "safety_filter/constraints/passivity_constraint.hpp"
 
 using namespace safety_filter;
 using namespace panda_mobile;
@@ -100,22 +104,62 @@ bool PandaMobileSafetyFilterSettings::init_from_ros(ros::NodeHandle& nh) {
       return false;
     }
   }
+
+  if (!nh.param("safety_filter/passivity_constraint/active",
+                passivity_constraint, false)) {
+    ROS_WARN("Failed to parse safety_filter/passivity_constraint/active");
+    return false;
+  }
+
+  if (passivity_constraint) {
+    if (!nh.param("safety_filter/passivity_constraint/initial_energy",
+                  tank_initial_energy, 1.0)) {
+      ROS_WARN(
+          "Failed to parse safety_filter/passivity_constraint/initial_energy");
+      return false;
+    }
+
+    if (!nh.param("safety_filter/passivity_constraint/lower_bound",
+                  tank_lower_energy_bound, 1e-3)) {
+      ROS_WARN(
+          "Failed to parse safety_filter/passivity_constraint/lower_bound");
+      return false;
+    }
+
+    if (!nh.param("safety_filter/passivity_constraint/dt", tank_integration_dt,
+                  0.01)) {
+      ROS_WARN("Failed to parse safety_filter/passivity_constraint/dt");
+      return false;
+    }
+  }
+
   return true;
 }
 
 std::ostream& operator<<(std::ostream& os,
                          const PandaMobileSafetyFilterSettings& settings) {
+  // clang-format off
   os << "PandaMobileSafetyFilterSettings: " << std::endl;
+
   os << "input_limits: " << settings.input_limits << std::endl;
   os << " >> u_min=" << settings.u_min.transpose() << std::endl;
   os << " >> u_max=" << settings.u_max.transpose() << std::endl;
+
   os << "joint_limits: " << settings.joint_limits << std::endl;
   os << " >> q_min=" << settings.q_min.transpose() << std::endl;
   os << " >> q_max=" << settings.q_max.transpose() << std::endl;
+
   os << "cartesian_limits: " << settings.cartesian_limits << std::endl;
   os << " >> max_reach: " << settings.max_reach << std::endl;
   os << " >> min_distance: " << settings.min_dist << std::endl;
+
+  os << "passivity_constraint: " << settings.passivity_constraint << std::endl;
+  os << " >> tank_initial_energy: " << settings.tank_initial_energy << std::endl;
+  os << " >> tank_lower_energy_bound: " << settings.tank_lower_energy_bound << std::endl;
+  os << " >> tank_integration_dt: " << settings.tank_integration_dt << std::endl;
+
   os << "verbose: " << settings.verbose << std::endl;
+  // clang-format on
   return os;
 }
 
@@ -166,6 +210,17 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
     std::shared_ptr<ConstraintBase> cart_const =
         std::make_shared<CartesianLimitConstraints>(10, cart_const_settings);
     cm.add_constraint("cartesian_limits", cart_const);
+  }
+
+  if (settings_.passivity_constraint) {
+    PassivityConstraintSettings pass_const_settings;
+    pass_const_settings.dt = settings_.tank_integration_dt;
+    pass_const_settings.epsilon = settings_.tank_lower_energy_bound;
+    pass_const_settings.initial_tank_energy = settings_.tank_initial_energy;
+    passivity_constraint_ptr_ =
+        std::make_shared<PassivityConstraint>(10, pass_const_settings);
+    std::shared_ptr<ConstraintBase> pass_const(passivity_constraint_ptr_);
+    cm.add_constraint("passivity_constraint", pass_const);
   }
 
   filter_ = std::make_shared<SafetyFilter>(cm);

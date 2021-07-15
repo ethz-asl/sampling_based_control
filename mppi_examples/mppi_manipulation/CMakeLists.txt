@@ -16,6 +16,7 @@ set(PACKAGE_DEPENDENCIES
         mppi
         mppi_ros
         mppi_pinocchio
+        mppi_panda_mobile
         roslib
         roscpp
         manipulation_msgs

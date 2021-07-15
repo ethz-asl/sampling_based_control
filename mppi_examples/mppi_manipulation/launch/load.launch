@@ -36,6 +36,16 @@
       damping:=10.0
       fixed_base:=$(arg fixed_base)"/>
 
+    <!-- The safety filter is hard coded to not consider the gripper -->
+    <param name="robot_description_safety_filter" command="$(find xacro)/xacro $(arg description_file)
+      ridgeback_resources_prefix:='$(find mppi_manipulation)/data/meshes/ridgeback/meshes'
+      add_finger:=false
+      custom_fingers:=false
+      no_position_limits:=false
+      friction:=0.0
+      damping:=10.0
+      fixed_base:=$(arg fixed_base)"/>
+
     <param name="object_description"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
            resource_prefix:='file://'
