@@ -6,7 +6,8 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /World1
-        - /World1/Obstacle1
+        - /World1/Object1
+        - /World1/Panda1
         - /Observer1/Vicon Odometry1/Shape1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 719
@@ -65,8 +66,6 @@ Visualization Manager:
           Value: false
         base_link:
           Value: false
-        box:
-          Value: true
         chassis_link:
           Value: false
         door:
@@ -95,6 +94,8 @@ Visualization Manager:
           Value: true
         mid_mount:
           Value: false
+        obstacle:
+          Value: true
         omni_base_root_link:
           Value: true
         panda_grasp:
@@ -153,7 +154,7 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          box:
+          obstacle:
             {}
           omni_base_root_link:
             x_slider:
@@ -254,7 +255,7 @@ Visualization Manager:
       Marker Topic: /obstacle_marker
       Name: Obstacle Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Group
@@ -315,7 +316,7 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
           Name: Object
-          Robot Description: object_description
+          Robot Description: object_description_raisim_sim
           TF Prefix: ""
           Update Interval: 0
           Value: true
@@ -509,7 +510,7 @@ Visualization Manager:
           Marker Topic: /contact_forces
           Name: Contact Forces
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Alpha: 0.20000000298023224
@@ -522,7 +523,7 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            box:
+            obstacle:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -706,7 +707,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.305503845214844
+      Distance: 3.5114636421203613
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -714,17 +715,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.946671187877655
-        Y: -0.07541895657777786
-        Z: 0.5484432578086853
+        X: 1.015872597694397
+        Y: -0.17740868031978607
+        Z: 0.46033775806427
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5147977471351624
+      Pitch: 0.7897977828979492
       Target Frame: <Fixed Frame>
-      Yaw: 1.998708724975586
+      Yaw: 4.50870943069458
     Saved: ~
 Window Geometry:
   Displays:
