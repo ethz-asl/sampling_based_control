@@ -118,6 +118,7 @@ void GaussianPolicy::shift(const double t) {
 
     t_ += dt_ * time_idx_shift;
 
+    // if beyond the horizon set all to zero
     if (time_idx_shift == nt_-1){
       Eigen::RowVectorXd last_nominal = nominal_.row(nt_-1);
       nominal_.rowwise() = last_nominal;
@@ -125,6 +126,7 @@ void GaussianPolicy::shift(const double t) {
       return;
     }
 
+    // construct permutation matrix
     L_.setIdentity();
     std::transform(L_.indices().data(), L_.indices().data() + nt_,
                    L_.indices().data(), [this](int i) -> int {
@@ -141,7 +143,7 @@ void GaussianPolicy::shift(const double t) {
     nominal_.bottomLeftCorner(time_idx_shift, nu_).setZero();
 
     // TODO(giuseppe) investigate why this does not work
-    // .rowwise() = nominal_.row(nt_ - time_idx_shift -1);
+    // nominal_.rowwise() = nominal_.row(nt_ - time_idx_shift -1);
   }
 }
 

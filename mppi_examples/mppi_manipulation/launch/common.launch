@@ -9,7 +9,7 @@
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot)">
-        <arg name="plotjuggler_layout" default="$(find mppi_manipulation)/config/pj/layout_mobile.xml"/>
+        <arg name="plotjuggler_layout" default="$(find mppi_manipulation)/config/pj/layout_mobile_acceleration.xml"/>
         <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
               args="--layout $(arg plotjuggler_layout)"
               output="screen"/>

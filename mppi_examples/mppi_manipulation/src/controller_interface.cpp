@@ -236,8 +236,12 @@ mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
 
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(
     const Eigen::VectorXd& x) {
-  object_model_.update_state(
-      x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
+  if (fixed_base_) {
+    object_model_.update_state(x.segment<OBJECT_DIMENSION>(ARM_GRIPPER_DIM));
+  } else {
+    object_model_.update_state(
+        x.segment<OBJECT_DIMENSION>(BASE_ARM_GRIPPER_DIM));
+  }
   return object_model_.get_pose("handle_link");
 }
 

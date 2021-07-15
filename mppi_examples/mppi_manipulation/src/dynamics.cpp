@@ -41,12 +41,13 @@ void PandaRaisimDynamics::initialize_world(
   // robot dof and base check
   if (fixed_base_) {
     robot_dof_ = ARM_GRIPPER_DIM;
-    state_dimension_ = 2 * (ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
+    state_dimension_ = 2 * (ARM_GRIPPER_DIM + OBJECT_DIMENSION) +
+                       CONTACT_STATE + ARM_GRIPPER_DIM;
     input_dimension_ = ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   } else {
     robot_dof_ = BASE_ARM_GRIPPER_DIM;
-    state_dimension_ =
-        2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
+    state_dimension_ = 2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) +
+                       CONTACT_STATE + BASE_ARM_GRIPPER_DIM;
     input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   }
   x_ = mppi::observation_t::Zero(state_dimension_);
@@ -108,13 +109,16 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   }
 
   if (fixed_base_) {
-    cmdv.head<ARM_DIMENSION>() = u.head<ARM_DIMENSION>();
+    cmdv.head<ARM_GRIPPER_DIM>() = x_.tail(ARM_GRIPPER_DIM);
   } else {
-    cmdv(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
-    cmdv(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
-    cmdv(2) = u(2);
-    cmdv.segment<ARM_DIMENSION>(BASE_DIMENSION) =
-        u.segment<ARM_DIMENSION>(BASE_DIMENSION);
+    double& vx = x_.tail<BASE_ARM_GRIPPER_DIM>()(0);
+    double& vy = x_.tail<BASE_ARM_GRIPPER_DIM>()(1);
+    double& dyaw = x_.tail<BASE_ARM_GRIPPER_DIM>()(2);
+
+    cmdv(0) = vx * std::cos(x_(2)) - vy * std::sin(x_(2));
+    cmdv(1) = vx * std::sin(x_(2)) + vy * std::cos(x_(2));
+    cmdv(2) = dyaw;
+    cmdv.segment<ARM_DIMENSION>(BASE_DIMENSION) = x_.tail(BASE_ARM_GRIPPER_DIM);
   }
 
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
@@ -143,13 +147,15 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
     x_.segment<ARM_GRIPPER_DIM>(ARM_GRIPPER_DIM) = joint_v;
     x_.segment<2 * OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM)(0) = object_p(0);
     x_.segment<2 * OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM)(1) = object_v(0);
-    x_.tail<1>()(0) = in_contact;
+    x_.tail(ARM_GRIPPER_DIM + 1)(0) = in_contact;
+    x_.tail(ARM_GRIPPER_DIM) += dt_ * u;
   } else {
     x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p;
     x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v;
     x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0) = object_p(0);
     x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v(0);
-    x_.tail<1>()(0) = in_contact;
+    x_.tail(BASE_ARM_GRIPPER_DIM + 1)(0) = in_contact;
+    x_.tail(BASE_ARM_GRIPPER_DIM) += dt_ * u;
   }
   return x_;
 }

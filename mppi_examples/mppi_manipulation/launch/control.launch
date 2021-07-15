@@ -34,7 +34,7 @@
 
     <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="object_description"/>
+        <remap from="robot_description" to="object_description_raisim_sim"/>
         <remap from="joint_states" to="/object/joint_state"/>
     </node>
 

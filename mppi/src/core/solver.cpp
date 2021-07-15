@@ -395,7 +395,7 @@ void Solver::compute_weights() {
 
 void Solver::optimize() {
   compute_weights();
-  double alpha_adaptive = (max_cost_ - min_cost_) / max_cost_;
+  double alpha_adaptive = 1.0;  //(max_cost_ - min_cost_) / max_cost_;
   policy_->update(weights_, config_.alpha * alpha_adaptive);
 
   // rollouts averaging

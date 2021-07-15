@@ -7,7 +7,7 @@ solver:
 
   cost_ratio: 0.2
   caching_factor: 0.0
-  filtering: false
+  filtering: true
   substeps: 1
 
   gradient_step_size: 1.0
@@ -53,7 +53,7 @@ angular_weight: 1.0
 obstacle_radius: 0.15
 joint_limits: false
 holonomic: true
-gaussian_policy: false
+gaussian_policy: true
 
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0

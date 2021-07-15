@@ -29,12 +29,29 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                                      const mppi::input_t& u,
                                      const mppi::reference_t& ref,
                                      const double t) {
+  double object_state = 0.0;
   double cost = 0.0;
+  double contact = 0;
 
   if (fixed_base_) {
     robot_model_.update_state(x.head<ARM_GRIPPER_DIM>());
+    object_model_.update_state(
+        x.segment<OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM));
+    object_state = x.segment<OBJECT_DIMENSION>(2 * ARM_GRIPPER_DIM)(0);
+    contact = x(2 * OBJECT_DIMENSION + 2 * ARM_GRIPPER_DIM);
+
+    // regularization
+    cost += x.tail<ARM_GRIPPER_DIM>().head<ARM_DIMENSION>().norm();
   } else {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+    object_model_.update_state(
+        x.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM));
+    object_state = x.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
+    contact = x(2 * OBJECT_DIMENSION + 2 * BASE_ARM_GRIPPER_DIM);
+
+    cost += x.tail<BASE_ARM_GRIPPER_DIM>()
+                .head<BASE_DIMENSION + ARM_DIMENSION>()
+                .norm();
   }
 
   // end effector reaching
@@ -50,13 +67,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost +=
         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * param_.Qr;
 
-    if (x.tail<1>()(0) > 0) cost += param_.Qc;
+    if (contact > 0.01) cost += param_.Qc;
   }
 
   // reach the handle with open gripper
   else if (mode == 1) {
-    object_model_.update_state(
-        x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
     error_ = mppi_pinocchio::diff(
         robot_model_.get_pose(tracked_frame_),
         object_model_.get_pose(handle_frame_) * param_.grasp_offset);
@@ -65,13 +80,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost +=
         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * param_.Qr;
 
-    if (x.tail<1>()(0) > 0) cost += param_.Qc;
+    if (contact > 0.01) cost += param_.Qc;
   }
   // keep only position control in proximity of the handle and no gripper cost
   // move the object
   else if (mode == 2) {
-    object_model_.update_state(
-        x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
     error_ = mppi_pinocchio::diff(
         robot_model_.get_pose(tracked_frame_),
         object_model_.get_pose(handle_frame_) * param_.grasp_offset);
@@ -81,8 +94,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * param_.Qr2;
 
     double object_error =
-        x.tail(2 * OBJECT_DIMENSION + CONTACT_STATE).head<1>()(0) -
-        ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
+        object_state - ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
 
     // when almost opened reintroduce contact cost to release contact
     cost += object_error * object_error * param_.Q_obj;

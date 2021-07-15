@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
   auto object_description_raisim =
-      nh.param<std::string>("/object_description_raisim", "");
+      nh.param<std::string>("/object_description_raisim_sim", "");
 
   // Fixed base option
   bool fixed_base;
@@ -80,10 +80,13 @@ int main(int argc, char** argv) {
   for (size_t i = 0; i < x0.size(); i++) x(i) = x0[i];
 
   observation_t x_nom;
-  manipulation_msgs::State x_nom_ros;
+  //  manipulation_msgs::State x_nom_ros;
+  //  ros::Publisher x_nom_publisher_ =
+  //      nh.advertise<manipulation_msgs::State>("/observer/state", 10);
+  std_msgs::Float32MultiArray x_nom_arr;
+  x_nom_arr.data.resize(simulation->get_state_dimension());
   ros::Publisher x_nom_publisher_ =
-      nh.advertise<manipulation_msgs::State>("/observer/state", 10);
-
+      nh.advertise<std_msgs::Float32MultiArray>("/observer/nominal_state", 10);
   ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
   simulation->reset(x);
 
@@ -118,25 +121,28 @@ int main(int argc, char** argv) {
       controller.set_observation(x, sim_time);
       controller.update_policy();
       controller.get_input(x, u, sim_time);
+      controller.get_input_state(x, x_nom, u, sim_time);
       controller.publish_ros_default();
       controller.publish_ros();
     } else {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
+      controller.get_input_state(x, x_nom, u, sim_time);
     }
 
-    if (apply_safety_filter) {
-      x_f = x.head<10>();
-      u_f = u.head<10>();
-      simulation->get_external_torque(torque_ext);
-      filter.passivity_constraint()->update_passivity_constraint(
-          torque_ext.head<10>());
-      filter.apply(x_f, u_f, u_opt);
-      u.head<10>() = u_opt;
-      filter.passivity_constraint()->integrate_tank(u_opt.head<10>());
-      tank_energy.data = filter.passivity_constraint()->get_tank_energy();
-      tank_energy_publisher.publish(tank_energy);
-    }
+    // TODO(giuseppe) see how to integrate sf with accelerations
+    //    if (apply_safety_filter) {
+    //      x_f = x.head<10>();
+    //      u_f = x_nom.tail<12>().head<10>();
+    //      simulation->get_external_torque(torque_ext);
+    //      filter.passivity_constraint()->update_passivity_constraint(
+    //          torque_ext.head<10>());
+    //      filter.apply(x_f, u_f, u_opt);
+    //      x.tail<12>().head<10>() = u_opt;
+    //      filter.passivity_constraint()->integrate_tank(u_opt.head<10>());
+    //      tank_energy.data = filter.passivity_constraint()->get_tank_energy();
+    //      tank_energy_publisher.publish(tank_energy);
+    //    }
 
     if (!static_optimization) {
       x = simulation->step(u, sim_dt);
@@ -144,8 +150,12 @@ int main(int argc, char** argv) {
     }
 
     controller.get_input_state(x, x_nom, u, sim_time);
-    manipulation::conversions::eigenToMsg(x_nom, x_nom_ros);
-    x_nom_publisher_.publish(x_nom_ros);
+
+    // TODO(giuseppe) need to change conversions if using accelerations
+    // manipulation::conversions::eigenToMsg(x_nom, x_nom_ros);
+    // x_nom_publisher_.publish(x_nom_ros);
+    for (int i = 0; i < x_nom.size(); i++) x_nom_arr.data[i] = x_nom[i];
+    x_nom_publisher_.publish(x_nom_arr);
 
     end = std::chrono::steady_clock::now();
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
