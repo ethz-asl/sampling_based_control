@@ -7,18 +7,18 @@ solver:
 
   cost_ratio: 0.2
   caching_factor: 0.0
-  filtering: false
+  filtering: true
   substeps: 1
 
-  gradient_step_size: 1.0
-  momentum_step_size: 0.0
+  gradient_step_size: 0.9
+  momentum_step_size: 0.999
 
   filter_type: 1
   filter_order: 1
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [ 0.25, 0.25, 0.0025, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25] #
+  input_variance: [ 1.25, 1.25, 0.0025, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25] #
 
   discount_factor: 1.0
   verbose: false
@@ -53,7 +53,7 @@ angular_weight: 1.0
 obstacle_radius: 0.15
 joint_limits: false
 holonomic: true
-gaussian_policy: false
+gaussian_policy: true
 
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0
@@ -62,7 +62,7 @@ ros_publish_rate: 10.0
 
 sequential: false
 
-apply_safety_filter: true
+apply_safety_filter: false
 
 static_optimization: false
 sim_dt: 0.01
