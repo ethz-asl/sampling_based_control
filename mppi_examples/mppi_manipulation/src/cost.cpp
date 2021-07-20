@@ -33,8 +33,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   if (fixed_base_) {
     robot_model_.update_state(x.head<ARM_GRIPPER_DIM>());
+    cost += param_.Qreg * x.segment<ARM_GRIPPER_DIM>(ARM_GRIPPER_DIM).norm();
   } else {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+    cost += param_.Qreg *
+            x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
   }
 
   // end effector reaching
@@ -143,6 +146,10 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 }
 
 bool PandaCostParam::parse_from_ros(const ros::NodeHandle& nh) {
+  if (!nh.getParam("regularization", Qreg) || Qreg < 0) {
+    ROS_ERROR("Filed to parse regularization or invalid!");
+    return false;
+  }
   if (!nh.getParam("obstacle_weight", Qo) || Qo < 0) {
     ROS_ERROR("Filed to parse obstacle_weight or invalid!");
     return false;
@@ -255,6 +262,7 @@ std::ostream& operator<<(std::ostream& os,
   os << "========================================" << std::endl;
   os << "        Panda Cost Parameters           " << std::endl;
   os << "========================================" << std::endl;
+  os << " regularization weight: "   << param.Qreg << std::endl;
   os << " obstacle_weight: "         << param.Qo << std::endl;
   os << " obstacle_radius: "         << param.ro << std::endl;
   os << " obstacle_weight_slope: "   << param.Qos << std::endl;

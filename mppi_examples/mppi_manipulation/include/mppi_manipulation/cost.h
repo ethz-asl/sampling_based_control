@@ -18,6 +18,7 @@
 namespace manipulation {
 
 struct PandaCostParam {
+  double Qreg;  // robot velocity regularization
   double Qt;  // translation cost
   double Qt2;
   double Qr;  // rotation cost
