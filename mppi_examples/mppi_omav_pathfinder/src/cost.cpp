@@ -6,9 +6,9 @@
  * @brief    description
  */
 
-#include "mppi_OMAV_Pathfinder/cost.h"
-#include <math.h>
+#include "mppi_omav_pathfinder/cost.h"
 #include <algorithm>
+#include <math.h>
 
 using namespace omav_pathfinder;
 

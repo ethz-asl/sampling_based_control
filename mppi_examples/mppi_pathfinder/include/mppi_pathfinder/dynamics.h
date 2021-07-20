@@ -17,9 +17,9 @@
 namespace pathfinder {
 
 enum PathfinderDim {
-  STATE_DIMENSION = 4,     // x, y, theta, v
-  INPUT_DIMENSION = 2,     // v_ref, theta_ref
-  REFERENCE_DIMENSION = 3  // x, y, theta
+  STATE_DIMENSION = 3,    // x, y, theta, v
+  INPUT_DIMENSION = 1,    // acceleration
+  REFERENCE_DIMENSION = 1 // position
 };
 
 struct PathfinderDynamicsConfig {
@@ -65,8 +65,8 @@ class PathfinderDynamics : public mppi::DynamicsBase {
   const observation_t get_state() const override;
 
  private:
-  void compute_velocities(double v, double theta_ref);
-  void integrate_internal(double v, double theta_ref, double dt);
+   void compute_velocities(double a);
+   void integrate_internal(double u, double dt);
 
  private:
   PathfinderDynamicsConfig config_;

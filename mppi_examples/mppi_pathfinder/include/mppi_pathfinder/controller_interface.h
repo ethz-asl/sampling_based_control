@@ -18,13 +18,15 @@ namespace pathfinder {
 
 class PathfinderControllerInterface : public mppi_ros::ControllerRos {
  public:
-  explicit PathfinderControllerInterface(ros::NodeHandle& nh)
-      : ControllerRos(nh){};
-  ~PathfinderControllerInterface() = default;
+   explicit PathfinderControllerInterface(ros::NodeHandle &nh)
+       : ControllerRos(nh, nh_public_){};
+   ~PathfinderControllerInterface() = default;
 
-  bool init_ros() override { return true; };
-  void publish_ros() override;
-  bool update_reference() override;
+   bool init_ros() override { return true; };
+   void publish_ros() override;
+   bool update_reference() override;
+
+   void publish_optimal_rollout() override;
 
  private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral>& controller) override;

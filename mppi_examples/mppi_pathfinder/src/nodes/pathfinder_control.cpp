@@ -29,8 +29,7 @@ int main(int argc, char** argv) {
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PathfinderDim::STATE_DIMENSION);
   x(0) = 0.0;
   x(1) = 0.0;
-  x(2) = 0.1;
-  x(3) = 0.0;
+  x(2) = 0.0;
   simulation.reset(x);
 
   mppi::DynamicsBase::input_t u;
@@ -41,9 +40,7 @@ int main(int argc, char** argv) {
       nh.advertise<sensor_msgs::JointState>("/joint_states", 10);
   sensor_msgs::JointState joint_state;
   joint_state.name.push_back("cart_x");
-  joint_state.name.push_back("cart_y");
-  joint_state.name.push_back("cart_theta");
-  joint_state.position.resize(3);
+  joint_state.position.resize(1);
   joint_state.header.frame_id = "world";
 
   bool static_optimization = nh.param<bool>("static_optimization", false);
@@ -57,21 +54,34 @@ int main(int argc, char** argv) {
     throw std::runtime_error("Failed to initialzied controller!");
   }
 
+  std::cout << "First observation: " << x.transpose() << std::endl;
   // set the very first observation
   controller.set_observation(x, sim_time);
 
   // sim loop
+  double max_vel = 0;
+  double max_pos = 0;
+  double max_pos_int = 0;
+
   controller.start();
   while (ros::ok()) {
     auto start = std::chrono::steady_clock::now();
     controller.set_observation(x, sim_time);
     controller.get_input(x, u, sim_time);
+    controller.publish_optimal_rollout();
     if (!static_optimization) {
       x = simulation.step(u, sim_dt);
       sim_time += sim_dt;
     }
+    max_vel = std::max(x(0), max_vel);
+    max_pos = std::max(x(1), max_pos);
+    max_pos_int = std::max(x(2), max_pos_int);
+    std::cout << "----------" << std::endl;
+    std::cout << max_vel << std::endl;
+    std::cout << max_pos << std::endl;
+    std::cout << max_pos_int << std::endl;
 
-    for (size_t i = 0; i < 3; i++) joint_state.position[i] = x(i);
+    joint_state.position[0] = x(2);
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 

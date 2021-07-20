@@ -21,19 +21,8 @@ double PathfinderCost::distance_from_obstacle_cost(double *cart_position, double
 
 mppi::CostBase::cost_t PathfinderCost::compute_cost(const mppi::observation_t &x, const mppi::reference_t &ref, const double t){
     double cost = 0.0;
-    double cart_position[2] = {x(0), x(1)};
-    double obstacle_cost = distance_from_obstacle_cost(cart_position, obstacle_1);
-    if (x(0) > x_fieldlimitpositive || x(0) < x_fieldlimitnegative || x(1) > y_fieldlimit || x(1) < -y_fieldlimit)
-      cost += c_leafing_field;
-    cost += obstacle_cost;
 
-    double theta = std::fmod(x(1), 2 * M_PI);
-    double delta = (theta < 0) ? ref(2) + theta : ref(2) - theta;
-    cost += w_theta * std::pow(delta, 2);
-
-    cost += w_x * std::pow(x(0) - ref(0), 2);
-    cost += w_y * std::pow(x(1) - ref(1), 2);
-
+    cost += w_y * std::pow(x(2) - ref(0), 2);
 
     return cost;
 }

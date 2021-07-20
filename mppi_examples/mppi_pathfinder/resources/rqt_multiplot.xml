@@ -26,20 +26,7 @@
                         <curve_0>
                             <axes>
                                 <x_axis>
-                                    <field></field>
-                                    <field_type>1</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/min_rollout_cost</topic>
-                                    <type>std_msgs/Float64</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>data</field>
+                                    <field>header/stamp</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -48,8 +35,21 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/min_rollout_cost</topic>
-                                    <type>std_msgs/Float64</type>
+                                    <topic>/optimal_rollout</topic>
+                                    <type>geometry_msgs/PoseArray</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>poses/0/position/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/optimal_rollout</topic>
+                                    <type>geometry_msgs/PoseArray</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -72,9 +72,136 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>cost</title>
+                            <title>Copy of Untitled Curve</title>
                         </curve_0>
                         <curve_1>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/joint_states</topic>
+                                    <type>sensor_msgs/JointState</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>position/0</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/joint_states</topic>
+                                    <type>sensor_msgs/JointState</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Untitled Curve</title>
+                        </curve_1>
+                        <curve_2>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/optimal_rollout</topic>
+                                    <type>geometry_msgs/PoseArray</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>poses/1/position/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/optimal_rollout</topic>
+                                    <type>geometry_msgs/PoseArray</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Copy of Copy of Untitled Curve</title>
+                        </curve_2>
+                    </curves>
+                    <legend>
+                        <visible>true</visible>
+                    </legend>
+                    <plot_rate>30</plot_rate>
+                    <title>Mppi</title>
+                </column_0>
+            </row_0>
+            <row_1>
+                <column_0>
+                    <axes>
+                        <axes>
+                            <x_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </x_axis>
+                            <y_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </y_axis>
+                        </axes>
+                    </axes>
+                    <curves>
+                        <curve_0>
                             <axes>
                                 <x_axis>
                                     <field></field>
@@ -123,16 +250,92 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>force</title>
-                        </curve_1>
+                            <title>Untitled Curve</title>
+                        </curve_0>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Mppi</title>
+                    <title>Untitled Plot</title>
                 </column_0>
-            </row_0>
+            </row_1>
+            <row_2>
+                <column_0>
+                    <axes>
+                        <axes>
+                            <x_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </x_axis>
+                            <y_axis>
+                                <custom_title>Untitled Axis</custom_title>
+                                <title_type>0</title_type>
+                                <title_visible>true</title_visible>
+                            </y_axis>
+                        </axes>
+                    </axes>
+                    <curves>
+                        <curve_0>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/cost</topic>
+                                    <type>std_msgs/Float64</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>data</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/cost</topic>
+                                    <type>std_msgs/Float64</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Untitled Curve</title>
+                        </curve_0>
+                    </curves>
+                    <legend>
+                        <visible>true</visible>
+                    </legend>
+                    <plot_rate>30</plot_rate>
+                    <title>Untitled Plot</title>
+                </column_0>
+            </row_2>
         </plots>
         <track_points>false</track_points>
     </table>

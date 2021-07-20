@@ -7,10 +7,10 @@ dynamics:
 
 solver:
   rollouts: 200
-  lambda: 0.0001 #0.001
-  h: 10.0
+  lambda: 0.0 #0.001
+  h: 20.0
   step_size: 0.01
-  horizon: 2.0
+  horizon: 3.0
 
   cost_ratio: 0.2
   caching_factor: 0.1
@@ -22,7 +22,7 @@ solver:
   filter_window: 10
 
   adaptive_sampling: false
-  input_variance: [3.0, 1.0 ]
+  input_variance: [1.0]
 
   discount_factor: 1.0
   verbose: false
@@ -32,11 +32,11 @@ solver:
   use_tree_search: false
   pruning_threshold: 0.01      # check with 9999999
   #  expert_types: {NORM, IMP}
-  expert_weights: [ 0.5, 0.5 ]
+  expert_weights: [ 0.0, 1.0 ]
   log_data: true
-  bound_input: true
-  u_min: [ 0, -7.0 ]
-  u_max: [ 4.0, 7.0 ]
+  bound_input: false
+  u_min: [ -1.0 ]
+  u_max: [ 1.0]
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0

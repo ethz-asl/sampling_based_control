@@ -6,7 +6,7 @@
  * @brief    description
  */
 
-#include "mppi_OMAV_Pathfinder/dynamics.h"
+#include "mppi_omav_pathfinder/dynamics.h"
 #include <Eigen/Geometry>
 
 using namespace mppi;

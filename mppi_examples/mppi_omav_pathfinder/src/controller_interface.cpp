@@ -6,7 +6,7 @@
  * @brief    description
  */
 
-#include "mppi_OMAV_Pathfinder/controller_interface.h"
+#include "mppi_omav_pathfinder/controller_interface.h"
 #include <ros/package.h>
 
 using namespace omav_pathfinder;

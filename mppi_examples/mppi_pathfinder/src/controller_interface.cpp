@@ -50,10 +50,10 @@ bool PathfinderControllerInterface::set_controller(
   // cart at the goal position
   ref_.rr.resize(1,
                  mppi::observation_t::Zero(PathfinderDim::REFERENCE_DIMENSION));
-  ref_.rr[0](0) = 20.0;
-  ref_.rr[0](1) = 3.0;
-  ref_.rr[0](2) = 0.0;
+  ref_.rr[0](0) = 2.0;
   ref_.tt.resize(1, 0.0);
+  optimal_rollout_publisher_ =
+      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
   return true;
 }
 
@@ -64,3 +64,21 @@ bool PathfinderControllerInterface::update_reference() {
 }
 
 void PathfinderControllerInterface::publish_ros() {}
+
+void PathfinderControllerInterface::publish_optimal_rollout() {
+  get_controller()->get_optimal_rollout(optimal_rollout_states_,
+                                        optimal_rollout_inputs_);
+  geometry_msgs::PoseArray optimal_rollout_array;
+  geometry_msgs::Pose current_pose;
+
+  optimal_rollout_array.header.frame_id = "odom";
+  optimal_rollout_array.header.stamp = ros::Time::now();
+  for (int i = 0; i < optimal_rollout_states_.size(); i++) {
+    current_pose.position.x = optimal_rollout_states_[i](2);
+    current_pose.position.y = 0;
+    current_pose.position.z = 0;
+
+    optimal_rollout_array.poses.push_back(current_pose);
+  }
+  optimal_rollout_publisher_.publish(optimal_rollout_array);
+}

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="plot_cost" default="false"/>
+    <arg name="plot_cost" default="true"/>
     <arg name="description_file" default="$(find mppi_pathfinder)/resources/pathfinder.urdf"/>
     <!-- TF prefix -->
     <arg name="tf_prefix" default=""/>
@@ -28,7 +28,7 @@
 
     <group if="$(arg plot_cost)">
         <arg name="mp_config" default="$(find mppi_pathfinder)/resources/rqt_multiplot.xml"/>
-        <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config)"
+        <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" args="--multiplot-config $(arg mp_config) --multiplot-run-all"
               output="screen"/>
     </group>
 </launch>
