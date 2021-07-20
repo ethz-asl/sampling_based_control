@@ -83,16 +83,18 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
   }
   else{
     std::vector<size_t> sorted_idxs = sort_indexes(weights);
-    for (int i=keep; i<ns_-1; i++){
+    for (int i = keep; i < ns_ - 3; i++) {
       dist_->setRandomRow(samples_[sorted_idxs[i]]);
     }
+
+    // noise free sample
+    samples_[sorted_idxs[ns_ - 2]].setZero();
+
+    // sample exactly zero velocity
+    samples_[sorted_idxs[ns_ - 1]] = -nominal_;
   }
 
-  // noise free sample
-  samples_[ns_-1].setZero();
 
-  // sample exactly zero velocity
-  samples_[ns_ - 2] = -nominal_;
   bound(); // TODO should bound each sample so that a convex combination is also within bounds
 }
 
@@ -166,9 +168,15 @@ void GaussianPolicy::shift(const double t) {
     nominal_ = L_ * nominal_;
     nominal_.bottomLeftCorner(time_idx_shift, nu_).setZero();
 
+    // extend the non-visited part with the last known value of momentum and
+    // momentum2
     if (adam_) {
       momentum_ = L_ * momentum_;
+      momentum_.bottomLeftCorner(time_idx_shift, nu_).rowwise() =
+          momentum_.row(nt_ - time_idx_shift - 1);  //.setZero();
       momentum2_ = L_ * momentum2_;
+      momentum2_.bottomLeftCorner(time_idx_shift, nu_).rowwise() =
+          momentum2_.row(nt_ - time_idx_shift - 1);
     }
 
     // TODO(giuseppe) investigate why this does not work

@@ -6,19 +6,19 @@ solver:
   horizon: 1.0
 
   cost_ratio: 0.2
-  caching_factor: 0.0
+  caching_factor: 0.2
   filtering: true
   substeps: 1
 
-  gradient_step_size: 0.9
-  momentum_step_size: 0.999
+  gradient_step_size: 0.9 #9
+  momentum_step_size: 0.999 #0.999 #999
 
   filter_type: 1
   filter_order: 1
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [ 1.25, 1.25, 0.0025, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25] #
+  input_variance: [ 0.25, 0.25, 0.0025, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   discount_factor: 1.0
   verbose: false
