@@ -14,6 +14,7 @@ set(PACKAGE_DEPENDENCIES
         std_msgs
         roscpp
         mppi
+        safety_filter
         mppi_ros
         mppi_pinocchio
         mppi_panda_mobile
@@ -36,6 +37,7 @@ add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp
+        src/manipulation_safety_filter.cpp
         src/dynamics_ros.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 

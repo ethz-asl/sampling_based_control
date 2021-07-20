@@ -9,10 +9,10 @@
 
 #include <manipulation_msgs/conversions.h>
 #include <mppi_manipulation/dynamics_ros.h>
+#include <mppi_manipulation/manipulation_safety_filter.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
-#include <mppi_panda_mobile/safety_filter/safety_filter.hpp>
 
 using namespace manipulation;
 
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  panda_mobile::PandaMobileSafetyFilterSettings filter_settings;
+  PandaMobileSafetyFilterSettings filter_settings;
   if (!filter_settings.init_from_ros(nh) && apply_safety_filter) {
     ROS_ERROR("Failed to initialize the safety filter!");
     return 0;
@@ -61,13 +61,9 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  panda_mobile::PandaMobileSafetyFilter filter(robot_description_sf,
-                                               filter_settings);
-  Eigen::VectorXd x_f, u_f, u_opt;
+  PandaMobileSafetyFilter filter(robot_description_sf, filter_settings);
   Eigen::VectorXd torque_ext;
-  x_f.setZero(10);  // optimizing only base and arm velocities
-  u_f.setZero(10);
-  u_opt.setZero(10);
+  Eigen::VectorXd u_opt;
 
   std_msgs::Float64 tank_energy;
   ros::Publisher tank_energy_publisher =
@@ -126,14 +122,11 @@ int main(int argc, char** argv) {
     }
 
     if (apply_safety_filter) {
-      x_f = x.head<10>();
-      u_f = u.head<10>();
       simulation->get_external_torque(torque_ext);
-      filter.passivity_constraint()->update_passivity_constraint(
-          torque_ext.head<10>());
-      filter.apply(x_f, u_f, u_opt);
+      filter.update(x, u, torque_ext);
+      filter.apply(u_opt);
       u.head<10>() = u_opt;
-      filter.passivity_constraint()->integrate_tank(u_opt.head<10>());
+
       tank_energy.data = filter.passivity_constraint()->get_tank_energy();
       tank_energy_publisher.publish(tank_energy);
     }
