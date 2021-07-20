@@ -11,14 +11,18 @@
 
 namespace manipulation {
 
-PandaRaisimDynamics::PandaRaisimDynamics(const std::string& robot_description,
-                                         const std::string& object_description,
-                                         const double dt, const bool fixed_base,
-                                         const PandaRaisimGains& gains)
+PandaRaisimDynamics::PandaRaisimDynamics(
+    const std::string& robot_description, const std::string& object_description,
+    const double dt, const bool fixed_base, const PandaRaisimGains& gains,
+    const std::unique_ptr<PandaMobileSafetyFilter>& safety_filter)
     : fixed_base_(fixed_base), dt_(dt), gains_(gains) {
   initialize_world(robot_description, object_description);
   initialize_pd();
   set_collision();
+  sf_ = safety_filter ? std::make_unique<PandaMobileSafetyFilter>(
+                            safety_filter->get_urdf_string(),
+                            safety_filter->get_settings())
+                      : nullptr;
 };
 
 void PandaRaisimDynamics::initialize_world(
@@ -98,6 +102,15 @@ void PandaRaisimDynamics::set_collision() {
 
 mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
                                               const double dt) {
+  // safety filter (optional)
+  if (sf_) {
+    get_external_torque(torque_ext_);
+    sf_->update(x_, u, torque_ext_);
+    sf_->apply(u_opt_);
+  } else {
+    u_opt_ = u;
+  }
+
   // keep the gripper in the current position
   if (fixed_base_) {
     cmd.tail<PandaDim::GRIPPER_DIMENSION>()
@@ -110,11 +123,11 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   if (fixed_base_) {
     cmdv.head<ARM_DIMENSION>() = u.head<ARM_DIMENSION>();
   } else {
-    cmdv(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
-    cmdv(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
-    cmdv(2) = u(2);
+    cmdv(0) = u_opt_(0) * std::cos(x_(2)) - u_opt_(1) * std::sin(x_(2));
+    cmdv(1) = u_opt_(0) * std::sin(x_(2)) + u_opt_(1) * std::cos(x_(2));
+    cmdv(2) = u_opt_(2);
     cmdv.segment<ARM_DIMENSION>(BASE_DIMENSION) =
-        u.segment<ARM_DIMENSION>(BASE_DIMENSION);
+        u_opt_.segment<ARM_DIMENSION>(BASE_DIMENSION);
   }
 
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();

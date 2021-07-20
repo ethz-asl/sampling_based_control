@@ -35,9 +35,6 @@ int main(int argc, char** argv) {
     ROS_ERROR_STREAM("Failed to find param fixed_base");
     return -1;
   }
-  auto simulation = std::make_shared<ManipulatorDynamicsRos>(
-      nh, robot_description_raisim, object_description_raisim, 0.015,
-      fixed_base);
 
   // Safety filter
   bool apply_safety_filter;
@@ -61,13 +58,14 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  PandaMobileSafetyFilter filter(robot_description_sf, filter_settings);
+  auto filter = std::make_unique<PandaMobileSafetyFilter>(robot_description_sf,
+                                                          filter_settings);
   Eigen::VectorXd torque_ext;
   Eigen::VectorXd u_opt;
 
-  std_msgs::Float64 tank_energy;
-  ros::Publisher tank_energy_publisher =
-      nh.advertise<std_msgs::Float64>("/tank_energy", 1);
+  auto simulation = std::make_shared<ManipulatorDynamicsRos>(
+      nh, robot_description_raisim, object_description_raisim, 0.015,
+      fixed_base, PandaRaisimGains(), filter);
 
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0
@@ -119,16 +117,6 @@ int main(int argc, char** argv) {
     } else {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
-    }
-
-    if (apply_safety_filter) {
-      simulation->get_external_torque(torque_ext);
-      filter.update(x, u, torque_ext);
-      filter.apply(u_opt);
-      u.head<10>() = u_opt;
-
-      tank_energy.data = filter.passivity_constraint()->get_tank_energy();
-      tank_energy_publisher.publish(tank_energy);
     }
 
     if (!static_optimization) {

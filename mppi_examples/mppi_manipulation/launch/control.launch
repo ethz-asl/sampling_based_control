@@ -4,7 +4,7 @@
     <arg name="launch_prefix" value="" unless="$(arg debug)"/>
     <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
 
-    <arg name="fixed_base" default="true"/>
+    <arg name="fixed_base" default="false"/>
     <arg name="object" default="shelf"/>
     <arg name="plot" default="false"/>
     <arg name="enable_obstacle" default="false"/>

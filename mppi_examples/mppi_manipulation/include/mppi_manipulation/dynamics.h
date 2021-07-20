@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include "mppi_manipulation/dimensions.h"
 #include "mppi_manipulation/gains.h"
+#include "mppi_manipulation/manipulation_safety_filter.h"
 
 namespace manipulation {
 
@@ -29,12 +30,13 @@ struct force_t {
 
 class PandaRaisimDynamics : public mppi::Dynamics {
  public:
-  PandaRaisimDynamics(const std::string& robot_description,
-                      const std::string& object_description, const double dt,
-                      const bool fixed_base = true,
-                      const PandaRaisimGains& = PandaRaisimGains());
+  PandaRaisimDynamics(
+      const std::string& robot_description,
+      const std::string& object_description, const double dt,
+      const bool fixed_base = true,
+      const PandaRaisimGains& = PandaRaisimGains(),
+      const std::unique_ptr<PandaMobileSafetyFilter>& = nullptr);
   ~PandaRaisimDynamics() = default;
-
  private:
   void initialize_world(const std::string& robot_description,
                         const std::string& object_description);
@@ -47,7 +49,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   size_t get_state_dimension() override { return state_dimension_; }
   mppi::dynamics_ptr create() override {
     return std::make_shared<PandaRaisimDynamics>(
-        robot_description_, object_description_, dt_, fixed_base_);
+        robot_description_, object_description_, dt_, fixed_base_, gains_, sf_);
   }
 
   mppi::dynamics_ptr clone() const override {
@@ -85,6 +87,10 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   Eigen::VectorXd tau_ext_;
   Eigen::VectorXd joint_p, joint_v;
 
+  inline const std::unique_ptr<PandaMobileSafetyFilter>& get_filter() const {
+    return sf_;
+  }
+
  private:
   double dt_;
   std::string robot_description_;
@@ -101,5 +107,9 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   Eigen::VectorXd joint_p_desired, joint_v_desired;
 
   PandaRaisimGains gains_;
+
+  Eigen::VectorXd u_opt_;
+  Eigen::VectorXd torque_ext_;
+  std::unique_ptr<PandaMobileSafetyFilter> sf_;
 };
 }  // namespace manipulation

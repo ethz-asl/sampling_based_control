@@ -166,7 +166,7 @@ std::ostream& operator<<(std::ostream& os,
 PandaMobileSafetyFilter::PandaMobileSafetyFilter(
     const std::string& urdf_string,
     const PandaMobileSafetyFilterSettings& settings)
-    : settings_(settings) {
+    : urdf_(urdf_string), settings_(settings) {
   std::cout << settings_ << std::endl;
   ConstraintsManager cm(10);
 
@@ -223,7 +223,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
     cm.add_constraint("passivity_constraint", pass_const);
   }
 
-  filter_ = std::make_shared<SafetyFilter>(cm);
+  filter_ = std::make_unique<SafetyFilter>(cm);
 }
 
 void PandaMobileSafetyFilter::update(const Eigen::VectorXd& x,

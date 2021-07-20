@@ -8,6 +8,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <std_msgs/Float64.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -15,10 +16,12 @@ namespace manipulation {
 
 class ManipulatorDynamicsRos : public PandaRaisimDynamics {
  public:
-  ManipulatorDynamicsRos(const ros::NodeHandle& nh,
-                         const std::string& robot_description,
-                         const std::string& object_description, const double dt,
-                         const bool fixed_base = true);
+  ManipulatorDynamicsRos(
+      const ros::NodeHandle& nh, const std::string& robot_description,
+      const std::string& object_description, const double dt,
+      const bool fixed_base = true,
+      const PandaRaisimGains& = PandaRaisimGains(),
+      const std::unique_ptr<PandaMobileSafetyFilter>& = nullptr);
   ~ManipulatorDynamicsRos() = default;
 
  public:
@@ -39,6 +42,8 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   sensor_msgs::JointState object_state_;
   visualization_msgs::Marker force_marker_;
   std_msgs::Float64MultiArray tau_ext_msg_;
+  std_msgs::Float64 tank_energy_;
+  ros::Publisher tank_energy_publisher_;
 };
 
 }  // namespace manipulation

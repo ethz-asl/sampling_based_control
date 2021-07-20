@@ -1,6 +1,7 @@
 //
 // Created by giuseppe on 20.07.21.
 //
+#pragma once
 
 #include <ros/ros.h>
 #include <map>
@@ -62,13 +63,15 @@ class PandaMobileSafetyFilter {
     return passivity_constraint_ptr_;
   }
 
- private:
-  Eigen::VectorXd x_;
-  Eigen::VectorXd u_;
-  Eigen::VectorXd torque_;
+  inline const PandaMobileSafetyFilterSettings get_settings() const {
+    return settings_;
+  }
+  inline const std::string get_urdf_string() const { return urdf_; }
 
+ private:
+  std::string urdf_;
   PandaMobileSafetyFilterSettings settings_;
-  std::shared_ptr<safety_filter::SafetyFilter> filter_;
+  std::unique_ptr<safety_filter::SafetyFilter> filter_;
   passivity_ptr_t passivity_constraint_ptr_;
 };
 

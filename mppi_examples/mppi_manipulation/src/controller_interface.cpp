@@ -9,6 +9,7 @@
 #include "mppi_manipulation/controller_interface.h"
 #include "mppi_manipulation/cost.h"
 #include "mppi_manipulation/dynamics.h"
+#include "mppi_manipulation/manipulation_safety_filter.h"
 
 #include <mppi_pinocchio/ros_conversions.h>
 
@@ -104,6 +105,27 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   init_model(robot_description, object_description);
 
   // -------------------------------
+  // ros params
+  // -------------------------------
+  std::string robot_description_raisim, object_description_raisim;
+  if (!nh_.param<std::string>("/robot_description_raisim",
+                              robot_description_raisim, "")) {
+    throw std::runtime_error(
+        "Could not parse robot_description_raisim. Is the parameter set?");
+  }
+
+  if (!nh_.param<std::string>("/object_description_raisim",
+                              object_description_raisim, "")) {
+    throw std::runtime_error(
+        "Could not parse object_description_raisim. Is the parameter set?");
+  }
+  if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
+    throw std::runtime_error(
+        "Could not parse fixed_base. Is the parameter set?");
+  }
+  ROS_INFO_STREAM("Fixed base? " << fixed_base_);
+
+  // -------------------------------
   // config
   // -------------------------------
   std::string config_file;
@@ -117,35 +139,48 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   }
 
   // -------------------------------
+  // safety filter
+  // -------------------------------
+  bool apply_safety_filter;
+  nh_.param<bool>("apply_predictive_safety_filter", apply_safety_filter, false);
+
+  if (apply_safety_filter && fixed_base_) {
+    throw std::runtime_error(
+        "Safety filter only support moving base for the moment being.");
+  }
+
+  std::unique_ptr<PandaMobileSafetyFilter> safety_filter(nullptr);
+  if (apply_safety_filter) {
+    PandaMobileSafetyFilterSettings filter_settings;
+    if (!filter_settings.init_from_ros(nh_) && apply_safety_filter) {
+      throw std::runtime_error("Failed to initialize the safety filter!");
+    }
+
+    std::string robot_description_sf;
+    if (!nh_.param<std::string>("/robot_description_safety_filter",
+                                robot_description_sf, "")) {
+      throw std::runtime_error(
+          "No /robot_description_safety_filter found on the param server.");
+    }
+    safety_filter = std::make_unique<PandaMobileSafetyFilter>(
+        robot_description_sf, filter_settings);
+  }
+
+  // -------------------------------
   // dynamics
   // -------------------------------
   mppi::dynamics_ptr dynamics;
-  std::string robot_description_raisim, object_description_raisim;
-  if (!nh_.param<std::string>("/robot_description_raisim",
-                              robot_description_raisim, "")) {
-    throw std::runtime_error(
-        "Could not parse robot_description_raisim. Is the parameter set?");
-  }
-  if (!nh_.param<std::string>("/object_description_raisim",
-                              object_description_raisim, "")) {
-    throw std::runtime_error(
-        "Could not parse object_description_raisim. Is the parameter set?");
-  }
-  if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
-    throw std::runtime_error(
-        "Could not parse fixed_base. Is the parameter set?");
-  }
-  ROS_INFO_STREAM("Fixed base? " << fixed_base_);
 
-  PandaRaisimGains dyanmics_gains;
-  if (!dyanmics_gains.parse_from_ros(nh_)) {
+  PandaRaisimGains dynamics_gains;
+  if (!dynamics_gains.parse_from_ros(nh_)) {
     ROS_ERROR("Failed to parse dynamics gains.");
     return false;
   }
-  ROS_INFO_STREAM("Successfully parsed dynamics gains: \n" << dyanmics_gains);
+  ROS_INFO_STREAM("Successfully parsed dynamics gains: \n" << dynamics_gains);
   dynamics = std::make_shared<PandaRaisimDynamics>(
       robot_description_raisim, object_description_raisim, config_.step_size,
-      fixed_base_, dyanmics_gains);
+      fixed_base_, dynamics_gains, safety_filter);
+
   std::cout << "Done." << std::endl;
 
   // -------------------------------

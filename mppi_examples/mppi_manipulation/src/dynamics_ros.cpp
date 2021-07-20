@@ -11,10 +11,11 @@ namespace manipulation {
 ManipulatorDynamicsRos::ManipulatorDynamicsRos(
     const ros::NodeHandle& nh, const std::string& robot_description,
     const std::string& object_description, const double dt,
-    const bool fixed_base)
+    const bool fixed_base, const PandaRaisimGains& gains,
+    const std::unique_ptr<PandaMobileSafetyFilter>& safety_filter)
     : nh_(nh),
-      PandaRaisimDynamics(robot_description, object_description, dt,
-                          fixed_base) {
+      PandaRaisimDynamics(robot_description, object_description, dt, fixed_base,
+                          gains, safety_filter) {
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
   object_state_publisher_ =
@@ -27,6 +28,7 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   tau_ext_publisher_ =
       nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
   power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
+  tank_energy_publisher_ = nh_.advertise<std_msgs::Float64>("/tank_energy", 1);
 
   if (fixed_base) {
     joint_state_.name = {
@@ -113,6 +115,12 @@ void ManipulatorDynamicsRos::publish_ros() {
   std_msgs::Float64 power;
   power.data = tau_ext_.transpose() * joint_v;
   power_publisher_.publish(power);
+
+  // publish tank energy if available
+  if (get_filter()) {
+    tank_energy_.data = get_filter()->passivity_constraint()->get_tank_energy();
+    tank_energy_publisher_.publish(tank_energy_);
+  }
 
   // publish end effector pose
   Eigen::Vector3d ee_position;
