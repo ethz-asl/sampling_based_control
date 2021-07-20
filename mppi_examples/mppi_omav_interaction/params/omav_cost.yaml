@@ -1,14 +1,14 @@
 # Weights for the deviation from the reference position
-x_distance_weight: 10.0
-y_distance_weight: 10.0
-z_distance_weight: 10.0
+x_distance_weight: 20.0
+y_distance_weight: 20.0
+z_distance_weight: 20.0
 # Weight for the deviation from the reference orientation
 orientation_weight: 10.0
 # Weights for the deviation from the reference position
 object_weight: 50.0
 # Velocity costs
-lin_vel_weight: 0.0
-ang_vel_weight: 0.0
+lin_vel_weight: 10.0
+ang_vel_weight: 10.0
 # Cost for leafing the field
 leafing_field_cost: 10000.0
 # Negative and positive limits of the field

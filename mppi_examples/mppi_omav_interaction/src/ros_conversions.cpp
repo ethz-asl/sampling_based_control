@@ -7,21 +7,23 @@
 namespace omav_interaction::conversions {
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
+    const mppi::observation_t &x0_opt,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
   double dt = 0.015;
   mav_msgs::EigenTrajectoryPoint current_trajectory_point;
   mav_msgs::EigenTrajectoryPointVector current_trajectory;
-
+  EigenTrajectoryPointFromState(x0_opt, u_opt[0], current_trajectory_point);
+  current_trajectory.push_back(current_trajectory_point);
   for (int i = 0; i < (x_opt.size() - 6); i++) {
-    EigenTrajectoryPointFromState(x_opt, u_opt, i, current_trajectory_point,
-                                  dt);
+    EigenTrajectoryPointFromStates(x_opt, u_opt, i, current_trajectory_point,
+                                   dt);
     current_trajectory.push_back(current_trajectory_point);
   }
   mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
                                                 &trajectory_msg);
 }
 
-void EigenTrajectoryPointFromState(
+void EigenTrajectoryPointFromStates(
     const observation_array_t &states, const input_array_t &inputs, int i,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt) {
 
@@ -45,30 +47,14 @@ void EigenTrajectoryPointFromState(
   const int d = 1;
   gram_sg::SavitzkyGolayFilter filter(m, t, n, d);
 
-  std::vector<double> lin_vel_x = {states[i](26),     states[i + 1](26),
-                                   states[i + 2](26), states[i + 3](26),
-                                   states[i + 4](26), states[i + 5](26),
-                                   states[i + 6](26)};
-  std::vector<double> lin_vel_y = {states[i](27),     states[i + 1](27),
-                                   states[i + 2](27), states[i + 3](27),
-                                   states[i + 4](27), states[i + 5](27),
-                                   states[i + 6](27)};
-  std::vector<double> lin_vel_z = {states[i](28),     states[i + 1](28),
-                                   states[i + 2](28), states[i + 3](28),
-                                   states[i + 4](28), states[i + 5](28),
-                                   states[i + 6](28)};
-  std::vector<double> ang_vel_x = {states[i](29),     states[i + 1](29),
-                                   states[i + 2](29), states[i + 3](29),
-                                   states[i + 4](29), states[i + 5](29),
-                                   states[i + 6](29)};
-  std::vector<double> ang_vel_y = {states[i](30),     states[i + 1](30),
-                                   states[i + 2](30), states[i + 3](30),
-                                   states[i + 4](30), states[i + 5](30),
-                                   states[i + 6](30)};
-  std::vector<double> ang_vel_z = {states[i](31),     states[i + 1](31),
-                                   states[i + 2](31), states[i + 3](31),
-                                   states[i + 4](31), states[i + 5](31),
-                                   states[i + 6](31)};
+  std::vector<double> lin_vel_x, lin_vel_y, lin_vel_z, ang_vel_x, ang_vel_y,
+      ang_vel_z;
+  OptimalRollouttoVelocityVector(i, 26, states, lin_vel_x);
+  OptimalRollouttoVelocityVector(i, 27, states, lin_vel_y);
+  OptimalRollouttoVelocityVector(i, 28, states, lin_vel_z);
+  OptimalRollouttoVelocityVector(i, 29, states, ang_vel_x);
+  OptimalRollouttoVelocityVector(i, 30, states, ang_vel_y);
+  OptimalRollouttoVelocityVector(i, 31, states, ang_vel_z);
 
   double lin_acc_x = filter.filter(lin_vel_x);
   double lin_acc_y = filter.filter(lin_vel_y);
@@ -85,7 +71,7 @@ void EigenTrajectoryPointFromState(
 
   trajectorypoint.acceleration_W = linear_acceleration;
   trajectorypoint.angular_acceleration_W = angular_acceleration_W;
-  trajectorypoint.time_from_start_ns = ros::Duration(i * dt).toNSec();
+  trajectorypoint.time_from_start_ns = ros::Duration((i + 1) * dt).toNSec();
 }
 
 void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,
@@ -147,6 +133,93 @@ void RPYtoQuaterniond(double roll, double pitch, double yaw,
   q.x() = sr * cp * cy - cr * sp * sy;
   q.y() = cr * sp * cy + sr * cp * sy;
   q.z() = cr * cp * sy - sr * sp * cy;
+}
+
+void OptimalRollouttoVelocityVector(const int trajectory_point_index,
+                                    const int velocity_index,
+                                    const observation_array_t &states,
+                                    std::vector<double> &velocity_vector) {
+  velocity_vector = {states[trajectory_point_index](velocity_index),
+                     states[trajectory_point_index + 1](velocity_index),
+                     states[trajectory_point_index + 2](velocity_index),
+                     states[trajectory_point_index + 3](velocity_index),
+                     states[trajectory_point_index + 4](velocity_index),
+                     states[trajectory_point_index + 5](velocity_index),
+                     states[trajectory_point_index + 6](velocity_index)};
+}
+
+void InterpolateTrajectoryPoints(
+    const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point_1,
+    const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point_2,
+    mav_msgs::EigenTrajectoryPoint *trajectory_point) {
+  double t = 0.01 / 0.015;
+
+  Eigen::Vector3d position_2 = mav_msgs::vector3FromMsg(
+      trajectory_msg_point_2.transforms[0].translation);
+  Eigen::Vector3d position_1 = mav_msgs::vector3FromMsg(
+      trajectory_msg_point_1.transforms[0].translation);
+
+  trajectory_point->position_W = position_1 + (position_2 - position_1) * t;
+  // std::cout << trajectory_point->position_W.x() << std::endl;
+
+  Eigen::Vector3d velocity_2 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_2.velocities[0].linear);
+  Eigen::Vector3d velocity_1 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_1.velocities[0].linear);
+
+  trajectory_point->velocity_W = velocity_1 + (velocity_2 - velocity_1) * t;
+
+  Eigen::Vector3d acceleration_2 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_2.accelerations[0].linear);
+  Eigen::Vector3d acceleration_1 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_1.accelerations[0].linear);
+
+  trajectory_point->acceleration_W =
+      acceleration_1 + (acceleration_2 - acceleration_1) * t;
+
+  // Slerp for quaternion interpolation!
+  Eigen::Quaterniond orientation_2(
+      trajectory_msg_point_2.transforms[0].rotation.w,
+      trajectory_msg_point_2.transforms[0].rotation.x,
+      trajectory_msg_point_2.transforms[0].rotation.y,
+      trajectory_msg_point_2.transforms[0].rotation.z);
+
+  Eigen::Quaterniond orientation_1(
+      trajectory_msg_point_1.transforms[0].rotation.w,
+      trajectory_msg_point_1.transforms[0].rotation.x,
+      trajectory_msg_point_1.transforms[0].rotation.y,
+      trajectory_msg_point_1.transforms[0].rotation.z);
+
+  trajectory_point->orientation_W_B = orientation_1.slerp(t, orientation_2);
+
+  Eigen::Vector3d angular_velocity_2 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_2.velocities[0].angular);
+  Eigen::Vector3d angular_velocity_1 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_1.velocities[0].angular);
+
+  trajectory_point->angular_velocity_W =
+      angular_velocity_1 + (angular_velocity_2 - angular_velocity_1) * t;
+
+  Eigen::Vector3d angular_acceleration_2 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_2.accelerations[0].angular);
+  Eigen::Vector3d angular_acceleration_1 =
+      mav_msgs::vector3FromMsg(trajectory_msg_point_1.accelerations[0].angular);
+
+  trajectory_point->angular_acceleration_W =
+      angular_acceleration_1 +
+      (angular_acceleration_2 - angular_acceleration_1) * t;
+}
+
+void EigenTrajectoryPointFromState(
+    const observation_t &state, const input_t &input,
+    mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
+  trajectorypoint.position_W = state.segment<3>(19);
+  trajectorypoint.orientation_W_B =
+      Eigen::Quaternion(state(22), state(23), state(24), state(25));
+  trajectorypoint.velocity_W = state.segment<3>(26);
+  trajectorypoint.angular_velocity_W = state.segment<3>(29);
+  trajectorypoint.acceleration_W = input.head(3);
+  trajectorypoint.angular_acceleration_W = input.segment<3>(3);
 }
 
 } // namespace omav_velocity::conversions

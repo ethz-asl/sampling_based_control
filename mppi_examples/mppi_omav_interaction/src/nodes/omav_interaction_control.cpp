@@ -19,6 +19,7 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
   initializeSubscribers();
   // Initialize data to prevent problems
   object_state_ << 0, 0;
+  target_state_.orientation_W_B.w() = 1.0;
   // setup dynamic reconfigure
   dynamic_reconfigure::Server<
       mppi_omav_interaction::MPPIOmavReferenceConfig>::CallbackType f;
@@ -38,8 +39,8 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
                                 &OmavTrajectoryGenerator::odometryCallback,
                                 this, ros::TransportHints().tcpNoDelay());
   position_target_sub_ = nh_.subscribe(
-      "command/current_reference", 10, &OmavTrajectoryGenerator::TargetCallback,
-      this, ros::TransportHints().tcpNoDelay());
+      "command/trajectory", 10, &OmavTrajectoryGenerator::TargetCallback, this,
+      ros::TransportHints().tcpNoDelay());
 
   if (true) {
     ROS_INFO_STREAM("Subscribed to shelf/joint_state");
@@ -72,8 +73,9 @@ void OmavTrajectoryGenerator::objectCallback(
 
 void OmavTrajectoryGenerator::TargetCallback(
     const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg) {
-  mav_msgs::eigenTrajectoryPointFromMsg(position_target_msg.points.front(),
-                                        &target_state_);
+  omav_interaction::conversions::InterpolateTrajectoryPoints(
+      position_target_msg.points[6], position_target_msg.points[7],
+      &target_state_);
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
@@ -190,7 +192,6 @@ int main(int argc, char **argv) {
   // init control input
   mppi::DynamicsBase::input_t u = input_t::Zero(6);
 
-  bool static_optimization = nh.param<bool>("static_optimization", false);
   auto sim_dt = nh.param<double>("sim_dt", 0.015);
   double sim_time = 0.0;
 
@@ -198,7 +199,7 @@ int main(int argc, char **argv) {
   bool ok = controller.init();
   if (!ok)
     throw std::runtime_error("Failed to initialize controller");
-
+  controller.set_observation(x, 0.0);
   if (running_rotors) {
     while (omav_trajectory_node->odometry_bool_) {
       ROS_INFO_STREAM_ONCE("No Odometry recieved yet");
@@ -247,13 +248,14 @@ int main(int argc, char **argv) {
     } else {
       if (running_rotors) {
         omav_trajectory_node->get_odometry(x);
+        r.sleep();
       }
       controller.set_observation(x, sim_time);
       controller.get_input_state(x, x_nom, u, sim_time);
-      r.sleep();
     }
     if (!running_rotors) {
       x = simulation->step(u, sim_dt);
+
       simulation->publish_ros();
       sim_time += sim_dt;
 

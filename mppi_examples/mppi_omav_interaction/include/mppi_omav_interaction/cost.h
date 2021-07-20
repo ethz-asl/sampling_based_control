@@ -110,6 +110,7 @@ public:
   double tip_velocity_cost_;
   double torque_cost_;
   double efficiency_cost_;
+  double velocity_cost_;
   double cost_;
   Eigen::Vector3d hook_pos_;
 
@@ -146,6 +147,9 @@ private:
   void compute_torque_cost(const Eigen::VectorXd &omav_state);
 
   void compute_efficiency_cost(const Eigen::VectorXd &omav_state);
+
+  void compute_velocity_cost(const Eigen::Vector3d &linear_velocity,
+                             const Eigen::Vector3d &angular_velocity);
 };
 
 } // namespace omav_interaction

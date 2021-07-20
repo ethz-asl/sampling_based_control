@@ -61,7 +61,9 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
   Eigen::VectorXd q_object(1);
   q_object << x(13);
   object_model_.update_state(q_object);
-
+  // Velocity Cost
+  // compute_velocity_cost(x.segment<3>(26), x.segment<3>(29));
+  // cost += velocity_cost_;
   // Leafing Field Cost
   if (x(0) > param_ptr_->x_limit_max || x(1) > param_ptr_->y_limit_max ||
       x(2) > param_ptr_->z_limit_max || x(0) < param_ptr_->x_limit_min ||
@@ -91,9 +93,7 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     // Object Cost
     compute_object_cost(x, ref);
     cost += object_cost_;
-    // Tip Velocity Cost
-    compute_tip_velocity_cost(x);
-    cost += tip_velocity_cost_;
+
     // Torque Cost
     compute_torque_cost(x);
     cost += torque_cost_;
@@ -183,6 +183,15 @@ void OMAVInteractionCost::compute_efficiency_cost(
       tip_lin_velocity_.normalized());
   efficiency_cost_ =
       std::min(param_ptr_->Q_power, param_ptr_->Q_power * (1 - power_normed));
+}
+
+void OMAVInteractionCost::compute_velocity_cost(
+    const Eigen::Vector3d &linear_velocity,
+    const Eigen::Vector3d &angular_velocity) {
+  Eigen::Matrix<double, 6, 1> velocity_vector;
+  velocity_vector << linear_velocity, angular_velocity;
+  velocity_cost_ =
+      velocity_vector.transpose() * param_ptr_->Q_vel * velocity_vector;
 }
 
 bool OMAVInteractionCostParam::parse_from_ros(const ros::NodeHandle &nh) {

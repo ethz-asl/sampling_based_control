@@ -57,7 +57,8 @@ private:
   void object_reference_callback(const geometry_msgs::PoseStampedConstPtr &msg);
 
   void publish_trajectory(const mppi::observation_array_t &x_opt,
-                          const mppi::input_array_t &u_opt);
+                          const mppi::input_array_t &u_opt,
+                          const mppi::observation_t &x0_opt);
 
 public:
   mppi::SolverConfig config_;
@@ -91,8 +92,9 @@ private:
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
 
-  observation_array_t xx_opt;
-  input_array_t uu_opt;
+  observation_array_t xx_opt_;
+  input_array_t uu_opt_;
+  observation_t x0_;
 
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;

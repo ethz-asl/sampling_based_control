@@ -42,6 +42,12 @@ private:
 
   void initialize_pd();
 
+  void integrate_quaterniond(const Eigen::Vector3d omega,
+                             const Eigen::Quaterniond q_n,
+                             Eigen::Quaterniond &q_n_plus_one);
+  void compute_velocities(const input_t &u);
+  void integrate_internal(const input_t &u, double dt);
+
 public:
   double get_dt() { return dt_; }
 
@@ -76,24 +82,21 @@ public:
 
   raisim::ArticulatedSystem *get_omav() { return omav_; }
   raisim::ArticulatedSystem *get_object() { return object_; }
-  raisim::ArticulatedSystem *get_omav_des() { return omav_des_; }
-  raisim::ArticulatedSystem *get_object_des() { return object_des_; }
 
 protected:
   size_t input_dimension_;
   size_t state_dimension_;
+  size_t derrivative_dimension_;
   size_t robot_dof_;
 
   observation_t x_;
+  observation_t xd_;
 
 private:
   double dt_;
+  double dt_internal_;
   std::string robot_description_;
   std::string object_description_;
-
-  // Objects in desired simulation
-  raisim::ArticulatedSystem *omav_des_;
-  raisim::ArticulatedSystem *object_des_;
 
   // Objects in odometry simulation
   raisim::ArticulatedSystem *omav_;
@@ -101,13 +104,12 @@ private:
   raisim::Ground *ground;
 
   raisim::World sim_;
-  raisim::World sim_desired_;
 
   Eigen::VectorXd cmd_, cmdv_;
-  Eigen::VectorXd omav_pose_, omav_velocity_, omav_pose_des_,
-      omav_velocity_des_;
-  Eigen::VectorXd object_pose_, object_velocity_, object_pose_des_,
-      object_velocity_des_;
+  Eigen::VectorXd omav_pose_, omav_velocity_;
+  Eigen::Matrix<double, 6, 1> omav_velocity_des_;
+  Eigen::Matrix<double, 7, 1> omav_pose_des_;
+  Eigen::VectorXd object_pose_, object_velocity_;
   force_t contact_force_;
 };
 } // namespace omav_interaction

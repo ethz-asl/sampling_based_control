@@ -128,7 +128,7 @@ void OMAVVelocityDynamicsRos::publish_ros() {
     object_state_publisher_.publish(object_state_);
 
     // visualize contact forces
-    force_t force = get_dominant_force();
+    force_t force = get_contact_forces();
     force_normed_ << force.force.normalized();
 
     force_marker_.points.resize(2);

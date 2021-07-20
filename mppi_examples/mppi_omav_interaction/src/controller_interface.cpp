@@ -194,25 +194,26 @@ bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
 }
 
 void OMAVControllerInterface::publish_ros() {
-  get_controller()->get_optimal_rollout(xx_opt, uu_opt);
-  OMAVControllerInterface::publish_trajectory(xx_opt, uu_opt);
+  get_controller()->get_optimal_rollout(xx_opt_, uu_opt_);
+  x0_ = get_controller()->get_current_observation();
+  OMAVControllerInterface::publish_trajectory(xx_opt_, uu_opt_, x0_);
   OMAVControllerInterface::publish_optimal_rollout();
   static tf::TransformBroadcaster odom_broadcaster;
   tf::Transform omav_odom;
-  omav_odom.setOrigin(tf::Vector3(xx_opt[0](0), xx_opt[0](1), xx_opt[0](2)));
-  omav_odom.setRotation(
-      tf::Quaternion(xx_opt[0](4), xx_opt[0](5), xx_opt[0](6), xx_opt[0](3)));
+  omav_odom.setOrigin(tf::Vector3(x0_(0), x0_(1), x0_(2)));
+  omav_odom.setRotation(tf::Quaternion(x0_(4), x0_(5), x0_(6), x0_(3)));
   odom_broadcaster.sendTransform(
       tf::StampedTransform(omav_odom, ros::Time::now(), "world", "odom_omav"));
   // update object state visualization
   object_state_.header.stamp = ros::Time::now();
-  object_state_.position[0] = xx_opt[0](13);
+  object_state_.position[0] = xx_opt_[0](13);
   object_state_publisher_.publish(object_state_);
 }
 
 void OMAVControllerInterface::publish_trajectory(
-    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt) {
-  omav_interaction::conversions::to_trajectory_msg(x_opt, u_opt,
+    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
+    const mppi::observation_t &x0_opt) {
+  omav_interaction::conversions::to_trajectory_msg(x_opt, u_opt, x0_opt,
                                                    current_trajectory_msg_);
   current_trajectory_msg_.header.stamp = ros::Time::now();
   cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);
@@ -266,14 +267,14 @@ void OMAVControllerInterface::publish_optimal_rollout() {
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
                                                      current_pose);
     omav_interaction::conversions::PoseMsgFromVector(
-        optimal_rollout_states_[i].segment<15>(19), current_pose_des);
+        optimal_rollout_states_[i].segment<13>(19), current_pose_des);
     optimal_rollout_array.poses.push_back(current_pose);
     optimal_rollout_array_des.poses.push_back(current_pose_des);
     if (detailed_publishing_) {
       // Cost publishing
       cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
       // Velocity Cost
-      velocity_cost_ += cost_->tip_velocity_cost_;
+      velocity_cost_ += cost_->velocity_cost_;
       // Efficiency Cost
       power_cost_ += cost_->efficiency_cost_;
       // Object Cost
@@ -306,11 +307,11 @@ void OMAVControllerInterface::publish_optimal_rollout() {
     cost_array_message_.array.push_back(object_cost_);
     cost_array_message_.array.push_back(torque_cost_);
     cost_array_message_.array.push_back(handle_hook_cost_);
-    cost_array_message_.array.push_back(optimal_rollout_states_[1](15));
-    cost_array_message_.array.push_back(optimal_rollout_states_[1](16));
-    cost_array_message_.array.push_back(optimal_rollout_states_[1](17));
+    cost_array_message_.array.push_back(optimal_rollout_states_[0](15));
+    cost_array_message_.array.push_back(optimal_rollout_states_[0](16));
+    cost_array_message_.array.push_back(optimal_rollout_states_[0](17));
     cost_array_message_.array.push_back(
-        optimal_rollout_states_[1].segment<3>(15).norm());
+        optimal_rollout_states_[0].segment<3>(15).norm());
     cost_array_message_.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
     cost_array_message_.array.push_back(
