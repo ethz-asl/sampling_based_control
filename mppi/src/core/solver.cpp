@@ -308,7 +308,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
 
       // compute input-state stage cost
       double cost_temp;
-      cost_temp = std::pow(config_.discount_factor, -t) *
+      cost_temp = std::pow(config_.discount_factor, t) *
                   cost->get_stage_cost(x, rollouts_[k].uu[t], ts);
 
       if (std::isnan(cost_temp)) {
@@ -331,8 +331,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       // store data
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
-      rollouts_[k].total_cost +=
-          cost_temp * std::pow(config_.discount_factor, t);
+      rollouts_[k].total_cost += cost_temp;
       // TODO(giuseppe) move input cost all in the cost function
 //          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
 //              rollouts_[k].nn[t] +
