@@ -331,7 +331,8 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       // store data
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
-      rollouts_[k].total_cost += cost_temp;
+      rollouts_[k].total_cost +=
+          cost_temp * std::pow(config_.discount_factor, t);
       // TODO(giuseppe) move input cost all in the cost function
 //          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
 //              rollouts_[k].nn[t] +
@@ -385,8 +386,23 @@ void Solver::compute_weights() {
 
   double sum = 0.0;
   for (int k=0; k<config_.rollouts; k++){
-    weights_[k] = rollouts_[k].valid ? std::exp(-config_.h * (rollouts_[k].total_cost - min_cost_) /
-                           (max_cost_ - min_cost_)) : 0;
+    double modified_cost = config_.h * (rollouts_[k].total_cost - min_cost_) /
+                           (max_cost_ - min_cost_);
+
+    if (!rollouts_[k].valid) {
+      weights_[k] = 0;
+    } else if (rollouts_[k].total_cost < 0.2) {
+      std::cout << "Here!" << std::endl;
+      // TODO(giuseppe) remove hard coded threshold
+      weights_[k] =
+          std::exp(-modified_cost) * (0.2 * 0.2 / modified_cost + 1 - 0.2);
+      if (weights_[k] > 1e10) weights_[k] = 1e10;
+      std::cout << "Weight [" << k << "]=" << weights_[k]
+                << "(total cost = " << rollouts_[k].total_cost << ")"
+                << std::endl;
+    } else {
+      weights_[k] = std::exp(-modified_cost);
+    }
     sum += weights_[k];
   }
   std::transform(weights_.begin(), weights_.end(), weights_.begin(),
@@ -395,8 +411,8 @@ void Solver::compute_weights() {
 
 void Solver::optimize() {
   compute_weights();
-  double alpha_adaptive = (max_cost_ - min_cost_) / max_cost_;
-  policy_->update(weights_, config_.alpha * alpha_adaptive);
+  // double alpha_adaptive = (max_cost_ - min_cost_) / max_cost_;
+  policy_->update(weights_, config_.alpha);
 
   // rollouts averaging
 //  for (size_t t = 0; t < steps_; t++) {

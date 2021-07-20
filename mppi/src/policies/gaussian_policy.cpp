@@ -20,6 +20,16 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   t_ = Eigen::ArrayXd::LinSpaced(nt_, 0.0, nt_) * dt_;
   nominal_ = Eigen::MatrixXd::Zero(nt_, nu);
   delta_ = Eigen::MatrixXd::Zero(nt_, nu);
+  gradient_ = Eigen::MatrixXd::Zero(nt_, nu);
+  gradient2_ = Eigen::MatrixXd::Zero(nt_, nu);
+  momentum_ = Eigen::MatrixXd::Zero(nt_, nu);
+  momentum2_ = Eigen::MatrixXd::Zero(nt_, nu);
+  momentum2_baseline_ = Eigen::MatrixXd::Ones(nt_, nu) * 1e-8;
+
+  beta_1_ = config_.alpha;
+  beta_2_ = config_.beta;
+  if (config_.alpha < 1) adam_ = true;
+  std::cout << "Using adam? " << adam_ << std::endl;
 
   L_.setIdentity(nt_);
 
@@ -80,14 +90,30 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
 
   // noise free sample
   samples_[ns_-1].setZero();
+
+  // sample exactly zero velocity
+  samples_[ns_ - 2] = -nominal_;
   bound(); // TODO should bound each sample so that a convex combination is also within bounds
 }
 
 void GaussianPolicy::update(const std::vector<double>& weights,
                             const double step_size) {
   delta_ = nominal_;
+  gradient_.setZero();
   for (int i=0; i < ns_; i++){
-    nominal_ += step_size * samples_[i] * weights[i];
+    gradient_ += samples_[i] * weights[i];
+  }
+
+  if (adam_) {
+    momentum_ = beta_1_ * momentum_ + (1 - beta_1_) * gradient_;
+    gradient2_ = gradient_.cwiseProduct(gradient_);
+    momentum2_ = beta_2_ * momentum2_ + (1 - beta_2_) * gradient2_;
+    nominal_ +=
+        0.01 *
+        momentum_.cwiseProduct(
+            (momentum2_.cwiseSqrt() + momentum2_baseline_).cwiseInverse());
+  } else {
+    nominal_ += step_size * gradient_;
   }
 
   if (config_.filtering) {

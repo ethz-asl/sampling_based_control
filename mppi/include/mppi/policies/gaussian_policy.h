@@ -48,5 +48,13 @@ public:
   Eigen::MatrixXd max_limits_;
   Eigen::MatrixXd min_limits_;
 
+  bool adam_ = false;
+  double beta_1_ = 0.9;
+  double beta_2_ = 0.999;
+  Eigen::MatrixXd gradient_;
+  Eigen::MatrixXd gradient2_;
+  Eigen::MatrixXd momentum_;
+  Eigen::MatrixXd momentum2_;
+  Eigen::MatrixXd momentum2_baseline_;
 };
 }
