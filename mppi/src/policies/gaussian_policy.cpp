@@ -166,6 +166,11 @@ void GaussianPolicy::shift(const double t) {
     nominal_ = L_ * nominal_;
     nominal_.bottomLeftCorner(time_idx_shift, nu_).setZero();
 
+    if (adam_) {
+      momentum_ = L_ * momentum_;
+      momentum2_ = L_ * momentum2_;
+    }
+
     // TODO(giuseppe) investigate why this does not work
     // .rowwise() = nominal_.row(nt_ - time_idx_shift -1);
   }

@@ -392,14 +392,10 @@ void Solver::compute_weights() {
     if (!rollouts_[k].valid) {
       weights_[k] = 0;
     } else if (rollouts_[k].total_cost < 0.2) {
-      std::cout << "Here!" << std::endl;
       // TODO(giuseppe) remove hard coded threshold
       weights_[k] =
           std::exp(-modified_cost) * (0.2 * 0.2 / modified_cost + 1 - 0.2);
       if (weights_[k] > 1e10) weights_[k] = 1e10;
-      std::cout << "Weight [" << k << "]=" << weights_[k]
-                << "(total cost = " << rollouts_[k].total_cost << ")"
-                << std::endl;
     } else {
       weights_[k] = std::exp(-modified_cost);
     }
