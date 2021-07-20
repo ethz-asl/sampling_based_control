@@ -351,6 +351,26 @@ void ControlGui::draw() {
         }
       }
 
+      if (ImGui::CollapsingHeader("Rollouts costs")) {
+        if (weights_.size() == 0) {
+          ImGui::Text("Weights are not set. Cannot display weights.");
+        } else {
+          std::vector<double> ridx;
+          for (int i = 0; i < (int)weights_.size(); i++) ridx.push_back(i);
+
+          static std::vector<double> total_costs(rollouts_.size());
+          for (int i = 0; i < rollouts_.size(); i++)
+            total_costs[i] = rollouts_[i].total_cost;
+          ImPlot::SetNextPlotLimitsX(0, (int)weights_.size(), ImGuiCond_Once);
+          if (ImPlot::BeginPlot("rollouts costs", "total cost", "rollout",
+                                ImVec2(-1, 0), ImPlotFlags_NoLegend,
+                                ImPlotAxisFlags_Lock)) {
+            ImPlot::PlotLine("total_costs", ridx.data(), total_costs.data(),
+                             (int)total_costs.size());
+            ImPlot::EndPlot();
+          }
+        }
+      }
       ImGui::EndTabItem();
     }
     ImGui::EndTabBar();
