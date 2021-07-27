@@ -50,6 +50,7 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
   tip_velocity_cost_ = 0.0;
   torque_cost_ = 0, 0;
   efficiency_cost_ = 0.0;
+  velocity_cost_ = 0.0;
 
   // Get mode from reference vector
   mode = ref(8);

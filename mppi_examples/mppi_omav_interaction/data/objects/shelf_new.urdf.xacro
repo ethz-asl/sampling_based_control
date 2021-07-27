@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="shelf_new" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:arg name="fixed" default="true"/>
     <xacro:arg name="height" default="0.0"/>
     <xacro:property name="height" default="$(arg height)"/>
@@ -215,7 +215,7 @@
     <joint name="handle_ref" type="fixed">
         <parent link="handle_link"/>
         <child link="handle_ref"/>
-        <origin xyz="${-handle_height/2-0.012} 0 0"
+        <origin xyz="${-handle_height/2} 0 0"
                 rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
     </joint>
 

@@ -41,13 +41,9 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
   position_target_sub_ = nh_.subscribe(
       "command/trajectory", 10, &OmavTrajectoryGenerator::TargetCallback, this,
       ros::TransportHints().tcpNoDelay());
-
-  if (true) {
-    ROS_INFO_STREAM("Subscribed to shelf/joint_state");
-    object_state_sub_ = nh_.subscribe("/shelf/joint_states", 10,
-                                      &OmavTrajectoryGenerator::objectCallback,
-                                      this, ros::TransportHints().tcpNoDelay());
-  }
+  object_state_sub_ = nh_.subscribe("/shelf/joint_states", 10,
+                                    &OmavTrajectoryGenerator::objectCallback,
+                                    this, ros::TransportHints().tcpNoDelay());
   ROS_INFO_STREAM("Subscribers initialized");
   odometry_bool_ = true;
 }
@@ -76,6 +72,7 @@ void OmavTrajectoryGenerator::TargetCallback(
   omav_interaction::conversions::InterpolateTrajectoryPoints(
       position_target_msg.points[6], position_target_msg.points[7],
       &target_state_);
+  shift_input_ = false;
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
@@ -90,7 +87,6 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x.segment<3>(23) = target_state_.orientation_W_B.vec();
   x.segment<3>(26) = target_state_.velocity_W;
   x.segment<3>(29) = target_state_.angular_velocity_W;
-  x.segment<2>(32) = object_state_;
   ROS_INFO_ONCE("MPPI got first state message");
 }
 
@@ -154,13 +150,26 @@ void OmavTrajectoryGenerator::CostParamCallback(
   rqt_cost_bool_ = true;
 }
 
+void OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
+  x.segment<3>(19) = current_odometry_.position_W;
+  x(22) = current_odometry_.orientation_W_B.w();
+  x.segment<3>(23) = current_odometry_.orientation_W_B.vec();
+  x.segment<3>(26) = current_odometry_.getVelocityWorld();
+  x.segment<3>(29) = current_odometry_.angular_velocity_B;
+
+  target_state_.position_W = current_odometry_.position_W;
+  target_state_.orientation_W_B.w() = current_odometry_.orientation_W_B.w();
+  target_state_.orientation_W_B.vec() = current_odometry_.orientation_W_B.vec();
+  target_state_.velocity_W = current_odometry_.getVelocityWorld();
+  target_state_.angular_velocity_W = current_odometry_.angular_velocity_B;
+}
+
 int main(int argc, char **argv) {
   // Initialize Ros Node
   ros::init(argc, argv, "omav_control_node");
   ros::NodeHandle nh("~"), nh_public;
   // Check if running with omav interface
   bool running_rotors = nh.param<bool>("running_rotors", false);
-  ROS_INFO_STREAM(running_rotors);
   std::shared_ptr<omav_interaction::OmavTrajectoryGenerator>
       omav_trajectory_node(
           new omav_interaction::OmavTrajectoryGenerator(nh_public, nh));
@@ -207,10 +216,11 @@ int main(int argc, char **argv) {
     }
   }
   ROS_INFO_STREAM("First Odometry recieved");
-  // Set fir odomety value as reference
+  // Set first odometry value as reference
   if (running_rotors) {
     omav_trajectory_node->get_odometry(x);
     controller.set_initial_reference(x);
+    omav_trajectory_node->initialize_integrators(x);
   }
 
   // start controller
@@ -235,6 +245,10 @@ int main(int argc, char **argv) {
       omav_trajectory_node->reset_object_ = false;
       ROS_INFO_STREAM("Reset Object");
     }
+    if (omav_trajectory_node->shift_input_) {
+      controller.manually_shift_input();
+      omav_trajectory_node->shift_input_ = false;
+    }
     if (sequential) {
       controller.update_reference();
       controller.set_observation(x, sim_time);
@@ -248,6 +262,7 @@ int main(int argc, char **argv) {
     } else {
       if (running_rotors) {
         omav_trajectory_node->get_odometry(x);
+        // sim_time += 1.0/250.0;
         r.sleep();
       }
       controller.set_observation(x, sim_time);

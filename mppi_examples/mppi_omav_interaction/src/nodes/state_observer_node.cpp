@@ -16,15 +16,10 @@ int main(int argc, char** argv) {
         ROS_ERROR("Failed to initialize the state observer.");
         return 0;
     }
-    bool center_calculated;
-    while (!center_calculated) {
-      center_calculated = observer.estimateCenter();
-    }
 
     ros::Rate rate(frequency);
     while (ros::ok()) {
         observer.publish();
-
         ros::spinOnce();
         rate.sleep();
     }

@@ -15,8 +15,6 @@ OMAVVelocityDynamics::OMAVVelocityDynamics(
     const double dt)
     : dt_(dt), robot_description_(robot_description),
       object_description_(object_description) {
-
-  dt_internal_ = 0.015;
   initialize_world(robot_description, object_description);
   initialize_pd();
 }
@@ -52,8 +50,8 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
 
   Eigen::VectorXd pGain(robot_dof_), dGain(robot_dof_);
-  pGain << 15.0, 15.0, 15.0, 10.0, 10.0, 10.0;
-  dGain << 15.0, 15.0, 15.0, 10.0, 10.0, 10.0;
+  pGain << 15.0, 15.0, 15.0, 20.0, 20.0, 20.0;
+  dGain << 5.0, 5.0, 5.0, 15.0, 15.0, 15.0;
 
   omav_->setPdGains(pGain, dGain);
 }
@@ -62,10 +60,12 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
                                                              const double dt) {
   // Simulate desired system
   // Integrate the linear and angular accelerations and velocities
-  integrate_internal(u, dt_internal_);
+  integrate_internal(u, dt_);
 
   // Simulate system that is reset with odometry
-  omav_->setPdTarget(x_.segment<7>(19), x_.segment<6>(26));
+  cmd_ = x_.segment<7>(19);
+  cmdv_ = x_.segment<6>(26);
+  omav_->setPdTarget(cmd_, cmdv_);
   omav_->setGeneralizedForce(omav_->getNonlinearities());
   sim_.integrate();
   omav_->getState(omav_pose_, omav_velocity_);
@@ -149,7 +149,7 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   return force;
 }
 
-void OMAVVelocityDynamics::integrate_quaterniond(
+void OMAVVelocityDynamics::integrate_quaternion(
     const Eigen::Vector3d omega_B, const Eigen::Quaterniond q_WB_n,
     Eigen::Quaterniond &q_WB_n_plus_one) {
   if (omega_B.norm() == 0) {
@@ -157,35 +157,36 @@ void OMAVVelocityDynamics::integrate_quaterniond(
   } else {
     Eigen::Vector3d omega_W = q_WB_n * omega_B;
     Eigen::Quaterniond q_tilde;
-    q_tilde.w() = std::cos(omega_W.norm() * dt_internal_ / 2);
+    q_tilde.w() = std::cos(omega_W.norm() * dt_ / 2);
     q_tilde.vec() =
-        std::sin(omega_W.norm() * dt_internal_ / 2) * omega_W / omega_W.norm();
+        std::sin(omega_W.norm() * dt_ / 2) * omega_W / omega_W.norm();
     q_WB_n_plus_one = q_tilde * q_WB_n;
   }
 }
 
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
-  xd_.head<6>() = u - 5 * x_.segment<6>(26);
-  xd_.segment<6>(6) = x_.segment<6>(26);
+  xd_.head<6>() = x_.segment<6>(26);
+  xd_.segment<6>(6) = u - x_.segment<6>(26);
 }
 
 void OMAVVelocityDynamics::integrate_internal(
     const mppi::DynamicsBase::input_t &u, double dt) {
-  if (dt > dt_internal_) {
+  if (dt > dt_) {
     std::stringstream ss;
     ss << "Integrate internal called with dt larger that internal dt: " << dt
-       << "> " << dt_internal_;
+       << "> " << dt_;
     throw std::runtime_error(ss.str());
   }
   compute_velocities(u);
-  // Integrate velocities
-  x_.segment<6>(26) += xd_.head<6>() * dt_internal_;
-  // Integrate position
-  x_.segment<3>(19) += xd_.segment<3>(6) * dt_internal_;
+
+  // Integrate position and Quaternion
+  x_.segment<3>(19) += xd_.head<3>() * dt;
   Eigen::Quaterniond quat_n(x_(22), x_(23), x_(24), x_(25)), quat_n_plus_one;
-  integrate_quaterniond(x_.segment<3>(29), quat_n, quat_n_plus_one);
+  integrate_quaternion(xd_.segment<3>(3), quat_n, quat_n_plus_one);
   x_.segment<4>(22) << quat_n_plus_one.w(), quat_n_plus_one.vec();
+  // Integrate velocities
+  x_.segment<6>(26) += xd_.segment<6>(6) * dt;
 }
 
 } // namespace omav_interaction

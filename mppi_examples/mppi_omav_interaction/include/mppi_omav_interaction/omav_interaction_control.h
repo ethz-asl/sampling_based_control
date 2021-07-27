@@ -36,11 +36,15 @@ public:
 
   void get_odometry(observation_t &x);
 
+  void initialize_integrators(observation_t &x);
+
   bool odometry_bool_;
 
   bool rqt_cost_bool_ = false;
 
   bool reset_object_ = false;
+
+  bool shift_input_ = false;
 
   OMAVInteractionCostParam rqt_cost_;
 

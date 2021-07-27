@@ -265,6 +265,7 @@ class PathIntegral {
   void copy_observation();
   /**
    * @brief Set the reference of the cost function to the latest received for
+   * @brief Set the reference of the cost function to the latest received for
    * the new optimization
    */
   void update_reference();
@@ -309,8 +310,9 @@ class PathIntegral {
   int steps_;
 
   bool first_step_ = true;
+  bool shift_inputs_ = false;
 
- protected:
+protected:
   double reset_time_;  // time from which the current optimization has started
   observation_t x0_;   // first state for simulation
   observation_t

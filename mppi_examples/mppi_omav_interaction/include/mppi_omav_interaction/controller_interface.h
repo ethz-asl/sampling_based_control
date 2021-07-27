@@ -47,6 +47,8 @@ public:
 
   bool set_initial_reference(const observation_t &x);
 
+  void manually_shift_input();
+
 private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 
@@ -78,6 +80,8 @@ private:
   ros::Publisher object_state_publisher_;
   ros::Publisher normalized_force_publisher_;
   ros::Publisher mppi_reference_publisher_;
+  ros::Publisher optimal_linear_input_publisher_;
+  ros::Publisher optimal_angular_input_publisher_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 

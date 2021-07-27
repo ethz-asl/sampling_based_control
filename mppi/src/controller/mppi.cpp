@@ -260,6 +260,9 @@ void PathIntegral::prepare_rollouts() {
     }
     offset = std::distance(opt_roll_cache_.tt.begin(), lower);
   }
+  if (shift_inputs_) {
+    offset = 7;
+  }
 
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());

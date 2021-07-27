@@ -26,6 +26,7 @@ void to_trajectory_msg(
 void EigenTrajectoryPointFromStates(
     const observation_array_t &states, const input_array_t &inputs, int i,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt) {
+  bool use_input = true;
 
   trajectorypoint.position_W = states[i].segment<3>(19);
   trajectorypoint.orientation_W_B = Eigen::Quaternion(
@@ -33,44 +34,48 @@ void EigenTrajectoryPointFromStates(
   trajectorypoint.velocity_W = states[i].segment<3>(26);
   // Angluar velocities and accelerations need to be represented in body frame
   trajectorypoint.angular_velocity_W = states[i].segment<3>(29);
-  // Filter the velocities to calculate the desired accelerations
-  // Window size is 2*m+1
-  const size_t m = 3;
-  // Polynomial Order
-  const size_t n = 2;
-  // Initial Point Smoothing (ie evaluate polynomial at first point in the
-  // window)
-  // Points are defined in range [-m;m]
-  const size_t t = m;
-  // Derivation order? 0: no derivation, 1: first derivative, 2: second
-  // derivative...
-  const int d = 1;
-  gram_sg::SavitzkyGolayFilter filter(m, t, n, d);
+  if (!use_input) {
+    // Filter the velocities to calculate the desired accelerations
+    // Window size is 2*m+1
+    const size_t m = 3;
+    // Polynomial Order
+    const size_t n = 2;
+    // Initial Point Smoothing (ie evaluate polynomial at first point in the
+    // window)
+    // Points are defined in range [-m;m]
+    const size_t t = m;
+    // Derivation order? 0: no derivation, 1: first derivative, 2: second
+    // derivative...
+    const int d = 1;
+    gram_sg::SavitzkyGolayFilter filter(m, t, n, d);
 
-  std::vector<double> lin_vel_x, lin_vel_y, lin_vel_z, ang_vel_x, ang_vel_y,
-      ang_vel_z;
-  OptimalRollouttoVelocityVector(i, 26, states, lin_vel_x);
-  OptimalRollouttoVelocityVector(i, 27, states, lin_vel_y);
-  OptimalRollouttoVelocityVector(i, 28, states, lin_vel_z);
-  OptimalRollouttoVelocityVector(i, 29, states, ang_vel_x);
-  OptimalRollouttoVelocityVector(i, 30, states, ang_vel_y);
-  OptimalRollouttoVelocityVector(i, 31, states, ang_vel_z);
+    std::vector<double> lin_vel_x, lin_vel_y, lin_vel_z, ang_vel_x, ang_vel_y,
+        ang_vel_z;
+    OptimalRollouttoVelocityVector(i, 26, states, lin_vel_x);
+    OptimalRollouttoVelocityVector(i, 27, states, lin_vel_y);
+    OptimalRollouttoVelocityVector(i, 28, states, lin_vel_z);
+    OptimalRollouttoVelocityVector(i, 29, states, ang_vel_x);
+    OptimalRollouttoVelocityVector(i, 30, states, ang_vel_y);
+    OptimalRollouttoVelocityVector(i, 31, states, ang_vel_z);
 
-  double lin_acc_x = filter.filter(lin_vel_x);
-  double lin_acc_y = filter.filter(lin_vel_y);
-  double lin_acc_z = filter.filter(lin_vel_z);
-  double ang_acc_x = filter.filter(ang_vel_x);
-  double ang_acc_y = filter.filter(ang_vel_y);
-  double ang_acc_z = filter.filter(ang_vel_z);
+    double lin_acc_x = filter.filter(lin_vel_x);
+    double lin_acc_y = filter.filter(lin_vel_y);
+    double lin_acc_z = filter.filter(lin_vel_z);
+    double ang_acc_x = filter.filter(ang_vel_x);
+    double ang_acc_y = filter.filter(ang_vel_y);
+    double ang_acc_z = filter.filter(ang_vel_z);
 
-  Eigen::Matrix<double, 3, 1> linear_acceleration;
-  linear_acceleration << lin_acc_x / dt, lin_acc_y / dt, lin_acc_z / dt;
+    Eigen::Matrix<double, 3, 1> linear_acceleration;
+    linear_acceleration << lin_acc_x / dt, lin_acc_y / dt, lin_acc_z / dt;
 
-  Eigen::Matrix<double, 3, 1> angular_acceleration_W;
-  angular_acceleration_W << ang_acc_x / dt, ang_acc_y / dt, ang_acc_z / dt;
-
-  trajectorypoint.acceleration_W = linear_acceleration;
-  trajectorypoint.angular_acceleration_W = angular_acceleration_W;
+    Eigen::Matrix<double, 3, 1> angular_acceleration_W;
+    angular_acceleration_W << ang_acc_x / dt, ang_acc_y / dt, ang_acc_z / dt;
+    trajectorypoint.acceleration_W = linear_acceleration;
+    trajectorypoint.angular_acceleration_W = angular_acceleration_W;
+  } else {
+    trajectorypoint.acceleration_W = inputs[i + 1].head<3>();
+    trajectorypoint.angular_acceleration_W = inputs[i + 1].segment<3>(3);
+  }
   trajectorypoint.time_from_start_ns = ros::Duration((i + 1) * dt).toNSec();
 }
 
@@ -160,7 +165,6 @@ void InterpolateTrajectoryPoints(
       trajectory_msg_point_1.transforms[0].translation);
 
   trajectory_point->position_W = position_1 + (position_2 - position_1) * t;
-  // std::cout << trajectory_point->position_W.x() << std::endl;
 
   Eigen::Vector3d velocity_2 =
       mav_msgs::vector3FromMsg(trajectory_msg_point_2.velocities[0].linear);
@@ -220,6 +224,14 @@ void EigenTrajectoryPointFromState(
   trajectorypoint.angular_velocity_W = state.segment<3>(29);
   trajectorypoint.acceleration_W = input.head(3);
   trajectorypoint.angular_acceleration_W = input.segment<3>(3);
+}
+
+// ToDo: Remove this as soon as possible, because it is crazy ugly @Matthias
+void PoseMsgForVelocityFromVector(const Eigen::Vector3d &velocity,
+                                  geometry_msgs::Pose &pose_msg) {
+  pose_msg.position.x = velocity(0);
+  pose_msg.position.y = velocity(1);
+  pose_msg.position.z = velocity(2);
 }
 
 } // namespace omav_velocity::conversions

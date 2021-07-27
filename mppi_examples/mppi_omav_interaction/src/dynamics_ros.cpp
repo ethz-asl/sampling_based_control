@@ -143,18 +143,18 @@ void OMAVVelocityDynamicsRos::publish_ros() {
     force_dot_marker_.points[0].x = 0;
     force_dot_marker_.points[0].y = 0;
     force_dot_marker_.points[0].z = 0;
-    force_dot_marker_.points[1].x = force_normed_(0);
+    force_dot_marker_.points[1].x = x_(14);
     force_dot_marker_.points[1].y = force_normed_(1);
     force_dot_marker_.points[1].z = force_normed_(2);
 
-    vel_normed_ << x_(7), x_(8), x_(9);
+    vel_normed_ << x_(10), x_(11), x_(12);
     vel_dot_marker_.points.resize(2);
-    vel_dot_marker_.points[0].x = 0;
-    vel_dot_marker_.points[0].y = 0;
-    vel_dot_marker_.points[0].z = 0;
-    vel_dot_marker_.points[1].x = vel_normed_.normalized()(0);
-    vel_dot_marker_.points[1].y = vel_normed_.normalized()(1);
-    vel_dot_marker_.points[1].z = vel_normed_.normalized()(2);
+    vel_dot_marker_.points[0].x = x_(7);
+    vel_dot_marker_.points[0].y = x_(8);
+    vel_dot_marker_.points[0].z = x_(9);
+    vel_dot_marker_.points[1].x = x_(10);
+    vel_dot_marker_.points[1].y = x_(11);
+    vel_dot_marker_.points[1].z = x_(12);
 
     force_dot_.publish(force_dot_marker_);
     vel_dot_.publish(vel_dot_marker_);

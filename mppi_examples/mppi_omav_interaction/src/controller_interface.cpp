@@ -20,6 +20,10 @@ bool OMAVControllerInterface::init_ros() {
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
   optimal_rollout_des_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout_desired", 1);
+  optimal_linear_input_publisher_ =
+      nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_linear", 1);
+  optimal_angular_input_publisher_ =
+      nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_angular", 1);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
@@ -241,8 +245,10 @@ void OMAVControllerInterface::publish_all_trajectories() {
 void OMAVControllerInterface::publish_optimal_rollout() {
   get_controller()->get_optimal_rollout(optimal_rollout_states_,
                                         optimal_rollout_inputs_);
-  geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des;
-  geometry_msgs::Pose current_pose, current_pose_des, mppi_reference;
+  geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des,
+      optimal_inputs_lin_array, optimal_inputs_ang_array;
+  geometry_msgs::Pose current_pose, current_pose_des, mppi_reference,
+      current_input_lin, current_input_ang;
   visualization_msgs::Marker force_marker;
 
   omav_interaction::conversions::arrow_initialization(force_marker);
@@ -254,6 +260,10 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_array.header.stamp = ros::Time::now();
   optimal_rollout_array_des.header.frame_id = "world";
   optimal_rollout_array_des.header.stamp = ros::Time::now();
+  optimal_inputs_lin_array.header.frame_id = "world";
+  optimal_inputs_lin_array.header.stamp = ros::Time::now();
+  optimal_inputs_ang_array.header.frame_id = "world";
+  optimal_inputs_ang_array.header.stamp = ros::Time::now();
 
   velocity_cost_ = 0;
   power_cost_ = 0;
@@ -268,8 +278,14 @@ void OMAVControllerInterface::publish_optimal_rollout() {
                                                      current_pose);
     omav_interaction::conversions::PoseMsgFromVector(
         optimal_rollout_states_[i].segment<13>(19), current_pose_des);
+    omav_interaction::conversions::PoseMsgForVelocityFromVector(
+        optimal_rollout_inputs_[i].segment<3>(0), current_input_lin);
+    omav_interaction::conversions::PoseMsgForVelocityFromVector(
+        optimal_rollout_inputs_[i].segment<3>(3), current_input_ang);
     optimal_rollout_array.poses.push_back(current_pose);
     optimal_rollout_array_des.poses.push_back(current_pose_des);
+    optimal_inputs_lin_array.poses.push_back(current_input_lin);
+    optimal_inputs_ang_array.poses.push_back(current_input_ang);
     if (detailed_publishing_) {
       // Cost publishing
       cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
@@ -339,7 +355,13 @@ void OMAVControllerInterface::publish_optimal_rollout() {
 
   optimal_rollout_publisher_.publish(optimal_rollout_array);
   optimal_rollout_des_publisher_.publish(optimal_rollout_array_des);
+  optimal_linear_input_publisher_.publish(optimal_inputs_lin_array);
+  optimal_angular_input_publisher_.publish(optimal_inputs_ang_array);
   mppi_reference_publisher_.publish(mppi_reference);
+}
+
+void OMAVControllerInterface::manually_shift_input() {
+  get_controller()->shift_inputs_ = true;
 }
 
 // namespace omav_interaction

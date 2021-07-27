@@ -42,9 +42,9 @@ private:
 
   void initialize_pd();
 
-  void integrate_quaterniond(const Eigen::Vector3d omega,
-                             const Eigen::Quaterniond q_n,
-                             Eigen::Quaterniond &q_n_plus_one);
+  void integrate_quaternion(const Eigen::Vector3d omega,
+                            const Eigen::Quaterniond q_n,
+                            Eigen::Quaterniond &q_n_plus_one);
   void compute_velocities(const input_t &u);
   void integrate_internal(const input_t &u, double dt);
 
@@ -94,7 +94,6 @@ protected:
 
 private:
   double dt_;
-  double dt_internal_;
   std::string robot_description_;
   std::string object_description_;
 
@@ -107,8 +106,6 @@ private:
 
   Eigen::VectorXd cmd_, cmdv_;
   Eigen::VectorXd omav_pose_, omav_velocity_;
-  Eigen::Matrix<double, 6, 1> omav_velocity_des_;
-  Eigen::Matrix<double, 7, 1> omav_pose_des_;
   Eigen::VectorXd object_pose_, object_velocity_;
   force_t contact_force_;
 };
