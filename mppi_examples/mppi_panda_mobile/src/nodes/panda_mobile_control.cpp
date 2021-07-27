@@ -103,6 +103,7 @@ int main(int argc, char** argv) {
     state_publisher.publish(joint_state);
 
     if (apply_safety_filter) {
+      filter.filter_->update_observation(x, u_opt);
       filter.apply(x, u, u_opt);
     } else {
       u_opt = u;

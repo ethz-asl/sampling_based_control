@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <arg name="plot_cost" default="false"/>
-    <arg name="plot_input" default="false"/>
+    <arg name="plot" default="false"/>
     <arg name="enable_obstacle" default="true"/>
     <arg name="debug" default="false"/>
 
@@ -39,18 +38,10 @@
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_panda_mobile)/config/config.rviz" output="screen"/>
 
     <!--    Plot cost and other info-->
-    <group if="$(arg plot_cost)">
-        <arg name="mp_config" default="$(find mppi_panda_mobile)/resources/rqt_multiplot.xml"/>
-        <node name="rqt_multiplot_cost" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config)"
-              output="screen"/>
-    </group>
-
-    <!--    Plot input-->
-    <group if="$(arg plot_input)">
-        <arg name="mp_config_input" default="$(find mppi_panda_mobile)/resources/rqt_multiplot_input.xml"/>
-        <node name="rqt_multiplot_input" pkg="rqt_multiplot" type="rqt_multiplot"
-              args="--multiplot-config $(arg mp_config_input)"
+    <group if="$(arg plot)">
+        <arg name="plot_config" default="$(find mppi_panda_mobile)/config/plotjuggler.xml"/>
+        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
+              args="--layout $(arg plot_config)"
               output="screen"/>
     </group>
 

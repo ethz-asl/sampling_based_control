@@ -24,8 +24,15 @@ class PandaMobileJointLimitsConstraints
 };
 
 struct PandaMobileSafetyFilterSettings {
+  double dt;
+
   Eigen::Matrix<double, 10, 1> u_min;
   Eigen::Matrix<double, 10, 1> u_max;
+  Eigen::Matrix<double, 10, 1> ud_min;
+  Eigen::Matrix<double, 10, 1> ud_max;
+  Eigen::Matrix<double, 10, 1> udd_min;
+  Eigen::Matrix<double, 10, 1> udd_max;
+
   Eigen::Matrix<double, 10, 1> q_min;
   Eigen::Matrix<double, 10, 1> q_max;
 
@@ -33,13 +40,10 @@ struct PandaMobileSafetyFilterSettings {
   double min_dist = 0.15;
 
   bool joint_limits = true;
-  bool input_limits = true;
   bool cartesian_limits = false;
-
-  bool passivity_constraint = false;
-  double tank_initial_energy = 1.0;
-  double tank_lower_energy_bound = 1e-3;
-  double tank_integration_dt = 0.01;
+  bool input_limits = true;
+  bool first_derivative_limits = false;
+  bool second_derivative_limits = false;
 
   bool verbose = false;
 
@@ -48,24 +52,15 @@ struct PandaMobileSafetyFilterSettings {
 
 class PandaMobileSafetyFilter {
  public:
-  using passivity_ptr_t = std::shared_ptr<safety_filter::PassivityConstraint>;
-
   PandaMobileSafetyFilter(const std::string& urdf_string,
                           const PandaMobileSafetyFilterSettings& settings);
 
-  bool update(const Eigen::VectorXd& x, const Eigen::VectorXd& torque);
   bool apply(const Eigen::VectorXd& x, const Eigen::VectorXd& u,
              Eigen::VectorXd& u_opt);
 
-  // TODO(giuseppe) brittle implementation -> what if this is not created?
-  inline passivity_ptr_t& passivity_constraint() {
-    return passivity_constraint_ptr_;
-  }
-
- private:
+ public:
   PandaMobileSafetyFilterSettings settings_;
   std::shared_ptr<safety_filter::SafetyFilter> filter_;
-  passivity_ptr_t passivity_constraint_ptr_;
 };
 
 }  // namespace panda_mobile

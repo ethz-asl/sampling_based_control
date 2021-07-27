@@ -10,15 +10,15 @@ solver:
   filtering: true
   substeps: 1
 
-  gradient_step_size: 0.9 #9
-  momentum_step_size: 0.999 #0.999 #999
+  gradient_step_size: 1.0 #9
+  momentum_step_size: 0.0 #0.999 #0.999 #999
 
   filter_type: 1
   filter_order: 1
   filter_window: 5
 
   adaptive_sampling: false
-  input_variance: [ 0.25, 0.25, 0.0025, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [ 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   discount_factor: 1.0
   verbose: false
@@ -62,7 +62,7 @@ ros_publish_rate: 10.0
 
 sequential: false
 
-apply_safety_filter: false
+apply_safety_filter: true
 
 static_optimization: false
 sim_dt: 0.01
