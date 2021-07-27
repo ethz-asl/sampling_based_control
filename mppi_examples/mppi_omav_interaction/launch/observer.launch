@@ -2,13 +2,20 @@
 <launch>
     <arg name="description_file_object" default="$(find mppi_omav_interaction)/data/objects/shelf.urdf.xacro"/>
     <param name="object_description" command="$(find xacro)/xacro $(arg description_file_object)"/>
+    <arg name="description_robot" default="$(find mppi_omav_interaction)/data/omav_hook_visualization.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_robot)"/>
 
-    <!--
+
     <node name="object_state_publisher_" pkg="robot_state_publisher" type="robot_state_publisher">
         <remap from="robot_description" to="object_description"/>
         <remap from="joint_states" to="/observer/object/joint_state"/>
     </node>
-    -->
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/robot/joint_state"/>
+    </node>
 
     <!--    State observer node-->
     <node pkg="mppi_omav_interaction" name="state_observer_node" type="state_observer_node" output="screen" >
