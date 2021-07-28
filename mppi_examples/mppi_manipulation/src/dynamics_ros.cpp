@@ -58,10 +58,14 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   tau_ext_msg_.data.resize(get_panda()->getDOF());
 
   // does not optimize the gripper input
+
   u_opt_.setZero(input_dimension_-1);
   signal_logger::add(u_opt_, "input_filt");
-  for (const auto& constraint : sf_->constraints_){
-    signal_logger::add(constraint.second->violation_, constraint.first + "_violation");
+
+  if (sf_){
+    for (const auto& constraint : sf_->constraints_){
+      signal_logger::add(constraint.second->violation_, constraint.first + "_violation");
+    }
   }
   signal_logger::logger->updateLogger();
 }
@@ -77,7 +81,7 @@ void ManipulatorDynamicsRos::reset_to_default() {
 void ManipulatorDynamicsRos::publish_ros() {
   // TODO(giuseppe) this should not be tight to publishing stuff to ros
   // update violation
-  sf_->update_violation(x_);
+  if (sf_) sf_->update_violation(x_);
 
   // update robot state visualization
   joint_state_.header.stamp = ros::Time::now();

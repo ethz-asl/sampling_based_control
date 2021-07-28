@@ -101,18 +101,18 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // joint limits
-  for (size_t i = 0; i < 7; i++) {
-    if (x(i + BASE_DIMENSION) < param_.lower_joint_limits[i])
+  for (size_t i = 0; i < 10; i++) {
+    if (x(i) < param_.lower_joint_limits[i])
       cost +=
           param_.Q_joint_limit +
           param_.Q_joint_limit_slope *
-              std::pow(param_.lower_joint_limits[i] - x(i + BASE_DIMENSION), 2);
+              std::pow(param_.lower_joint_limits[i] - x(i), 2);
 
-    if (x(i + BASE_DIMENSION) > param_.upper_joint_limits[i])
+    if (x(i) > param_.upper_joint_limits[i])
       cost +=
           param_.Q_joint_limit +
           param_.Q_joint_limit_slope *
-              std::pow(x(i + BASE_DIMENSION) - param_.upper_joint_limits[i], 2);
+              std::pow(x(i) - param_.upper_joint_limits[i], 2);
   }
 
   return cost;
@@ -184,13 +184,13 @@ bool PandaCostParam::parse_from_ros(const ros::NodeHandle& nh) {
   }
 
   if (!nh.getParam("upper_joint_limits", upper_joint_limits) ||
-      upper_joint_limits.size() != 7) {
+      upper_joint_limits.size() != 10) {
     ROS_ERROR("Filed to parse upper_joint_limits or invalid!");
     return false;
   }
 
   if (!nh.getParam("lower_joint_limits", lower_joint_limits) ||
-      lower_joint_limits.size() != 7) {
+      lower_joint_limits.size() != 10) {
     ROS_ERROR("Filed to parse lower_joint_limits or invalid!");
     return false;
   }

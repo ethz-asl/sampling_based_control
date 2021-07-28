@@ -60,7 +60,7 @@ safety_filter:
 
   verbose: false
 
-apply_safety_filter: true
+apply_safety_filter: false
 apply_predictive_safety_filter: false
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
