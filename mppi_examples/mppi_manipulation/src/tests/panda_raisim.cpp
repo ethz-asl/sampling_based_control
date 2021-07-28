@@ -28,21 +28,13 @@ int main(int argc, char** argv) {
                         "/home/giuseppe/git/raisimlib/rsc/activation.raisim");
   raisim::World::setActivationKey(activation_file);
 
-  // Fixed base option
-  bool fixed_base;
-  if (!nh.param<bool>("fixed_base", fixed_base, false)) {
-    ROS_ERROR_STREAM("Failed to find param fixed_base");
-    return -1;
-  }
-
   // Instantiate the simulation world
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
   auto object_description_raisim =
       nh.param<std::string>("/object_description_raisim", "");
   ManipulatorDynamicsRos simulation(nh, robot_description_raisim,
-                                    object_description_raisim, TIMESTEP,
-                                    fixed_base);
+                                    object_description_raisim, TIMESTEP);
 
   // Reset the state to a default configuration
   Eigen::VectorXd x, x_snapshot;

@@ -14,8 +14,7 @@ using namespace manipulation;
 
 PandaCost::PandaCost(const std::string& robot_description,
                      const std::string& object_description,
-                     const PandaCostParam& param, bool fixed_base)
-    : fixed_base_(fixed_base) {
+                     const PandaCostParam& param) {
   robot_description_ = robot_description;
   object_description_ = object_description;
   param_ = param;
@@ -31,14 +30,9 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                                      const double t) {
   double cost = 0.0;
 
-  if (fixed_base_) {
-    robot_model_.update_state(x.head<ARM_GRIPPER_DIM>());
-    cost += param_.Qreg * x.segment<ARM_GRIPPER_DIM>(ARM_GRIPPER_DIM).norm();
-  } else {
-    robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-    cost += param_.Qreg *
-            x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
-  }
+  robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+  cost += param_.Qreg *
+          x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
 
   // end effector reaching
   int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
@@ -92,56 +86,35 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // obstacle 2d distance projected on base plane
-  if (!fixed_base_) {
-    double obstacle_dist = (x.head<2>() - ref.segment<2>(7)).norm();
-    if (obstacle_dist < param_.ro) {
-      cost += param_.Qo + param_.Qos * (param_.ro - obstacle_dist);
-    }
+  double obstacle_dist = (x.head<2>() - ref.segment<2>(7)).norm();
+  if (obstacle_dist < param_.ro) {
+    cost += param_.Qo + param_.Qos * (param_.ro - obstacle_dist);
   }
 
   // 2d reach computation
   double reach;
-  if (fixed_base_) {
-    reach = robot_model_.get_pose(tracked_frame_).translation.head<2>().norm();
-  } else {
-    robot_model_.get_error(arm_base_frame_, tracked_frame_, error_);
-    reach = error_.head<2>().norm();
-  }
+  robot_model_.get_error(arm_base_frame_, tracked_frame_, error_);
+  reach = error_.head<2>().norm();
   if (reach > param_.max_reach) {
     cost += param_.Q_reach +
             param_.Q_reachs * (std::pow(reach - param_.max_reach, 2));
   }
 
   // joint limits
-  if (!fixed_base_) {
-    for (size_t i = 0; i < 7; i++) {
-      if (x(i + BASE_DIMENSION) < param_.lower_joint_limits[i])
-        cost +=
-            param_.Q_joint_limit +
-            param_.Q_joint_limit_slope *
-                std::pow(param_.lower_joint_limits[i] - x(i + BASE_DIMENSION),
-                         2);
+  for (size_t i = 0; i < 7; i++) {
+    if (x(i + BASE_DIMENSION) < param_.lower_joint_limits[i])
+      cost +=
+          param_.Q_joint_limit +
+          param_.Q_joint_limit_slope *
+              std::pow(param_.lower_joint_limits[i] - x(i + BASE_DIMENSION), 2);
 
-      if (x(i + BASE_DIMENSION) > param_.upper_joint_limits[i])
-        cost +=
-            param_.Q_joint_limit +
-            param_.Q_joint_limit_slope *
-                std::pow(x(i + BASE_DIMENSION) - param_.upper_joint_limits[i],
-                         2);
-    }
-  } else {
-    for (size_t i = 0; i < 7; i++) {
-      if (x(i) < param_.lower_joint_limits[i])
-        cost += param_.Q_joint_limit +
-                param_.Q_joint_limit_slope *
-                    std::pow(param_.lower_joint_limits[i] - x(i), 2);
-
-      if (x(i) > param_.upper_joint_limits[i])
-        cost += param_.Q_joint_limit +
-                param_.Q_joint_limit_slope *
-                    std::pow(x(i) - param_.upper_joint_limits[i], 2);
-    }
+    if (x(i + BASE_DIMENSION) > param_.upper_joint_limits[i])
+      cost +=
+          param_.Q_joint_limit +
+          param_.Q_joint_limit_slope *
+              std::pow(x(i + BASE_DIMENSION) - param_.upper_joint_limits[i], 2);
   }
+
   return cost;
 }
 

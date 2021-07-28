@@ -13,12 +13,19 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
+#include <signal_logger/signal_logger.hpp>
 
 using namespace manipulation;
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
+
+  // init logger
+  signal_logger::setSignalLoggerStd();
+  signal_logger::SignalLoggerOptions silo_options;
+  silo_options.maxLoggingTime_ = 60.0;
+  signal_logger::logger->initLogger(silo_options);
 
   // ros interface
   auto controller = PandaControllerInterface(nh);
@@ -29,21 +36,10 @@ int main(int argc, char** argv) {
   auto object_description_raisim =
       nh.param<std::string>("/object_description_raisim", "");
 
-  // Fixed base option
-  bool fixed_base;
-  if (!nh.param<bool>("fixed_base", fixed_base, false)) {
-    ROS_ERROR_STREAM("Failed to find param fixed_base");
-    return -1;
-  }
 
   // Safety filter
   bool apply_safety_filter;
   nh.param<bool>("apply_safety_filter", apply_safety_filter, false);
-
-  if (apply_safety_filter && fixed_base) {
-    ROS_ERROR("Safety filter only support moving base for the moment being.");
-    return 0;
-  }
 
   PandaMobileSafetyFilterSettings filter_settings;
   if (!filter_settings.init_from_ros(nh) && apply_safety_filter) {
@@ -60,12 +56,10 @@ int main(int argc, char** argv) {
 
   auto filter = std::make_unique<PandaMobileSafetyFilter>(robot_description_sf,
                                                           filter_settings);
-  Eigen::VectorXd torque_ext;
-  Eigen::VectorXd u_opt;
 
   auto simulation = std::make_shared<ManipulatorDynamicsRos>(
       nh, robot_description_raisim, object_description_raisim, 0.015,
-      fixed_base, PandaRaisimGains(), filter);
+      PandaRaisimGains(), filter);
 
   // set initial state (which is also equal to the one to be tracked)
   // the object position and velocity is already set to 0
@@ -105,6 +99,12 @@ int main(int argc, char** argv) {
   double elapsed;
   std::chrono::time_point<std::chrono::steady_clock> start, end;
 
+  signal_logger::add(sim_time, "sim_time");
+  signal_logger::add(u, "input");
+  signal_logger::logger->updateLogger();
+
+  signal_logger::logger->startLogger();
+
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
     if (sequential) {
@@ -139,6 +139,13 @@ int main(int argc, char** argv) {
           3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
 
     simulation->publish_ros();
+
+    signal_logger::logger->collectLoggerData();
     ros::spinOnce();
   }
+
+  std::cout << "Saving logged data..." << std::endl;
+  signal_logger::logger->stopAndSaveLoggerData({signal_logger::LogFileType::BINARY});
+  signal_logger::logger->cleanup();
+  std::cout << "Done." << std::endl;
 }

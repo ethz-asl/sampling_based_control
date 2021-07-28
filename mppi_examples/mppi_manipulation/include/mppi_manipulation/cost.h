@@ -19,7 +19,7 @@ namespace manipulation {
 
 struct PandaCostParam {
   double Qreg;  // robot velocity regularization
-  double Qt;  // translation cost
+  double Qt;    // translation cost
   double Qt2;
   double Qr;  // rotation cost
   double Qr2;
@@ -45,12 +45,10 @@ class PandaCost : public mppi::Cost {
  public:
   PandaCost() : PandaCost("", "", PandaCostParam()){};
   PandaCost(const std::string& robot_description,
-            const std::string& object_description, const PandaCostParam& param,
-            bool fixed_base = true);
+            const std::string& object_description, const PandaCostParam& param);
   ~PandaCost() = default;
 
  private:
-  bool fixed_base_;
   std::string robot_description_;
   std::string object_description_;
   PandaCostParam param_;
@@ -68,7 +66,7 @@ class PandaCost : public mppi::Cost {
  public:
   mppi::cost_ptr create() override {
     return std::make_shared<PandaCost>(robot_description_, object_description_,
-                                       param_, fixed_base_);
+                                       param_);
   }
   mppi::cost_ptr clone() const override {
     return std::make_shared<PandaCost>(*this);

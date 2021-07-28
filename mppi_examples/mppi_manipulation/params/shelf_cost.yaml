@@ -6,8 +6,8 @@ angular_weight: 10.0
 angular_weight_opening: 1.0
 
 max_reach: 1.2
-reach_weight: 100
-reach_weight_slope: 10
+reach_weight: 0
+reach_weight_slope: 0
 
 obstacle_weight: 0
 obstacle_weight_slope: 0

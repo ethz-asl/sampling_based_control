@@ -19,7 +19,6 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   ManipulatorDynamicsRos(
       const ros::NodeHandle& nh, const std::string& robot_description,
       const std::string& object_description, const double dt,
-      const bool fixed_base = true,
       const PandaRaisimGains& = PandaRaisimGains(),
       const std::unique_ptr<PandaMobileSafetyFilter>& = nullptr);
   ~ManipulatorDynamicsRos() = default;

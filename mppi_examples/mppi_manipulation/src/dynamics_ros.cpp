@@ -5,16 +5,17 @@
 #include "mppi_manipulation/dynamics_ros.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Float64.h>
+#include <signal_logger/signal_logger.hpp>
 
 namespace manipulation {
 
 ManipulatorDynamicsRos::ManipulatorDynamicsRos(
     const ros::NodeHandle& nh, const std::string& robot_description,
     const std::string& object_description, const double dt,
-    const bool fixed_base, const PandaRaisimGains& gains,
+    const PandaRaisimGains& gains,
     const std::unique_ptr<PandaMobileSafetyFilter>& safety_filter)
     : nh_(nh),
-      PandaRaisimDynamics(robot_description, object_description, dt, fixed_base,
+      PandaRaisimDynamics(robot_description, object_description, dt,
                           gains, safety_filter) {
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
@@ -30,18 +31,12 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
   tank_energy_publisher_ = nh_.advertise<std_msgs::Float64>("/tank_energy", 1);
 
-  if (fixed_base) {
-    joint_state_.name = {
-        "panda_joint1", "panda_joint2",        "panda_joint3",
-        "panda_joint4", "panda_joint5",        "panda_joint6",
-        "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
-  } else {
-    joint_state_.name = {
-        "x_base_joint", "y_base_joint",        "pivot_joint",
-        "panda_joint1", "panda_joint2",        "panda_joint3",
-        "panda_joint4", "panda_joint5",        "panda_joint6",
-        "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
-  }
+  joint_state_.name = {
+      "x_base_joint", "y_base_joint",        "pivot_joint",
+      "panda_joint1", "panda_joint2",        "panda_joint3",
+      "panda_joint4", "panda_joint5",        "panda_joint6",
+      "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
+
   joint_state_.position.resize(joint_state_.name.size());
   joint_state_.velocity.resize(joint_state_.name.size());
   joint_state_.header.frame_id = "world";
@@ -61,21 +56,29 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   force_marker_.color.a = 1.0;
 
   tau_ext_msg_.data.resize(get_panda()->getDOF());
+
+  // does not optimize the gripper input
+  u_opt_.setZero(input_dimension_-1);
+  signal_logger::add(u_opt_, "input_filt");
+  for (const auto& constraint : sf_->constraints_){
+    signal_logger::add(constraint.second->violation_, constraint.first + "_violation");
+  }
+  signal_logger::logger->updateLogger();
 }
 
 void ManipulatorDynamicsRos::reset_to_default() {
   x_.setZero();
-  if (fixed_base_)
-    x_.head<ARM_GRIPPER_DIM>() << 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69,
-        0.04, 0.04;
-  else
-    x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
-        0.0, 1.10, 0.69, 0.04, 0.04;
+  x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
+      0.0, 1.10, 0.69, 0.04, 0.04;
   reset(x_);
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
 }
 
 void ManipulatorDynamicsRos::publish_ros() {
+  // TODO(giuseppe) this should not be tight to publishing stuff to ros
+  // update violation
+  sf_->update_violation(x_);
+
   // update robot state visualization
   joint_state_.header.stamp = ros::Time::now();
   for (size_t j = 0; j < robot_dof_; j++) {

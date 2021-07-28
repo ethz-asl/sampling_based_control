@@ -22,6 +22,7 @@ set(PACKAGE_DEPENDENCIES
         roscpp
         manipulation_msgs
         tf2_ros
+        signal_logger
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})

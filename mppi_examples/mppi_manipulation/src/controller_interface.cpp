@@ -119,11 +119,6 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
     throw std::runtime_error(
         "Could not parse object_description_raisim. Is the parameter set?");
   }
-  if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
-    throw std::runtime_error(
-        "Could not parse fixed_base. Is the parameter set?");
-  }
-  ROS_INFO_STREAM("Fixed base? " << fixed_base_);
 
   // -------------------------------
   // config
@@ -143,11 +138,6 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   bool apply_safety_filter;
   nh_.param<bool>("apply_predictive_safety_filter", apply_safety_filter, false);
-
-  if (apply_safety_filter && fixed_base_) {
-    throw std::runtime_error(
-        "Safety filter only support moving base for the moment being.");
-  }
 
   std::unique_ptr<PandaMobileSafetyFilter> safety_filter(nullptr);
   if (apply_safety_filter) {
@@ -179,7 +169,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   ROS_INFO_STREAM("Successfully parsed dynamics gains: \n" << dynamics_gains);
   dynamics = std::make_shared<PandaRaisimDynamics>(
       robot_description_raisim, object_description_raisim, config_.step_size,
-      fixed_base_, dynamics_gains, safety_filter);
+      dynamics_gains, safety_filter);
 
   std::cout << "Done." << std::endl;
 
@@ -193,7 +183,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   }
   ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
   auto cost = std::make_shared<PandaCost>(robot_description, object_description,
-                                          cost_param, fixed_base_);
+                                          cost_param);
 
   // -------------------------------
   // policy
@@ -261,11 +251,7 @@ bool PandaControllerInterface::update_reference() { return true; }
 
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-  if (fixed_base_) {
-    robot_model_.update_state(x.head<ARM_GRIPPER_DIM>());
-  } else {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-  }
   return robot_model_.get_pose("panda_grasp");
 }
 
@@ -325,13 +311,11 @@ void PandaControllerInterface::publish_ros() {
 
   for (const auto& x : x_opt_) {
     optimal_path_.poses.push_back(get_pose_end_effector_ros(x));
-    if (!fixed_base_) optimal_base_path_.poses.push_back(get_pose_base(x));
+    optimal_base_path_.poses.push_back(get_pose_base(x));
   }
 
   optimal_trajectory_publisher_.publish(optimal_path_);
-
-  if (!fixed_base_)
-    optimal_base_trajectory_publisher_.publish(optimal_base_path_);
+  optimal_base_trajectory_publisher_.publish(optimal_base_path_);
 
   // extrapolate base twist from optimal base path
   if (optimal_base_path_.poses.size() > 2) {

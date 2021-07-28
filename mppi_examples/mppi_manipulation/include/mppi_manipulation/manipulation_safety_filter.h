@@ -58,6 +58,8 @@ class PandaMobileSafetyFilter {
                                        const Eigen::VectorXd& torque);
   bool apply(Eigen::VectorXd& u_opt);
 
+  void update_violation(const Eigen::VectorXd& x);
+
   // TODO(giuseppe) brittle implementation -> what if this is not created?
   inline passivity_ptr_t& passivity_constraint() {
     return passivity_constraint_ptr_;
@@ -67,6 +69,10 @@ class PandaMobileSafetyFilter {
     return settings_;
   }
   inline const std::string get_urdf_string() const { return urdf_; }
+  inline const std::unique_ptr<safety_filter::SafetyFilter>& get_filter(){ return filter_;}
+
+ public:
+  std::map<std::string, std::shared_ptr<safety_filter::ConstraintBase>> constraints_;
 
  private:
   std::string urdf_;

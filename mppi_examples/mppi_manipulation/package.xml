@@ -21,6 +21,7 @@
     <depend>tf2_ros</depend>
     <depend>plotjuggler</depend>
     <depend>safety_filter</depend>
+    <depend>signal_logger</depend>
 </package>
 
 

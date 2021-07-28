@@ -177,6 +177,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
     std::shared_ptr<ConstraintBase> ul_const =
         std::make_shared<InputLimits>(ul_settings);
     cm.add_constraint("input_limits", ul_const);
+    constraints_["input_limits"] = ul_const;
   }
 
   if (settings_.joint_limits) {
@@ -186,6 +187,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
     std::shared_ptr<ConstraintBase> jl_const =
         std::make_shared<PandaMobileJointLimitsConstraints>(10, 10, jl_setting);
     cm.add_constraint("joint_limits", jl_const);
+    constraints_["joint_limits"] = jl_const;
   }
 
   if (settings_.cartesian_limits) {
@@ -210,6 +212,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
     std::shared_ptr<ConstraintBase> cart_const =
         std::make_shared<CartesianLimitConstraints>(10, cart_const_settings);
     cm.add_constraint("cartesian_limits", cart_const);
+    constraints_["cartesian_limits"] = cart_const;
   }
 
   if (settings_.passivity_constraint) {
@@ -221,6 +224,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
         std::make_shared<PassivityConstraint>(10, pass_const_settings);
     std::shared_ptr<ConstraintBase> pass_const(passivity_constraint_ptr_);
     cm.add_constraint("passivity_constraint", pass_const);
+    constraints_["passivity_constraint"] = pass_const;
   }
 
   filter_ = std::make_unique<SafetyFilter>(cm);
@@ -233,6 +237,12 @@ void PandaMobileSafetyFilter::update(const Eigen::VectorXd& x,
       torque.head<10>());
   filter_->update_problem(x.head<10>(), u.head<10>());
 
+}
+
+void PandaMobileSafetyFilter::update_violation(const Eigen::VectorXd& x){
+  for (auto const& constraint : constraints_){
+    constraint.second->update_violation(x);
+  }
 }
 
 bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {

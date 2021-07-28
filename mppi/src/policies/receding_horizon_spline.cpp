@@ -267,7 +267,7 @@ void RecedingHorizonSpline::update_samples(const Eigen::VectorXd& weights, const
   N_.col(n_samples_ - 2) = -c_points_.values_;
 
   // Freeze cpoints that control the first interval
-  N_.topRows(m_).setZero();
+  //N_.topRows(m_).setZero();
 
   // Compute new samples (including nominal trajectory as last sample)
   // Compute capped control points
@@ -294,7 +294,7 @@ void RecedingHorizonSpline::update(const Eigen::VectorXd &weights,
   Eigen::VectorXd c_points_temp = c_points_.values_;
   Eigen::VectorXd delta_temp = /*step_size * */ step_size_ * sigma_ *
                                (weights.transpose() * get_gradients()).array();
-  std::cout << "delta temp is: " << delta_temp.transpose() << std::endl;
+  //std::cout << "delta temp is: " << delta_temp.transpose() << std::endl;
 
   // TODO(giuseppe) for now controlling gradients using normalization
   // delta_temp.normalize();

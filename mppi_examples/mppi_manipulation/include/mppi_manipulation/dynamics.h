@@ -33,7 +33,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   PandaRaisimDynamics(
       const std::string& robot_description,
       const std::string& object_description, const double dt,
-      const bool fixed_base = true,
       const PandaRaisimGains& = PandaRaisimGains(),
       const std::unique_ptr<PandaMobileSafetyFilter>& = nullptr);
   ~PandaRaisimDynamics() = default;
@@ -49,7 +48,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   size_t get_state_dimension() override { return state_dimension_; }
   mppi::dynamics_ptr create() override {
     return std::make_shared<PandaRaisimDynamics>(
-        robot_description_, object_description_, dt_, fixed_base_, gains_, sf_);
+        robot_description_, object_description_, dt_, gains_, sf_);
   }
 
   mppi::dynamics_ptr clone() const override {
@@ -78,7 +77,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void get_external_torque(Eigen::VectorXd& tau_ext);
 
  protected:
-  bool fixed_base_;
   size_t robot_dof_;
   size_t input_dimension_;
   size_t state_dimension_;
@@ -91,7 +89,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
     return sf_;
   }
 
- private:
+ protected:
   double dt_;
   std::string robot_description_;
   std::string object_description_;
