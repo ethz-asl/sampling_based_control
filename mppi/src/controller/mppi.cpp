@@ -260,13 +260,14 @@ void PathIntegral::prepare_rollouts() {
     }
     offset = std::distance(opt_roll_cache_.tt.begin(), lower);
   }
-  if (shift_inputs_) {
-    offset = 7;
-  }
 
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
 
+  std::cout << "Opt Rollout before Shift:" << std::endl;
+  for (int i = 0; i < 9; i++) {
+    std::cout << opt_roll_.uu[i].transpose() << std::endl;
+  }
   // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
     shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
@@ -278,6 +279,10 @@ void PathIntegral::prepare_rollouts() {
   shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
              offset);
   shift_back(momentum_, momentum_.back(), offset);
+  std::cout << "Opt Rollout after Shift:" << std::endl;
+  for (int i = 0; i < 9; i++) {
+    std::cout << opt_roll_.uu[i].transpose() << std::endl;
+  }
 }
 
 void PathIntegral::set_reference_trajectory(mppi::reference_trajectory_t& ref) {
@@ -312,6 +317,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              const size_t start_idx,
                                              const size_t end_idx) {
   observation_t x;
+  std::cout << "Shift Inputs: " << shift_inputs_ << std::endl;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     x = x0_internal_;
@@ -319,6 +325,9 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
         rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
+        if (t < 8 && !shift_inputs_) {
+          rollouts_[k].nn[t].setZero();
+        }
       }
       // noise free trajectory
       else if (k == cached_rollouts_) {
@@ -328,6 +337,9 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // perturbed trajectory
       else {
         sample_noise(rollouts_[k].nn[t]);
+        if (t < 8 && !shift_inputs_) {
+          rollouts_[k].nn[t].setZero();
+        }
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
       }
 
@@ -358,6 +370,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
+  shift_inputs_ = false;
 }
 
 void PathIntegral::sample_trajectories() {
@@ -442,13 +455,21 @@ void PathIntegral::optimize() {
 void PathIntegral::filter_input() {
   if (config_.filter_type) {
     filter_.reset(t0_internal_);
+    std::cout << "Opt Rollout before filtering:" << std::endl;
+    for (int i = 0; i < 9; i++) {
+      std::cout << opt_roll_.uu[i].transpose() << std::endl;
+    }
 
     for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
       filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
 
-    for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
+    for (size_t i = 8; i < opt_roll_.uu.size(); i++) {
       filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
+    }
+    std::cout << "Opt Rollout after filtering:" << std::endl;
+    for (int i = 0; i < 9; i++) {
+      std::cout << opt_roll_.uu[i].transpose() << std::endl;
     }
   }
 }

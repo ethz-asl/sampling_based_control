@@ -44,7 +44,7 @@ public:
 
   bool reset_object_ = false;
 
-  bool shift_input_ = false;
+  bool shift_input_ = true;
 
   OMAVInteractionCostParam rqt_cost_;
 

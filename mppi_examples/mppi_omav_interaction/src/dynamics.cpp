@@ -50,7 +50,7 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
 
   Eigen::VectorXd pGain(robot_dof_), dGain(robot_dof_);
-  pGain << 15.0, 15.0, 15.0, 20.0, 20.0, 20.0;
+  pGain << 20.0, 20.0, 20.0, 20.0, 20.0, 20.0;
   dGain << 5.0, 5.0, 5.0, 15.0, 15.0, 15.0;
 
   omav_->setPdGains(pGain, dGain);
@@ -167,7 +167,7 @@ void OMAVVelocityDynamics::integrate_quaternion(
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
   xd_.head<6>() = x_.segment<6>(26);
-  xd_.segment<6>(6) = u - x_.segment<6>(26);
+  xd_.segment<6>(6) = u - 4 * x_.segment<6>(26);
 }
 
 void OMAVVelocityDynamics::integrate_internal(

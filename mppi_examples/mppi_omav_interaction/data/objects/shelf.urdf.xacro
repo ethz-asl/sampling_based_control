@@ -114,7 +114,7 @@
     <joint name="articulation_joint" type="revolute">
         <parent link="axis_link"/>
         <child link="measured_joint_link"/>
-        <dynamics damping="5.0" friction="10.0"/>
+        <dynamics damping="0.1" friction="1.0"/>
         <origin xyz="0 0 0"/>
         <axis xyz="0 0 -1"/>
         <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>

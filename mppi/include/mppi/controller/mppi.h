@@ -310,7 +310,7 @@ class PathIntegral {
   int steps_;
 
   bool first_step_ = true;
-  bool shift_inputs_ = false;
+  bool shift_inputs_ = true;
 
 protected:
   double reset_time_;  // time from which the current optimization has started

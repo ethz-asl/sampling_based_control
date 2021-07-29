@@ -13,7 +13,7 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
     const ros::NodeHandle &nh, const std::string &robot_description,
     const std::string &object_description, const double dt)
     : OMAVVelocityDynamics(robot_description, object_description, dt) {
-  detailed_publishing_ = nh.param<bool>("detailed_publishing", false);
+  detailed_publishing_ = true;
   if (detailed_publishing_) {
     vis_publisher_ =
         nh_.advertise<visualization_msgs::Marker>("visualization_marker", 0);
