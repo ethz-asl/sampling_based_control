@@ -248,7 +248,7 @@ void PandaControllerInterface::mode_callback(
 }
 
 void PandaControllerInterface::update_reference(const double t) {
-  if (reference_trigger_.has_reference(t)){
+  if (reference_trigger_.has_reference(t)) {
     reference_trigger_.set_reference(t, ref_);
   }
 }
