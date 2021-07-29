@@ -14,7 +14,6 @@ namespace manipulation {
 class ReferenceScheduler {
  public:
   void add_reference(const double t, const mppi::reference_t& ref) {
-
     if (!times_.empty() && t < times_.back()) {
       std::cout
           << "[ReferenceScheduler]: trying to add a reference back in the past."
@@ -29,7 +28,7 @@ class ReferenceScheduler {
     std::stringstream ss;
     ss << "[ReferenceScheduler]: adding new reference." << std::endl;
     ss << "  ref  = [" << ref.transpose() << "]" << std::endl;
-    ss << "  time = " << t <<  std::endl;
+    ss << "  time = " << t << std::endl;
     std::cout << ss.str();
   }
 
@@ -38,7 +37,8 @@ class ReferenceScheduler {
   }
 
   bool parse_from_file(const std::string& file_path) {
-    std::cout << "[ReferenceScheduler]: parsing references from " << file_path << std::endl;
+    std::cout << "[ReferenceScheduler]: parsing references from " << file_path
+              << std::endl;
     YAML::Node config;
     try {
       config = YAML::LoadFile(file_path);
@@ -64,8 +64,7 @@ class ReferenceScheduler {
       mppi::reference_t r_eigen;
       r_eigen = mppi::reference_t::Zero(r.size());
       r_eigen.setZero(r.size());
-      for (int i = 0; i < r.size(); i++)
-        r_eigen(i) = r[i];
+      for (int i = 0; i < r.size(); i++) r_eigen(i) = r[i];
       add_reference(t, r_eigen);
     }
     return true;

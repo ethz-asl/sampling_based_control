@@ -6,9 +6,9 @@
  * @brief    description
  */
 #pragma once
+#include <Eigen/Core>
 #include <memory>
 #include <vector>
-#include <Eigen/Core>
 
 namespace mppi {
 
