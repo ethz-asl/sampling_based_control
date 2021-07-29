@@ -13,7 +13,7 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
-#include "mppi_manipulation/reference_trigger.h"
+#include "mppi_manipulation/reference_scheduler.h"
 
 namespace manipulation {
 
@@ -49,7 +49,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 
-  ReferenceTrigger reference_trigger_;
+  ReferenceScheduler reference_scheduler_;
   size_t last_ee_ref_id_;
   size_t last_ob_ref_id_;
   std::mutex reference_mutex_;

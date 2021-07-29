@@ -107,8 +107,8 @@ int main(int argc, char** argv) {
 
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
+    controller.update_reference(sim_time);
     if (sequential) {
-      controller.update_reference();
       controller.set_observation(x, sim_time);
       controller.update_policy();
       controller.get_input(x, u, sim_time);

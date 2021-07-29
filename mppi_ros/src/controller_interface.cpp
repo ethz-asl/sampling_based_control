@@ -118,6 +118,11 @@ bool ControllerRos::update_policy() {
   return true;
 }
 
+bool ControllerRos::update_reference_thread(
+    const mppi::threading::WorkerEvent &event) {
+  return update_reference();
+}
+
 bool ControllerRos::update_policy_thread(
     const mppi::threading::WorkerEvent &event) {
   if (!observation_set_) return true;

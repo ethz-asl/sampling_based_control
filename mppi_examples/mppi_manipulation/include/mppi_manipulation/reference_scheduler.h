@@ -11,19 +11,26 @@
 
 namespace manipulation {
 
-class ReferenceTrigger {
+class ReferenceScheduler {
+ public:
   void add_reference(const double t, const mppi::reference_t& ref) {
-    if (t < times_.back()) {
+
+    if (!times_.empty() && t < times_.back()) {
       std::cout
-          << "[ReferenceTrigger] Trying to add a reference back in the past."
+          << "[ReferenceScheduler]: trying to add a reference back in the past."
           << std::endl;
       return;
     }
     mppi::reference_trajectory_t rt;
     rt.rr.push_back(ref);
     rt.tt.push_back(t);
-    schedule_.emplace_back(rt);
-    times_.emplace_back(t);
+    schedule_.push_back(rt);
+    times_.push_back(t);
+    std::stringstream ss;
+    ss << "[ReferenceScheduler]: adding new reference." << std::endl;
+    ss << "  ref  = [" << ref.transpose() << "]" << std::endl;
+    ss << "  time = " << t <<  std::endl;
+    std::cout << ss.str();
   }
 
   bool has_reference(const double t) {
@@ -31,6 +38,7 @@ class ReferenceTrigger {
   }
 
   bool parse_from_file(const std::string& file_path) {
+    std::cout << "[ReferenceScheduler]: parsing references from " << file_path << std::endl;
     YAML::Node config;
     try {
       config = YAML::LoadFile(file_path);
@@ -41,23 +49,26 @@ class ReferenceTrigger {
     }
 
     if (!config.IsSequence()) {
-      std::cout << "[ReferenceTrigger] Failed to parse references file."
+      std::cout << "[ReferenceScheduler] Failed to parse references file."
                 << std::endl;
       return false;
     }
 
     for (const auto& element : config) {
       if (!element.IsMap()) {
-        std::cout << "[ReferenceTrigger] Element should be dictionary"
+        std::cout << "[ReferenceScheduler]: element should be dictionary"
                   << std::endl;
       }
       auto r = element["r"].as<std::vector<double>>();
       auto t = element["t"].as<double>();
       mppi::reference_t r_eigen;
+      r_eigen = mppi::reference_t::Zero(r.size());
       r_eigen.setZero(r.size());
-      for (int i = 0; i < r.size(); i++) r_eigen(i) = r[i];
+      for (int i = 0; i < r.size(); i++)
+        r_eigen(i) = r[i];
       add_reference(t, r_eigen);
     }
+    return true;
   }
 
   void set_reference(const double t, mppi::reference_trajectory_t& rt) {

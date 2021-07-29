@@ -30,6 +30,7 @@ class ControllerRos {
    */
   virtual bool set_controller(std::shared_ptr<Solver>& controller) = 0;
 
+  virtual bool update_reference() { return true; }
   virtual bool init_ros() { return true; };
   virtual void publish_ros(){};
 

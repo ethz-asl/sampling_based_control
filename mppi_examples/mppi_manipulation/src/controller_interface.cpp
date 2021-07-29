@@ -71,6 +71,10 @@ bool PandaControllerInterface::init_ros() {
   obstacle_marker_.pose.position.y = transformStamped.transform.translation.y;
   obstacle_marker_.pose.position.z = transformStamped.transform.translation.z;
 
+  std::string references_file;
+  nh_.param<std::string>("references_file", references_file, "");
+  reference_scheduler_.parse_from_file(references_file);
+
   last_ee_ref_id_ = 0;
   ee_desired_pose_.header.seq = last_ee_ref_id_;
 
@@ -248,8 +252,10 @@ void PandaControllerInterface::mode_callback(
 }
 
 void PandaControllerInterface::update_reference(const double t) {
-  if (reference_trigger_.has_reference(t)) {
-    reference_trigger_.set_reference(t, ref_);
+  if (reference_scheduler_.has_reference(t)) {
+    reference_scheduler_.set_reference(t, ref_);
+    std::unique_lock<std::mutex> lock(reference_mutex_);
+    get_controller()->set_reference_trajectory(ref_);
   }
 }
 

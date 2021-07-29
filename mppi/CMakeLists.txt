@@ -31,7 +31,7 @@ set(SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${y
 include_directories(include ${SYSTEM_INCLUDE_DIRECTORIES})
 
 file(GLOB_RECURSE SRCS src/*.cpp)
-add_library(${PROJECT_NAME} ${SRCS} src/policies/spline_policy.cpp)
+add_library(${PROJECT_NAME} ${SRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} yaml-cpp)
 
 if(OpenMP_CXX_FOUND)
