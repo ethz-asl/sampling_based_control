@@ -25,6 +25,10 @@
 #include "mppi/utils/logging.h"
 #include "mppi/utils/savgol_filter.h"
 
+#ifdef SIGNAL_LOGGER
+#include <signal_logger/signal_logger.hpp>
+#endif
+
 namespace mppi {
 
 Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
@@ -39,6 +43,13 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
   if (config_.display_update_freq) {
     start_time_ = std::chrono::high_resolution_clock::now();
   }
+
+#ifdef SIGNAL_LOGGER
+  signal_logger::add(min_cost_, "solver/rollouts/min_cost");
+  signal_logger::add(max_cost_, "solver/rollouts/max_cost");
+  signal_logger::add(rollouts_cost_, "solver/rollouts/consts");
+  signal_logger::logger->updateLogger();
+#endif
 }
 
 void Solver::init_data() {

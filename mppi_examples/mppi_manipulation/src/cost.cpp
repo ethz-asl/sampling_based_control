@@ -103,16 +103,14 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // joint limits
   for (size_t i = 0; i < 10; i++) {
     if (x(i) < param_.lower_joint_limits[i])
-      cost +=
-          param_.Q_joint_limit +
-          param_.Q_joint_limit_slope *
-              std::pow(param_.lower_joint_limits[i] - x(i), 2);
+      cost += param_.Q_joint_limit +
+              param_.Q_joint_limit_slope *
+                  std::pow(param_.lower_joint_limits[i] - x(i), 2);
 
     if (x(i) > param_.upper_joint_limits[i])
-      cost +=
-          param_.Q_joint_limit +
-          param_.Q_joint_limit_slope *
-              std::pow(x(i) - param_.upper_joint_limits[i], 2);
+      cost += param_.Q_joint_limit +
+              param_.Q_joint_limit_slope *
+                  std::pow(x(i) - param_.upper_joint_limits[i], 2);
   }
 
   return cost;

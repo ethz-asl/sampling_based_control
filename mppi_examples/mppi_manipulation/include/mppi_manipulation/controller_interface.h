@@ -13,6 +13,7 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
+#include "mppi_manipulation/reference_trigger.h"
 
 namespace manipulation {
 
@@ -23,7 +24,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   bool init_ros() override;
   void publish_ros() override;
-  bool update_reference() override;
+  void update_reference(const double t);
 
   mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
@@ -42,13 +43,13 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
 
  public:
-  bool fixed_base_;
   mppi::config_t config_;
 
  private:
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 
+  ReferenceTrigger reference_trigger_;
   size_t last_ee_ref_id_;
   size_t last_ob_ref_id_;
   std::mutex reference_mutex_;

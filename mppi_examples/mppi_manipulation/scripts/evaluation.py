@@ -1,135 +1,106 @@
-#! /usr/bin/env  python
-
-import os
-from rospkg import RosPack
-import rosbag
-import numpy as np
-import pinocchio as pin
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
+import numpy as np
+import signal_logger
 
-#import seaborn as sns
-#sns.set_theme()
-#sns.set_context("paper")
-
-from manipulation_msgs.msg import State
-
-pkg_dir = RosPack().get_path("mppi_manipulation")
-
-
-class Manipulator:
-    def __init__(self, model, data):
-        self.model = model
-        self.data = data
-
-    def get_frame_velocity(self, q, v, frame_id) -> pin.Motion:
-        pin.forwardKinematics(self.model, self.data, q, v)
-
-        return pin.getFrameVelocity(self.model, self.data,
-                                    self.model.getFrameId(frame_id),
-                                    pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
+###############################
+# Definitions
+###############################
+LOG_FILE = "/home/giuseppe/.ros/silo_20210729_14-34-53_00025.silo"
+REQUIRED_FIELDS = [
+    "log/sim_time", "log/input", "log/input_filt",
+    "log/joint_limits_violation", "log/solver/rollouts/min_cost",
+    "log/solver/rollouts/max_cost"
+]
 
 
-def get_manipulator_model():
-    urdf_filename = pkg_dir + '/data/panda.urdf'
-    model = pin.buildModelFromUrdf(urdf_filename)
-    data = model.createData()
-    print("Created manipulator model: nq={nq}, nv={nv}".format(nq=model.nq,
-                                                               nv=model.nv))
-    return Manipulator(model, data)
+###############################
+# Utilities
+###############################
+def print_keys(logger: signal_logger.Silo):
+    print(f"Logger contains the following keys ({len(silo.keys())}):")
+    for key in silo.keys():
+        print(f"[{key}]")
 
 
-# Open bag
+def eval_field(logger: signal_logger.Silo, prefix: str):
+    """
+    Evaluate a field specified by its prefix in the silo logger
+    Vector are transformed to scalar field appended by _<idx>. If the pattern is found
+    then a matrix containing each index time series as column is returned
+    :param logger: silo logger
+    :param prefix: prefix or full_name
+    :return:
+    """
+    keys = logger.keys()
+    entries = []
+    found = False
+    for key in keys:
+        if key.startswith(prefix):
+            postfix = key.replace(prefix, '')
+            # Scalar case
+            if postfix == '':
+                return logger.get_signal(prefix).values
+            # Good candidate to be a vector but other entries with similar prefixes might be there
+            else:
+                postfixes = postfix.split("_")
+                # The prefix is not followed by nothing else the vector index postfix
+                if len(postfixes) == 2:
+                    found = True
+                    entries.append(eval(postfixes[-1]))
 
-bag_file = os.path.join(pkg_dir, "data", "bags", "exp_mobile_10.bag")
-bag = rosbag.Bag(bag_file)
+    if not found:
+        print(f"Failed to find entry with prefix [{prefix}]")
+        return None
 
-time = []
-time_data = []
-arm_joint_positions = []
-arm_joint_velocities = []
-base_twist = []
-switches = []
+    cols = max(entries) + 1
+    rows = logger.get_signal(prefix + "_0").values.size
+    matrix = np.zeros((rows, cols))
+    for col in range(cols):
+        matrix[:, col] = logger.get_signal(prefix + f"_{col}").values
+    return matrix
 
-print("Reading bag.")
-for topic, msg, t in bag.read_messages(topics=['/observer/state', '/mode']):
-    if topic == '/observer/state':  #'/x_nom':
-        time.append(t.to_sec())
-        arm_joint_positions.append(np.array(msg.arm_state.position))
-        arm_joint_velocities.append(np.array(msg.arm_state.velocity))
-        base_twist.append(
-            np.array([
-                msg.base_twist.linear.x, msg.base_twist.linear.y,
-                msg.base_twist.linear.z
-            ]))
 
-    if topic == '/mode':
-        switches.append([t.to_sec() - time[0], msg.data])
+def to_dictionary(logger: signal_logger.Silo, fields):
+    """ Given a list of prefixes (see eval_filed) returns a representation of the logs as a dictionary """
+    d = {}
+    for field in fields:
+        dict_field = field.split('/')[-1]
+        d[dict_field] = eval_field(logger, prefix=field)
+    return d
 
-    if topic == '/mppi_data':
-        time_data.append(t.to_sec())
-bag.close()
-print("Done")
 
-ee_velocity_norm = []
-base_velocity_norm = []
-manipulator: Manipulator = get_manipulator_model()
-for aq, av, bt in zip(arm_joint_positions, arm_joint_velocities, base_twist):
-    ee_vel: pin.Motion = manipulator.get_frame_velocity(aq, av, "panda_hand")
-    ee_velocity_norm.append(np.linalg.norm(ee_vel.linear))
-    base_velocity_norm.append(np.linalg.norm(bt))
+def matrix_plot(m: np.ndarray, prefix="value"):
+    """
+    Plot each row of a matrix in the same plot
+    :param m:
+    :param prefix:
+    :return:
+    """
+    fig, ax = plt.subplots()
+    for i in range(m.shape[1]):
+        ax.plot(m[:, i], label=f"prefix_{i}")
 
-ee_velocity_norm_filt = savgol_filter(ee_velocity_norm, 101, 2)
-base_velocity_norm_filt = savgol_filter(base_velocity_norm, 101, 2)
 
-print("Plotting data")
-fig, ax = plt.subplots()
+###############################
+# Main
+###############################
 
-# let the time start at 0
-time = np.array(time)
-time = time - time[0]
-ax.plot(time, ee_velocity_norm_filt, label="end effector", linewidth=2)
-ax.plot(time, base_velocity_norm_filt, label="base", linewidth=2)
+if __name__ == "__main__":
+    silo = signal_logger.Silo(LOG_FILE)
+    print_keys(silo)
+    silo_dict = to_dictionary(silo, REQUIRED_FIELDS)
 
-# Differentiate between modes
-modes_color = {0: 'r', 1: 'g', 2: 'b'}
-modes_id = {0: 'C', 1: 'A', 2: 'B'}
-for idx, switch in enumerate(switches):
-    if idx < len(switches) - 1:
-        ax.axvspan(switch[0],
-                   switches[idx + 1][0],
-                   alpha=0.05,
-                   facecolor=modes_color[switch[1]])
-    else:
-        ax.axvspan(switch[0],
-                   time[-1],
-                   alpha=0.05,
-                   facecolor=modes_color[switch[1]])
-    ax.axvline(switch[0], linestyle="--", linewidth="2")
+    fig, ax = plt.subplots()
+    ax.plot(silo_dict['sim_time'], silo_dict['input'][:, 0], label="input")
+    ax.plot(silo_dict['sim_time'],
+            silo_dict['input_filt'][:, 0],
+            label="input_filt")
+    ax.plot(silo_dict['sim_time'],
+            silo_dict['joint_limits_violation'][:, 0],
+            label="constraint_violation")
+    #ax.plot(silo_dict['sim_time'], silo_dict['min_cost'], label="min_cost")
 
-ax.axvspan(switches[-1][0],
-           time[-1],
-           alpha=0.1,
-           facecolor=modes_color[switch[1]])
-ax.set_xlim(left=time[0], right=time[-1])
-
-ax.set_xlabel("time [s]", fontsize=40)
-ax.set_ylabel("velocity norm [m/s]", fontsize=40)
-ax.set_ybound(lower=-0.01, upper=0.25)
-#from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
-#ax.yaxis.set_minor_locator(AutoMinorLocator(10))
-#ax.xaxis.set_minor_locator(AutoMinorLocator(10))
-
-#ax.set_ybound(lower=0, upper=0.15)
-#ax.set_xticks([])
-
-#ax.grid(which='major')
-#ax.grid(which='minor')
-# plt.plot(ee_velocity_norm, linestyle="--", label="end effector velocity norm")
-# plt.plot(base_velocity_norm, linestyle="--", label="base velocity norm")
-
-plt.grid()
-plt.yticks(fontsize=18)
-plt.xticks(fontsize=18)
-plt.legend(fontsize=30, loc='upper left')
-plt.show()
+    matrix_plot(silo_dict['input'], prefix="input")
+    plt.legend()
+    plt.grid()
+    plt.show()

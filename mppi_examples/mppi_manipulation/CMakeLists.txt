@@ -39,6 +39,7 @@ add_library(${PROJECT_NAME}
         src/cost.cpp
         src/controller_interface.cpp
         src/manipulation_safety_filter.cpp
+        src/reference_trigger.cpp
         src/dynamics_ros.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 
@@ -65,6 +66,6 @@ install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
 
-catkin_install_python(PROGRAMS scripts/unpause_physics.py scripts/demo.py scripts/evaluation.py
+catkin_install_python(PROGRAMS scripts/demo.py scripts/evaluation.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )

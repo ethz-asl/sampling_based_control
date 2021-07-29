@@ -6,6 +6,7 @@
  * @brief    description
  */
 #pragma once
+#include <Eigen/Core>
 
 namespace mppi {
 

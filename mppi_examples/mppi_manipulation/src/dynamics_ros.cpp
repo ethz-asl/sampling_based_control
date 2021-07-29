@@ -62,9 +62,10 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   u_opt_.setZero(input_dimension_-1);
   signal_logger::add(u_opt_, "input_filt");
 
-  if (sf_){
-    for (const auto& constraint : sf_->constraints_){
-      signal_logger::add(constraint.second->violation_, constraint.first + "_violation");
+  if (sf_) {
+    for (const auto& constraint : sf_->constraints_) {
+      signal_logger::add(constraint.second->violation_,
+                         constraint.first + "_violation");
     }
   }
   signal_logger::logger->updateLogger();

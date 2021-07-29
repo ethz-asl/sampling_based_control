@@ -8,6 +8,7 @@
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>eigen</depend>
+    <depend>signal_logger</depend>
 </package>
 
 

@@ -247,7 +247,11 @@ void PandaControllerInterface::mode_callback(
   ROS_INFO_STREAM("Switching to mode: " << msg->data);
 }
 
-bool PandaControllerInterface::update_reference() { return true; }
+void PandaControllerInterface::update_reference(const double t) {
+  if (reference_trigger_.has_reference(t)){
+    reference_trigger_.set_reference(t, ref_);
+  }
+}
 
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
