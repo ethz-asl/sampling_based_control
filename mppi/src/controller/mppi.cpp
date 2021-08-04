@@ -341,7 +341,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
         rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
-        if (t < (8 - shift_int_internal_) && !first_mppi_iteration_) {
+        if (t < (8 - 1) && !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
       }
@@ -353,7 +353,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // perturbed trajectory
       else {
         sample_noise(rollouts_[k].nn[t]);
-        if (t < (8 - shift_int_internal_) && !first_mppi_iteration_) {
+        if (t < (8 - 1) && !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
@@ -479,7 +479,7 @@ void PathIntegral::filter_input() {
     for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
       filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
-    for (size_t i = (8 - shift_int_internal_); i < opt_roll_.uu.size(); i++) {
+    for (size_t i = (8 - 1); i < opt_roll_.uu.size(); i++) {
       filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
     // std::cout << "Opt Rollout after filtering:" << std::endl;
