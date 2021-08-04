@@ -5,7 +5,7 @@ z_distance_weight: 20.0
 # Weight for the deviation from the reference orientation
 orientation_weight: 10.0
 # Weights for the deviation from the reference position
-object_weight: 50.0
+object_weight: 150.0
 # Velocity costs
 lin_vel_weight: 0.0
 ang_vel_weight: 0.0
@@ -31,4 +31,4 @@ handle_hook_threshold: 0.03
 # Efficiency cost
 power_cost: 0.0
 # Torque cost
-torque_cost: 80.0
+torque_cost: 100.0

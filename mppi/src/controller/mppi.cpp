@@ -147,6 +147,7 @@ void PathIntegral::update_policy() {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
     copy_observation();
+    shift_int_internal_ = shift_int_;
 
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
@@ -261,12 +262,27 @@ void PathIntegral::prepare_rollouts() {
     offset = std::distance(opt_roll_cache_.tt.begin(), lower);
   }
 
+  if (shift_input_ && shift_int_internal_ < 7) {
+    offset = 1;
+    shift_input_ = false;
+  } else if (shift_input_ && shift_int_internal_ == 7) {
+    offset = 2;
+    shift_input_ = false;
+  } else {
+    offset = 0;
+  }
+
+  // std::cout << "Offset: " << offset << std::endl;
+  // std::cout << "Shift Int: " << shift_int_internal_ << std::endl;
+
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
-
-  std::cout << "Opt Rollout before Shift:" << std::endl;
+  // std::cout << "t0_internal: " << t0_internal_ << ", opt_roll_cache_ t[0:1]:
+  // " << opt_roll_cache_.tt[0] << " " << opt_roll_cache_.tt[1] << std::endl;
+  // std::cout << "Offset: " << offset << std::endl;
+  // std::cout << "Opt Rollout before Shift:" << std::endl;
   for (int i = 0; i < 9; i++) {
-    std::cout << opt_roll_.uu[i].transpose() << std::endl;
+    // std::cout << opt_roll_.uu[i].transpose() << std::endl;
   }
   // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
@@ -279,9 +295,9 @@ void PathIntegral::prepare_rollouts() {
   shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
              offset);
   shift_back(momentum_, momentum_.back(), offset);
-  std::cout << "Opt Rollout after Shift:" << std::endl;
+  // std::cout << "Opt Rollout after Shift:" << std::endl;
   for (int i = 0; i < 9; i++) {
-    std::cout << opt_roll_.uu[i].transpose() << std::endl;
+    // std::cout << opt_roll_.uu[i].transpose() << std::endl;
   }
 }
 
@@ -317,7 +333,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              const size_t start_idx,
                                              const size_t end_idx) {
   observation_t x;
-  std::cout << "Shift Inputs: " << shift_inputs_ << std::endl;
+  // std::cout << "First iteration: " << first_mppi_iteration_ << std::endl;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     x = x0_internal_;
@@ -325,7 +341,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
         rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
-        if (t < 8 && !shift_inputs_) {
+        if (t < (8 - shift_int_internal_) && !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
       }
@@ -337,7 +353,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // perturbed trajectory
       else {
         sample_noise(rollouts_[k].nn[t]);
-        if (t < 8 && !shift_inputs_) {
+        if (t < (8 - shift_int_internal_) && !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
@@ -370,7 +386,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
-  shift_inputs_ = false;
+  // first_mppi_iteration_ = false;
 }
 
 void PathIntegral::sample_trajectories() {
@@ -455,21 +471,20 @@ void PathIntegral::optimize() {
 void PathIntegral::filter_input() {
   if (config_.filter_type) {
     filter_.reset(t0_internal_);
-    std::cout << "Opt Rollout before filtering:" << std::endl;
+    // std::cout << "Opt Rollout before filtering:" << std::endl;
     for (int i = 0; i < 9; i++) {
-      std::cout << opt_roll_.uu[i].transpose() << std::endl;
+      // std::cout << opt_roll_.uu[i].transpose() << std::endl;
     }
 
     for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
       filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
-
-    for (size_t i = 8; i < opt_roll_.uu.size(); i++) {
+    for (size_t i = (8 - shift_int_internal_); i < opt_roll_.uu.size(); i++) {
       filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
-    std::cout << "Opt Rollout after filtering:" << std::endl;
+    // std::cout << "Opt Rollout after filtering:" << std::endl;
     for (int i = 0; i < 9; i++) {
-      std::cout << opt_roll_.uu[i].transpose() << std::endl;
+      // std::cout << opt_roll_.uu[i].transpose() << std::endl;
     }
   }
 }
@@ -576,6 +591,7 @@ bool PathIntegral::get_optimal_rollout(observation_array_t& xx,
                                 opt_roll_cache_.tt.end(), reset_time_);
   if (lower == opt_roll_cache_.tt.end()) return false;
   size_t offset = std::distance(opt_roll_cache_.tt.begin(), lower);
+  offset = 0;
 
   // fill with portion of vector starting from current time
   xx = observation_array_t(opt_roll_cache_.xx.begin() + offset,

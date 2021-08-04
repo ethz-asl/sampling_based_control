@@ -167,7 +167,7 @@ void OMAVVelocityDynamics::integrate_quaternion(
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
   xd_.head<6>() = x_.segment<6>(26);
-  xd_.segment<6>(6) = u - 4 * x_.segment<6>(26);
+  xd_.segment<6>(6) = u - 5 * x_.segment<6>(26);
 }
 
 void OMAVVelocityDynamics::integrate_internal(

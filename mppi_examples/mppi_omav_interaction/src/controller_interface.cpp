@@ -360,8 +360,12 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   mppi_reference_publisher_.publish(mppi_reference);
 }
 
-void OMAVControllerInterface::manually_shift_input() {
-  get_controller()->shift_inputs_ = true;
+void OMAVControllerInterface::manually_shift_input(const int i) {
+  if (i != 0) {
+    get_controller()->shift_input_ = true;
+  }
+  get_controller()->shift_int_ = i;
+  get_controller()->first_mppi_iteration_ = false;
 }
 
 // namespace omav_interaction

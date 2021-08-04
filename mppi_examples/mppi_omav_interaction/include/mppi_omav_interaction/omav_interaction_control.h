@@ -36,6 +36,9 @@ public:
 
   void get_odometry(observation_t &x);
 
+  void set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
+                      &trajectory_msg_point);
+
   void initialize_integrators(observation_t &x);
 
   bool odometry_bool_;
@@ -44,9 +47,20 @@ public:
 
   bool reset_object_ = false;
 
-  bool shift_input_ = true;
+  bool first_trajectory_sent_ = false;
+
+  bool shift_lock_ = false;
+
+  double target_state_time_ = 0.0;
+
+  int shift_index_ = 0;
 
   OMAVInteractionCostParam rqt_cost_;
+
+  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_;
+
+  // Target Variables
+  mav_msgs::EigenTrajectoryPoint target_state_;
 
 private:
   void initializeSubscribers();
@@ -81,8 +95,7 @@ private:
 
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
-  // Target Variables
-  mav_msgs::EigenTrajectoryPoint target_state_;
+
   // Object State Variable
   Eigen::Vector2d object_state_;
   // Dynamics Reconfigure

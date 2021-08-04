@@ -283,7 +283,9 @@ class PathIntegral {
   inline observation_t get_current_observation() { return x0_internal_; }
   inline data_t get_data() { return data_; }
 
- public:
+  int shift_int_internal_ = 0;
+
+public:
   /**
    * @brief Set the reference trajectory to be used in the next optimization
    * loop
@@ -310,7 +312,9 @@ class PathIntegral {
   int steps_;
 
   bool first_step_ = true;
-  bool shift_inputs_ = true;
+  bool shift_input_ = false;
+  bool first_mppi_iteration_ = true;
+  int shift_int_ = 0;
 
 protected:
   double reset_time_;  // time from which the current optimization has started

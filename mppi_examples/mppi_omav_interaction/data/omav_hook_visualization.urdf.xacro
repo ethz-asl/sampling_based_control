@@ -44,7 +44,7 @@
     <joint name="omav_to_rod" type="fixed">
         <parent link="omav_base"/>
         <child link="rod"/>
-        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
+        <origin rpy="-1.5708 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
     </joint>
 
     <link name="rod">

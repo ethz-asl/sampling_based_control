@@ -35,7 +35,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 1
+  threads: 8
   debug_print: false
 
   logging: true
@@ -45,9 +45,9 @@ reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
 
-sequential: true
+sequential: false
 static_optimization: false
-running_rotors: false
+running_rotors: true
 door_in_sim: false
 detailed_publishing: true
 sim_dt: 0.015

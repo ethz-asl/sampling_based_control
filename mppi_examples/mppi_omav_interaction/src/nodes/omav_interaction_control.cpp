@@ -1,5 +1,5 @@
 /*!
- * @file    omav_velocity_control.cpp
+ * @file    omav_interaction_control.cpp
  * @author  Matthias Studiger
  * @date    10.04.2021
  * @version 1.0
@@ -69,10 +69,11 @@ void OmavTrajectoryGenerator::objectCallback(
 
 void OmavTrajectoryGenerator::TargetCallback(
     const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg) {
-  omav_interaction::conversions::InterpolateTrajectoryPoints(
-      position_target_msg.points[6], position_target_msg.points[7],
-      &target_state_);
-  shift_input_ = false;
+  target_state_time_ = 0.0;
+  first_trajectory_sent_ = true;
+  set_target(position_target_msg.points[0]);
+  current_trajectory_ = position_target_msg;
+  shift_lock_ = false;
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
@@ -164,6 +165,27 @@ void OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
   target_state_.angular_velocity_W = current_odometry_.angular_velocity_B;
 }
 
+void OmavTrajectoryGenerator::set_target(
+    const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point) {
+  Eigen::Vector3d position =
+      mav_msgs::vector3FromMsg(trajectory_msg_point.transforms[0].translation);
+  target_state_.position_W = position;
+  target_state_.orientation_W_B.w() =
+      trajectory_msg_point.transforms[0].rotation.w;
+  target_state_.orientation_W_B.x() =
+      trajectory_msg_point.transforms[0].rotation.x;
+  target_state_.orientation_W_B.y() =
+      trajectory_msg_point.transforms[0].rotation.y;
+  target_state_.orientation_W_B.z() =
+      trajectory_msg_point.transforms[0].rotation.z;
+  Eigen::Vector3d velocity_lin =
+      mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].linear);
+  target_state_.velocity_W = velocity_lin;
+  Eigen::Vector3d velocity_ang =
+      mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].angular);
+  target_state_.angular_velocity_W = velocity_ang;
+}
+
 int main(int argc, char **argv) {
   // Initialize Ros Node
   ros::init(argc, argv, "omav_control_node");
@@ -203,6 +225,7 @@ int main(int argc, char **argv) {
 
   auto sim_dt = nh.param<double>("sim_dt", 0.015);
   double sim_time = 0.0;
+  int index_temp = 0.0;
 
   // init the controller
   bool ok = controller.init();
@@ -245,16 +268,15 @@ int main(int argc, char **argv) {
       omav_trajectory_node->reset_object_ = false;
       ROS_INFO_STREAM("Reset Object");
     }
-    if (omav_trajectory_node->shift_input_) {
-      controller.manually_shift_input();
-      omav_trajectory_node->shift_input_ = false;
-    }
     if (sequential) {
       controller.update_reference();
-      controller.set_observation(x, sim_time);
+      // controller.set_observation(x, sim_time);
       controller.update_policy();
       controller.get_input_state(x, x_nom, u, sim_time);
       controller.publish_ros_default();
+      if (omav_trajectory_node->target_state_time_ > 0.1) {
+        controller.publish_ros();
+      }
       // Additional publisher for additional visualization
       controller.publish_optimal_rollout();
       controller.publish_all_trajectories();
@@ -263,27 +285,54 @@ int main(int argc, char **argv) {
       if (running_rotors) {
         omav_trajectory_node->get_odometry(x);
         sim_time += 1.0 / 250.0;
-        r.sleep();
+        omav_trajectory_node->target_state_time_ += 1.0 / 250.0;
       }
-      controller.set_observation(x, sim_time);
-      controller.get_input_state(x, x_nom, u, sim_time);
     }
     if (!running_rotors) {
       x = simulation->step(u, sim_dt);
-
       simulation->publish_ros();
       sim_time += sim_dt;
+      omav_trajectory_node->target_state_time_ += sim_dt;
 
       end = std::chrono::steady_clock::now();
       elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
               .count() /
           1000.0;
-      if (sim_dt - elapsed > 0)
-        ros::Duration(0.5).sleep();
-      else
-        ROS_INFO_STREAM_THROTTLE(
-            3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
+    }
+    if (omav_trajectory_node->first_trajectory_sent_) {
+      omav_trajectory_node->shift_index_ =
+          std::ceil(omav_trajectory_node->target_state_time_ / 0.015);
+      if (omav_trajectory_node->shift_index_ != index_temp &&
+          omav_trajectory_node->shift_index_ < 6) {
+        index_temp = omav_trajectory_node->shift_index_;
+        controller.manually_shift_input(index_temp);
+        omav_trajectory_node->set_target(
+            omav_trajectory_node->current_trajectory_.points[index_temp]);
+      } else if (omav_trajectory_node->shift_index_ != index_temp &&
+                 !omav_trajectory_node->shift_lock_) {
+        omav_interaction::conversions::InterpolateTrajectoryPoints(
+            omav_trajectory_node->current_trajectory_.points[6],
+            omav_trajectory_node->current_trajectory_.points[7],
+            &omav_trajectory_node->target_state_);
+        controller.manually_shift_input(7);
+        omav_trajectory_node->shift_lock_ = true;
+      } else if (omav_trajectory_node->target_state_time_ > 0.09) {
+        controller.manually_shift_input(0);
+      }
+    }
+
+    // Set new observation
+    controller.set_observation(x, sim_time);
+    controller.get_input_state(x, x_nom, u, sim_time);
+    // Timing Tasks
+    if (running_rotors) {
+      r.sleep();
+    } else if (sim_dt - elapsed > 0) {
+      ros::Duration(sim_dt - elapsed).sleep();
+    } else {
+      ROS_INFO_STREAM_THROTTLE(
+          3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
     }
     ros::spinOnce();
   }
