@@ -18,7 +18,7 @@ dynamics:
 sim_dynamics:
   dt: 0.015
   has_filter: true
-  apply_filter: true
+  apply_filter: false
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04, 0.0,
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0 ]
   gains:

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import rospkg
 rospack = rospkg.RosPack()
 ROOT_DIR = rospack.get_path("mppi_manipulation")
-LOG_FILE = os.path.join(ROOT_DIR, "data", "logs", "test.silo")
+LOG_FILE = os.path.join(ROOT_DIR, "data", "logs", "test_no_filter.silo")
 REQUIRED_FIELDS = [
     "log/sim_time", "log/input", "log/input_filtered",
     "log/joint_limits_violation", "log/solver/rollouts/min_cost",
@@ -82,7 +82,7 @@ def matrix_plot(m: np.ndarray, prefix="value"):
     """
     fig, ax = plt.subplots()
     for i in range(m.shape[1]):
-        ax.plot(m[:, i], label=f"prefix_{i}")
+        ax.plot(m[:, i], label=f"{prefix}_{i}")
 
 
 ###############################
@@ -94,15 +94,22 @@ if __name__ == "__main__":
     print_keys(silo)
     silo_dict = to_dictionary(silo, REQUIRED_FIELDS)
 
-    fig, ax = plt.subplots()
-    ax.plot(silo_dict['sim_time'], silo_dict['input'][:, 0], label="input")
-    ax.plot(silo_dict['sim_time'],
-            silo_dict['input_filtered'][:, 0],
-            label="input_filtered")
-    ax.plot(silo_dict['sim_time'],
-            silo_dict['joint_limits_violation'][:, 0],
-            label="constraint_violation")
-    #ax.plot(silo_dict['sim_time'], silo_dict['min_cost'], label="min_cost")
+    fig1, ax1 = plt.subplots()
+    ax1.plot(silo_dict['sim_time'], silo_dict['input'][:, 0], label="input")
+    ax1.plot(silo_dict['sim_time'],
+             silo_dict['input_filtered'][:, 0],
+             label="input_filtered")
+    ax1.grid()
+    ax1.legend()
+
+    # ax.plot(silo_dict['sim_time'],
+    #         silo_dict['joint_limits_violation'][:, 0],
+    #         label="constraint_violation")
+
+    fig2, ax2 = plt.subplots()
+    ax2.plot(silo_dict['sim_time'], silo_dict['min_cost'], label="min_cost")
+    ax2.grid()
+    ax2.legend()
 
     matrix_plot(silo_dict['input'], prefix="input")
     plt.legend()

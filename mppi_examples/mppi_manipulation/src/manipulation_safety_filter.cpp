@@ -103,7 +103,6 @@ void PandaMobileSafetyFilter::update_violation(const Eigen::VectorXd& x) {
 bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
   if (params_.verbose) filter_->print_problem();
   filter_->solve(u_opt);
-  passivity_constraint_ptr_->integrate_tank(u_opt);
 
   // TODO(giuseppe) must return the correct status
   return true;

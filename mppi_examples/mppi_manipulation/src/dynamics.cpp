@@ -44,7 +44,8 @@ void PandaRaisimDynamics::initialize_world(
 
   // robot dof
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
-  state_dimension_ = 2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
+  state_dimension_ =
+      2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
   input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   x_ = mppi::observation_t::Zero(state_dimension_);
 
@@ -62,7 +63,7 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_p_desired.setZero(robot_dof_);
   joint_v_desired.setZero(robot_dof_);
 
-  // clang-format on
+  // clang-format off
   joint_p_gain.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
   joint_d_gain.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
   joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) =
@@ -71,7 +72,7 @@ void PandaRaisimDynamics::initialize_pd() {
       params_.gains.arm_gains.Kd;
   joint_p_gain.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
   joint_d_gain.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
-  // clang-format off
+  // clang-format on
 
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
@@ -92,10 +93,13 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   if (sf_) {
     get_external_torque(torque_ext_);
     sf_->update(x_, u, torque_ext_);
-    if (params_.apply_filter)
+    if (params_.apply_filter) {
       sf_->apply(u_opt_);
-  }
-  else {
+    } else {
+      u_opt_ = u.head<10>();
+    }
+    sf_->passivity_constraint()->integrate_tank(u_opt_);
+  } else {
     u_opt_ = u;
   }
 
@@ -144,10 +148,9 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x) {
 
   // reset arm
   panda->setState(x_.head<BASE_ARM_GRIPPER_DIM>(),
-                    x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
-  object->setState(
-      x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
-      x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
+                  x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
+  object->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
+                   x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
 }
 
 mppi::input_t PandaRaisimDynamics::get_zero_input(

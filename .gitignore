@@ -4,4 +4,5 @@
 cmake-build-release/
 cmake-build-debug/
 *.so
+*.silo
 .ipynb_checkpoints/

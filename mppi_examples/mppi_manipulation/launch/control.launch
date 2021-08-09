@@ -9,7 +9,7 @@
     <arg name="enable_obstacle" default="false"/>
 
     <arg name="experiment" default="false"/>
-    <arg name="experiment_id" default="manipulation"/>
+    <arg name="experiment_name" default="mppi_manipulation"/>
 
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
@@ -50,6 +50,7 @@
         <param name="references_file" value="$(find mppi_manipulation)/config/experiments/references.yaml"/>
         <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_manipulation)/params/controller.yaml"/>
+        <param name="experiment_name" value="$(arg experiment_name)"/>
     </node>
 
     <include file="$(find mppi_manipulation)/launch/common.launch">
@@ -57,10 +58,4 @@
         <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
     </include>
 
-    <group if="$(arg experiment)">
-        <node pkg="mppi_ros" type="record_data.py" name="record_data">
-            <param name="experiment_id" value="$(arg experiment_id)"/>
-        </node>
-        <node pkg="mppi_manipulation" type="demo.py" name="demo" output="screen"/>
-    </group>
 </launch>
