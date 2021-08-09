@@ -1,0 +1,37 @@
+//
+// Created by giuseppe on 09.08.21.
+//
+#pragma once
+#include <ros/ros.h>
+#include <Eigen/Core>
+
+namespace manipulation {
+struct FilterParams {
+  std::string urdf;
+
+  Eigen::Matrix<double, 10, 1> u_min;
+  Eigen::Matrix<double, 10, 1> u_max;
+  Eigen::Matrix<double, 10, 1> q_min;
+  Eigen::Matrix<double, 10, 1> q_max;
+
+  double max_reach = 0.8;
+  double min_dist = 0.15;
+
+  bool joint_limits = true;
+  bool input_limits = true;
+  bool cartesian_limits = false;
+
+  bool passivity_constraint = false;
+  double tank_initial_energy = 1.0;
+  double tank_lower_energy_bound = 1e-3;
+  double tank_integration_dt = 0.01;
+
+  bool verbose = false;
+
+  bool init_from_ros(ros::NodeHandle& nh);
+};
+
+}  // namespace manipulation
+
+std::ostream& operator<<(std::ostream& os,
+                         const manipulation::FilterParams& settings);

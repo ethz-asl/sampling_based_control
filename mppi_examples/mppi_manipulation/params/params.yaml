@@ -1,0 +1,99 @@
+dynamics:
+  dt: 0.015
+  has_filter: false
+  apply_filter: false
+  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04, 0.0,
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0]
+  gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+
+sim_dynamics:
+  dt: 0.015
+  has_filter: true
+  apply_filter: true
+  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04, 0.0,
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0 ]
+  gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+
+cost:
+  regularization: 0.0
+  linear_weight: 100.0
+  linear_weight_opening: 100.0
+
+  angular_weight: 10.0
+  angular_weight_opening: 1.0
+
+  min_dist: 0.15
+  max_reach: 0.65
+  reach_weight: 0
+  reach_weight_slope: 0
+
+  obstacle_weight: 0
+  obstacle_weight_slope: 0
+  obstacle_radius: 0.8
+
+  contact_weight: 10.0
+
+  object_weight: 10
+  object_tolerance: 0.01
+
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
+
+  upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+  lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+
+  joint_limit_cost: 1000 #1000
+  joint_limit_slope: 1000000 #100
+
+safety_filter:
+  input_limits: true
+  u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
+  u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+
+  joint_limits: true
+  q_min: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+  q_max: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+
+  cartesian_limits: true
+  max_reach: 0.65
+  min_distance: 0.15
+
+  passivity_constraint:
+    active: true
+    initial_energy: 10.0
+    lower_bound: 0.01
+    dt: 0.015
+
+  verbose: false
+
+
+# For valve
+# grasp_translation_offset: [0.0, 0.01, 0.07]
+# grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x
+# For microwave
+# grasp_translation_offset: [0.0, 0.0, 0.0]
+# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+# For drawer
+# grasp_translation_offset: [0.0, 0.0, 0.0]
+# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+# For door
+# grasp_translation_offset: [0.0, 0.0, 0.0]
+# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y

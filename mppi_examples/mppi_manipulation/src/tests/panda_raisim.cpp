@@ -33,8 +33,13 @@ int main(int argc, char** argv) {
       nh.param<std::string>("/robot_description_raisim", "");
   auto object_description_raisim =
       nh.param<std::string>("/object_description_raisim", "");
-  ManipulatorDynamicsRos simulation(nh, robot_description_raisim,
-                                    object_description_raisim, TIMESTEP);
+
+  DynamicsParams dynamics_params;
+  if (!dynamics_params.init_from_ros(nh)){
+    ROS_ERROR("Failed to parse dynamics params");
+    return 0;
+  }
+  ManipulatorDynamicsRos simulation(nh, dynamics_params);
 
   // Reset the state to a default configuration
   Eigen::VectorXd x, x_snapshot;

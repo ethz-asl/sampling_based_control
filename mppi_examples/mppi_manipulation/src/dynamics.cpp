@@ -11,24 +11,25 @@
 
 namespace manipulation {
 
-PandaRaisimDynamics::PandaRaisimDynamics(
-    const std::string& robot_description, const std::string& object_description,
-    const double dt, const PandaRaisimGains& gains,
-    const std::unique_ptr<PandaMobileSafetyFilter>& safety_filter)
-    : dt_(dt), gains_(gains) {
-  initialize_world(robot_description, object_description);
+PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
+    : params_(params) {
+  initialize_world(params_.robot_description, params_.object_description);
   initialize_pd();
   set_collision();
-  sf_ = safety_filter ? std::make_unique<PandaMobileSafetyFilter>(
-                            safety_filter->get_urdf_string(),
-                            safety_filter->get_settings())
-                      : nullptr;
+  if (params_.has_filter){
+    sf_ = std::make_unique<PandaMobileSafetyFilter>(params_.filter_params);
+  }
+  else{
+    sf_ = nullptr;
+  }
 };
 
 void PandaRaisimDynamics::initialize_world(
     const std::string& robot_description,
     const std::string& object_description) {
-  sim_.setTimeStep(dt_);
+  std::cout << "Initializing world" << std::endl;
+  dt_ = params_.dt;
+  sim_.setTimeStep(params_.dt);
   sim_.setERP(0., 0.);
   sim_.setMaterialPairProp("steel", "steel", 0.01, 0.0, 0.0);
   robot_description_ = robot_description;
@@ -42,11 +43,13 @@ void PandaRaisimDynamics::initialize_world(
   object->setGeneralizedForce(Eigen::VectorXd::Zero(object->getDOF()));
   object->setGeneralizedCoordinate(Eigen::VectorXd::Zero(1));
 
-  // robot dof and base check
+  // robot dof
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
   state_dimension_ = 2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
   input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   x_ = mppi::observation_t::Zero(state_dimension_);
+
+  reset(params_.initial_state);
 }
 
 void PandaRaisimDynamics::initialize_pd() {
@@ -61,12 +64,12 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_v_desired.setZero(robot_dof_);
 
   // clang-format on
-  joint_p_gain.head(BASE_DIMENSION) = gains_.base_gains.Kp;
-  joint_d_gain.head(BASE_DIMENSION) = gains_.base_gains.Kd;
-  joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = gains_.arm_gains.Kp;
-  joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = gains_.arm_gains.Kd;
-  joint_p_gain.tail(GRIPPER_DIMENSION) = gains_.gripper_gains.Kp;
-  joint_d_gain.tail(GRIPPER_DIMENSION) = gains_.gripper_gains.Kd;
+  joint_p_gain.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
+  joint_d_gain.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
+  joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kp;
+  joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kd;
+  joint_p_gain.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
+  joint_d_gain.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
   // clang-format off
 
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
@@ -88,8 +91,10 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   if (sf_) {
     get_external_torque(torque_ext_);
     sf_->update(x_, u, torque_ext_);
-    sf_->apply(u_opt_);
-  } else {
+    if (params_.apply_filter)
+      sf_->apply(u_opt_);
+  }
+  else {
     u_opt_ = u;
   }
 

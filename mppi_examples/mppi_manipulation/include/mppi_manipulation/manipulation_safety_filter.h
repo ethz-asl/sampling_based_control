@@ -10,6 +10,8 @@
 #include "safety_filter/constraints/passivity_constraint.hpp"
 #include "safety_filter/filter/filter.hpp"
 
+#include "mppi_manipulation/params/filter_params.h"
+
 namespace manipulation {
 
 class PandaMobileJointLimitsConstraints
@@ -23,39 +25,14 @@ class PandaMobileJointLimitsConstraints
   void update_jacobian(const Eigen::VectorXd& x) override;
 };
 
-struct PandaMobileSafetyFilterSettings {
-  Eigen::Matrix<double, 10, 1> u_min;
-  Eigen::Matrix<double, 10, 1> u_max;
-  Eigen::Matrix<double, 10, 1> q_min;
-  Eigen::Matrix<double, 10, 1> q_max;
-
-  double max_reach = 0.8;
-  double min_dist = 0.15;
-
-  bool joint_limits = true;
-  bool input_limits = true;
-  bool cartesian_limits = false;
-
-  bool passivity_constraint = false;
-  double tank_initial_energy = 1.0;
-  double tank_lower_energy_bound = 1e-3;
-  double tank_integration_dt = 0.01;
-
-  bool verbose = false;
-
-  bool init_from_ros(ros::NodeHandle& nh);
-};
-
 class PandaMobileSafetyFilter {
  public:
   using passivity_ptr_t = std::shared_ptr<safety_filter::PassivityConstraint>;
 
-  PandaMobileSafetyFilter(const std::string& urdf_string,
-                          const PandaMobileSafetyFilterSettings& settings);
+  PandaMobileSafetyFilter(const FilterParams& settings);
 
-  void update(const Eigen::VectorXd& x,
-                                       const Eigen::VectorXd& u,
-                                       const Eigen::VectorXd& torque);
+  void update(const Eigen::VectorXd& x, const Eigen::VectorXd& u,
+              const Eigen::VectorXd& torque);
   bool apply(Eigen::VectorXd& u_opt);
 
   void update_violation(const Eigen::VectorXd& x);
@@ -65,20 +42,23 @@ class PandaMobileSafetyFilter {
     return passivity_constraint_ptr_;
   }
 
-  inline const PandaMobileSafetyFilterSettings get_settings() const {
-    return settings_;
+  inline const FilterParams get_settings() const {
+    return params_;
   }
-  inline const std::string get_urdf_string() const { return urdf_; }
-  inline const std::unique_ptr<safety_filter::SafetyFilter>& get_filter(){ return filter_;}
+  inline const std::string get_urdf_string() const { return params_.urdf; }
+  inline const std::unique_ptr<safety_filter::SafetyFilter>& get_filter() {
+    return filter_;
+  }
 
  public:
-  std::map<std::string, std::shared_ptr<safety_filter::ConstraintBase>> constraints_;
+  std::map<std::string, std::shared_ptr<safety_filter::ConstraintBase>>
+      constraints_;
 
  private:
   std::string urdf_;
-  PandaMobileSafetyFilterSettings settings_;
+  FilterParams params_;
   std::unique_ptr<safety_filter::SafetyFilter> filter_;
   passivity_ptr_t passivity_constraint_ptr_;
 };
 
-}  // namespace panda_mobile
+}  // namespace manipulation

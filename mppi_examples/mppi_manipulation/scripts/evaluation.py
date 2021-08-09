@@ -1,13 +1,17 @@
-import matplotlib.pyplot as plt
+import os
 import numpy as np
 import signal_logger
+import matplotlib.pyplot as plt
 
 ###############################
 # Definitions
 ###############################
-LOG_FILE = "/home/giuseppe/.ros/silo_20210729_14-34-53_00025.silo"
+import rospkg
+rospack = rospkg.RosPack()
+ROOT_DIR = rospack.get_path("mppi_manipulation")
+LOG_FILE = os.path.join(ROOT_DIR, "data", "logs", "test.silo")
 REQUIRED_FIELDS = [
-    "log/sim_time", "log/input", "log/input_filt",
+    "log/sim_time", "log/input", "log/input_filtered",
     "log/joint_limits_violation", "log/solver/rollouts/min_cost",
     "log/solver/rollouts/max_cost"
 ]
@@ -93,8 +97,8 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     ax.plot(silo_dict['sim_time'], silo_dict['input'][:, 0], label="input")
     ax.plot(silo_dict['sim_time'],
-            silo_dict['input_filt'][:, 0],
-            label="input_filt")
+            silo_dict['input_filtered'][:, 0],
+            label="input_filtered")
     ax.plot(silo_dict['sim_time'],
             silo_dict['joint_limits_violation'][:, 0],
             label="constraint_violation")

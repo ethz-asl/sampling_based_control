@@ -1,3 +1,9 @@
+//
+// Created by giuseppe on 09.08.21.
+//
+
+#pragma once
+
 #include <ros/ros.h>
 #include <Eigen/Core>
 #include "mppi_manipulation/dimensions.h"
@@ -35,23 +41,18 @@ struct gain_pair {
   }
 };
 
-struct PandaRaisimGains {
-  PandaRaisimGains()
-      : base_gains(0, 1000), arm_gains(0.0, 10.0), gripper_gains(100.0, 50.0){};
+struct PDGains {
+  PDGains()
+  : base_gains(0, 1000), arm_gains(0.0, 10.0), gripper_gains(100.0, 50.0){};
 
   gain_pair<BASE_DIMENSION> base_gains;
   gain_pair<ARM_DIMENSION> arm_gains;
   gain_pair<GRIPPER_DIMENSION> gripper_gains;
 
-  bool parse_from_ros(const ros::NodeHandle& nh) {
-    if (!base_gains.parse_from_ros(nh, "base_gains")) return false;
-    if (!arm_gains.parse_from_ros(nh, "arm_gains")) return false;
-    if (!gripper_gains.parse_from_ros(nh, "gripper_gains")) return false;
-    return true;
-  }
+  bool init_from_ros(const ros::NodeHandle& nh);
 };
 
 }  // namespace manipulation
 
 std::ostream& operator<<(std::ostream& os,
-                         const manipulation::PandaRaisimGains& gains);
+    const manipulation::PDGains& gains);

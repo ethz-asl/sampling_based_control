@@ -17,10 +17,7 @@ namespace manipulation {
 class ManipulatorDynamicsRos : public PandaRaisimDynamics {
  public:
   ManipulatorDynamicsRos(
-      const ros::NodeHandle& nh, const std::string& robot_description,
-      const std::string& object_description, const double dt,
-      const PandaRaisimGains& = PandaRaisimGains(),
-      const std::unique_ptr<PandaMobileSafetyFilter>& = nullptr);
+      const ros::NodeHandle& nh, const DynamicsParams& params);
   ~ManipulatorDynamicsRos() = default;
 
  public:

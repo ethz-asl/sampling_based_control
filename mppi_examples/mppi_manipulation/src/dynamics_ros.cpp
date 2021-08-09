@@ -10,13 +10,9 @@
 namespace manipulation {
 
 ManipulatorDynamicsRos::ManipulatorDynamicsRos(
-    const ros::NodeHandle& nh, const std::string& robot_description,
-    const std::string& object_description, const double dt,
-    const PandaRaisimGains& gains,
-    const std::unique_ptr<PandaMobileSafetyFilter>& safety_filter)
+    const ros::NodeHandle& nh, const DynamicsParams& params)
     : nh_(nh),
-      PandaRaisimDynamics(robot_description, object_description, dt,
-                          gains, safety_filter) {
+      PandaRaisimDynamics(params) {
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
   object_state_publisher_ =
@@ -57,12 +53,10 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
 
   tau_ext_msg_.data.resize(get_panda()->getDOF());
 
-  // does not optimize the gripper input
-
-  u_opt_.setZero(input_dimension_-1);
-  signal_logger::add(u_opt_, "input_filt");
-
   if (sf_) {
+    // does not optimize the gripper input
+    u_opt_.setZero(input_dimension_-1);
+    signal_logger::add(u_opt_, "input_filtered");
     for (const auto& constraint : sf_->constraints_) {
       signal_logger::add(constraint.second->violation_,
                          constraint.first + "_violation");

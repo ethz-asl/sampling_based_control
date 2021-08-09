@@ -18,8 +18,8 @@
 #include <numeric>
 #include <stdexcept>
 #include "mppi_manipulation/dimensions.h"
-#include "mppi_manipulation/gains.h"
 #include "mppi_manipulation/manipulation_safety_filter.h"
+#include "mppi_manipulation/params/dynamics_params.h"
 
 namespace manipulation {
 
@@ -30,11 +30,7 @@ struct force_t {
 
 class PandaRaisimDynamics : public mppi::Dynamics {
  public:
-  PandaRaisimDynamics(
-      const std::string& robot_description,
-      const std::string& object_description, const double dt,
-      const PandaRaisimGains& = PandaRaisimGains(),
-      const std::unique_ptr<PandaMobileSafetyFilter>& = nullptr);
+  PandaRaisimDynamics(const DynamicsParams& params);
   ~PandaRaisimDynamics() = default;
  private:
   void initialize_world(const std::string& robot_description,
@@ -47,8 +43,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   size_t get_input_dimension() override { return input_dimension_; }
   size_t get_state_dimension() override { return state_dimension_; }
   mppi::dynamics_ptr create() override {
-    return std::make_shared<PandaRaisimDynamics>(
-        robot_description_, object_description_, dt_, gains_, sf_);
+    return std::make_shared<PandaRaisimDynamics>(params_);
   }
 
   mppi::dynamics_ptr clone() const override {
@@ -90,6 +85,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   }
 
  protected:
+  DynamicsParams params_;
   double dt_;
   std::string robot_description_;
   std::string object_description_;
@@ -103,8 +99,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   Eigen::VectorXd cmd, cmdv;
   Eigen::VectorXd joint_p_gain, joint_d_gain;
   Eigen::VectorXd joint_p_desired, joint_v_desired;
-
-  PandaRaisimGains gains_;
 
   Eigen::VectorXd u_opt_;
   Eigen::VectorXd torque_ext_;

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <arg name="debug" default="false"/>
-    <arg name="fixed_base" default="true"/>
     <arg name="object" default="door"/>
     <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
     <arg name="object_height" default="1.0"/>
@@ -12,7 +11,7 @@
       collision_hand:=true
       add_finger:=true
       custom_fingers:=true
-      fixed_base:=$(arg fixed_base)"/>
+      fixed_base:=false"/>
 
     <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
     <param name="robot_description_fixed_base" command="$(find xacro)/xacro $(arg description_file)
@@ -31,10 +30,10 @@
       collision_format:='obj'
       add_finger:=true
       custom_fingers:=true
-      no_position_limits:=false
+      no_position_limits:=true
       friction:=0.0
       damping:=10.0
-      fixed_base:=$(arg fixed_base)"/>
+      fixed_base:=false"/>
 
     <!-- The safety filter is hard coded to not consider the gripper -->
     <param name="robot_description_safety_filter" command="$(find xacro)/xacro $(arg description_file)
@@ -44,7 +43,7 @@
       no_position_limits:=false
       friction:=0.0
       damping:=10.0
-      fixed_base:=$(arg fixed_base)"/>
+      fixed_base:=false"/>
 
     <param name="object_description"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro

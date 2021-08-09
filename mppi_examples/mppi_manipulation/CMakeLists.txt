@@ -35,7 +35,10 @@ catkin_package(
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
-        src/gains.cpp
+        src/params/gains.cpp
+        src/params/filter_params.cpp
+        src/params/dynamics_params.cpp
+        src/params/cost_params.cpp
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp

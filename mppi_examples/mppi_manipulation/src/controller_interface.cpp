@@ -10,7 +10,8 @@
 #include "mppi_manipulation/cost.h"
 #include "mppi_manipulation/dynamics.h"
 #include "mppi_manipulation/manipulation_safety_filter.h"
-
+#include "mppi_manipulation/params/dynamics_params.h"
+#include "mppi_manipulation/params/cost_params.h"
 #include <mppi_pinocchio/ros_conversions.h>
 
 #include <geometry_msgs/TransformStamped.h>
@@ -109,20 +110,16 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   init_model(robot_description, object_description);
 
   // -------------------------------
-  // ros params
+  // dynamics
   // -------------------------------
-  std::string robot_description_raisim, object_description_raisim;
-  if (!nh_.param<std::string>("/robot_description_raisim",
-                              robot_description_raisim, "")) {
-    throw std::runtime_error(
-        "Could not parse robot_description_raisim. Is the parameter set?");
-  }
+  mppi::dynamics_ptr dynamics;
+  DynamicsParams dynamics_params;
+  if (!dynamics_params.init_from_ros(nh_)){
+    ROS_ERROR("Failed to init dynamics parameters.");
+    return false;
+  };
+  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params);
 
-  if (!nh_.param<std::string>("/object_description_raisim",
-                              object_description_raisim, "")) {
-    throw std::runtime_error(
-        "Could not parse object_description_raisim. Is the parameter set?");
-  }
 
   // -------------------------------
   // config
@@ -138,56 +135,14 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   }
 
   // -------------------------------
-  // safety filter
-  // -------------------------------
-  bool apply_safety_filter;
-  nh_.param<bool>("apply_predictive_safety_filter", apply_safety_filter, false);
-
-  std::unique_ptr<PandaMobileSafetyFilter> safety_filter(nullptr);
-  if (apply_safety_filter) {
-    PandaMobileSafetyFilterSettings filter_settings;
-    if (!filter_settings.init_from_ros(nh_) && apply_safety_filter) {
-      throw std::runtime_error("Failed to initialize the safety filter!");
-    }
-
-    std::string robot_description_sf;
-    if (!nh_.param<std::string>("/robot_description_safety_filter",
-                                robot_description_sf, "")) {
-      throw std::runtime_error(
-          "No /robot_description_safety_filter found on the param server.");
-    }
-    safety_filter = std::make_unique<PandaMobileSafetyFilter>(
-        robot_description_sf, filter_settings);
-  }
-
-  // -------------------------------
-  // dynamics
-  // -------------------------------
-  mppi::dynamics_ptr dynamics;
-
-  PandaRaisimGains dynamics_gains;
-  if (!dynamics_gains.parse_from_ros(nh_)) {
-    ROS_ERROR("Failed to parse dynamics gains.");
-    return false;
-  }
-  ROS_INFO_STREAM("Successfully parsed dynamics gains: \n" << dynamics_gains);
-  dynamics = std::make_shared<PandaRaisimDynamics>(
-      robot_description_raisim, object_description_raisim, config_.step_size,
-      dynamics_gains, safety_filter);
-
-  std::cout << "Done." << std::endl;
-
-  // -------------------------------
   // cost
   // -------------------------------
-  PandaCostParam cost_param;
-  if (!cost_param.parse_from_ros(nh_)) {
+  CostParams cost_params;
+  if (!cost_params.init_from_ros(nh_)) {
     ROS_ERROR("Failed to parse cost parameters.");
     return false;
   }
-  ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param);
-  auto cost = std::make_shared<PandaCost>(robot_description, object_description,
-                                          cost_param);
+  auto cost = std::make_shared<PandaCost>(cost_params);
 
   // -------------------------------
   // policy
