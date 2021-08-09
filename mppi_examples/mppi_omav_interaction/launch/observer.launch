@@ -17,9 +17,4 @@
         <remap from="joint_states" to="/robot/joint_state"/>
     </node>
 
-    <!--    State observer node-->
-    <node pkg="mppi_omav_interaction" name="state_observer_node" type="state_observer_node" output="screen" >
-        <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
-        <param name="observer_update_frequency" value="250"/>
-    </node>
 </launch>

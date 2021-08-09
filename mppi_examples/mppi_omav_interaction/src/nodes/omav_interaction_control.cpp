@@ -222,8 +222,8 @@ int main(int argc, char **argv) {
 
   // init control input
   mppi::DynamicsBase::input_t u = input_t::Zero(6);
-
   auto sim_dt = nh.param<double>("sim_dt", 0.015);
+  // Initialize values for the manual timing
   double sim_time = 0.0;
   int index_temp = 0.0;
 
@@ -300,17 +300,27 @@ int main(int argc, char **argv) {
               .count() /
           1000.0;
     }
+    // After the first trajectory is sent input timing is started
     if (omav_trajectory_node->first_trajectory_sent_) {
+      // Calculation of the index where we are in the last sent trajectory based
+      // on the time the last trajectory that was sent
       omav_trajectory_node->shift_index_ =
           std::ceil(omav_trajectory_node->target_state_time_ / 0.015);
+      // Input does only have to be shifted if the trajectory index changed and
+      // exception is made when we are close to 0.1s when its crucial the
+      // trajectory optimized is continuous
       if (omav_trajectory_node->shift_index_ != index_temp &&
           omav_trajectory_node->shift_index_ < 6) {
         index_temp = omav_trajectory_node->shift_index_;
+        // Input is shifted in the MPPI as well as the intitial values of the
+        // desired trajectories of the intregrators
         controller.manually_shift_input(index_temp);
         omav_trajectory_node->set_target(
             omav_trajectory_node->current_trajectory_.points[index_temp]);
       } else if (omav_trajectory_node->shift_index_ != index_temp &&
                  !omav_trajectory_node->shift_lock_) {
+        // To ensure the trajectories are contiunous even if the controller
+        // takes longer than 0.015 to run the "final state" is set earlier
         omav_interaction::conversions::InterpolateTrajectoryPoints(
             omav_trajectory_node->current_trajectory_.points[6],
             omav_trajectory_node->current_trajectory_.points[7],
@@ -318,6 +328,9 @@ int main(int argc, char **argv) {
         controller.manually_shift_input(7);
         omav_trajectory_node->shift_lock_ = true;
       } else if (omav_trajectory_node->target_state_time_ > 0.09) {
+        // Experienced some problems where I ran into problems due to
+        // multithreading, so to ensure no funny buissnes happening andded this
+        // saveguard
         controller.manually_shift_input(0);
       }
     }
