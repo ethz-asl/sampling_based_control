@@ -3,12 +3,12 @@
 //
 
 #pragma once
-#include "mppi_manipulation/params/gains.h"
 #include "mppi_manipulation/params/filter_params.h"
+#include "mppi_manipulation/params/gains.h"
 
 namespace manipulation {
 
-struct DynamicsParams{
+struct DynamicsParams {
   double dt;
   std::string robot_description;
   std::string object_description;
@@ -19,9 +19,10 @@ struct DynamicsParams{
   bool apply_filter;
   FilterParams filter_params;
 
-  bool init_from_ros(ros::NodeHandle& nh, bool is_sim=false);
+  bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };
 
-}
+}  // namespace manipulation
 
-std::ostream& operator<<(std::ostream& os, const manipulation::DynamicsParams& params);
+std::ostream& operator<<(std::ostream& os,
+                         const manipulation::DynamicsParams& params);

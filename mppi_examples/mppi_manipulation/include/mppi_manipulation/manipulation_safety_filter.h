@@ -42,9 +42,7 @@ class PandaMobileSafetyFilter {
     return passivity_constraint_ptr_;
   }
 
-  inline const FilterParams get_settings() const {
-    return params_;
-  }
+  inline const FilterParams get_settings() const { return params_; }
   inline const std::string get_urdf_string() const { return params_.urdf; }
   inline const std::unique_ptr<safety_filter::SafetyFilter>& get_filter() {
     return filter_;

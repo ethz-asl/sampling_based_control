@@ -9,10 +9,9 @@
 
 namespace manipulation {
 
-ManipulatorDynamicsRos::ManipulatorDynamicsRos(
-    const ros::NodeHandle& nh, const DynamicsParams& params)
-    : nh_(nh),
-      PandaRaisimDynamics(params) {
+ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
+                                               const DynamicsParams& params)
+    : nh_(nh), PandaRaisimDynamics(params) {
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
   object_state_publisher_ =
@@ -55,7 +54,7 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
 
   if (sf_) {
     // does not optimize the gripper input
-    u_opt_.setZero(input_dimension_-1);
+    u_opt_.setZero(input_dimension_ - 1);
     signal_logger::add(u_opt_, "input_filtered");
     for (const auto& constraint : sf_->constraints_) {
       signal_logger::add(constraint.second->violation_,

@@ -16,10 +16,9 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
   initialize_world(params_.robot_description, params_.object_description);
   initialize_pd();
   set_collision();
-  if (params_.has_filter){
+  if (params_.has_filter) {
     sf_ = std::make_unique<PandaMobileSafetyFilter>(params_.filter_params);
-  }
-  else{
+  } else {
     sf_ = nullptr;
   }
 };
@@ -66,8 +65,10 @@ void PandaRaisimDynamics::initialize_pd() {
   // clang-format on
   joint_p_gain.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
   joint_d_gain.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
-  joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kp;
-  joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kd;
+  joint_p_gain.segment(BASE_DIMENSION, ARM_DIMENSION) =
+      params_.gains.arm_gains.Kp;
+  joint_d_gain.segment(BASE_DIMENSION, ARM_DIMENSION) =
+      params_.gains.arm_gains.Kd;
   joint_p_gain.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
   joint_d_gain.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
   // clang-format off

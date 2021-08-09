@@ -7,12 +7,12 @@
  */
 
 #include "mppi_manipulation/controller_interface.h"
+#include <mppi_pinocchio/ros_conversions.h>
 #include "mppi_manipulation/cost.h"
 #include "mppi_manipulation/dynamics.h"
 #include "mppi_manipulation/manipulation_safety_filter.h"
-#include "mppi_manipulation/params/dynamics_params.h"
 #include "mppi_manipulation/params/cost_params.h"
-#include <mppi_pinocchio/ros_conversions.h>
+#include "mppi_manipulation/params/dynamics_params.h"
 
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -114,12 +114,11 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   mppi::dynamics_ptr dynamics;
   DynamicsParams dynamics_params;
-  if (!dynamics_params.init_from_ros(nh_)){
+  if (!dynamics_params.init_from_ros(nh_)) {
     ROS_ERROR("Failed to init dynamics parameters.");
     return false;
   };
   dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params);
-
 
   // -------------------------------
   // config

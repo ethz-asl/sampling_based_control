@@ -7,10 +7,9 @@
 using namespace manipulation;
 
 bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
-  if (!nh.param<std::string>("/robot_description_safety_filter",
-                              urdf, "") || urdf.empty()) {
-    ROS_ERROR(
-        "Failed to parse /robot_description_safety_filter or invalid.");
+  if (!nh.param<std::string>("/robot_description_safety_filter", urdf, "") ||
+      urdf.empty()) {
+    ROS_ERROR("Failed to parse /robot_description_safety_filter or invalid.");
     return false;
   }
 
@@ -127,8 +126,7 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
   return true;
 }
 
-std::ostream& operator<<(std::ostream& os,
-    const FilterParams& settings) {
+std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
   // clang-format off
   os << "PandaMobileSafetyFilterSettings: " << std::endl;
 

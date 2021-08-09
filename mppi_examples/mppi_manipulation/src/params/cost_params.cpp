@@ -7,12 +7,14 @@
 using namespace manipulation;
 
 bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
-  if (!nh.getParam("/robot_description", robot_description) || robot_description.empty()) {
+  if (!nh.getParam("/robot_description", robot_description) ||
+      robot_description.empty()) {
     ROS_ERROR("Failed to parse /robot_description or invalid!");
     return false;
   }
 
-  if (!nh.getParam("/object_description", object_description) || object_description.empty()) {
+  if (!nh.getParam("/object_description", object_description) ||
+      object_description.empty()) {
     ROS_ERROR("Failed to parse /object_description or invalid!");
     return false;
   }
@@ -47,7 +49,8 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
   }
 
   std::vector<double> trans;
-  if (!nh.getParam("cost/grasp_translation_offset", trans) || trans.size() != 3) {
+  if (!nh.getParam("cost/grasp_translation_offset", trans) ||
+      trans.size() != 3) {
     ROS_ERROR("Failed to parse cost/grasp_translation_offset or invalid!");
     return false;
   }
@@ -87,24 +90,25 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
   }
 
   if (!nh.getParam("cost/upper_joint_limits", upper_joint_limits) ||
-  upper_joint_limits.size() != 10) {
+      upper_joint_limits.size() != 10) {
     ROS_ERROR("Failed to parse cost/upper_joint_limits or invalid!");
     return false;
   }
 
   if (!nh.getParam("cost/lower_joint_limits", lower_joint_limits) ||
-  lower_joint_limits.size() != 10) {
+      lower_joint_limits.size() != 10) {
     ROS_ERROR("Failed to parse cost/lower_joint_limits or invalid!");
     return false;
   }
 
-  if (!nh.getParam("cost/joint_limit_cost", Q_joint_limit) || Q_joint_limit < 0) {
+  if (!nh.getParam("cost/joint_limit_cost", Q_joint_limit) ||
+      Q_joint_limit < 0) {
     ROS_ERROR("Failed to parse cost/joint_limit_cost or invalid!");
     return false;
   }
 
   if (!nh.getParam("cost/joint_limit_slope", Q_joint_limit_slope) ||
-  Q_joint_limit_slope < 0) {
+      Q_joint_limit_slope < 0) {
     ROS_ERROR("Failed to parse cost/joint_limit_slope or invalid!");
     return false;
   }
@@ -133,7 +137,7 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
 }
 
 std::ostream& operator<<(std::ostream& os,
-    const manipulation::CostParams& param) {
+                         const manipulation::CostParams& param) {
   // clang-format off
   os << "========================================" << std::endl;
   os << "        Panda Cost Parameters           " << std::endl;

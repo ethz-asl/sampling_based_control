@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
       nh.param<std::string>("/object_description_raisim", "");
 
   DynamicsParams dynamics_params;
-  if (!dynamics_params.init_from_ros(nh)){
+  if (!dynamics_params.init_from_ros(nh)) {
     ROS_ERROR("Failed to parse dynamics params");
     return 0;
   }
