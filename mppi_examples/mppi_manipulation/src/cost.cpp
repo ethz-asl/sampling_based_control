@@ -29,15 +29,15 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                                      const mppi::reference_t& ref,
                                      const double t) {
   double cost = 0.0;
+  int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
 
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+
+  // regularization cost
   cost += param_.Qreg *
           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
 
-  // end effector reaching
-  int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
-
-  // end effector reaching task
+  // end effector reaching cost
   if (mode == 0) {
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
@@ -50,7 +50,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     if (x.tail<1>()(0) > 0) cost += param_.Qc;
   }
 
-  // reach the handle with open gripper
+  // handle reaching cost
   else if (mode == 1) {
     object_model_.update_state(
         x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
@@ -64,8 +64,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
     if (x.tail<1>()(0) > 0) cost += param_.Qc;
   }
-  // keep only position control in proximity of the handle and no gripper cost
-  // move the object
+  // object displacement cost
   else if (mode == 2) {
     object_model_.update_state(
         x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
@@ -81,17 +80,16 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         x.tail(2 * OBJECT_DIMENSION + CONTACT_STATE).head<1>()(0) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
 
-    // when almost opened reintroduce contact cost to release contact
     cost += object_error * object_error * param_.Q_obj;
   }
 
-  // obstacle 2d distance projected on base plane
+  // 2d obstacle cost
   double obstacle_dist = (x.head<2>() - ref.segment<2>(7)).norm();
   if (obstacle_dist < param_.ro) {
     cost += param_.Qo + param_.Qos * (param_.ro - obstacle_dist);
   }
 
-  // 2d reach computation
+  // arm reach cost
   double reach;
   robot_model_.get_error(arm_base_frame_, tracked_frame_, error_);
   reach = error_.head<2>().norm();
@@ -99,8 +97,13 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += param_.Q_reach +
             param_.Q_reachs * (std::pow(reach - param_.max_reach, 2));
   }
+  if (reach < param_.min_dist) {
+    std::cout << "reach is: " << reach << std::endl;
+    cost += param_.Q_reach +
+            param_.Q_reachs * (std::pow(reach - param_.min_dist, 2));
+  }
 
-  // joint limits
+  // joint limits cost
   for (size_t i = 0; i < 10; i++) {
     if (x(i) < param_.lower_joint_limits[i])
       cost += param_.Q_joint_limit +
@@ -168,6 +171,11 @@ bool PandaCostParam::parse_from_ros(const ros::NodeHandle& nh) {
 
   if (!nh.getParam("max_reach", max_reach) || max_reach < 0) {
     ROS_ERROR("Filed to parse max_reach or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("min_dist", min_dist) || min_dist > max_reach) {
+    ROS_ERROR("Filed to parse min_dist or invalid!");
     return false;
   }
 

@@ -193,6 +193,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
   if (settings_.cartesian_limits) {
     CartesianLimitSettings end_effector_self_collision;
     end_effector_self_collision.direction = CartesianLimitSettings::COLLISION;
+    end_effector_self_collision.P(2, 2) = 0;  // only 2d
     end_effector_self_collision.frame_a = "panda_link1";
     end_effector_self_collision.frame_b = "panda_hand";
     end_effector_self_collision.distance = settings_.min_dist;

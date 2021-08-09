@@ -28,6 +28,7 @@ struct PandaCostParam {
   double Qc;   // contact cost
   double ro;   // obstacle radius
   double max_reach;
+  double min_dist;  // min distance from base for collision avoidance
   double Q_reach;
   double Q_reachs;
   double Q_obj;

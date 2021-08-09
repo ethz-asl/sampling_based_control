@@ -102,7 +102,6 @@ int main(int argc, char** argv) {
   signal_logger::add(sim_time, "sim_time");
   signal_logger::add(u, "input");
   signal_logger::logger->updateLogger();
-
   signal_logger::logger->startLogger();
 
   while (ros::ok()) {
