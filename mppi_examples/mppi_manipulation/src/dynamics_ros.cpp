@@ -62,10 +62,9 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
       signal_logger::add(constraint.second->violation_,
                          constraint.first + "_violation");
     }
-    signal_logger::add(sf_->passivity_constraint()->get_tank_energy(),
-                       "tank_energy");
   }
   signal_logger::add(ff_tau_, "ff_torque");
+  signal_logger::add(tank_.get_state(), "tank_state");
   signal_logger::logger->updateLogger();
 }
 
@@ -139,7 +138,7 @@ void ManipulatorDynamicsRos::publish_ros() {
 
   // publish tank energy if available
   if (get_filter()) {
-    tank_energy_.data = get_filter()->passivity_constraint()->get_tank_energy();
+    tank_energy_.data = x_.tail<1>()(0);
     tank_energy_publisher_.publish(tank_energy_);
   }
 

@@ -2,12 +2,12 @@
 // Created by giuseppe on 20.07.21.
 //
 
-#include "mppi_manipulation/manipulation_safety_filter.h"
+#include "mppi_manipulation/constraints/safety_filter.h"
+#include "mppi_manipulation/constraints/passivity.h"
 #include "safety_filter/constraints/cartesian_limit.hpp"
 #include "safety_filter/constraints/constraints_manager.hpp"
 #include "safety_filter/constraints/first_derivative_limit.hpp"
 #include "safety_filter/constraints/input_limits.hpp"
-#include "safety_filter/constraints/passivity_constraint.hpp"
 #include "safety_filter/constraints/second_derivative_limit.hpp"
 
 using namespace safety_filter;
@@ -93,13 +93,8 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
   }
 
   if (params_.passivity_constraint) {
-    PassivityConstraintSettings pass_const_settings;
-    pass_const_settings.dt = params_.tank_integration_dt;
-    pass_const_settings.epsilon = params_.tank_lower_energy_bound;
-    pass_const_settings.initial_tank_energy = params_.tank_initial_energy;
-    passivity_constraint_ptr_ =
-        std::make_shared<PassivityConstraint>(10, pass_const_settings);
-    std::shared_ptr<ConstraintBase> pass_const(passivity_constraint_ptr_);
+    std::shared_ptr<ConstraintBase> pass_const =
+        std::make_shared<PassivityConstraint>(10, params_.min_tank_energy);
     cm.add_constraint("passivity_constraint", pass_const);
     constraints_["passivity_constraint"] = pass_const;
   }
@@ -108,10 +103,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
 }
 
 void PandaMobileSafetyFilter::update(const Eigen::VectorXd& x,
-                                     const Eigen::VectorXd& u,
-                                     const Eigen::VectorXd& torque,
-                                     const double t) {
-  passivity_constraint_ptr_->update_passivity_constraint(torque.head<10>());
+                                     const Eigen::VectorXd& u, const double t) {
   filter_->update_observation(x, u, t);
   filter_->update_problem(x.head<10>(), u.head<10>());
 }

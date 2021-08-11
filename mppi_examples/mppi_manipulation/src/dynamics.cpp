@@ -44,10 +44,9 @@ void PandaRaisimDynamics::initialize_world(
 
   // robot dof
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
-  state_dimension_ =
-      2 * (BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) + CONTACT_STATE;
-  input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
-  x_ = mppi::observation_t::Zero(state_dimension_);
+  state_dimension_ = STATE_DIMENSION;
+  input_dimension_ = INPUT_DIMENSION;
+  x_ = mppi::observation_t::Zero(STATE_DIMENSION);
 
   reset(params_.initial_state, t_);
 }
@@ -91,14 +90,12 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
                                               const double dt) {
   // safety filter (optional)
   if (sf_) {
-    get_external_torque(torque_ext_);
-    sf_->update(x_, u, torque_ext_, t_);
+    sf_->update(x_, u, t_);
     if (params_.apply_filter) {
       sf_->apply(u_opt_);
     } else {
       u_opt_ = u.head<10>();
     }
-    sf_->passivity_constraint()->integrate_tank(u_opt_);
   } else {
     u_opt_ = u;
   }
@@ -116,10 +113,8 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
   panda->setPdTarget(cmd, cmdv);
   panda->setGeneralizedForce(panda->getNonlinearities());
-  panda->getState(joint_p, joint_v);
 
   // gravity compensated object
-  object->getState(object_p, object_v);
   object->setGeneralizedForce(object->getNonlinearities());
 
   // get contact state
@@ -131,17 +126,30 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
     }
   }
 
+  // integrate the tank
+  get_external_torque(tau_ext_);
+  tank_.step(u_opt_.transpose()*tau_ext_, sim_.getTimeStep());
+
+  // additional control if implemented
   pre_integrate();
 
   // step simulation
   sim_.integrate();
   t_ += sim_.getTimeStep();
 
+  panda->getState(joint_p, joint_v);
+  object->getState(object_p, object_v);
+
   x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p;
   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v;
   x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0) = object_p(0);
   x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v(0);
-  x_.tail<1>()(0) = in_contact;
+  x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;
+  x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1) = tank_.get_state();
+  x_.tail<TORQUE_DIMENSION>() = tau_ext_;
+
+  // additional state processing (e.g add odometry noise)
+  post_integrate();
   return x_;
 }
 
@@ -155,7 +163,10 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
                   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
   object->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
                    x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
-  if (sf_) sf_->reset_constraints();
+  tank_.reset(x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1), t);
+  if (sf_) {
+    sf_->reset_constraints();
+  }
 }
 
 mppi::input_t PandaRaisimDynamics::get_zero_input(

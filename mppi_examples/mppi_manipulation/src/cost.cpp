@@ -45,8 +45,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   // handle reaching cost
   else if (mode == 1) {
-    object_model_.update_state(
-        x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
+    object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
     error_ = mppi_pinocchio::diff(
         robot_model_.get_pose(tracked_frame_),
         object_model_.get_pose(handle_frame_) * params_.grasp_offset);
@@ -55,12 +54,15 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost +=
         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
 
-    if (x.tail<1>()(0) > 0) cost += params_.Qc;
+    // contact cost
+    if (x(2*BASE_ARM_GRIPPER_DIM + 2*OBJECT_DIMENSION) > 0) {
+      cost += params_.Qc;
+    }
   }
+
   // object displacement cost
   else if (mode == 2) {
-    object_model_.update_state(
-        x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
+    object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
     error_ = mppi_pinocchio::diff(
         robot_model_.get_pose(tracked_frame_),
         object_model_.get_pose(handle_frame_) * params_.grasp_offset);
@@ -70,7 +72,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr2;
 
     double object_error =
-        x.tail(2 * OBJECT_DIMENSION + CONTACT_STATE).head<1>()(0) -
+        x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
 
     cost += object_error * object_error * params_.Q_obj;

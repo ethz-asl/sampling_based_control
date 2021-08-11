@@ -10,7 +10,6 @@
 #include <mppi_pinocchio/ros_conversions.h>
 #include "mppi_manipulation/cost.h"
 #include "mppi_manipulation/dynamics.h"
-#include "mppi_manipulation/manipulation_safety_filter.h"
 #include "mppi_manipulation/params/cost_params.h"
 #include "mppi_manipulation/params/dynamics_params.h"
 

@@ -17,9 +17,10 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   nt_ = static_cast<int>(std::ceil(config.horizon / dt_));
   samples_.resize(ns_, Eigen::MatrixXd::Zero(nt_, nu));
 
+  // TODO(giuseppe) make this a parameter or find a better solution
   Eigen::VectorXd multipliers = Eigen::VectorXd::Zero(nt_);
   for (int i = 0; i < nt_; i++) {
-    multipliers[i] = 1 - std::exp(-i / 20);
+    multipliers[i] = 1 - std::exp(-i / 5);
   }
   multipliers_ = multipliers.asDiagonal();
 

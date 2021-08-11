@@ -2,6 +2,7 @@
 // Created by giuseppe on 09.08.21.
 //
 
+#include "mppi_manipulation/dimensions.h"
 #include "mppi_manipulation/params/dynamics_params.h"
 
 using namespace manipulation;
@@ -24,8 +25,6 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  // set initial state (which is also equal to the one to be tracked)
-  // the object position and velocity is already set to 0
   std::vector<double> x0;
   if (!nh.param<std::vector<double>>(prefix + "dynamics/initial_state", x0,
                                      {}) ||
@@ -33,6 +32,11 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     ROS_ERROR("Failed to parse dynamics/initial_state or invalid");
     return false;
   }
+  if (x0.size() != STATE_DIMENSION){
+    ROS_ERROR_STREAM("Initial state with the wrong dimension: " << initial_state.size() << "!=" << (int)STATE_DIMENSION);
+    return false;
+  }
+
   initial_state.setZero(x0.size());
   for (int i = 0; i < x0.size(); i++) initial_state(i) = x0[i];
 

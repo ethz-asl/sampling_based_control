@@ -39,10 +39,12 @@ add_library(${PROJECT_NAME}
         src/params/filter_params.cpp
         src/params/dynamics_params.cpp
         src/params/cost_params.cpp
+        src/constraints/passivity.cpp
+        src/constraints/safety_filter.cpp
         src/dynamics.cpp
         src/cost.cpp
+        src/energy_tank.cpp
         src/controller_interface.cpp
-        src/manipulation_safety_filter.cpp
         src/reference_scheduler.cpp
         src/dynamics_ros.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp)

@@ -85,7 +85,8 @@ int main(int argc, char** argv) {
       controller.get_input(x, u, sim_time);
       controller.publish_ros_default();
       controller.publish_ros();
-    } else {
+    }
+    else {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
     }

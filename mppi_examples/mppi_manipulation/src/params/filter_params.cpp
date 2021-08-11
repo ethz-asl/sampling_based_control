@@ -165,23 +165,10 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
   }
 
   if (passivity_constraint) {
-    if (!nh.param("safety_filter/passivity_constraint/initial_energy",
-                  tank_initial_energy, 1.0)) {
+    if (!nh.param("safety_filter/passivity_constraint/min_tank_energy",
+                  min_tank_energy, 0.0)) {
       ROS_WARN(
-          "Failed to parse safety_filter/passivity_constraint/initial_energy");
-      return false;
-    }
-
-    if (!nh.param("safety_filter/passivity_constraint/lower_bound",
-                  tank_lower_energy_bound, 1e-3)) {
-      ROS_WARN(
-          "Failed to parse safety_filter/passivity_constraint/lower_bound");
-      return false;
-    }
-
-    if (!nh.param("safety_filter/passivity_constraint/dt", tank_integration_dt,
-                  0.01)) {
-      ROS_WARN("Failed to parse safety_filter/passivity_constraint/dt");
+          "Failed to parse safety_filter/passivity_constraint/min_tank_energy");
       return false;
     }
   }
@@ -214,10 +201,7 @@ std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
   os << " >> min_distance: " << settings.min_dist << std::endl;
 
   os << "passivity_constraint: " << settings.passivity_constraint << std::endl;
-  os << " >> tank_initial_energy: " << settings.tank_initial_energy << std::endl;
-  os << " >> tank_lower_energy_bound: " << settings.tank_lower_energy_bound << std::endl;
-  os << " >> tank_integration_dt: " << settings.tank_integration_dt << std::endl;
-
+  os << " >> min tank energy: " << settings.min_tank_energy << std::endl;
   os << "verbose: " << settings.verbose << std::endl;
   // clang-format on
   return os;

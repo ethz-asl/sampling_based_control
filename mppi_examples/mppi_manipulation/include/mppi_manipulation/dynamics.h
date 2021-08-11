@@ -18,7 +18,8 @@
 #include <numeric>
 #include <stdexcept>
 #include "mppi_manipulation/dimensions.h"
-#include "mppi_manipulation/manipulation_safety_filter.h"
+#include "mppi_manipulation/energy_tank.h"
+#include "mppi_manipulation/constraints/safety_filter.h"
 #include "mppi_manipulation/params/dynamics_params.h"
 
 namespace manipulation {
@@ -39,8 +40,9 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void set_collision();
 
  protected:
-  // additional processing to perform prior to integration
+  // additional pre/post-processing to perform prior to integration
   virtual void pre_integrate(){};
+  virtual void post_integrate(){};
 
  public:
   double get_dt() { return dt_; }
@@ -94,6 +96,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   std::string robot_description_;
   std::string object_description_;
 
+  EnergyTank tank_;
   raisim::ArticulatedSystem* panda;
   raisim::ArticulatedSystem* object;
 
