@@ -24,11 +24,6 @@ void PandaMobileJointLimitsConstraints::update_jacobian(
 }
 
 bool PandaMobileSafetyFilterSettings::init_from_ros(ros::NodeHandle& nh) {
-  if (!nh.param("safety_filter/dt", dt, 0.01) || dt <= 0) {
-    ROS_ERROR("Failed to parse safety_filter/dt or invalid");
-    return false;
-  }
-
   if (!nh.param("safety_filter/verbose", verbose, false)) {
     ROS_WARN("Failed to parse safety_filter/verbose");
     return false;
@@ -181,7 +176,6 @@ std::ostream& operator<<(std::ostream& os,
                          const PandaMobileSafetyFilterSettings& settings) {
   // clang-format off
   os << "PandaMobileSafetyFilterSettings: " << std::endl;
-  os << "dt = " << settings.dt << std::endl;
   os << "joint_limits: " << settings.joint_limits << std::endl;
   os << " >> q_min=" << settings.q_min.transpose() << std::endl;
   os << " >> q_max=" << settings.q_max.transpose() << std::endl;
@@ -225,7 +219,6 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
 
   if (settings_.first_derivative_limits) {
     safety_filter::FirstDerivativeLimitSettings dl_settings;
-    dl_settings.dt = settings_.dt;
     dl_settings.ud_min = settings_.ud_min;
     dl_settings.ud_max = settings_.ud_max;
     std::shared_ptr<ConstraintBase> dl_const =
@@ -235,7 +228,6 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(
 
   if (settings_.second_derivative_limits) {
     safety_filter::SecondDerivativeLimitSettings ddl_settings;
-    ddl_settings.dt = settings_.dt;
     ddl_settings.udd_min = settings_.udd_min;
     ddl_settings.udd_max = settings_.udd_max;
     std::shared_ptr<ConstraintBase> ddl_const =

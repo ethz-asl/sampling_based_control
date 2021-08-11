@@ -32,10 +32,10 @@ class PandaMobileSafetyFilter {
   PandaMobileSafetyFilter(const FilterParams& settings);
 
   void update(const Eigen::VectorXd& x, const Eigen::VectorXd& u,
-              const Eigen::VectorXd& torque);
-  bool apply(Eigen::VectorXd& u_opt);
-
+              const Eigen::VectorXd& torque, const double t);
   void update_violation(const Eigen::VectorXd& x);
+  void reset_constraints();
+  bool apply(Eigen::VectorXd& u_opt);
 
   // TODO(giuseppe) brittle implementation -> what if this is not created?
   inline passivity_ptr_t& passivity_constraint() {

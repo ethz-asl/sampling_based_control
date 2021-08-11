@@ -11,6 +11,11 @@ struct FilterParams {
 
   Eigen::Matrix<double, 10, 1> u_min;
   Eigen::Matrix<double, 10, 1> u_max;
+  Eigen::Matrix<double, 10, 1> ud_min;
+  Eigen::Matrix<double, 10, 1> ud_max;
+  Eigen::Matrix<double, 10, 1> udd_min;
+  Eigen::Matrix<double, 10, 1> udd_max;
+
   Eigen::Matrix<double, 10, 1> q_min;
   Eigen::Matrix<double, 10, 1> q_max;
 
@@ -20,6 +25,9 @@ struct FilterParams {
   bool joint_limits = true;
   bool input_limits = true;
   bool cartesian_limits = false;
+
+  bool first_derivative_limits = false;
+  bool second_derivative_limits = false;
 
   bool passivity_constraint = false;
   double tank_initial_energy = 1.0;

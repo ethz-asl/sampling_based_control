@@ -39,6 +39,7 @@ public:
   int nt_;
   Eigen::ArrayXd t_;
   std::shared_ptr<multivariate_normal> dist_;
+  Eigen::MatrixXd multipliers_;  // scale samples for each time step
   std::vector<Eigen::MatrixXd> samples_;
   Eigen::MatrixXd nominal_;
   Eigen::MatrixXd delta_;

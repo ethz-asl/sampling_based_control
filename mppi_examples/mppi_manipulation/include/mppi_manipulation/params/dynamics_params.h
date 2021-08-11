@@ -12,7 +12,7 @@ struct DynamicsParams {
   double dt;
   std::string robot_description;
   std::string object_description;
-  PDGains gains;
+  PIDGains gains;
   Eigen::VectorXd initial_state;
 
   bool has_filter;

@@ -18,5 +18,7 @@ mppi::observation_t FOMDynamics::step(const mppi::input_t &u, const double dt) {
 
 const mppi::observation_t FOMDynamics::get_state() const { return x_; }
 
-void FOMDynamics::reset(const mppi::observation_t &x) { x_ = x; }
+void FOMDynamics::reset(const mppi::observation_t &x, const double t) {
+  x_ = x;
+}
 }  // namespace fom

@@ -43,7 +43,7 @@ class FOMDynamics : public mppi::Dynamics {
     return std::make_shared<FOMDynamics>(*this);
   }
 
-  void reset(const mppi::observation_t& x) override;
+  void reset(const mppi::observation_t& x, const double t) override;
 
   mppi::observation_t step(const mppi::input_t& u, const double dt) override;
 

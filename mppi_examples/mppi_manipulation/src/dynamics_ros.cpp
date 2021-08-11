@@ -51,6 +51,8 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   force_marker_.color.a = 1.0;
 
   tau_ext_msg_.data.resize(get_panda()->getDOF());
+  ff_tau_.setZero(get_panda()->getDOF());
+  integral_term_.setZero(ARM_DIMENSION);
 
   if (sf_) {
     // does not optimize the gripper input
@@ -60,7 +62,10 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
       signal_logger::add(constraint.second->violation_,
                          constraint.first + "_violation");
     }
+    signal_logger::add(sf_->passivity_constraint()->get_tank_energy(),
+                       "tank_energy");
   }
+  signal_logger::add(ff_tau_, "ff_torque");
   signal_logger::logger->updateLogger();
 }
 
@@ -68,8 +73,23 @@ void ManipulatorDynamicsRos::reset_to_default() {
   x_.setZero();
   x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
       0.0, 1.10, 0.69, 0.04, 0.04;
-  reset(x_);
+  reset(x_, 0.0);
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
+}
+
+void ManipulatorDynamicsRos::pre_integrate() {
+  ff_tau_ = get_panda()->getNonlinearities().e() *
+            0.95;  // simulate imperfect velocity tracking
+
+  Eigen::VectorXd velocity_error =
+      (cmdv - joint_v).segment<ARM_DIMENSION>(BASE_DIMENSION);
+  integral_term_ += params_.gains.arm_gains.Ki.cwiseProduct(velocity_error) *
+                    sim_.getTimeStep();
+  integral_term_ = integral_term_.cwiseMin(params_.gains.arm_gains.Imax)
+                       .cwiseMax(-params_.gains.arm_gains.Imax);
+  ff_tau_.segment<ARM_DIMENSION>(BASE_DIMENSION) += integral_term_;
+
+  panda->setGeneralizedForce(ff_tau_);
 }
 
 void ManipulatorDynamicsRos::publish_ros() {

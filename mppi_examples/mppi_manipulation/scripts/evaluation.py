@@ -3,13 +3,16 @@ import numpy as np
 import signal_logger
 import matplotlib.pyplot as plt
 
+plt.rcParams['axes.grid'] = True
+
 ###############################
 # Definitions
 ###############################
 import rospkg
 rospack = rospkg.RosPack()
 ROOT_DIR = rospack.get_path("mppi_manipulation")
-LOG_FILE = os.path.join(ROOT_DIR, "data", "logs", "test_no_filter.silo")
+LOG_FILE = os.path.join(ROOT_DIR, "data", "logs",
+                        "mppi_manipulation_with_filter.silo")
 REQUIRED_FIELDS = [
     "log/sim_time", "log/input", "log/input_filtered",
     "log/joint_limits_violation", "log/solver/rollouts/min_cost",
@@ -83,6 +86,8 @@ def matrix_plot(m: np.ndarray, prefix="value"):
     fig, ax = plt.subplots()
     for i in range(m.shape[1]):
         ax.plot(m[:, i], label=f"{prefix}_{i}")
+    #ax.grid()
+    ax.legend()
 
 
 ###############################
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     ax1.plot(silo_dict['sim_time'],
              silo_dict['input_filtered'][:, 0],
              label="input_filtered")
-    ax1.grid()
+    #ax1.grid()
     ax1.legend()
 
     # ax.plot(silo_dict['sim_time'],
@@ -108,10 +113,13 @@ if __name__ == "__main__":
 
     fig2, ax2 = plt.subplots()
     ax2.plot(silo_dict['sim_time'], silo_dict['min_cost'], label="min_cost")
-    ax2.grid()
+    #ax2.grid()
     ax2.legend()
 
     matrix_plot(silo_dict['input'], prefix="input")
+    matrix_plot(silo_dict['input_filtered'], prefix="input_filtered")
+    matrix_plot(silo_dict['joint_limits_violation'],
+                prefix="joint_limits_violation")
+    #plt.grid()
     plt.legend()
-    plt.grid()
     plt.show()

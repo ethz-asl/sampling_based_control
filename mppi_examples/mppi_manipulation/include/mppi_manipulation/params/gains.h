@@ -12,12 +12,16 @@ namespace manipulation {
 
 template <int N>
 struct gain_pair {
-  gain_pair(double kp, double kd) {
+  gain_pair(double kp, double kd, double ki = 0, double i_max = 0.0) {
     Kp.setConstant(kp);
     Kd.setConstant(kd);
+    Ki.setConstant(ki);
+    Imax.setConstant(i_max);
   }
   Eigen::Matrix<double, N, 1> Kp;
   Eigen::Matrix<double, N, 1> Kd;
+  Eigen::Matrix<double, N, 1> Ki;
+  Eigen::Matrix<double, N, 1> Imax;
 
   bool parse_from_ros(const ros::NodeHandle& nh,
                       const std::string& param_name) {
@@ -33,16 +37,30 @@ struct gain_pair {
       return false;
     }
 
+    std::vector<double> ki;
+    if (!nh.getParam(param_name + "/ki", ki) || ki.size() != N) {
+      ROS_ERROR_STREAM("Failed to parse " << param_name << "/ki or invalid");
+      return false;
+    }
+
+    std::vector<double> i_max;
+    if (!nh.getParam(param_name + "/i_max", i_max) || i_max.size() != N) {
+      ROS_ERROR_STREAM("Failed to parse " << param_name << "/i_max or invalid");
+      return false;
+    }
+
     for (size_t i = 0; i < N; i++) {
       Kp[i] = kp[i];
       Kd[i] = kd[i];
+      Ki[i] = ki[i];
+      Imax[i] = i_max[i];
     }
     return true;
   }
 };
 
-struct PDGains {
-  PDGains()
+struct PIDGains {
+  PIDGains()
       : base_gains(0, 1000), arm_gains(0.0, 10.0), gripper_gains(100.0, 50.0){};
 
   gain_pair<BASE_DIMENSION> base_gains;
@@ -54,4 +72,4 @@ struct PDGains {
 
 }  // namespace manipulation
 
-std::ostream& operator<<(std::ostream& os, const manipulation::PDGains& gains);
+std::ostream& operator<<(std::ostream& os, const manipulation::PIDGains& gains);

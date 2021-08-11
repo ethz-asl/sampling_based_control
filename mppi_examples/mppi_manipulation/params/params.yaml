@@ -8,12 +8,18 @@ dynamics:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
       kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [0.0, 0.0, 0.0]
+      i_max: [0.0, 0.0, 0.0]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
       kd: [ 50.0, 50.0 ]
+      ki: [0.0, 0.0]
+      i_max: [0.0, 0.0]
 
 sim_dynamics:
   dt: 0.015
@@ -25,12 +31,18 @@ sim_dynamics:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
       kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [0.0, 0.0, 0.0]
+      i_max: [0.0, 0.0, 0.0]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
       kd: [ 50.0, 50.0 ]
+      ki: [0.0, 0.0]
+      i_max: [0.0, 0.0]
 
 cost:
   regularization: 0.0
@@ -40,10 +52,10 @@ cost:
   angular_weight: 10.0
   angular_weight_opening: 1.0
 
-  min_dist: 0.15
-  max_reach: 0.65
-  reach_weight: 0
-  reach_weight_slope: 0
+  min_dist: 0.0
+  max_reach: 1.0
+  reach_weight: 100
+  reach_weight_slope: 10
 
   obstacle_weight: 0
   obstacle_weight_slope: 0
@@ -81,6 +93,16 @@ safety_filter:
     initial_energy: 10.0
     lower_bound: 0.01
     dt: 0.015
+
+  first_derivative_limits: false
+  ud_min: [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5]
+  ud_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
+
+  second_derivative_limits: false
+  udd_min: [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5]
+  udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
+  # udd_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  # udd_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
   verbose: false
 

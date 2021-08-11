@@ -20,6 +20,9 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
                          const DynamicsParams& params);
   ~ManipulatorDynamicsRos() = default;
 
+ private:
+  void pre_integrate() override;
+
  public:
   void reset_to_default();
   void publish_ros();
@@ -40,6 +43,9 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   std_msgs::Float64MultiArray tau_ext_msg_;
   std_msgs::Float64 tank_energy_;
   ros::Publisher tank_energy_publisher_;
+
+  Eigen::VectorXd ff_tau_;
+  Eigen::VectorXd integral_term_;
 };
 
 }  // namespace manipulation

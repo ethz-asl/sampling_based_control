@@ -63,6 +63,8 @@ int main(int argc, char** argv) {
   // start controller
   bool sequential;
   nh.param<bool>("sequential", sequential, false);
+  ROS_INFO_STREAM("Running in sequential mode? " << sequential);
+
   if (!sequential) controller.start();
 
   // do some timing

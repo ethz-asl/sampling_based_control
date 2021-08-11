@@ -25,7 +25,7 @@ class Dynamics {
   virtual dynamics_ptr create() = 0;       // virtual constructor
   virtual dynamics_ptr clone() const = 0;  // virtual copy constructor
 
-  virtual void reset(const observation_t& x) = 0;
+  virtual void reset(const observation_t& x, const double t) = 0;
   virtual void render() {}
   virtual observation_t step(const input_t& u, const double dt) = 0;
   virtual const observation_t get_state() const = 0;
@@ -37,7 +37,8 @@ class Dynamics {
 
   inline double get_dt() const { return dt; }
 
- private:
+ protected:
+  double t_;
   double dt;
 };
 

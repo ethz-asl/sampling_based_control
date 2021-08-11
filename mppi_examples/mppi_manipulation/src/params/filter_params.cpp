@@ -78,6 +78,69 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     }
   }
 
+  if (!nh.param("safety_filter/first_derivative_limits",
+                first_derivative_limits, false)) {
+    ROS_WARN("Failed to parse safety_filter/first_derivative_limits");
+    return false;
+  }
+
+  if (first_derivative_limits) {
+    std::vector<double> ud_min_v, ud_max_v;
+    if (!nh.param<std::vector<double>>("safety_filter/ud_min", ud_min_v, {})) {
+      ROS_WARN("Failed to parse safety_filter/ud_min");
+      return false;
+    }
+
+    if (!nh.param<std::vector<double>>("safety_filter/ud_max", ud_max_v, {})) {
+      ROS_WARN("Failed to parse safety_filter/ud_max");
+      return false;
+    }
+
+    int u_size = ud_min_v.size();
+    if (u_size != ud_max_v.size()) {
+      throw std::runtime_error("First derivative limits have different size!");
+    }
+
+    ud_min.resize(u_size);
+    ud_max.resize(u_size);
+    for (int i = 0; i < u_size; i++) {
+      ud_min[i] = ud_min_v[i];
+      ud_max[i] = ud_max_v[i];
+    }
+  }
+
+  if (!nh.param("safety_filter/second_derivative_limits",
+                second_derivative_limits, false)) {
+    ROS_WARN("Failed to parse safety_filter/second_derivative_limits");
+    return false;
+  }
+
+  if (second_derivative_limits) {
+    std::vector<double> udd_min_v, udd_max_v;
+    if (!nh.param<std::vector<double>>("safety_filter/udd_min", udd_min_v,
+                                       {})) {
+      ROS_WARN("Failed to parse safety_filter/udd_min");
+      return false;
+    }
+
+    if (!nh.param<std::vector<double>>("safety_filter/ud_max", udd_max_v, {})) {
+      ROS_WARN("Failed to parse safety_filter/udd_max");
+      return false;
+    }
+
+    int u_size = udd_min_v.size();
+    if (u_size != udd_max_v.size()) {
+      throw std::runtime_error("Second derivative limits have different size!");
+    }
+
+    udd_min.resize(u_size);
+    udd_max.resize(u_size);
+    for (int i = 0; i < u_size; i++) {
+      udd_min[i] = udd_min_v[i];
+      udd_max[i] = udd_max_v[i];
+    }
+  }
+
   if (!nh.param("safety_filter/cartesian_limits", cartesian_limits, false)) {
     ROS_WARN("Failed to parse safety_filter/cartesian_limits");
     return false;
@@ -133,6 +196,14 @@ std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
   os << "input_limits: " << settings.input_limits << std::endl;
   os << " >> u_min=" << settings.u_min.transpose() << std::endl;
   os << " >> u_max=" << settings.u_max.transpose() << std::endl;
+
+  os << "first_derivative_limits: " << settings.first_derivative_limits << std::endl;
+  os << " >> ud_min=" << settings.ud_min.transpose() << std::endl;
+  os << " >> ud_max=" << settings.ud_max.transpose() << std::endl;
+
+  os << "second_derivative_limits: " << settings.second_derivative_limits << std::endl;
+  os << " >> udd_min=" << settings.udd_min.transpose() << std::endl;
+  os << " >> udd_max=" << settings.udd_max.transpose() << std::endl;
 
   os << "joint_limits: " << settings.joint_limits << std::endl;
   os << " >> q_min=" << settings.q_min.transpose() << std::endl;

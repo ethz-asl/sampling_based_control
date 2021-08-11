@@ -149,7 +149,7 @@ void Solver::update_policy() {
 
       // TODO move this away. This goes year since there might be filtering
       // happening before optimal rollout
-      dynamics_->reset(x0_internal_);
+      dynamics_->reset(x0_internal_, t0_internal_);
       for (size_t t = 0; t < steps_; t++) {
         opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
       }
@@ -291,7 +291,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
                                        const size_t end_idx) {
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
-    dynamics->reset(x0_internal_);
+    dynamics->reset(x0_internal_, t0_internal_);
     x = x0_internal_;
     double ts;
     for (size_t t = 0; t < steps_; t++) {

@@ -38,7 +38,7 @@ class PandaDynamics : public mppi::Dynamics {
     return std::make_shared<PandaDynamics>(*this);
   }
 
-  void reset(const mppi::observation_t& x) override;
+  void reset(const mppi::observation_t& x, const double t) override;
 
   mppi::observation_t step(const mppi::input_t& u, const double dt) override;
   const mppi::observation_t get_state() const override;

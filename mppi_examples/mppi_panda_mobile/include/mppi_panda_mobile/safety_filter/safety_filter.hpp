@@ -24,8 +24,6 @@ class PandaMobileJointLimitsConstraints
 };
 
 struct PandaMobileSafetyFilterSettings {
-  double dt;
-
   Eigen::Matrix<double, 10, 1> u_min;
   Eigen::Matrix<double, 10, 1> u_max;
   Eigen::Matrix<double, 10, 1> ud_min;

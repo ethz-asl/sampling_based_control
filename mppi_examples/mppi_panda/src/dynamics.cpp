@@ -19,7 +19,9 @@ mppi::observation_t PandaDynamics::step(const mppi::input_t &u,
 
 const mppi::observation_t PandaDynamics::get_state() const { return x_; }
 
-void PandaDynamics::reset(const mppi::observation_t &x) { x_ = x; }
+void PandaDynamics::reset(const mppi::observation_t &x, const double t) {
+  x_ = x;
+}
 
 mppi::input_t PandaDynamics::get_zero_input(const observation_t &x) {
   return mppi::input_t::Zero(get_input_dimension());

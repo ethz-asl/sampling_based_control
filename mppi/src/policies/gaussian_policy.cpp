@@ -17,6 +17,12 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   nt_ = static_cast<int>(std::ceil(config.horizon / dt_));
   samples_.resize(ns_, Eigen::MatrixXd::Zero(nt_, nu));
 
+  Eigen::VectorXd multipliers = Eigen::VectorXd::Zero(nt_);
+  for (int i = 0; i < nt_; i++) {
+    multipliers[i] = 1 - std::exp(-i / 20);
+  }
+  multipliers_ = multipliers.asDiagonal();
+
   t_ = Eigen::ArrayXd::LinSpaced(nt_, 0.0, nt_) * dt_;
   nominal_ = Eigen::MatrixXd::Zero(nt_, nu);
   delta_ = Eigen::MatrixXd::Zero(nt_, nu);
@@ -78,13 +84,13 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
   }
 
   if (keep == 0){
-    for (auto & sample : samples_)
-    dist_->setRandomRow(sample);
+    for (auto& sample : samples_) dist_->setRandomRow(sample);
   }
   else{
     std::vector<size_t> sorted_idxs = sort_indexes(weights);
     for (int i = keep; i < ns_ - 3; i++) {
       dist_->setRandomRow(samples_[sorted_idxs[i]]);
+      samples_[sorted_idxs[i]] = multipliers_ * samples_[sorted_idxs[i]];
     }
 
     // noise free sample

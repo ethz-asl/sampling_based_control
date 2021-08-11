@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
       nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < initial_configuration.size(); i++)
     x(i) = initial_configuration[i];
-  simulation.reset(x);
+  simulation.reset(x, 0.0);
 
   mppi::input_t u;
   u = simulation.get_zero_input(x);
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
     state_publisher.publish(joint_state);
 
     if (apply_safety_filter) {
-      filter.filter_->update_observation(x, u_opt);
+      filter.filter_->update_observation(x, u_opt, sim_dt);
       filter.apply(x, u, u_opt);
     } else {
       u_opt = u;

@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
     if (i == 1000) {
       std::cout << "Resetting simulation from snapshot" << std::endl;
-      simulation.reset(x_snapshot);
+      simulation.reset(x_snapshot, i * TIMESTEP);
       u = u_snapshot;
     }
 

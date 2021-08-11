@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 
   auto cb = [&](const manipulation_msgs::StateConstPtr& msg) {
     manipulation::conversions::msgToEigen(*msg, current_state);
-    dynamics.reset(current_state);
+    dynamics.reset(current_state, 0);
   };
 
   ros::Subscriber current_state_subscriber =

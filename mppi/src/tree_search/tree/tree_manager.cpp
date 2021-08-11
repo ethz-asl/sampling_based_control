@@ -106,7 +106,7 @@ void TreeManager::init_tree() {
 void TreeManager::grow_tree() {
   // reset to initial state first
   for (size_t i = 0; i < config_.rollouts; i++) {
-    tree_dynamics_v_shared_[i]->reset(x0_internal_);
+    tree_dynamics_v_shared_[i]->reset(x0_internal_, t0_internal_);
     leaves_state_[i] = x0_internal_;
   }
 
@@ -171,7 +171,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
         0, extendable_leaf_pos_.size() - 1)];
     extending_leaf = leaf_handles_[extending_leaf_pos];
 
-    node_dynamics->reset(leaves_state_[extending_leaf_pos]);
+    node_dynamics->reset(leaves_state_[extending_leaf_pos], 0);
   }
 
   // TODO(giuseppe) all the time this stuff gets created

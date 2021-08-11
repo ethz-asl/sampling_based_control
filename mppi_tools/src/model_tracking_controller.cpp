@@ -29,7 +29,7 @@ void ModelTrackingController::set_initial_state(const mppi::observation_t &x0,
                                                 const double &t0) {
   t_ = t0;
   x_ = x0;
-  model_->reset(x0);
+  model_->reset(x0, t0);
   solver_->set_observation(x0, t_);
 }
 

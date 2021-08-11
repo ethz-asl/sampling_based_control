@@ -5,8 +5,10 @@
 #include "mppi_manipulation/manipulation_safety_filter.h"
 #include "safety_filter/constraints/cartesian_limit.hpp"
 #include "safety_filter/constraints/constraints_manager.hpp"
+#include "safety_filter/constraints/first_derivative_limit.hpp"
 #include "safety_filter/constraints/input_limits.hpp"
 #include "safety_filter/constraints/passivity_constraint.hpp"
+#include "safety_filter/constraints/second_derivative_limit.hpp"
 
 using namespace safety_filter;
 using namespace manipulation;
@@ -35,6 +37,24 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
         std::make_shared<InputLimits>(ul_settings);
     cm.add_constraint("input_limits", ul_const);
     constraints_["input_limits"] = ul_const;
+  }
+
+  if (params_.first_derivative_limits) {
+    safety_filter::FirstDerivativeLimitSettings dl_settings;
+    dl_settings.ud_min = params_.ud_min;
+    dl_settings.ud_max = params_.ud_max;
+    std::shared_ptr<ConstraintBase> dl_const =
+        std::make_shared<FirstDerivativeLimits>(dl_settings);
+    cm.add_constraint("first_derivative_limits", dl_const);
+  }
+
+  if (params_.second_derivative_limits) {
+    safety_filter::SecondDerivativeLimitSettings ddl_settings;
+    ddl_settings.udd_min = params_.udd_min;
+    ddl_settings.udd_max = params_.udd_max;
+    std::shared_ptr<ConstraintBase> ddl_const =
+        std::make_shared<SecondDerivativeLimits>(ddl_settings);
+    cm.add_constraint("second_derivative_limits", ddl_const);
   }
 
   if (params_.joint_limits) {
@@ -89,8 +109,10 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
 
 void PandaMobileSafetyFilter::update(const Eigen::VectorXd& x,
                                      const Eigen::VectorXd& u,
-                                     const Eigen::VectorXd& torque) {
+                                     const Eigen::VectorXd& torque,
+                                     const double t) {
   passivity_constraint_ptr_->update_passivity_constraint(torque.head<10>());
+  filter_->update_observation(x, u, t);
   filter_->update_problem(x.head<10>(), u.head<10>());
 }
 
@@ -106,4 +128,8 @@ bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
 
   // TODO(giuseppe) must return the correct status
   return true;
+}
+
+void PandaMobileSafetyFilter::reset_constraints() {
+  filter_->reset_constraints();
 }

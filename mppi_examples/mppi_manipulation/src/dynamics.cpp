@@ -21,12 +21,12 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
   } else {
     sf_ = nullptr;
   }
+  t_ = 0.0;
 };
 
 void PandaRaisimDynamics::initialize_world(
     const std::string& robot_description,
     const std::string& object_description) {
-  std::cout << "Initializing world" << std::endl;
   dt_ = params_.dt;
   sim_.setTimeStep(params_.dt);
   sim_.setERP(0., 0.);
@@ -49,7 +49,7 @@ void PandaRaisimDynamics::initialize_world(
   input_dimension_ = BASE_ARM_GRIPPER_DIM - 1;  // mimic joint for gripper
   x_ = mppi::observation_t::Zero(state_dimension_);
 
-  reset(params_.initial_state);
+  reset(params_.initial_state, t_);
 }
 
 void PandaRaisimDynamics::initialize_pd() {
@@ -92,7 +92,7 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   // safety filter (optional)
   if (sf_) {
     get_external_torque(torque_ext_);
-    sf_->update(x_, u, torque_ext_);
+    sf_->update(x_, u, torque_ext_, t_);
     if (params_.apply_filter) {
       sf_->apply(u_opt_);
     } else {
@@ -131,8 +131,11 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
     }
   }
 
+  pre_integrate();
+
   // step simulation
   sim_.integrate();
+  t_ += sim_.getTimeStep();
 
   x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p;
   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v;
@@ -142,8 +145,9 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   return x_;
 }
 
-void PandaRaisimDynamics::reset(const mppi::observation_t& x) {
+void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
   // internal eigen state
+  t_ = t;
   x_ = x;
 
   // reset arm
@@ -151,6 +155,7 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x) {
                   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
   object->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
                    x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
+  if (sf_) sf_->reset_constraints();
 }
 
 mppi::input_t PandaRaisimDynamics::get_zero_input(
