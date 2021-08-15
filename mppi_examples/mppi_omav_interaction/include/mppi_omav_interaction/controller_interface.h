@@ -82,6 +82,8 @@ private:
   ros::Publisher mppi_reference_publisher_;
   ros::Publisher optimal_linear_input_publisher_;
   ros::Publisher optimal_angular_input_publisher_;
+  ros::Publisher optimal_rollout_lin_vel_;
+  ros::Publisher optimal_rollout_ang_vel_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 

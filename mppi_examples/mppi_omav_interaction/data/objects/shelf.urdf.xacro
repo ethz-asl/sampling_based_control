@@ -22,14 +22,14 @@
 
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 ${-y/2} 0"/>
             <mass value="${m}"/>
             <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
                      ixy="0"
                      ixz="0"
                      iyy="${0.0833 * m * (x**2 + z**2)}"
                      iyz="0"
-                     izz="${0.0833 * m * (z**2 + y**2)}"/>
+                     izz="${0.0833 * m * (x**2 + y**2)}"/>
         </inertial>
     </xacro:macro>
 
@@ -38,7 +38,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="-0.009 0.0 1.645"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="0.0 0.0 1.645"/>
         </joint>
     </xacro:if>
 
@@ -62,7 +62,7 @@
     </link>
 
     <link name="door">
-        <xacro:box_inertia m="5.8" x="${door_width}" y="${door_length}" z="${door_height}"/>
+        <xacro:box_inertia m="3.0" x="${door_width}" y="${door_length}" z="${door_height}"/>
         <visual>
             <origin rpy="0 0 0" xyz="${-door_width/2} ${door_length/2} 0"/>
             <geometry>
@@ -114,10 +114,10 @@
     <joint name="articulation_joint" type="revolute">
         <parent link="axis_link"/>
         <child link="measured_joint_link"/>
-        <dynamics damping="0.1" friction="1.0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <origin xyz="0 0 0"/>
         <axis xyz="0 0 -1"/>
-        <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
+        <limit effort="100" lower="0" upper="1.75" velocity="10.0"/>
     </joint>
 
 

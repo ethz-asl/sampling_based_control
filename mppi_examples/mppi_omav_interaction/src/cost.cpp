@@ -103,7 +103,7 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     cost += efficiency_cost_;
     // Minimize force
     double force = x.segment<3>(15).norm();
-    cost += std::max(0.0, 10 * force - 100);
+    cost += param_ptr_->Q_power * force * force;
   }
   cost_ = cost;
 

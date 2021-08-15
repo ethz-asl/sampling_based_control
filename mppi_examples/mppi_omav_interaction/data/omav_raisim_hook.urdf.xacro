@@ -8,7 +8,7 @@
     <xacro:property name="tool_length" value="0.05"/>         <!-- [m] -->
     <xacro:property name="tool_radius" value="0.0075"/>         <!-- [m] -->
 
-    <xacro:property name="mass_ouzel" value="5.0"/>
+    <xacro:property name="mass_ouzel" value="4.337"/>
     <xacro:property name="ixx_ouzel" value="0.12"/>
     <xacro:property name="iyy_ouzel" value="0.14"/>
     <xacro:property name="izz_ouzel" value="0.18"/>

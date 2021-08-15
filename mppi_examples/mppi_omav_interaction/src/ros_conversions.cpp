@@ -33,7 +33,7 @@ void EigenTrajectoryPointFromStates(
   trajectorypoint.orientation_W_B = Eigen::Quaternion(
       states[i](22), states[i](23), states[i](24), states[i](25));
   trajectorypoint.velocity_W = states[i].segment<3>(26);
-  // Angluar velocities and accelerations need to be represented in body frame
+  // Angular velocities and accelerations need to be represented in body frame
   trajectorypoint.angular_velocity_W = states[i].segment<3>(29);
   if (!use_input) {
     // Filter the velocities to calculate the desired accelerations
