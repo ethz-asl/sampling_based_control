@@ -1,3 +1,4 @@
+arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
 dynamics:
   dt: 0.015
   has_filter: false
@@ -28,7 +29,7 @@ dynamics:
 
 sim_dynamics:
   dt: 0.015
-  has_filter: true
+  has_filter: false
   apply_filter: false
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity

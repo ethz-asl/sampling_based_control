@@ -40,9 +40,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void set_collision();
 
  protected:
-  // additional pre/post-processing to perform prior to integration
-  virtual void pre_integrate(){};
-  virtual void post_integrate(){};
 
  public:
   double get_dt() { return dt_; }
@@ -60,6 +57,9 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   }
 
   void reset(const mppi::observation_t& x, const double t) override;
+
+  void advance();
+  void set_control(const mppi::input_t& u);
 
   mppi::observation_t step(const mppi::input_t& u, const double dt) override;
   mppi::input_t get_zero_input(const mppi::observation_t& x) override;

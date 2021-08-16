@@ -86,8 +86,7 @@ void PandaRaisimDynamics::set_collision() {
       panda->ignoreCollisionBetween(body_idx1, body_idx2);
 }
 
-mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
-                                              const double dt) {
+void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
   // safety filter (optional)
   if (sf_) {
     sf_->update(x_, u, t_);
@@ -116,7 +115,9 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
 
   // gravity compensated object
   object->setGeneralizedForce(object->getNonlinearities());
+}
 
+void PandaRaisimDynamics::advance() {
   // get contact state
   double in_contact = -1;
   for (const auto& contact : object->getContacts()) {
@@ -129,9 +130,6 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   // integrate the tank
   get_external_torque(tau_ext_);
   tank_.step(u_opt_.transpose()*tau_ext_, sim_.getTimeStep());
-
-  // additional control if implemented
-  pre_integrate();
 
   // step simulation
   sim_.integrate();
@@ -147,9 +145,12 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
   x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;
   x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1) = tank_.get_state();
   x_.tail<TORQUE_DIMENSION>() = tau_ext_;
+}
 
-  // additional state processing (e.g add odometry noise)
-  post_integrate();
+mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
+                                              const double dt) {
+  set_control(u);
+  advance();
   return x_;
 }
 

@@ -76,21 +76,6 @@ void ManipulatorDynamicsRos::reset_to_default() {
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
 }
 
-void ManipulatorDynamicsRos::pre_integrate() {
-  ff_tau_ = get_panda()->getNonlinearities().e() *
-            0.95;  // simulate imperfect velocity tracking
-
-  Eigen::VectorXd velocity_error =
-      (cmdv - joint_v).segment<ARM_DIMENSION>(BASE_DIMENSION);
-  integral_term_ += params_.gains.arm_gains.Ki.cwiseProduct(velocity_error) *
-                    sim_.getTimeStep();
-  integral_term_ = integral_term_.cwiseMin(params_.gains.arm_gains.Imax)
-                       .cwiseMax(-params_.gains.arm_gains.Imax);
-  ff_tau_.segment<ARM_DIMENSION>(BASE_DIMENSION) += integral_term_;
-
-  panda->setGeneralizedForce(ff_tau_);
-}
-
 void ManipulatorDynamicsRos::publish_ros() {
   // TODO(giuseppe) this should not be tight to publishing stuff to ros
   // update violation

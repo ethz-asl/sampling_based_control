@@ -32,6 +32,13 @@ void toEigenState(const Eigen::Vector3d& base_pose,
                   const Eigen::VectorXd& external_torque,
                   Eigen::VectorXd& x);
 
+void fromEigenState(Eigen::Vector3d& base_pose, Eigen::Vector3d& base_twist,
+                    Eigen::VectorXd& arm_position,
+                    Eigen::VectorXd& arm_velocity, double& object_position,
+                    double& object_velocity, bool& contact_state,
+                    double tank_state, Eigen::VectorXd& external_torque,
+                    const Eigen::VectorXd& x);
+
 void toMsg(const Eigen::Vector3d& base_pose, const Eigen::Vector3d& base_twist,
            const Eigen::VectorXd& arm_position,
            const Eigen::VectorXd& arm_velocity, const double& object_position,

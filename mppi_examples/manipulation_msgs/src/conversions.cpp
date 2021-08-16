@@ -108,6 +108,32 @@ void toEigenState(const Eigen::Vector3d &base_pose,
   state(27) = tank_state;
 }
 
+void fromEigenState(Eigen::Vector3d &base_pose, Eigen::Vector3d &base_twist,
+                    Eigen::VectorXd &arm_position,
+                    Eigen::VectorXd &arm_velocity, double &object_position,
+                    double &object_velocity, bool &contact_state,
+                    double tank_state, Eigen::VectorXd &external_torque,
+                    const Eigen::VectorXd &state) {
+  assert(state.size() == manipulation_msgs::State::SIZE);
+  base_pose.x() = state(0);
+  base_pose.y() = state(1);
+  base_pose.z() = state(2);
+  base_twist.x() = state(12);
+  base_twist.y() = state(13);
+  base_twist.z() = state(14);
+
+  for (int i = 0; i < 9; i++) {
+    arm_position(i) = state(3 + i);
+    arm_velocity(i) = state(15 + i);
+    external_torque(i) = state(31 + i);
+  }
+
+  object_position = state(24);
+  object_velocity = state(25);
+  contact_state = state(26);
+  tank_state = state(27);
+}
+
 void toMsg(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
            const Eigen::VectorXd &arm_position,
            const Eigen::VectorXd &arm_velocity, const double &object_position,

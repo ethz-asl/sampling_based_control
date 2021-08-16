@@ -20,9 +20,6 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
                          const DynamicsParams& params);
   ~ManipulatorDynamicsRos() = default;
 
- private:
-  void pre_integrate() override;
-
  public:
   void reset_to_default();
   void publish_ros();
