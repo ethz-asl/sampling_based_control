@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<launch>
+    <arg name="robot_ip" default="$(env FRANKA_IP)"/>
+
+    <include file="$(find franka_gripper)/launch/franka_gripper.launch">
+        <arg name="robot_ip" value="$(arg robot_ip)" />
+    </include>
+
+    <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
+        <rosparam command="load" file="$(find mppi_royalpanda)/config/franka_control_node.yaml" />
+        <param name="robot_ip" value="$(arg robot_ip)" />
+    </node>
+
+    <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
+    <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>
+
+    <node name="joint_state_publisher" type="joint_state_publisher" pkg="joint_state_publisher" output="screen">
+        <rosparam param="source_list">[franka_state_controller/joint_states, franka_gripper/joint_states] </rosparam>
+        <param name="rate" value="200"/>
+        <remap from="robot_description" to="robot_description_fixed_base"/>
+        <remap from="joint_states" to="/panda/joint_states"/>
+    </node>
+
+</launch>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <!--    Arguments-->
+    <arg name="fixed_base" default="true"/>
+    <arg name="simulation" default="false"/>
+
+ 	<!-- Config file for controller -->
+    <group if="$(arg fixed_base)">
+        <param name="/config_file" value="$(find mppi_manipulation)/params/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml" ns="manipulation_control"/>
+    </group>
+    <group unless="$(arg fixed_base)">
+        <param name="/config_file" value="$(find mppi_manipulation)/params/params_mobile.yaml"/>
+        <rosparam command="load" file="$(find mppi_manipulation)/params/params_mobile.yaml" ns="manipulation_control"/>
+    </group>
+
+     <!--  Controller -->
+    <rosparam file="$(find mppi_royalpanda)/config/ros_controller.yaml" command="load" subst_value="true"/>
+</launch>

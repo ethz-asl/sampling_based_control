@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="test" default="false"/>
+    <arg name="fixed_base" default="false"/>
+    <arg name="simulation" default="false"/>
+
+    <!--    World description-->
+    <include file="$(find mppi_manipulation)/launch/load.launch">
+        <arg name="fixed_base" value="$(arg fixed_base)"/>
+        <arg name="object" value="shelf"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+    <!-- Start the robot state controller publisher -->
+    <include file="$(find mppi_royalpanda)/launch/robot/bringup.launch" unless="$(arg simulation)"/>
+    <include file="$(find mppi_royalpanda)/launch/sim/gazebo.launch" if="$(arg simulation)"/>
+
+    <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state
+            (published either from gazebo or franka state publisher) -->
+    <node name="royal_panda_joint_state_publisher" type="joint_state_publisher" pkg="joint_state_publisher" output="screen">
+        <rosparam param="source_list">[/observer/base/joint_state, /panda/joint_states] </rosparam>
+        <param name="rate" value="200"/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/observer/joint_states"/>
+    </node>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value=""/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/observer/joint_states"/>
+    </node>
+
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+        <remap from="robot_description" to="object_description"/>
+        <remap from="joint_states" to="/observer/object/joint_state"/>
+    </node>
+
+    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+        <remap from="robot_description" to="obstacle_description"/>
+        <remap from="joint_states" to="/fake_joint_state"/>
+    </node>
+
+    <group if="$(arg test)">
+        <node pkg="mppi_manipulation" type="base_odometry_dummy_node" name="base_odometry_dummy_node" output="screen">
+            <remap from="/franka/state" to="/panda/joint_states"/>
+        </node>
+    </group>
+
+    <!--    State observer node-->
+    <node pkg="mppi_manipulation" name="state_observer_node" type="state_observer_node" output="screen" launch-prefix="gdb -ex run --args">
+        <param name="fixed_base" value="$(arg fixed_base)"/>
+        <param name="base_alpha" value="0.7"/>
+        <param name="base_pose_topic" value="/panda_base/vrpn_client/estimated_odometry"/>
+        <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
+        <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
+        <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="observer_update_frequency" value="200"/>
+    </node>
+</launch>
+

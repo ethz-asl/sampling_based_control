@@ -1,0 +1,8 @@
+<library path="lib/libmppi_royalpanda_controller">
+    <class name="royalpanda/RoyalPandaControllerRos" type="royalpanda::RoyalPandaControllerRos"
+           base_class_type="controller_interface::ControllerBase">
+        <description>
+            A sampling based controller for the royal-panda robot using a dynamic model for interaction handling.
+        </description>
+    </class>
+</library>

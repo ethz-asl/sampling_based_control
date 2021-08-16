@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<arg name="plot_cost" default="false"/>
+    <arg name="plot_input" default="false"/>
+	<arg name="plot_state" default="false"/>
+    <arg name="enable_obstacle" default="false"/>
+    <arg name="ogre_vis" default="false"/>
+    <arg name="fixed_base" default="false"/>
+
+
+	<include file="$(find mppi_royalpanda)/launch/robot/vicon.launch"/>
+
+	<include file="$(find mppi_manipulation)/launch/common.launch">
+	    <arg name="plot_cost" default="$(arg plot_cost)"/>
+	    <arg name="plot_input" default="$(arg plot_input)"/>
+		<arg name="plot_state" default="$(arg plot_state)"/>
+	    <arg name="enable_obstacle" default="$(arg enable_obstacle)"/>
+	</include>
+
+	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
+
+	<group if="$(arg ogre_vis)">
+      <include file="$(find mppi_manipulation)/launch/ogre.launch">
+      	<arg name="fixed_base" value="$(arg fixed_base)"/>
+      </include>
+	</group>
+
+	<node name="vicon_tf_publisher" type="static_transform_publisher" pkg="tf2_ros" args="0 0 0 0 0 0 world vicon"/>
+</launch>
