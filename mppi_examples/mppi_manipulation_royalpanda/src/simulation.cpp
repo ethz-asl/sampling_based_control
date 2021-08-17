@@ -41,8 +41,15 @@ bool RoyalPandaSim::init_params() {
     NAMED_LOG_ERROR("Failed to get base_odom_topic");
     return false;
   }
+
   if(!nh_.param<std::string>("base_twist_topic", base_twist_topic_, {})){
     NAMED_LOG_ERROR("Failed to get base_twist_topic");
+    return false;
+  }
+
+  if (!nh_.param<std::string>("base_twist_cmd_topic", base_twist_cmd_topic_,
+                              {})) {
+    NAMED_LOG_ERROR("Failed to get base_twist_cmd_topic");
     return false;
   }
 
@@ -107,9 +114,14 @@ void RoyalPandaSim::init_publishers() {
   object_pose_publisher_ = nh_.advertise<nav_msgs::Odometry>(handle_odom_topic_, 1);
   arm_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>(arm_state_topic_, 1);
+  base_twist_cmd_subscriber_ = nh_.subscribe(
+      base_twist_cmd_topic_, 1, &RoyalPandaSim::base_twist_cmd_callback, this);
 }
 
 void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
+  ROS_INFO_STREAM("Current simulation state ("
+                  << time.toSec()
+                  << ") is: " << dynamics_->get_state().transpose());
   manipulation::conversions::fromEigenState(base_position_,
                                     base_twist_,
                                     arm_joint_position_,
@@ -183,6 +195,13 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
   object_pose_publisher_.publish(handle_odom_);
 }
 
+void RoyalPandaSim::base_twist_cmd_callback(
+    const geometry_msgs::TwistConstPtr &msg) {
+  base_twist_cmd_.x() = msg->linear.x;
+  base_twist_cmd_.y() = msg->linear.y;
+  base_twist_cmd_.z() = msg->angular.z;
+}
+
 void RoyalPandaSim::publish_ros(){
   dynamics_->publish_ros();
 }
@@ -191,7 +210,7 @@ void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period){
   // TODO subscriber to the base desired twist
 
   // base is velocity controlled
-  u_.head<3>() = base_twist_desired_;
+  u_.head<3>() = base_twist_cmd_;
   dynamics_->set_control(u_);
 
   // arm has imperfect gravity compensation

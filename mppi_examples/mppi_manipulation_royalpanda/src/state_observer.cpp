@@ -59,6 +59,9 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   robot_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
 
+  sync_state_service_ = nh_.advertiseService(
+      "/observer/state_request", &StateObserver::state_request_cb, this);
+
   object_state_.name.push_back("articulation_joint");
   object_state_.position.push_back(0.0);
   object_state_.velocity.push_back(0.0);
@@ -141,34 +144,35 @@ bool StateObserver::initialize() {
 
 void StateObserver::update() {
   manipulation::conversions::toMsg(
-      time_,
-      base_state_, base_twist_, q_, dq_, object_state_.position[0],
+      time_, base_pose_, base_twist_, q_, dq_, object_state_.position[0],
       object_state_.velocity[0], false, tank_state_, ext_tau_, state_ros_);
 }
 
 void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
+  base_pose_time_ = msg->header.stamp.toSec();
   tf::poseMsgToEigen(msg->pose.pose, T_world_reference_);
   T_world_base_ = T_world_reference_ * T_reference_base_;
 
-  base_state_.x() = T_world_base_.translation().x();
-  base_state_.y() = T_world_base_.translation().y();
+  base_pose_.x() = T_world_base_.translation().x();
+  base_pose_.y() = T_world_base_.translation().y();
 
   Eigen::Vector3d ix =
       T_world_base_.rotation().col(0);  // 2d projection of forward motion axis
-  base_state_.z() = std::atan2(ix.y(), ix.x());
+  base_pose_.z() = std::atan2(ix.y(), ix.x());
 }
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
+  base_twist_time_ = msg->header.stamp.toSec();
   Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x,
                                   msg->twist.twist.linear.y, 0.0);
-  odom_base_twist =
-      Eigen::AngleAxis(base_state_.z(), Eigen::Vector3d::UnitZ()) *
-      odom_base_twist;
+  odom_base_twist = Eigen::AngleAxis(base_pose_.z(), Eigen::Vector3d::UnitZ()) *
+                    odom_base_twist;
   base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
 }
 
 void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
+  arm_state_time_ = msg->header.stamp.toSec();
   if (msg->name.size() != 9) {
     ROS_WARN_STREAM_THROTTLE(
         2.0, "Joint state has the wrong size: " << msg->name.size());
@@ -181,6 +185,7 @@ void StateObserver::arm_state_callback(
 
 void StateObserver::object_pose_callback(
     const nav_msgs::OdometryConstPtr& msg) {
+  object_pose_time_ = msg->header.stamp.toSec();
   tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
   if (articulation_first_computation_) {
     ROS_INFO("First computation of the shelf pose.");
@@ -217,24 +222,45 @@ void StateObserver::object_pose_callback(
   previous_time_ = current_time;
 }
 
+bool StateObserver::state_request_cb(
+    manipulation_msgs::StateRequestRequest& req,
+    manipulation_msgs::StateRequestResponse& res) {
+  if (base_pose_time_ == base_twist_time_ == arm_state_time_ ==
+          object_pose_time_ &&
+      base_pose_time_ == req.time) {
+    manipulation::conversions::toMsg(
+        req.time, base_pose_, base_twist_, q_, dq_, object_state_.position[0],
+        object_state_.velocity[0], false, tank_state_, ext_tau_, state_ros_);
+    res.state = state_ros_;
+    return true;
+  }
+  ROS_ERROR_STREAM("Failed to get required synchronized state: "
+                   << std::endl
+                   << "base_pose_time=" << base_pose_time_ << std::endl
+                   << "base_twist_time=" << base_twist_time_ << std::endl
+                   << "arm_state_time=" << arm_state_time_ << std::endl
+                   << "object_pose_time=" << object_pose_time_);
+  return false;
+}
+
 void StateObserver::publish() {
   geometry_msgs::PoseStamped base_pose;
   base_pose.header.stamp = ros::Time::now();
   base_pose.header.frame_id = "world";
-  base_pose.pose.position.x = base_state_.x();
-  base_pose.pose.position.y = base_state_.y();
+  base_pose.pose.position.x = base_pose_.x();
+  base_pose.pose.position.y = base_pose_.y();
   base_pose.pose.position.z = 0.0;
   Eigen::Quaterniond q(
-      Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
+      Eigen::AngleAxisd(base_pose_.z(), Eigen::Vector3d::UnitZ()));
   base_pose.pose.orientation.x = q.x();
   base_pose.pose.orientation.y = q.y();
   base_pose.pose.orientation.z = q.z();
   base_pose.pose.orientation.w = q.w();
   base_pose_publisher_.publish(base_pose);
 
-  robot_state_.position[0] = base_state_.x();
-  robot_state_.position[1] = base_state_.y();
-  robot_state_.position[2] = base_state_.z();
+  robot_state_.position[0] = base_pose_.x();
+  robot_state_.position[1] = base_pose_.y();
+  robot_state_.position[2] = base_pose_.z();
 
   base_twist_ros_.header.frame_id = "world";
   base_twist_ros_.header.stamp = ros::Time::now();

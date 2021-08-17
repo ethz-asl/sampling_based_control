@@ -8,6 +8,8 @@
 #include <chrono>
 #include <thread>
 
+#include "manipulation_msgs/StateRequest.h"
+#include "manipulation_msgs/conversions.h"
 #include "mppi_manipulation_royalpanda/simulation.h"
 
 using namespace std::chrono;
@@ -27,6 +29,14 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  ros::ServiceClient state_client =
+      nh.serviceClient<manipulation_msgs::StateRequest>(
+          "/observer/state_request");
+  if (!state_client.waitForExistence(ros::Duration(3))) {
+    ROS_ERROR("Service /observer/state_request does not exist.");
+    return 0;
+  }
+
   controller_manager::ControllerManager controller_manager(&sim, nh);
   ros::AsyncSpinner spinner(4, &queue);
   spinner.start();
@@ -42,8 +52,37 @@ int main(int argc, char** argv) {
   while (ros::ok()) {
     start = steady_clock::now();
 
-    // read variables from simulation and publish over ros
-    sim.read_sim(curr_time, period);
+    // TODO giuseppe remove: test that enforces determinism
+    manipulation_msgs::StateRequestRequest req;
+    manipulation_msgs::StateRequestResponse res;
+    req.time = curr_time.toSec();
+    int max_attemps = 1000;
+    int attempts = 0;
+    while (attempts < max_attemps) {
+      // read variables from simulation and publish over ros
+      sim.read_sim(curr_time, period);
+
+      if (!state_client.call(req, res)) {
+        ROS_ERROR("State request failed.");
+        attempts++;
+      } else {
+        break;
+      }
+      ros::Duration(0.001).sleep();
+      // process all general callbacks
+      ros::spinOnce();
+    }
+
+    if (attempts == max_attemps) {
+      ROS_ERROR("Max attempts hit.");
+      return 0;
+    }
+
+    Eigen::VectorXd x;
+    double t;
+    manipulation::conversions::msgToEigen(res.state, x, t);
+    ROS_INFO_STREAM("Requested simulation state ( "
+                    << t << ") is: " << x.transpose());
 
     // update the controller input
     controller_manager.update(curr_time, period);
@@ -64,6 +103,9 @@ int main(int argc, char** argv) {
     remaining = std::max(0.0, dt - elapsed);
     if (remaining > 0.0)
       std::this_thread::sleep_for(microseconds((int)(remaining * 1e6)));
+
+    // process all general callbacks
+    ros::spinOnce();
   }
 
   spinner.stop();

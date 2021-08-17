@@ -1,6 +1,7 @@
 # Topics
 base_odom_topic: /panda_base/vrpn_client/estimated_odometry
 base_twist_topic: /ridgeback_velocity_controller/odom
+base_twist_cmd_topic: /ridgeback_velocity_controller/cmd_vel
 handle_odom_topic: /shelf_door/vrpn_client/estimated_odometry
 arm_state_topic: /panda/joint_states
 

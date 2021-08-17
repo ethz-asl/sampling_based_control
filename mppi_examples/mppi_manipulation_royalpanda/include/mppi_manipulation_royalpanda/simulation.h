@@ -41,6 +41,8 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   void init_handles();
   void init_publishers();
 
+  void base_twist_cmd_callback(const geometry_msgs::TwistConstPtr& msg);
+
  private:
   std::unique_ptr<manipulation::ManipulatorDynamicsRos> dynamics_;
 
@@ -60,7 +62,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   Eigen::Vector3d base_position_;
   Eigen::Vector3d base_twist_;
-  Eigen::Vector3d base_twist_desired_;
+  Eigen::Vector3d base_twist_cmd_;
   bool contact_state_;
   double object_position_;
   double object_velocity_;
@@ -74,6 +76,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   std::string base_twist_topic_;
   std::string handle_odom_topic_;
   std::string arm_state_topic_;
+  std::string base_twist_cmd_topic_;
 
   nav_msgs::Odometry base_pose_odom_;  // from vicon
   nav_msgs::Odometry base_twist_odom_; // from ridgeback
@@ -84,6 +87,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   ros::Publisher base_twist_publisher_;
   ros::Publisher arm_state_publisher_;
   ros::Publisher object_pose_publisher_;
+  ros::Subscriber base_twist_cmd_subscriber_;
 };
 
 }  // namespace manipulation_royalpanda

@@ -16,6 +16,7 @@
 #include <Eigen/Geometry>
 
 #include <manipulation_msgs/State.h>
+#include <manipulation_msgs/StateRequest.h>
 
 namespace manipulation_royalpanda {
 
@@ -38,6 +39,8 @@ class StateObserver {
   void base_twist_callback(const nav_msgs::OdometryConstPtr& msg);
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
+  bool state_request_cb(manipulation_msgs::StateRequestRequest& req,
+                        manipulation_msgs::StateRequestResponse& res);
 
  private:
   ros::NodeHandle nh_;
@@ -51,15 +54,19 @@ class StateObserver {
   // tank
   double tank_state_;
 
-  // base
+  // base transforms
   Eigen::Affine3d T_reference_base_;
   Eigen::Affine3d T_world_base_;
   Eigen::Affine3d T_world_reference_;
+
+  // base odometry
+  double base_twist_time_;
   Eigen::Vector3d base_twist_;
-  ros::Subscriber base_twist_subscriber_;
-  Eigen::Vector3d base_state_;
+  double base_pose_time_;
+  Eigen::Vector3d base_pose_;
 
   // arm
+  double arm_state_time_;
   Eigen::Matrix<double, 9, 1> dq_;
   Eigen::Matrix<double, 9, 1> q_;  // arm plus the gripper joints
   Eigen::Matrix<double, 9, 1> ext_tau_;
@@ -73,13 +80,15 @@ class StateObserver {
   sensor_msgs::JointState robot_state_;
   ros::Publisher robot_state_publisher_;
 
-  // vicon subscribers
+  // vicon/simulation subscribers
   ros::Subscriber object_pose_subscriber_;
   ros::Subscriber base_pose_subscriber_;
+  ros::Subscriber base_twist_subscriber_;
   ros::Subscriber arm_state_subscriber_;
 
   ///// Articulation
   // articulation
+  double object_pose_time_;
   double previous_time_;
   double start_relative_angle_;
   double current_relative_angle_;
@@ -102,5 +111,8 @@ class StateObserver {
 
   // filter base odometry
   double base_alpha_;
+
+  // this is only to enforce determinism in simulation
+  ros::ServiceServer sync_state_service_;
 };
 }  // namespace royalpanda

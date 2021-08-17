@@ -10,9 +10,8 @@ using namespace manipulation_royalpanda;
 int main(int argc, char** argv) {
   ros::init(argc, argv, "state_observer");
   ros::NodeHandle nh("~");
-
-  double frequency;
-  nh.param<double>("observer_update_frequency", frequency, 200);
+  ros::AsyncSpinner spinner(4);
+  spinner.start();
 
   StateObserver observer(nh);
   if (!observer.initialize()) {
@@ -20,13 +19,10 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  ros::Rate rate(frequency);
   while (ros::ok()) {
     observer.update();
     observer.publish();
-
-    ros::spinOnce();
-    rate.sleep();
   }
+  spinner.stop();
   return 0;
 }
