@@ -151,6 +151,7 @@ void toMsg(const double &time, const Eigen::Vector3d &base_pose,
 
   stateRos.arm_state.position.resize(9);
   stateRos.arm_state.velocity.resize(9);
+  stateRos.arm_state.effort.resize(9);
   for (size_t i = 0; i < 9; i++) {
     stateRos.arm_state.position[i] = arm_position(i);
     stateRos.arm_state.velocity[i] = arm_velocity(i);

@@ -1,13 +1,24 @@
 <?xml version="1.0" ?>
 <launch>
     <arg name="robot_ip" default="$(env FRANKA_IP)"/>
+    <arg name="object" default="shelf"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
+    <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
+    <arg name="object_reference_position" default="0.50" if="$(eval arg('object') == 'drawer')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
+
+    <include file="$(find mppi_manipulation)/launch/load.launch">
+        <arg name="debug" value="false"/>
+        <arg name="object" value="$(arg object)"/>
+    </include>
 
     <include file="$(find franka_gripper)/launch/franka_gripper.launch">
         <arg name="robot_ip" value="$(arg robot_ip)" />
     </include>
 
     <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
-        <rosparam command="load" file="$(find mppi_royalpanda)/config/franka_control_node.yaml" />
+        <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_control_node.yaml" />
         <param name="robot_ip" value="$(arg robot_ip)" />
     </node>
 

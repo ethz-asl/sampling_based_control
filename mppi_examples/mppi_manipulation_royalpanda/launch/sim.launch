@@ -22,26 +22,6 @@
         <arg name="object" value="$(arg object)"/>
     </include>
 
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <param name="use_tf_static" value="true"/>
-        <param name="tf_prefix" value=""/>
-        <remap from="robot_description" to="robot_description"/>
-        <remap from="joint_states" to="/joint_states"/>
-    </node>
-
-    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="object_description"/>
-        <remap from="joint_states" to="/object/joint_state"/>
-    </node>
-
-    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="obstacle_description"/>
-        <remap from="joint_states" to="/fake_joint_state"/>
-    </node>
-
     <param name="/config_file" value="$(find mppi_manipulation)/params/controller.yaml"/>
 
     <node name="simulation_node" type="simulation_node" pkg="mppi_manipulation_royalpanda" output="screen"
@@ -58,7 +38,7 @@
     </include>
 
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers.yaml"/>
-    <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
+<!--    <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>-->
+
+    <include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch"/>
 </launch>
-
-

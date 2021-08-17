@@ -29,8 +29,11 @@ bool RoyalPandaSim::init_sim() {
 }
 
 bool RoyalPandaSim::init_params() {
-  if (!nh_.param<std::vector<std::string>>("arm_joint_names", arm_joint_name_, {}) || arm_joint_name_.size() != 7){
-    NAMED_LOG_ERROR("Failed to parse arm_joint_names");
+  if (!nh_.param<std::vector<std::string>>("arm_joint_names", arm_joint_name_,
+                                           {}) ||
+      arm_joint_name_.size() != 9) {
+    NAMED_LOG_ERROR(
+        "Failed to parse arm_joint_names (must contain gripper joints)");
     return false;
   }
 
@@ -72,13 +75,13 @@ bool RoyalPandaSim::init_dynamics() {
 }
 
 void RoyalPandaSim::init_handles() {
-  arm_joint_position_.setZero(7);
-  arm_joint_velocity_.setZero(7);
-  arm_joint_effort_.setZero(7);
-  arm_joint_effort_desired_.setZero(7);
+  arm_joint_position_.setZero(9);
+  arm_joint_velocity_.setZero(9);
+  arm_joint_effort_.setZero(9);
+  arm_joint_effort_desired_.setZero(9);
 
   // usual interfaces
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 9; i++) {
     joint_state_if_.registerHandle(hardware_interface::JointStateHandle(
         arm_joint_name_[i], &arm_joint_position_[i], &arm_joint_velocity_[i],
         &arm_joint_effort_[i]));
@@ -102,7 +105,8 @@ void RoyalPandaSim::init_publishers() {
   base_pose_publisher_ = nh_.advertise<nav_msgs::Odometry>(base_odom_topic_, 1);
   base_twist_publisher_ = nh_.advertise<nav_msgs::Odometry>(base_twist_topic_, 1);
   object_pose_publisher_ = nh_.advertise<nav_msgs::Odometry>(handle_odom_topic_, 1);
-  arm_state_publisher_ = nh_.advertise<nav_msgs::Odometry>(arm_state_topic_, 1);
+  arm_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>(arm_state_topic_, 1);
 }
 
 void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
@@ -157,7 +161,7 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
   base_twist_publisher_.publish(base_twist_odom_);
 
   arm_state_.header.stamp = time;
-  for (int i=0; i<7; i++){
+  for (int i = 0; i < 9; i++) {
     arm_state_.position[i] = arm_joint_position_[i];
     arm_state_.velocity[i] = arm_joint_velocity_[i];
     arm_state_.effort[i] = arm_joint_effort_[i];
@@ -185,10 +189,16 @@ void RoyalPandaSim::publish_ros(){
 
 void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period){
   // TODO subscriber to the base desired twist
+
+  // base is velocity controlled
   u_.head<3>() = base_twist_desired_;
   dynamics_->set_control(u_);
+
+  // arm has imperfect gravity compensation
   Eigen::VectorXd tau = 0.9 * dynamics_->get_panda()->getNonlinearities().e();
-  tau.segment<7>(3) += arm_joint_effort_desired_;
+
+  // control only the arm joints (leave out gripper)
+  tau.segment<7>(3) += arm_joint_effort_desired_.head<7>();
   dynamics_->get_panda()->setGeneralizedForce(tau);
   dynamics_->advance();
 }
