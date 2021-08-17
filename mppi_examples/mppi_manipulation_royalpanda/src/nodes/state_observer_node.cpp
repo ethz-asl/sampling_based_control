@@ -3,16 +3,18 @@
 //
 
 #include <ros/ros.h>
-#include "mppi_royalpanda/state_observer.h"
+#include "mppi_manipulation_royalpanda/state_observer.h"
+
+using namespace manipulation_royalpanda;
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "state_observer_test");
+  ros::init(argc, argv, "state_observer");
   ros::NodeHandle nh("~");
 
   double frequency;
   nh.param<double>("observer_update_frequency", frequency, 200);
 
-  royalpanda::StateObserver observer(nh);
+  StateObserver observer(nh);
   if (!observer.initialize()) {
     ROS_ERROR("Failed to initialize the state observer.");
     return 0;

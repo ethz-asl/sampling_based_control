@@ -3,7 +3,7 @@ joint_publisher:
   publish_rate: 50
 
 manipulation_controller:
-  type: royalpanda/RoyalPandaControllerRos
+  type: manipulation_royalpanda/ManipulationController
   simulation: false
   fixed_base: $(arg fixed_base)
 
@@ -13,15 +13,8 @@ manipulation_controller:
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
   arm_I_max: 0.1
 
-  base_K_gains: [10.0, 10.0, 10.0]
-  base_I_gains: [1.0, 1.0, 1.0]
-  I_max: 0.0
-  base_filter_alpha: 0.0
-  
-  publish_rate: 10.0
-  coriolis_factor: 1.0
-
   state_topic: /observer/state
+  nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
 
   policy_update_rate: 0.0  # execute as fast as possible
@@ -30,33 +23,37 @@ manipulation_controller:
   ros_publish_rate: 10.0
   static_optimization: false
 
-  # cost stuff
-  linear_weight: 300.0
-  linear_weight_opening: 300.0 # 30 
+  cost:
+    regularization: 0.0
+    linear_weight: 100.0
+    linear_weight_opening: 100.0
 
-  angular_weight: 10.0
-  angular_weight_opening: 20.0 # 5
+    angular_weight: 10.0
+    angular_weight_opening: 1.0
 
-  obstacle_weight: 100
-  obstacle_weight_slope: 10
-  obstacle_radius: 0.8
+    min_dist: 0.0
+    max_reach: 1.0
+    reach_weight: 100
+    reach_weight_slope: 10
 
-  contact_weight: 10.0
+    obstacle_weight: 0
+    obstacle_weight_slope: 0
+    obstacle_radius: 0.8
 
-  max_reach: 1.0
-  reach_weight: 0
-  reach_weight_slope: 0
+    contact_weight: 10.0
 
-  object_weight: 50
-  object_tolerance: 0.01
+    object_weight: 10
+    object_tolerance: 0.01
 
-  grasp_translation_offset: [0.0, 0.0, 0.0]
-  grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+    grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+    grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
 
-  upper_joint_limits: [2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973]
-  lower_joint_limits: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
-  joint_limit_cost: 100 #1000
-  joint_limit_slope: 10 #100
+    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+    lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+
+    joint_limit_cost: 1000 #1000
+    joint_limit_slope: 1000000 #100
+
   object_reference_position: 1.57   
 
   base_gains:

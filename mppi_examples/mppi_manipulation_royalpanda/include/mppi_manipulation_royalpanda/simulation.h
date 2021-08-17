@@ -16,6 +16,7 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <mppi_manipulation/dynamics_ros.h>
+#include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <cmath>
 #include <map>
@@ -37,7 +38,8 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
  private:
   bool init_params();
   bool init_dynamics();
-  bool init_handles();
+  void init_handles();
+  void init_publishers();
 
  private:
   std::unique_ptr<manipulation::ManipulatorDynamicsRos> dynamics_;
@@ -67,7 +69,21 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   Eigen::Matrix<double, 12, 1> u_; // compound velocity command (base + arm)
 
   ros::NodeHandle nh_;
-  ros::Publisher state_publisher_;
+
+  std::string base_odom_topic_;
+  std::string base_twist_topic_;
+  std::string handle_odom_topic_;
+  std::string arm_state_topic_;
+
+  nav_msgs::Odometry base_pose_odom_;  // from vicon
+  nav_msgs::Odometry base_twist_odom_; // from ridgeback
+  nav_msgs::Odometry handle_odom_;     // from vicon
+  sensor_msgs::JointState arm_state_;
+
+  ros::Publisher base_pose_publisher_;
+  ros::Publisher base_twist_publisher_;
+  ros::Publisher arm_state_publisher_;
+  ros::Publisher object_pose_publisher_;
 };
 
 }  // namespace manipulation_royalpanda

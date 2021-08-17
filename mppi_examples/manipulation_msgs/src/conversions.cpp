@@ -7,9 +7,9 @@
 namespace manipulation::conversions {
 
 void msgToEigen(const manipulation_msgs::State &stateRos,
-                Eigen::VectorXd &state) {
+                Eigen::VectorXd &state, double &time) {
+  time = stateRos.header.stamp.toSec();
   state.resize(manipulation_msgs::State::SIZE);
-
   state(0) = stateRos.base_pose.x;
   state(1) = stateRos.base_pose.y;
   state(2) = stateRos.base_pose.z;
@@ -29,8 +29,9 @@ void msgToEigen(const manipulation_msgs::State &stateRos,
   state(27) = stateRos.tank_state;
 }
 
-void eigenToMsg(const Eigen::VectorXd &state,
+void eigenToMsg(const Eigen::VectorXd &state, const double &time,
                 manipulation_msgs::State &stateRos) {
+  stateRos.header.stamp = ros::Time().fromSec(time);
   stateRos.base_pose.x = state(0);
   stateRos.base_pose.y = state(1);
   stateRos.base_pose.z = state(2);
@@ -83,8 +84,7 @@ void toEigenState(const Eigen::Vector3d &base_pose,
                   const Eigen::VectorXd &arm_position,
                   const Eigen::VectorXd &arm_velocity,
                   const double &object_position, const double &object_velocity,
-                  const bool &contact_state,
-                  const double tank_state,
+                  const bool &contact_state, const double tank_state,
                   const Eigen::VectorXd &external_torque,
                   Eigen::VectorXd &state) {
   state.resize(manipulation_msgs::State::SIZE);
@@ -99,7 +99,7 @@ void toEigenState(const Eigen::Vector3d &base_pose,
   for (size_t i = 0; i < 9; i++) {
     state(3 + i) = arm_position(i);
     state(15 + i) = arm_velocity(i);
-    state(31 + i) = external_torque(3+i);
+    state(31 + i) = external_torque(3 + i);
   }
 
   state(24) = object_position;
@@ -134,12 +134,14 @@ void fromEigenState(Eigen::Vector3d &base_pose, Eigen::Vector3d &base_twist,
   tank_state = state(27);
 }
 
-void toMsg(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
+void toMsg(const double &time, const Eigen::Vector3d &base_pose,
+           const Eigen::Vector3d &base_twist,
            const Eigen::VectorXd &arm_position,
            const Eigen::VectorXd &arm_velocity, const double &object_position,
            const double &object_velocity, const bool &contact_state,
-           const double& tank_state, const Eigen::VectorXd& external_torque,
+           const double &tank_state, const Eigen::VectorXd &external_torque,
            manipulation_msgs::State &stateRos) {
+  stateRos.header.stamp = ros::Time().fromSec(time);
   stateRos.base_pose.x = base_pose.x();
   stateRos.base_pose.y = base_pose.y();
   stateRos.base_pose.z = base_pose.z();
@@ -152,7 +154,7 @@ void toMsg(const Eigen::Vector3d &base_pose, const Eigen::Vector3d &base_twist,
   for (size_t i = 0; i < 9; i++) {
     stateRos.arm_state.position[i] = arm_position(i);
     stateRos.arm_state.velocity[i] = arm_velocity(i);
-    stateRos.arm_state.effort[i] = external_torque(3+i);
+    stateRos.arm_state.effort[i] = external_torque(3 + i);
   }
   stateRos.object_position = object_position;
   stateRos.object_velocity = object_velocity;

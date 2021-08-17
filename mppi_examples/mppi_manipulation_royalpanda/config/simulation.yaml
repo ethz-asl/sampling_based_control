@@ -1,0 +1,35 @@
+# Topics
+base_odom_topic: /panda_base/vrpn_client/estimated_odometry
+base_twist_topic: /ridgeback_velocity_controller/odom
+handle_odom_topic: /shelf_door/vrpn_client/estimated_odometry
+arm_state_topic: /panda/joint_states
+
+# Params
+arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
+sim_dynamics:
+  dt: 0.015
+  has_filter: false
+  apply_filter: false
+  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
+                   0.0,                                                                    # object joint position
+                   0.0,                                                                    # object joint velocity
+                   0,                                                                      # contact flag
+                   100,                                                                    # tank energy
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+  gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [ 0.0, 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0, 0.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      ki: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]

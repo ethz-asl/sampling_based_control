@@ -52,12 +52,12 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  if (!gains.init_from_ros(nh)) {
+  if (!gains.init_from_ros(nh, prefix)) {
     ROS_ERROR("Failed to parse simulation gains.");
     return false;
   }
 
-  if (!filter_params.init_from_ros(nh)) {
+  if (!filter_params.init_from_ros(nh) && has_filter) {
     ROS_ERROR("Failed to parse filter parameters.");
     return false;
   }
@@ -71,6 +71,7 @@ std::ostream& operator<<(std::ostream& os,
   os << "dt=" << params.dt << std::endl;
   os << "has filter = " << params.has_filter << std::endl;
   os << "apply filter = " << params.apply_filter << std::endl;
+  os << params.gains << std::endl;
   return os;
   // clang-format on
 }

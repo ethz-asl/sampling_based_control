@@ -67,7 +67,7 @@ struct PIDGains {
   gain_pair<ARM_DIMENSION> arm_gains;
   gain_pair<GRIPPER_DIMENSION> gripper_gains;
 
-  bool init_from_ros(const ros::NodeHandle& nh);
+  bool init_from_ros(const ros::NodeHandle& nh, const std::string& prefix="");
 };
 
 }  // namespace manipulation

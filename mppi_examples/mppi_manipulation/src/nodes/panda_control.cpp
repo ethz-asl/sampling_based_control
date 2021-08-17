@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
     sim_time += simulation->get_dt();
 
     controller.get_input_state(x, x_nom, u, sim_time);
-    manipulation::conversions::eigenToMsg(x_nom, x_nom_ros);
+    manipulation::conversions::eigenToMsg(x_nom, sim_time, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
 
     end = steady_clock::now();

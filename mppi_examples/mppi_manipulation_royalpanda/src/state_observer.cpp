@@ -2,7 +2,7 @@
 // Created by giuseppe on 25.01.21.
 //
 
-#include "mppi_royalpanda/state_observer.h"
+#include "mppi_manipulation_royalpanda/state_observer.h"
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -23,7 +23,7 @@
 
 #include <manipulation_msgs/conversions.h>
 
-namespace royalpanda {
+namespace manipulation_royalpanda {
 
 StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   std::string base_pose_topic;
@@ -71,11 +71,6 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
 }
 
 bool StateObserver::initialize() {
-  if (!nh_.param<bool>("fixed_base", fixed_base_, true)) {
-    ROS_ERROR("Failed to parse fixed_base param.");
-    return false;
-  }
-
   if (!nh_.getParam("base_alpha", base_alpha_) || base_alpha_ < 0 ||
       base_alpha_ > 1) {
     ROS_ERROR("Failed to parse base_alpha param or invalid.");
@@ -145,17 +140,10 @@ bool StateObserver::initialize() {
 }
 
 void StateObserver::update() {
-  if (!fixed_base_) {
-    manipulation::conversions::toMsg(
-        base_state_, base_twist_, q_, dq_, object_state_.position[0],
-        object_state_.velocity[0], false, state_ros_);
-    state_ros_.header.stamp = ros::Time::now();
-  } else {
-    manipulation::conversions::toMsg(q_, dq_, object_state_.position[0],
-                                     object_state_.velocity[0], false,
-                                     state_ros_);
-    state_ros_.header.stamp = ros::Time::now();
-  }
+  manipulation::conversions::toMsg(
+      time_,
+      base_state_, base_twist_, q_, dq_, object_state_.position[0],
+      object_state_.velocity[0], false, tank_state_, ext_tau_, state_ros_);
 }
 
 void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
@@ -186,6 +174,7 @@ void StateObserver::arm_state_callback(
         2.0, "Joint state has the wrong size: " << msg->name.size());
     return;
   }
+  time_ = msg->header.stamp.toSec();
   for (size_t i = 0; i < 9; i++) q_(i) = msg->position[i];
   for (size_t i = 0; i < 9; i++) dq_(i) = msg->velocity[i];
 }
@@ -229,35 +218,33 @@ void StateObserver::object_pose_callback(
 }
 
 void StateObserver::publish() {
-  if (!fixed_base_) {
-    geometry_msgs::PoseStamped base_pose;
-    base_pose.header.stamp = ros::Time::now();
-    base_pose.header.frame_id = "world";
-    base_pose.pose.position.x = base_state_.x();
-    base_pose.pose.position.y = base_state_.y();
-    base_pose.pose.position.z = 0.0;
-    Eigen::Quaterniond q(
-        Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
-    base_pose.pose.orientation.x = q.x();
-    base_pose.pose.orientation.y = q.y();
-    base_pose.pose.orientation.z = q.z();
-    base_pose.pose.orientation.w = q.w();
-    base_pose_publisher_.publish(base_pose);
+  geometry_msgs::PoseStamped base_pose;
+  base_pose.header.stamp = ros::Time::now();
+  base_pose.header.frame_id = "world";
+  base_pose.pose.position.x = base_state_.x();
+  base_pose.pose.position.y = base_state_.y();
+  base_pose.pose.position.z = 0.0;
+  Eigen::Quaterniond q(
+      Eigen::AngleAxisd(base_state_.z(), Eigen::Vector3d::UnitZ()));
+  base_pose.pose.orientation.x = q.x();
+  base_pose.pose.orientation.y = q.y();
+  base_pose.pose.orientation.z = q.z();
+  base_pose.pose.orientation.w = q.w();
+  base_pose_publisher_.publish(base_pose);
 
-    robot_state_.position[0] = base_state_.x();
-    robot_state_.position[1] = base_state_.y();
-    robot_state_.position[2] = base_state_.z();
+  robot_state_.position[0] = base_state_.x();
+  robot_state_.position[1] = base_state_.y();
+  robot_state_.position[2] = base_state_.z();
 
-    base_twist_ros_.header.frame_id = "world";
-    base_twist_ros_.header.stamp = ros::Time::now();
-    base_twist_ros_.twist.linear.x = base_twist_.x();
-    base_twist_ros_.twist.linear.y = base_twist_.y();
-    base_twist_ros_.twist.angular.z = base_twist_.z();
-    base_twist_publisher_.publish(base_twist_ros_);
+  base_twist_ros_.header.frame_id = "world";
+  base_twist_ros_.header.stamp = ros::Time::now();
+  base_twist_ros_.twist.linear.x = base_twist_.x();
+  base_twist_ros_.twist.linear.y = base_twist_.y();
+  base_twist_ros_.twist.angular.z = base_twist_.z();
+  base_twist_publisher_.publish(base_twist_ros_);
 
-    robot_state_.header.stamp = ros::Time::now();
-    robot_state_publisher_.publish(robot_state_);
-  }
+  robot_state_.header.stamp = ros::Time::now();
+  robot_state_publisher_.publish(robot_state_);
 
   object_state_.header.stamp = ros::Time::now();
   object_state_publisher_.publish(object_state_);
@@ -265,4 +252,4 @@ void StateObserver::publish() {
   state_publisher_.publish(state_ros_);
 }
 
-}  // namespace royalpanda
+}  // namespace manipulation_royalpanda

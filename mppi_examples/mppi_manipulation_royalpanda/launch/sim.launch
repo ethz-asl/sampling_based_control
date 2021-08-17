@@ -49,8 +49,7 @@
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
         <param name="references_file" value="$(find mppi_manipulation)/config/experiments/references.yaml"/>
-        <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml"/>
-        <rosparam command="load" file="$(find mppi_manipulation)/params/controller.yaml"/>
+        <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/simulation.yaml"/>
     </node>
 
     <include file="$(find mppi_manipulation)/launch/common.launch">

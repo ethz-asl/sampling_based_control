@@ -17,7 +17,7 @@
 
 #include <manipulation_msgs/State.h>
 
-namespace royalpanda {
+namespace manipulation_royalpanda {
 
 /// The scope of this class is to collect info and return the complete mobile
 /// robot state
@@ -39,15 +39,17 @@ class StateObserver {
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
 
-  //  friend std::ostream& operator<<(std::ostream& os, const StateObserver&
-  //  obs);
-
  private:
-  bool fixed_base_;
   ros::NodeHandle nh_;
 
   manipulation_msgs::State state_ros_;
   ros::Publisher state_publisher_;
+
+  // time: will be the one received on the arm state
+  double time_;
+
+  // tank
+  double tank_state_;
 
   // base
   Eigen::Affine3d T_reference_base_;
@@ -60,6 +62,7 @@ class StateObserver {
   // arm
   Eigen::Matrix<double, 9, 1> dq_;
   Eigen::Matrix<double, 9, 1> q_;  // arm plus the gripper joints
+  Eigen::Matrix<double, 9, 1> ext_tau_;
 
   // debug ros publishing: do not use for realtime control loops
   ros::Publisher base_pose_publisher_;
