@@ -52,7 +52,7 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  if (!gains.init_from_ros(nh, prefix)) {
+  if (!gains.init_from_ros(nh, prefix + "dynamics/")) {
     ROS_ERROR("Failed to parse simulation gains.");
     return false;
   }

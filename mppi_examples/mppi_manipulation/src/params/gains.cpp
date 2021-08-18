@@ -7,9 +7,9 @@
 using namespace manipulation;
 
 bool PIDGains::init_from_ros(const ros::NodeHandle& nh, const std::string& prefix) {
-  if (!base_gains.parse_from_ros(nh, prefix + "dynamics/gains/base_gains")) return false;
-  if (!arm_gains.parse_from_ros(nh, prefix + "dynamics/gains/arm_gains")) return false;
-  if (!gripper_gains.parse_from_ros(nh, prefix + "dynamics/gains/gripper_gains"))
+  if (!base_gains.parse_from_ros(nh, prefix + "gains/base_gains")) return false;
+  if (!arm_gains.parse_from_ros(nh, prefix + "gains/arm_gains")) return false;
+  if (!gripper_gains.parse_from_ros(nh, prefix + "gains/gripper_gains"))
     return false;
   return true;
 }

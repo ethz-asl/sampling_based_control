@@ -67,8 +67,6 @@ void namedLog(LogType type, const char* prefix, Args&& ...args){
     case ERROR:
       append(os, args...);
       ROS_ERROR_STREAM(os.str());
-    default:
-      std::cout << os.str() << std::endl;
   }
 }
 

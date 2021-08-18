@@ -13,12 +13,12 @@ RoyalPandaSim::RoyalPandaSim(const ros::NodeHandle &nh) : nh_(nh){};
 
 bool RoyalPandaSim::init_sim() {
   if (!init_params()) {
-    NAMED_LOG_ERROR("Failed to initialize parameters.");
+    ROS_ERROR("Failed to initialize parameters.");
     return false;
   }
 
   if (!init_dynamics()) {
-    NAMED_LOG_ERROR("Failed to initialize dynamics.");
+    ROS_ERROR("Failed to initialize dynamics.");
     return false;
   }
 
@@ -31,50 +31,57 @@ bool RoyalPandaSim::init_params() {
   if (!nh_.param<std::vector<std::string>>("arm_joint_names", arm_joint_name_,
                                            {}) ||
       arm_joint_name_.size() != 7) {
-    NAMED_LOG_ERROR("Failed to parse arm_joint_names");
+    ROS_ERROR("Failed to parse arm_joint_names");
     return false;
   }
 
   if (!nh_.param<std::vector<std::string>>("finger_joint_names",
                                            finger_joint_name_, {}) ||
       finger_joint_name_.size() != 2) {
-    NAMED_LOG_ERROR("Failed to parse finger_joint_names");
+    ROS_ERROR("Failed to parse finger_joint_names");
+    return false;
+  }
+
+  if (!nh_.param<std::vector<std::string>>("base_joint_names", base_joint_name_,
+                                           {}) ||
+      base_joint_name_.size() != 3) {
+    ROS_ERROR("Failed to parse base_joint_names");
     return false;
   }
 
   if (!nh_.param<std::string>("base_odom_topic", base_odom_topic_, {})) {
-    NAMED_LOG_ERROR("Failed to get base_odom_topic");
+    ROS_ERROR("Failed to get base_odom_topic");
     return false;
   }
 
   if (!nh_.param<std::string>("base_twist_topic", base_twist_topic_, {})) {
-    NAMED_LOG_ERROR("Failed to get base_twist_topic");
+    ROS_ERROR("Failed to get base_twist_topic");
     return false;
   }
 
   if (!nh_.param<std::string>("base_twist_cmd_topic", base_twist_cmd_topic_,
                               {})) {
-    NAMED_LOG_ERROR("Failed to get base_twist_cmd_topic");
+    ROS_ERROR("Failed to get base_twist_cmd_topic");
     return false;
   }
 
   if (!nh_.param<std::string>("handle_odom_topic", handle_odom_topic_, {})) {
-    NAMED_LOG_ERROR("Failed to get handle_odom_topic");
+    ROS_ERROR("Failed to get handle_odom_topic");
     return false;
   }
 
   if (!nh_.param<std::string>("arm_state_topic", arm_state_topic_, {})) {
-    NAMED_LOG_ERROR("Failed to get arm_state_topic");
+    ROS_ERROR("Failed to get arm_state_topic");
     return false;
   }
 
   if (!nh_.param<std::string>("finger_state_topic", finger_state_topic_, {})) {
-    NAMED_LOG_ERROR("Failed to get finger_state_topic");
+    ROS_ERROR("Failed to get finger_state_topic");
     return false;
   }
 
   if (!nh_.param<std::string>("wrench_topic", wrench_topic_, {})) {
-    NAMED_LOG_ERROR("Failed to get wrench_topic");
+    ROS_ERROR("Failed to get wrench_topic");
     return false;
   }
 
@@ -121,6 +128,16 @@ void RoyalPandaSim::init_handles() {
         &arm_joint_effort_desired_[i]));
   }
 
+  for (int i = 0; i < 3; i++) {
+    joint_state_if_.registerHandle(hardware_interface::JointStateHandle(
+        base_joint_name_[i], &base_position_[i], &base_twist_[i],
+        &base_effort_[i]));
+
+    velocity_joint_if_.registerHandle(hardware_interface::JointHandle(
+        joint_state_if_.getHandle(base_joint_name_[i]),
+        &base_twist_cmd_shared_[i]));
+  }
+
   // franka interfaces
   franka_state_if_.registerHandle(
       franka_hw::FrankaStateHandle("panda_robot", this->robot_state_));
@@ -128,6 +145,7 @@ void RoyalPandaSim::init_handles() {
       "panda_model", *this->model_, this->robot_state_));
 
   registerInterface(&joint_state_if_);
+  registerInterface(&velocity_joint_if_);
   registerInterface(&effort_joint_if_);
   registerInterface(&franka_state_if_);
   registerInterface(&franka_model_if_);
@@ -274,7 +292,7 @@ void RoyalPandaSim::publish_ros() { dynamics_->publish_ros(); }
 void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period) {
 
   // base is velocity controlled
-  u_.head<3>() = base_twist_cmd_;
+  u_.head<3>() = base_twist_cmd_shared_;
   dynamics_->set_control(u_);
 
   // arm has imperfect gravity compensation

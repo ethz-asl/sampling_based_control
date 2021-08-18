@@ -6,7 +6,8 @@ manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
 
   arm_id: panda
-  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
+  base_joint_names: [world_x, world_y, theta]
   i_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
   arm_I_max: 0.1
@@ -14,6 +15,8 @@ manipulation_controller:
   state_topic: /observer/state
   nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+
+  sequential: true
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
@@ -52,19 +55,52 @@ manipulation_controller:
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 1000000 #100
 
-  object_reference_position: 1.57   
+  controller_gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [ 0.0, 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0, 0.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]
 
-  base_gains:
-    kp: [0.0, 0.0, 0.0]
-    kd: [1000.0, 1000.0, 1000.0]
+  object_reference_position: 1.57
+  dynamics:
+    dt: 0.015
+    has_filter: false
+    apply_filter: false
+    initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
+                     0.0,                                                                    # object joint position
+                     0.0,                                                                    # object joint velocity
+                     0,                                                                      # contact flag
+                     100,                                                                    # tank energy
+                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]             # external torques
 
-  arm_gains: 
-    kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    kd: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
-
-  gripper_gains:
-    kp: [100.0, 100.0]
-    kd: [50.0, 50.0]
+    gains:
+      base_gains:
+        kp: [ 0.0, 0.0, 0.0 ]
+        kd: [ 1000.0, 1000.0, 1000.0 ]
+        ki: [ 0.0, 0.0, 0.0 ]
+        i_max: [ 0.0, 0.0, 0.0 ]
+      arm_gains:
+        kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+        kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+        ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+        i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+      gripper_gains:
+        kp: [ 100.0, 100.0 ]
+        kd: [ 50.0, 50.0 ]
+        ki: [ 0.0, 0.0 ]
+        i_max: [ 0.0, 0.0 ]
 
 panda_position_controller:
   type: effort_controllers/JointGroupPositionController

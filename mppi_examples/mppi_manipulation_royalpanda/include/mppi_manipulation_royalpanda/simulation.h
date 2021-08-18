@@ -52,12 +52,14 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   hardware_interface::JointStateInterface joint_state_if_;
   hardware_interface::EffortJointInterface effort_joint_if_;
+  hardware_interface::VelocityJointInterface velocity_joint_if_;
   franka_hw::FrankaStateInterface franka_state_if_;
   franka_hw::FrankaModelInterface franka_model_if_;
 
   franka::RobotState robot_state_;
   std::unique_ptr<franka_hw::ModelBase> model_;
 
+  std::vector<std::string> base_joint_name_;
   std::vector<std::string> arm_joint_name_;
   std::vector<std::string> finger_joint_name_;
 
@@ -68,8 +70,10 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   Eigen::Vector3d base_position_;
   Eigen::Vector3d base_twist_;
-  Eigen::Vector3d base_twist_cmd_;
   Eigen::Vector3d base_effort_;
+  Eigen::Vector3d base_twist_cmd_;
+  Eigen::Vector3d base_twist_cmd_shared_;  // the command written using shared
+                                           // memory (sim only)
   bool contact_state_;
   double object_position_;
   double object_velocity_;

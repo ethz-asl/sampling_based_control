@@ -9,8 +9,9 @@ wrench_topic: /external_force
 
 # Params
 enforce_determinism: true
-arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
-finger_joint_names: [ panda_finger_joint1, panda_finger_joint2]
+arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
+finger_joint_names: [ panda_finger_joint1, panda_finger_joint2 ]
+base_joint_names: [ world_x, world_y, theta ]
 
 sim_dynamics:
   dt: 0.015
@@ -22,7 +23,7 @@ sim_dynamics:
                    0.0,                                                                    # object joint velocity
                    0,                                                                      # contact flag
                    100,                                                                    # tank energy
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]             # external torques
   gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]

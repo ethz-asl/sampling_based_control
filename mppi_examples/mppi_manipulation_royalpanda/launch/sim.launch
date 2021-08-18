@@ -39,7 +39,7 @@
     </include>
 
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers.yaml"/>
-<!--    <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>-->
+    <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 
     <include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch"/>
 </launch>

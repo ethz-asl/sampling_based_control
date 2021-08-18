@@ -19,62 +19,71 @@ using namespace manipulation;
 using namespace manipulation_royalpanda;
 
 bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
-                                  ros::NodeHandle& node_handle) {
-  if (!init_parameters(node_handle)) return false;
+                                  ros::NodeHandle& root_nh,
+                                  ros::NodeHandle& controller_nh) {
+  if (!init_parameters(controller_nh)) return false;
   if (!init_interfaces(robot_hw)) return false;
-  init_ros(node_handle);
+  init_ros(controller_nh);
 
   man_interface_ =
-      std::make_unique<manipulation::PandaControllerInterface>(node_handle);
+      std::make_unique<manipulation::PandaControllerInterface>(controller_nh);
   if (!man_interface_->init()) {
-    NAMED_LOG_ERROR("Failed to initialized manipulation interface");
+    ROS_ERROR("Failed to initialized manipulation interface");
     return false;
   }
-  NAMED_LOG_INFO("Solver initialized correctly.");
+  ROS_INFO("Solver initialized correctly.");
 
-  NAMED_LOG_INFO("Controller successfully initialized!");
+  ROS_INFO("Controller successfully initialized!");
   started_ = false;
+  state_ok_ = true;
   return true;
 }
 
 bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   if (!node_handle.getParam("arm_id", arm_id_)) {
-    NAMED_LOG_ERROR("Could not read parameter arm_id");
+    ROS_ERROR("Could not read parameter arm_id");
     return false;
   }
 
   if (!node_handle.getParam("joint_names", joint_names_) ||
       joint_names_.size() != 7) {
-    NAMED_LOG_ERROR("Invalid or no joint_names parameters provided");
+    ROS_ERROR("Invalid or no joint_names parameters provided");
     return false;
+  }
+
+  if (!node_handle.getParam("base_joint_names", base_joint_names_) ||
+      base_joint_names_.size() != 3) {
+    ROS_WARN(
+        "No base_joint_names parameters provided. These work only in "
+        "simulation.");
   }
 
   if (!node_handle.getParam("sequential", sequential_)) {
-    NAMED_LOG_ERROR("Failed to get sequential parameter");
+    ROS_ERROR("Failed to get sequential parameter");
     return false;
   }
 
-  if (!gains_.init_from_ros(node_handle)) {
-    NAMED_LOG_ERROR("Failed to parse gains.");
+  if (!gains_.init_from_ros(node_handle, "controller_")) {
+    ROS_ERROR("Failed to parse gains.");
     return false;
   }
 
   if (!node_handle.getParam("state_topic", state_topic_)) {
-    NAMED_LOG_ERROR("state_topic not found");
+    ROS_ERROR("state_topic not found");
     return false;
   }
 
   if (!node_handle.getParam("nominal_state_topic", nominal_state_topic_)) {
-    NAMED_LOG_ERROR("nominal_state_topic not found");
+    ROS_ERROR("nominal_state_topic not found");
     return false;
   }
 
   if (!node_handle.getParam("base_twist_topic", base_twist_topic_)) {
-    NAMED_LOG_ERROR("base_twist_topic not found");
+    ROS_ERROR("base_twist_topic not found");
     return false;
   }
 
-  NAMED_LOG_INFO("Parameters successfully initialized.");
+  ROS_INFO("Parameters successfully initialized.");
   return true;
 }
 
@@ -83,7 +92,7 @@ bool ManipulationController::init_interfaces(
   auto* effort_joint_interface =
       robot_hw->get<hardware_interface::EffortJointInterface>();
   if (effort_joint_interface == nullptr) {
-    NAMED_LOG_ERROR("Failed to get effort joint interface.");
+    ROS_ERROR("Failed to get effort joint interface.");
     return false;
   }
 
@@ -92,51 +101,72 @@ bool ManipulationController::init_interfaces(
       joint_handles_.push_back(
           effort_joint_interface->getHandle(joint_names_[i]));
     } catch (const hardware_interface::HardwareInterfaceException& ex) {
-      NAMED_LOG_ERROR("Failed to get joint handles: ", ex.what());
+      ROS_ERROR("Failed to get joint handles: ", ex.what());
       return false;
     }
   }
 
+  auto* velocity_joint_interface =
+      robot_hw->get<hardware_interface::VelocityJointInterface>();
+  if (velocity_joint_interface == nullptr) {
+    ROS_ERROR("Failed to get velocity joint interface.");
+    return false;
+  }
+
+  for (size_t i = 0; i < 3; ++i) {
+    try {
+      base_joint_handles_.push_back(
+          velocity_joint_interface->getHandle(base_joint_names_[i]));
+    } catch (const hardware_interface::HardwareInterfaceException& ex) {
+      ROS_WARN_STREAM("Failed to get base joint handles: "
+                      << base_joint_names_[i]
+                      << ". These will only work in simulation --> sending "
+                         "command via ros topic instead.");
+      has_base_handles_ = false;
+      break;
+    }
+  }
+  has_base_handles_ = true;
+
   auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
   if (model_interface == nullptr) {
-    NAMED_LOG_ERROR("Failed to get model interface.");
+    ROS_ERROR("Failed to get model interface.");
     return false;
   }
   try {
     model_handle_ = std::make_unique<franka_hw::FrankaModelHandle>(
         model_interface->getHandle(arm_id_ + "_model"));
   } catch (hardware_interface::HardwareInterfaceException& ex) {
-    NAMED_LOG_ERROR("Failed to get model handle from interface: ", ex.what());
+    ROS_ERROR("Failed to get model handle from interface: ", ex.what());
     return false;
   }
 
   auto* state_interface = robot_hw->get<franka_hw::FrankaStateInterface>();
   if (state_interface == nullptr) {
-    NAMED_LOG_ERROR("Failed to get state interface from hardware");
+    ROS_ERROR("Failed to get state interface from hardware");
     return false;
   }
   try {
     state_handle_ = std::make_unique<franka_hw::FrankaStateHandle>(
         state_interface->getHandle(arm_id_ + "_robot"));
   } catch (hardware_interface::HardwareInterfaceException& ex) {
-    NAMED_LOG_ERROR("Failed to get state handle from interface: ", ex.what());
+    ROS_ERROR("Failed to get state handle from interface: ", ex.what());
     return false;
   }
 
-  NAMED_LOG_INFO("Interfaces successfully initialized.");
+  ROS_INFO("Interfaces successfully initialized.");
   return true;
 }
 
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   base_twist_publisher_.init(nh, base_twist_topic_, 1);
   nominal_state_publisher_.init(nh, nominal_state_topic_, 1);
-
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
 
-  NAMED_LOG_INFO("Sending base commands to: ", base_twist_topic_);
-  NAMED_LOG_INFO("Receiving state at: ", state_topic_);
-  NAMED_LOG_INFO("Ros successfully initialized.");
+  ROS_INFO_STREAM("Sending base commands to: " << base_twist_topic_);
+  ROS_INFO_STREAM("Receiving state at: " << state_topic_);
+  ROS_INFO_STREAM("Ros successfully initialized.");
 }
 
 void ManipulationController::state_callback(
@@ -152,13 +182,14 @@ void ManipulationController::state_callback(
 
   if (!state_received_) {
     state_received_ = true;
-  } else {
-    if ((observation_time_ - last_observation_time_) > 0.01) {
-      state_ok_ = false;
-      NAMED_LOG_WARN("State update is too slow. Current delay: ",
-                     (observation_time_ - last_observation_time_));
-    }
   }
+  //  else {
+  //    if ((observation_time_ - last_observation_time_) > 0.01) {
+  //      state_ok_ = false;
+  //      ROS_WARN_STREAM("State update is too slow. Current delay: " <<
+  //      (observation_time_ - last_observation_time_));
+  //    }
+  //  }
   last_observation_time_ = observation_time_;
 }
 
@@ -168,7 +199,7 @@ void ManipulationController::starting(const ros::Time& time) {
   if (!sequential_) {
     started_ = man_interface_->start();
     if (!started_) {
-      NAMED_LOG_ERROR("Failed  to start controller");
+      ROS_ERROR("Failed  to start controller");
       return;
     }
   }
@@ -179,12 +210,17 @@ void ManipulationController::starting(const ros::Time& time) {
     arm_position_desired_[i] = joint_handles_[i].getPosition();
   }
   started_ = true;
-  NAMED_LOG_INFO("Controller started!");
+  ROS_INFO("Controller started!");
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
-  // in simulation we can use directly the hardware interface
-  // TODO
+  // In simulation, we can use directly the hardware interface
+  if (has_base_handles_) {
+    for (int i = 0; i < 3; i++) {
+      base_joint_handles_[i].setCommand(u_[i]);
+    }
+    return;
+  }
 
   if (base_trigger_() && base_twist_publisher_.trylock()) {
     Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
@@ -229,7 +265,7 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
 void ManipulationController::update(const ros::Time& time,
                                     const ros::Duration& period) {
   if (!started_) {
-    NAMED_LOG_ERROR("Controller not started. Probably error occurred...");
+    ROS_ERROR("Controller not started. Probably error occurred...");
     return;
   }
 
@@ -252,7 +288,8 @@ void ManipulationController::update(const ros::Time& time,
 
   if (sequential_) {
     man_interface_->update_policy();
-    man_interface_->get_input(x_, u_, time.toSec());
+    //    man_interface_->get_input(x_, u_, time.toSec());
+    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
     man_interface_->publish_ros_default();
     man_interface_->publish_ros();
   } else {
