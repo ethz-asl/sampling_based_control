@@ -3,6 +3,7 @@
 //
 
 #include "mppi_manipulation_royalpanda/state_observer.h"
+#include "mppi_manipulation_royalpanda/utils.h"
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -26,6 +27,11 @@
 namespace manipulation_royalpanda {
 
 StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
+  base_pose_received_ = false;
+  base_twist_received_ = false;
+  object_pose_received_ = false;
+  arm_state_received_ = false;
+
   std::string base_pose_topic;
   nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
   base_pose_subscriber_ = nh_.subscribe(
@@ -71,6 +77,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   robot_state_.position.resize(robot_state_.name.size());
   robot_state_.velocity.resize(robot_state_.name.size());
   robot_state_.header.frame_id = "world";
+
+  ext_tau_.setZero();
 }
 
 bool StateObserver::initialize() {
@@ -143,13 +151,16 @@ bool StateObserver::initialize() {
 }
 
 void StateObserver::update() {
-  manipulation::conversions::toMsg(
-      time_, base_pose_, base_twist_, q_, dq_, object_state_.position[0],
-      object_state_.velocity[0], false, tank_state_, ext_tau_, state_ros_);
+  if (arm_state_received_ && base_twist_received_ && base_pose_received_ &&
+      object_pose_received_) {
+    manipulation::conversions::toMsg(
+        time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_, ext_tau_.tail<9>(), object_state_.position[0],
+        object_state_.velocity[0], false, tank_state_, state_ros_);
+  }
+  state_publisher_.publish(state_ros_);
 }
 
 void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
-  base_pose_time_ = msg->header.stamp.toSec();
   tf::poseMsgToEigen(msg->pose.pose, T_world_reference_);
   T_world_base_ = T_world_reference_ * T_reference_base_;
 
@@ -159,33 +170,38 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   Eigen::Vector3d ix =
       T_world_base_.rotation().col(0);  // 2d projection of forward motion axis
   base_pose_.z() = std::atan2(ix.y(), ix.x());
+  base_pose_time_ = msg->header.stamp.toSec();
+  base_pose_received_ = true;
 }
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
-  base_twist_time_ = msg->header.stamp.toSec();
   Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x,
                                   msg->twist.twist.linear.y, 0.0);
   odom_base_twist = Eigen::AngleAxis(base_pose_.z(), Eigen::Vector3d::UnitZ()) *
                     odom_base_twist;
   base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
+  base_twist_time_ = msg->header.stamp.toSec();
+  base_twist_received_ = true;
 }
 
 void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
-  arm_state_time_ = msg->header.stamp.toSec();
-  if (msg->name.size() != 9) {
+  if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(), (int)msg->effort.size(), (int)msg->velocity.size())){
     ROS_WARN_STREAM_THROTTLE(
-        2.0, "Joint state has the wrong size: " << msg->name.size());
+        2.0, "Joint state filds have the wrong size." << msg->name.size());
     return;
   }
   time_ = msg->header.stamp.toSec();
-  for (size_t i = 0; i < 9; i++) q_(i) = msg->position[i];
-  for (size_t i = 0; i < 9; i++) dq_(i) = msg->velocity[i];
+  for (size_t i = 0; i < 9; i++){
+    q_(i) = msg->position[i];
+    dq_(i) = msg->velocity[i];
+  }
+  arm_state_time_ = msg->header.stamp.toSec();
+  arm_state_received_ = true;
 }
 
 void StateObserver::object_pose_callback(
     const nav_msgs::OdometryConstPtr& msg) {
-  object_pose_time_ = msg->header.stamp.toSec();
   tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
   if (articulation_first_computation_) {
     ROS_INFO("First computation of the shelf pose.");
@@ -220,27 +236,40 @@ void StateObserver::object_pose_callback(
       (theta_new - object_state_.position[0]) / (current_time - previous_time_);
   object_state_.position[0] = theta_new;
   previous_time_ = current_time;
+  object_pose_time_ = msg->header.stamp.toSec();
+  object_pose_received_ = true;
+}
+
+void StateObserver::wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg) {
+  // TODO
 }
 
 bool StateObserver::state_request_cb(
     manipulation_msgs::StateRequestRequest& req,
     manipulation_msgs::StateRequestResponse& res) {
-  if (base_pose_time_ == base_twist_time_ == arm_state_time_ ==
-          object_pose_time_ &&
-      base_pose_time_ == req.time) {
-    manipulation::conversions::toMsg(
-        req.time, base_pose_, base_twist_, q_, dq_, object_state_.position[0],
-        object_state_.velocity[0], false, tank_state_, ext_tau_, state_ros_);
-    res.state = state_ros_;
-    return true;
+  if (!(arm_state_received_ && base_twist_received_ && base_pose_received_ &&
+  object_pose_received_)){
+    ROS_WARN_THROTTLE(1.0, "Full state not received yet.");
+    return false;
   }
-  ROS_ERROR_STREAM("Failed to get required synchronized state: "
-                   << std::endl
-                   << "base_pose_time=" << base_pose_time_ << std::endl
-                   << "base_twist_time=" << base_twist_time_ << std::endl
-                   << "arm_state_time=" << arm_state_time_ << std::endl
-                   << "object_pose_time=" << object_pose_time_);
-  return false;
+
+  if (!are_equal(req.time, base_pose_time_, base_twist_time_, arm_state_time_,
+                object_pose_time_)) {
+    ROS_DEBUG_STREAM("Failed to get required synchronized state: "
+    << std::endl
+    << "base_pose_time=" << base_pose_time_ << std::endl
+    << "base_twist_time=" << base_twist_time_ << std::endl
+    << "arm_state_time=" << arm_state_time_ << std::endl
+    << "object_pose_time=" << object_pose_time_);
+    return false;
+  }
+
+  manipulation::conversions::toMsg(
+      req.time, base_pose_, base_twist_, ext_tau_.head<3>(),
+          q_, dq_, ext_tau_.tail<9>(), object_state_.position[0],
+      object_state_.velocity[0], false, tank_state_, state_ros_);
+  res.state = state_ros_;
+  return true;
 }
 
 void StateObserver::publish() {
@@ -274,8 +303,6 @@ void StateObserver::publish() {
 
   object_state_.header.stamp = ros::Time::now();
   object_state_publisher_.publish(object_state_);
-
-  state_publisher_.publish(state_ros_);
 }
 
 }  // namespace manipulation_royalpanda

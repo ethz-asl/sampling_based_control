@@ -17,6 +17,7 @@
 #include <hardware_interface/joint_state_interface.h>
 #include <mppi_manipulation/dynamics_ros.h>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include <ros/ros.h>
 #include <cmath>
 #include <map>
@@ -34,6 +35,9 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   void write_sim(ros::Time time, ros::Duration period);
   double get_time_step();
   void publish_ros();
+
+  Eigen::VectorXd get_state() const;
+  void print_state();
 
  private:
   bool init_params();
@@ -55,6 +59,8 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   std::unique_ptr<franka_hw::ModelBase> model_;
 
   std::vector<std::string> arm_joint_name_;
+  std::vector<std::string> finger_joint_name_;
+
   Eigen::VectorXd arm_joint_position_;
   Eigen::VectorXd arm_joint_velocity_;
   Eigen::VectorXd arm_joint_effort_;
@@ -63,6 +69,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   Eigen::Vector3d base_position_;
   Eigen::Vector3d base_twist_;
   Eigen::Vector3d base_twist_cmd_;
+  Eigen::Vector3d base_effort_;
   bool contact_state_;
   double object_position_;
   double object_velocity_;
@@ -74,20 +81,32 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   std::string base_odom_topic_;
   std::string base_twist_topic_;
+  std::string base_twist_cmd_topic_;
   std::string handle_odom_topic_;
   std::string arm_state_topic_;
-  std::string base_twist_cmd_topic_;
+  std::string finger_state_topic_;
+  std::string wrench_topic_;
 
   nav_msgs::Odometry base_pose_odom_;  // from vicon
   nav_msgs::Odometry base_twist_odom_; // from ridgeback
   nav_msgs::Odometry handle_odom_;     // from vicon
   sensor_msgs::JointState arm_state_;
+  sensor_msgs::JointState finger_state_;
+  geometry_msgs::WrenchStamped wrench_;
 
   ros::Publisher base_pose_publisher_;
   ros::Publisher base_twist_publisher_;
   ros::Publisher arm_state_publisher_;
+  ros::Publisher finger_state_publisher_;
   ros::Publisher object_pose_publisher_;
+  ros::Publisher wrench_publisher_;
   ros::Subscriber base_twist_cmd_subscriber_;
+
+  // External force computation
+  Eigen::VectorXd tau_ext_base_arm_;
+  Eigen::MatrixXd ee_jacobian_;
+  Eigen::MatrixXd ee_jacobian_transpose_pinv_;
+  Eigen::Matrix<double, 6, 1> ee_wrench_;
 };
 
 }  // namespace manipulation_royalpanda

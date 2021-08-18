@@ -20,12 +20,12 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
 
-  ros::CallbackQueue queue;
-  nh.setCallbackQueue(&queue);
-
-  RoyalPandaSim sim(nh_private);
-  if (!sim.init_sim()) {
-    ROS_ERROR("Failed to init the simulation.");
+  // when enforcing determinism we make sure (through a service call)
+  // that the latest state from simulation has been collected as
+  // on the real hardware
+  bool enforce_determinism;
+  if(!nh_private.getParam("enforce_determinism", enforce_determinism)){
+    ROS_ERROR("Failed to parse enforce_determinism");
     return 0;
   }
 
@@ -37,6 +37,15 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+
+  RoyalPandaSim sim(nh_private);
+  if (!sim.init_sim()) {
+    ROS_ERROR("Failed to init the simulation.");
+    return 0;
+  }
+
+  ros::CallbackQueue queue;
+  nh.setCallbackQueue(&queue);
   controller_manager::ControllerManager controller_manager(&sim, nh);
   ros::AsyncSpinner spinner(4, &queue);
   spinner.start();
@@ -49,40 +58,31 @@ int main(int argc, char** argv) {
   time_point<steady_clock> start, end;
   double elapsed, remaining;
 
+  manipulation_msgs::StateRequestRequest req;
+  manipulation_msgs::StateRequestResponse res;
+
   while (ros::ok()) {
     start = steady_clock::now();
+    ROS_DEBUG_STREAM("Sim state=[" << std::setprecision(2) << sim.get_state().transpose() << "]");
 
-    // TODO giuseppe remove: test that enforces determinism
-    manipulation_msgs::StateRequestRequest req;
-    manipulation_msgs::StateRequestResponse res;
-    req.time = curr_time.toSec();
-    int max_attemps = 1000;
-    int attempts = 0;
-    while (attempts < max_attemps) {
-      // read variables from simulation and publish over ros
-      sim.read_sim(curr_time, period);
-
-      if (!state_client.call(req, res)) {
-        ROS_ERROR("State request failed.");
-        attempts++;
-      } else {
-        break;
+    if (enforce_determinism){
+      // the server returns successfully only once it "builds" a sync state
+      // at the requested timestamp
+      // we need to keep calling read_sim so that the sim keeps publishing
+      // the most recent state
+      req.time = curr_time.toSec();
+      while(!state_client.call(req, res)) {
+        sim.read_sim(curr_time, period);
+        ros::Duration(0.001).sleep();
+        ros::spinOnce();
       }
-      ros::Duration(0.001).sleep();
-      // process all general callbacks
-      ros::spinOnce();
+
+      Eigen::VectorXd x;
+      double t_req;
+      manipulation::conversions::msgToEigen(res.state, x, t_req);
+      ROS_DEBUG_STREAM("Req state=[" << std::setprecision(2) << x.transpose() << "]");
     }
 
-    if (attempts == max_attemps) {
-      ROS_ERROR("Max attempts hit.");
-      return 0;
-    }
-
-    Eigen::VectorXd x;
-    double t;
-    manipulation::conversions::msgToEigen(res.state, x, t);
-    ROS_INFO_STREAM("Requested simulation state ( "
-                    << t << ") is: " << x.transpose());
 
     // update the controller input
     controller_manager.update(curr_time, period);

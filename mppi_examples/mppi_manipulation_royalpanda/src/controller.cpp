@@ -143,9 +143,12 @@ void ManipulationController::state_callback(
     const manipulation_msgs::StateConstPtr& state_msg) {
   if (!started_) return;
 
-  manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
+  {
+    std::unique_lock<std::mutex> lock(observation_mutex_);
+    manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
+  }
+
   x_ros_ = *state_msg;
-  man_interface_->set_observation(x_, ros::Time::now().toSec());
 
   if (!state_received_) {
     state_received_ = true;
@@ -180,6 +183,9 @@ void ManipulationController::starting(const ros::Time& time) {
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
+  // in simulation we can use directly the hardware interface
+  // TODO
+
   if (base_trigger_() && base_twist_publisher_.trylock()) {
     Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
                                   x_nom_ros_.base_twist.linear.y,
@@ -237,6 +243,11 @@ void ManipulationController::update(const ros::Time& time,
     ROS_WARN_STREAM_THROTTLE(
         2.0, "[ManipulationController::update] State is not ok.");
     return;
+  }
+
+  {
+    std::unique_lock<std::mutex> lock(observation_mutex_);
+    man_interface_->set_observation(x_, time.toSec());
   }
 
   if (sequential_) {

@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
+    <!-- joins gripper and arm state -->
+    <node name="joint_state_aggregator" type="joint_state_aggregator" pkg="mppi_manipulation_royalpanda" output="screen">
+        <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
+        <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
+        <param name="output_topic" value="/panda/joint_states"/>
+        <param name="exact_sync" value="true"/>
+    </node>
+
+<!--    <node name="joint_state_publisher" type="joint_state_publisher" pkg="joint_state_publisher" output="screen">-->
+<!--        <rosparam param="source_list">[franka_state_controller/joint_states, franka_gripper/joint_states] </rosparam>-->
+<!--        <param name="rate" value="200"/>-->
+<!--        <remap from="robot_description" to="robot_description_fixed_base"/>-->
+<!--        <remap from="joint_states" to="/panda/joint_states"/>-->
+<!--    </node>-->
+
     <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state
             (published either from simulation or franka state publisher) -->
     <node name="royalpanda_joint_state_publisher" type="joint_state_publisher" pkg="joint_state_publisher" output="screen">

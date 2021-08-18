@@ -3,11 +3,15 @@ base_odom_topic: /panda_base/vrpn_client/estimated_odometry
 base_twist_topic: /ridgeback_velocity_controller/odom
 base_twist_cmd_topic: /ridgeback_velocity_controller/cmd_vel
 handle_odom_topic: /shelf_door/vrpn_client/estimated_odometry
-arm_state_topic: /panda/joint_states
+arm_state_topic: /franka_state_controller/joint_states
+finger_state_topic: /franka_gripper/joint_states
+wrench_topic: /external_force
 
 # Params
-arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7,
-                   panda_finger_joint1, panda_finger_joint2]
+enforce_determinism: true
+arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
+finger_joint_names: [ panda_finger_joint1, panda_finger_joint2]
+
 sim_dynamics:
   dt: 0.015
   has_filter: false

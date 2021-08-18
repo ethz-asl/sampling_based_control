@@ -100,6 +100,7 @@ class ManipulationController
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
+  std::mutex observation_mutex_;
   double observation_time_;
   double last_observation_time_;
   Eigen::VectorXd x_;

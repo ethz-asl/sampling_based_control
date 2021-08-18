@@ -21,6 +21,7 @@ set(PACKAGE_DEPENDENCIES
     hardware_interface
     kdl_parser
     manipulation_msgs
+    message_filters
     eigen_conversions
 )
 
@@ -48,6 +49,11 @@ target_link_libraries(manipulation_controller ${catkin_LIBRARIES} ${Franka_LIBRA
 add_executable(state_observer_node src/state_observer.cpp src/nodes/state_observer_node.cpp)
 target_include_directories(state_observer_node PUBLIC include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})
 target_link_libraries(state_observer_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRARY_DIRS})
+
+### Utils
+add_executable(joint_state_aggregator src/nodes/joint_state_aggregator.cpp)
+target_include_directories(joint_state_aggregator PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(joint_state_aggregator ${catkin_LIBRARIES})
 
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

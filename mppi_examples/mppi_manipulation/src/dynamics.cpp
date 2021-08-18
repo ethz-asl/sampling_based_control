@@ -226,6 +226,27 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
   }
 }
 
+void PandaRaisimDynamics::get_reference_link_pose(Eigen::Vector3d& position,
+                             Eigen::Quaterniond& orientation){
+  size_t frame_id = panda->getFrameIdxByName("reference_link_joint");
+  raisim::Vec<3> pos;
+  raisim::Mat<3, 3> rot;
+  panda->getFramePosition(frame_id, pos);
+  panda->getFrameOrientation(frame_id, rot);
+  position = pos.e();
+  orientation = Eigen::Quaterniond(rot.e());
+}
+
+void PandaRaisimDynamics::get_ee_jacobian(Eigen::MatrixXd& J){
+  J.setZero(6, panda->getDOF());
+  panda->getDenseFrameJacobian("panda_grasp_joint", J);
+  double& theta = x_(2);
+  // clang-format off
+  J.topLeftCorner<3, 3>() << std::cos(theta), -std::sin(theta), 0,
+                             std::sin(theta), std::cos(theta), 0,
+                             0, 0, 1;
+  // clang-format on
+}
 double PandaRaisimDynamics::get_object_displacement() const {
   return x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
 }

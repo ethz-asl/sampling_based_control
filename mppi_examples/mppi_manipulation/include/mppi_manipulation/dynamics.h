@@ -74,8 +74,14 @@ class PandaRaisimDynamics : public mppi::Dynamics {
                              Eigen::Quaterniond& orientation);
   void get_handle_pose(Eigen::Vector3d& position,
                        Eigen::Quaterniond& orientation);
+
+  // this is a link on royalpanda which is tracked by vicon
+  void get_reference_link_pose(Eigen::Vector3d& position,
+                               Eigen::Quaterniond& orientation);
+
   double get_object_displacement() const;
   void get_external_torque(Eigen::VectorXd& tau_ext);
+  void get_ee_jacobian(Eigen::MatrixXd& J);
 
  protected:
   size_t robot_dof_;

@@ -27,6 +27,7 @@
   <depend>franka</depend>
   <depend>kdl_parser</depend>
   <depend>eigen_conversions</depend>
+  <depend>message_filters</depend>
 
   <export>
     <controller_interface plugin="${prefix}/plugins.xml"/>

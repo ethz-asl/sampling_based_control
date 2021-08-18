@@ -8,6 +8,7 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
@@ -39,10 +40,17 @@ class StateObserver {
   void base_twist_callback(const nav_msgs::OdometryConstPtr& msg);
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
+  void wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg);
+
   bool state_request_cb(manipulation_msgs::StateRequestRequest& req,
                         manipulation_msgs::StateRequestResponse& res);
 
  private:
+  bool base_pose_received_;
+  bool base_twist_received_;
+  bool object_pose_received_;
+  bool arm_state_received_;
+
   ros::NodeHandle nh_;
 
   manipulation_msgs::State state_ros_;
@@ -69,7 +77,6 @@ class StateObserver {
   double arm_state_time_;
   Eigen::Matrix<double, 9, 1> dq_;
   Eigen::Matrix<double, 9, 1> q_;  // arm plus the gripper joints
-  Eigen::Matrix<double, 9, 1> ext_tau_;
 
   // debug ros publishing: do not use for realtime control loops
   ros::Publisher base_pose_publisher_;
@@ -114,5 +121,8 @@ class StateObserver {
 
   // this is only to enforce determinism in simulation
   ros::ServiceServer sync_state_service_;
+
+  // wrench
+  Eigen::Matrix<double, 12, 1> ext_tau_;
 };
 }  // namespace royalpanda

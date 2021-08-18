@@ -24,12 +24,4 @@
 
     <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
     <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>
-
-    <node name="joint_state_publisher" type="joint_state_publisher" pkg="joint_state_publisher" output="screen">
-        <rosparam param="source_list">[franka_state_controller/joint_states, franka_gripper/joint_states] </rosparam>
-        <param name="rate" value="200"/>
-        <remap from="robot_description" to="robot_description_fixed_base"/>
-        <remap from="joint_states" to="/panda/joint_states"/>
-    </node>
-
 </launch>
