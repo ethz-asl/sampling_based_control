@@ -60,5 +60,8 @@ void toMsg(const double& time,
            const double& tank_state,
            manipulation_msgs::State&);
 
+std::string eigenToString(const Eigen::VectorXd& x);
+
+
 //clang-format on
 }  // namespace manipulation::conversions

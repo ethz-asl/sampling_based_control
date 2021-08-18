@@ -191,4 +191,19 @@ void toMsg(const double &time,
   stateRos.tank_state = tank_state;
 }
 
+std::string eigenToString(const Eigen::VectorXd &x) {
+  std::stringstream ss;
+  ss << "base position =" << x.head<3>().transpose() << std::endl;
+  ss << "base twist    =" << x.segment<3>(12).transpose() << std::endl;
+  ss << "arm position  =" << x.segment<7>(3).transpose() << std::endl;
+  ss << "arm velocity  =" << x.segment<7>(15).transpose() << std::endl;
+  ss << "fing position =" << x.segment<2>(10).transpose() << std::endl;
+  ss << "fing velocity =" << x.segment<2>(22).transpose() << std::endl;
+  ss << "object state  =" << x.segment<2>(24).transpose() << std::endl;
+  ss << "contact state =" << x.segment<1>(26).transpose() << std::endl;
+  ss << "tank state    =" << x(27) << std::endl;
+  ss << "ext tau       =" << x.tail<12>().transpose() << std::endl;
+  return ss.str();
+}
+
 }  // namespace manipulation::conversions

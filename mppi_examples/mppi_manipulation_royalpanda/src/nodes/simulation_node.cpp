@@ -6,6 +6,7 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 #include <chrono>
+#include <signal_logger/signal_logger.hpp>
 #include <thread>
 
 #include "manipulation_msgs/StateRequest.h"
@@ -19,6 +20,12 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "simulation");
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
+
+  // start logging
+  signal_logger::setSignalLoggerStd();
+  signal_logger::SignalLoggerOptions silo_options;
+  silo_options.maxLoggingTime_ = 60.0;
+  signal_logger::logger->initLogger(silo_options);
 
   // when enforcing determinism we make sure (through a service call)
   // that the latest state from simulation has been collected as
@@ -61,9 +68,16 @@ int main(int argc, char** argv) {
   manipulation_msgs::StateRequestRequest req;
   manipulation_msgs::StateRequestResponse res;
 
+  signal_logger::add(t, "sim_time");
+  signal_logger::logger->updateLogger();
+  signal_logger::logger->startLogger();
+
   while (ros::ok()) {
     start = steady_clock::now();
-    ROS_DEBUG_STREAM("Sim state=[" << std::setprecision(2) << sim.get_state().transpose() << "]");
+    ROS_DEBUG_STREAM("Sim state:" << std::endl
+                                  << std::setprecision(2)
+                                  << manipulation::conversions::eigenToString(
+                                         sim.get_state()));
 
     if (enforce_determinism){
       // the server returns successfully only once it "builds" a sync state
@@ -71,7 +85,7 @@ int main(int argc, char** argv) {
       // we need to keep calling read_sim so that the sim keeps publishing
       // the most recent state
       req.time = curr_time.toSec();
-      while(!state_client.call(req, res)) {
+      while (!state_client.call(req, res) && ros::ok()) {
         sim.read_sim(curr_time, period);
         ros::Duration(0.001).sleep();
         ros::spinOnce();
@@ -80,7 +94,10 @@ int main(int argc, char** argv) {
       Eigen::VectorXd x;
       double t_req;
       manipulation::conversions::msgToEigen(res.state, x, t_req);
-      ROS_DEBUG_STREAM("Req state=[" << std::setprecision(2) << x.transpose() << "]");
+      ROS_DEBUG_STREAM("Req state:"
+                       << std::endl
+                       << std::setprecision(2)
+                       << manipulation::conversions::eigenToString(x));
     }
 
 
@@ -105,8 +122,20 @@ int main(int argc, char** argv) {
       std::this_thread::sleep_for(microseconds((int)(remaining * 1e6)));
 
     // process all general callbacks
+    signal_logger::logger->collectLoggerData();
     ros::spinOnce();
   }
+
+  // save logs
+  std::cout << "Saving logged data..." << std::endl;
+  std::string file_path = __FILE__;
+  std::string dir_path = file_path.substr(0, file_path.rfind("/"));
+  file_path = dir_path + "/../../logs/test";
+  signal_logger::logger->stopLogger();
+  signal_logger::logger->saveLoggerData({signal_logger::LogFileType::BINARY},
+                                        file_path);
+  signal_logger::logger->cleanup();
+  std::cout << "Done." << std::endl;
 
   spinner.stop();
 

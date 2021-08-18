@@ -176,7 +176,8 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
   Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x,
-                                  msg->twist.twist.linear.y, 0.0);
+                                  msg->twist.twist.linear.y,
+                                  msg->twist.twist.angular.z);
   odom_base_twist = Eigen::AngleAxis(base_pose_.z(), Eigen::Vector3d::UnitZ()) *
                     odom_base_twist;
   base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;

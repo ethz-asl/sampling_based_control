@@ -10,6 +10,7 @@
 #include <controller_interface/controller_base.h>
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
+#include <signal_logger/signal_logger.hpp>
 
 #include <franka/robot_state.h>
 
@@ -21,6 +22,8 @@ using namespace manipulation_royalpanda;
 bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
                                   ros::NodeHandle& root_nh,
                                   ros::NodeHandle& controller_nh) {
+  signal_logger::logger->stopLogger();
+
   if (!init_parameters(controller_nh)) return false;
   if (!init_interfaces(robot_hw)) return false;
   init_ros(controller_nh);
@@ -33,9 +36,13 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   }
   ROS_INFO("Solver initialized correctly.");
 
-  ROS_INFO("Controller successfully initialized!");
+  // logging
+  signal_logger::add(arm_torque_command_, "torque_command");
+  signal_logger::logger->startLogger(true);
+
   started_ = false;
   state_ok_ = true;
+  ROS_INFO("Controller successfully initialized!");
   return true;
 }
 
@@ -248,16 +255,15 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   arm_position_desired_ += u_.segment<7>(3) * period.toSec();
   for (int i = 0; i < 7; ++i) {
     tau_d_calculated[i] =
-        gains_.arm_gains.Kp[i] * (arm_position_desired_[i] - robot_state_.q[i]) +
+        std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (arm_position_desired_[i] - robot_state_.q[i]))) +
         gains_.arm_gains.Kd[i] * (u_.segment<7>(3)(i) - arm_velocity_filtered_[i]);
   }
 
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
-  std::array<double, 7> tau_d_saturated = saturateTorqueRate(tau_d_calculated,
-                                                             robot_state_.tau_J_d);
+  saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
 
   for (size_t i = 0; i < 7; ++i) {
-    joint_handles_[i].setCommand(tau_d_saturated[i]);
+    joint_handles_[i].setCommand(arm_torque_command_[i]);
   }
   // clang-format on
 }
@@ -286,6 +292,11 @@ void ManipulationController::update(const ros::Time& time,
     man_interface_->set_observation(x_, time.toSec());
   }
 
+  ROS_DEBUG_STREAM("Ctl state:"
+                   << std::endl
+                   << std::setprecision(2)
+                   << manipulation::conversions::eigenToString(x_));
+
   if (sequential_) {
     man_interface_->update_policy();
     //    man_interface_->get_input(x_, u_, time.toSec());
@@ -305,22 +316,23 @@ void ManipulationController::update(const ros::Time& time,
     nominal_state_publisher_.msg_ = x_nom_ros_;
     nominal_state_publisher_.unlockAndPublish();
   }
+  signal_logger::logger->collectLoggerData();
 }
 
-void ManipulationController::stopping(const ros::Time& time) {}
+void ManipulationController::stopping(const ros::Time& time) {
+  signal_logger::logger->disableElement("torque_command");
+}
 
-std::array<double, 7> ManipulationController::saturateTorqueRate(
+void ManipulationController::saturateTorqueRate(
     const std::array<double, 7>& tau_d_calculated,
-    const std::array<double, 7>&
-        tau_J_d) {  // NOLINT (readability-identifier-naming)
-  std::array<double, 7> tau_d_saturated{};
+    const std::array<double, 7>& tau_J_d,
+    Eigen::Matrix<double, 7, 1>&
+        torque_cmd) {  // NOLINT (readability-identifier-naming)
   for (size_t i = 0; i < 7; i++) {
     double difference = tau_d_calculated[i] - tau_J_d[i];
-    tau_d_saturated[i] =
-        tau_J_d[i] +
-        std::max(std::min(difference, delta_tau_max_), -delta_tau_max_);
+    torque_cmd[i] = tau_J_d[i] + std::max(std::min(difference, delta_tau_max_),
+                                          -delta_tau_max_);
   }
-  return tau_d_saturated;
 }
 
 void ManipulationController::getRotationMatrix(Eigen::Matrix3d& R,

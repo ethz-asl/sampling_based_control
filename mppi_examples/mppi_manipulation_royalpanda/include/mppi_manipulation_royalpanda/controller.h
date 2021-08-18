@@ -66,10 +66,9 @@ class ManipulationController
   void send_command_base(const ros::Duration& period);
 
   // Saturation
-  std::array<double, 7> saturateTorqueRate(
-      const std::array<double, 7>& tau_d_calculated,
-      const std::array<double, 7>&
-          tau_J_d);  // NOLINT (readability-identifier-naming)
+  void saturateTorqueRate(const std::array<double, 7>& tau_d_calculated,
+                          const std::array<double, 7>& tau_J_d,
+                          Eigen::Matrix<double, 7, 1>& torque_cmd);
 
   static void getRotationMatrix(Eigen::Matrix3d& R, double theta);
 
@@ -118,5 +117,7 @@ class ManipulationController
 
   manipulation_msgs::State x_ros_;
   manipulation_msgs::State x_nom_ros_;
+
+  Eigen::Matrix<double, 7, 1> arm_torque_command_;
 };
 }  // namespace manipulation_royalpanda
