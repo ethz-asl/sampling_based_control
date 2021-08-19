@@ -34,18 +34,18 @@
             <mass value="1.0"/>
             <inertia ixx="0.048966669" ixy="0" ixz="0" iyy="0.046466667" iyz="0" izz="0.0041666669"/>
         </inertial>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.25"/>
-            <geometry>
-                <box size="0.95 0.90 0.5"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0 0 0" xyz="-0.35 0 0.775"/>
-            <geometry>
-                <box size="0.20 0.90 0.55"/>
-            </geometry>
-        </collision>
+<!--        <collision>-->
+<!--            <origin rpy="0 0 0" xyz="0 0 0.25"/>-->
+<!--            <geometry>-->
+<!--                <box size="0.95 0.90 0.5"/>-->
+<!--            </geometry>-->
+<!--        </collision>-->
+<!--        <collision>-->
+<!--            <origin rpy="0 0 0" xyz="-0.35 0 0.775"/>-->
+<!--            <geometry>-->
+<!--                <box size="0.20 0.90 0.55"/>-->
+<!--            </geometry>-->
+<!--        </collision>-->
     </link>
 
     <joint name="base_link_joint" type="fixed">

@@ -46,6 +46,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   void init_publishers();
 
   void base_twist_cmd_callback(const geometry_msgs::TwistConstPtr& msg);
+  void apply_external_force_callback(const geometry_msgs::WrenchConstPtr& msg);
 
  private:
   std::unique_ptr<manipulation::ManipulatorDynamicsRos> dynamics_;
@@ -105,12 +106,17 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   ros::Publisher object_pose_publisher_;
   ros::Publisher wrench_publisher_;
   ros::Subscriber base_twist_cmd_subscriber_;
+  ros::Subscriber external_force_subscriber_;
 
   // External force computation
   Eigen::VectorXd tau_ext_base_arm_;
   Eigen::MatrixXd ee_jacobian_;
   Eigen::MatrixXd ee_jacobian_transpose_pinv_;
   Eigen::Matrix<double, 6, 1> ee_wrench_;
+
+  // external force from user
+  Eigen::Vector3d user_force_;
+
 };
 
 }  // namespace manipulation_royalpanda

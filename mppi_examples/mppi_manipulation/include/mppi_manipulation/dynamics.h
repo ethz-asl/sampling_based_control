@@ -82,6 +82,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   double get_object_displacement() const;
   void get_external_torque(Eigen::VectorXd& tau_ext);
   void get_ee_jacobian(Eigen::MatrixXd& J);
+  void set_external_ee_force(const Eigen::Vector3d& f);
 
  protected:
   size_t robot_dof_;
@@ -113,7 +114,9 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   Eigen::VectorXd joint_p_gain, joint_d_gain;
   Eigen::VectorXd joint_p_desired, joint_v_desired;
 
+  bool ee_force_applied_;
   Eigen::VectorXd u_opt_;
+  Eigen::MatrixXd J_contact_;
   Eigen::VectorXd torque_ext_;
   std::unique_ptr<PandaMobileSafetyFilter> sf_;
 };

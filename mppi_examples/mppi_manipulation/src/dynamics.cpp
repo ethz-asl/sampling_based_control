@@ -22,6 +22,7 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
     sf_ = nullptr;
   }
   t_ = 0.0;
+  ee_force_applied_ = false;
 };
 
 void PandaRaisimDynamics::initialize_world(
@@ -34,6 +35,7 @@ void PandaRaisimDynamics::initialize_world(
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+  J_contact_.setZero(3, panda->getDOF());
   tau_ext_ = Eigen::VectorXd::Zero(panda->getDOF());
 
   /// create raisim objects
@@ -205,7 +207,7 @@ std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
                  /// 'skip'
     if (contact.isSelfCollision()) continue;
     force_t force;
-    force.force = -contact.getContactFrame().e() * contact.getImpulse()->e() /
+    force.force = -contact.getContactFrame().e().transpose() * contact.getImpulse()->e() /
                   sim_.getTimeStep();
     force.position = contact.getPosition().e();
     forces.push_back(force);
@@ -214,15 +216,30 @@ std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
 }
 
 void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
-  Eigen::MatrixXd J(6, panda->getDOF());
-  J.setZero();
-  tau.setZero(panda->getDOF());
+  tau.setZero((int)panda->getDOF());
   for (const auto contact : panda->getContacts()) {
+    J_contact_.setZero();
     if (!contact.skip() && !contact.isSelfCollision()) {
       panda->getDenseJacobian(contact.getlocalBodyIndex(),
-                              contact.getPosition(), J);
-      tau -= J.transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
+                              contact.getPosition(), J_contact_);
+
+      // clang-format off
+      J_contact_.topLeftCorner<3, 3>() << std::cos(x_(2)), -std::sin(x_(2)), 0,
+                                          std::sin(x_(2)), std::cos(x_(2)), 0,
+                                          0, 0, 1;
+      // transform contact to force --> to force in world frame --> to reaction torques
+      tau = J_contact_.transpose() * contact.getContactFrame().e().transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
+      // clang-format on
     }
+  }
+  if (ee_force_applied_){
+    J_contact_.setZero();
+    panda->getDenseFrameJacobian("panda_grasp_joint", J_contact_);
+    J_contact_.topLeftCorner<3, 3>() << std::cos(x_(2)), -std::sin(x_(2)), 0,
+    std::sin(x_(2)), std::cos(x_(2)), 0,
+    0, 0, 1;
+    tau += J_contact_.transpose() * panda->getExternalForce()[0].e();
+
   }
 }
 
@@ -238,15 +255,29 @@ void PandaRaisimDynamics::get_reference_link_pose(Eigen::Vector3d& position,
 }
 
 void PandaRaisimDynamics::get_ee_jacobian(Eigen::MatrixXd& J){
-  J.setZero(6, panda->getDOF());
-  panda->getDenseFrameJacobian("panda_grasp_joint", J);
-  double& theta = x_(2);
+  J.setZero(6, (int)panda->getDOF());
+  Eigen::MatrixXd J_linear;
+  J_linear.setZero(3, 12);
+  Eigen::MatrixXd J_angular;
+  J_angular.setZero(3, 12);
+
+  panda->getDenseFrameJacobian("panda_grasp_joint", J_linear);
+  panda->getDenseFrameRotationalJacobian("panda_grasp_joint", J_angular);
+  J.topRows(3) = J_linear;
+  J.bottomRows(3) = J_angular;
   // clang-format off
-  J.topLeftCorner<3, 3>() << std::cos(theta), -std::sin(theta), 0,
-                             std::sin(theta), std::cos(theta), 0,
+  J.topLeftCorner<3, 3>() << std::cos(x_(2)), -std::sin(x_(2)), 0,
+                             std::sin(x_(2)), std::cos(x_(2)), 0,
                              0, 0, 1;
   // clang-format on
 }
+
+void PandaRaisimDynamics::set_external_ee_force(const Eigen::Vector3d& f) {
+  ee_force_applied_ = (f.norm() > 1e-4);
+  auto& frame = panda->getFrameByName("panda_grasp_joint");
+  panda->setExternalForce(frame.parentId, raisim::ArticulatedSystem::Frame::WORLD_FRAME, f, raisim::ArticulatedSystem::Frame::BODY_FRAME, raisim::Vec<3>());
+}
+
 double PandaRaisimDynamics::get_object_displacement() const {
   return x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
 }

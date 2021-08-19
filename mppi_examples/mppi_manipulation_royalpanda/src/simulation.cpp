@@ -162,9 +162,11 @@ void RoyalPandaSim::init_publishers() {
   finger_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>(finger_state_topic_, 1);
   wrench_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>(wrench_topic_, 1);
+      nh_.advertise<geometry_msgs::WrenchStamped>(wrench_topic_, 1);
   base_twist_cmd_subscriber_ = nh_.subscribe(
       base_twist_cmd_topic_, 1, &RoyalPandaSim::base_twist_cmd_callback, this);
+  external_force_subscriber_ = nh_.subscribe(
+      "/apply_external_force", 1, &RoyalPandaSim::apply_external_force_callback, this);
 }
 
 void RoyalPandaSim::print_state() {
@@ -269,6 +271,16 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
   tau_ext_base_arm_.head<3>() = base_effort_;
   tau_ext_base_arm_.tail<9>() = arm_joint_effort_;
   ee_wrench_ = ee_jacobian_transpose_pinv_ * tau_ext_base_arm_;
+
+  // this wrench is indeed in the world frame
+  // rotate it back to the end effector frame
+  Eigen::Vector3d ee_position;
+  Eigen::Quaterniond ee_rotation;
+  dynamics_->get_end_effector_pose(ee_position, ee_rotation);
+  Eigen::Matrix3d R_world_ee(ee_rotation);
+  ee_wrench_.head<3>() = R_world_ee.transpose() * ee_wrench_.head<3>();
+  ee_wrench_.tail<3>() = R_world_ee.transpose() * ee_wrench_.tail<3>();
+
   wrench_.header.stamp = time;
   wrench_.header.frame_id = "panda_hand";
   wrench_.wrench.force.x = ee_wrench_(0);
@@ -287,6 +299,13 @@ void RoyalPandaSim::base_twist_cmd_callback(
   base_twist_cmd_.z() = msg->angular.z;
 }
 
+void RoyalPandaSim::apply_external_force_callback(const geometry_msgs::WrenchConstPtr &msg) {
+  user_force_.x() = msg->force.x;
+  user_force_.y() = msg->force.y;
+  user_force_.z() = msg->force.z;
+  ROS_INFO_STREAM("Setting user force to " << user_force_);
+}
+
 void RoyalPandaSim::publish_ros() { dynamics_->publish_ros(); }
 
 void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period) {
@@ -296,11 +315,12 @@ void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period) {
   dynamics_->set_control(u_);
 
   // arm has imperfect gravity compensation
-  Eigen::VectorXd tau = 0.9 * dynamics_->get_panda()->getNonlinearities().e();
+  Eigen::VectorXd tau = 1.0 * dynamics_->get_panda()->getNonlinearities().e();
 
   // control only the arm joints (leave out gripper)
   tau.segment<7>(3) += arm_joint_effort_desired_.head<7>();
   dynamics_->get_panda()->setGeneralizedForce(tau);
+  dynamics_->set_external_ee_force(user_force_);
   dynamics_->advance();
 }
 

@@ -8,7 +8,7 @@
 #include <chrono>
 #include <signal_logger/signal_logger.hpp>
 #include <thread>
-
+#include <rosgraph_msgs/Clock.h>
 #include "manipulation_msgs/StateRequest.h"
 #include "manipulation_msgs/conversions.h"
 #include "mppi_manipulation_royalpanda/simulation.h"
@@ -44,6 +44,10 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  // tell ROS to use the sim time
+  nh.setParam("/use_sim_time", true);
+  rosgraph_msgs::Clock ros_time;
+  ros::Publisher clock_publisher = nh.advertise<rosgraph_msgs::Clock>("/clock", 1);
 
   RoyalPandaSim sim(nh_private);
   if (!sim.init_sim()) {
@@ -120,6 +124,10 @@ int main(int argc, char** argv) {
     remaining = std::max(0.0, dt - elapsed);
     if (remaining > 0.0)
       std::this_thread::sleep_for(microseconds((int)(remaining * 1e6)));
+
+    // publish sim time
+    ros_time.clock.fromSec(t);
+    clock_publisher.publish(ros_time);
 
     // process all general callbacks
     signal_logger::logger->collectLoggerData();
