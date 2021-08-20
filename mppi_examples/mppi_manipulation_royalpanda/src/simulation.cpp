@@ -315,7 +315,7 @@ void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period) {
   dynamics_->set_control(u_);
 
   // arm has imperfect gravity compensation
-  Eigen::VectorXd tau = 1.0 * dynamics_->get_panda()->getNonlinearities().e();
+  Eigen::VectorXd tau = 0.99 * dynamics_->get_panda()->getNonlinearities().e();
 
   // control only the arm joints (leave out gripper)
   tau.segment<7>(3) += arm_joint_effort_desired_.head<7>();

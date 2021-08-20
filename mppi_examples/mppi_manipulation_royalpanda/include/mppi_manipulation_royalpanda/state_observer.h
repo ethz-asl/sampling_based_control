@@ -12,9 +12,10 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
-
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <kdl/chainjnttojacsolver.hpp>
+#include <kdl/jacobian.hpp>
 
 #include <manipulation_msgs/State.h>
 #include <manipulation_msgs/StateRequest.h>
@@ -50,6 +51,7 @@ class StateObserver {
   bool base_twist_received_;
   bool object_pose_received_;
   bool arm_state_received_;
+  bool wrench_received_;
 
   ros::NodeHandle nh_;
 
@@ -92,6 +94,7 @@ class StateObserver {
   ros::Subscriber base_pose_subscriber_;
   ros::Subscriber base_twist_subscriber_;
   ros::Subscriber arm_state_subscriber_;
+  ros::Subscriber wrench_subscriber_;
 
   ///// Articulation
   // articulation
@@ -123,6 +126,14 @@ class StateObserver {
   ros::ServiceServer sync_state_service_;
 
   // wrench
+  double wrench_time_;
   Eigen::Matrix<double, 12, 1> ext_tau_;
+
+  // get jacobian to convert wrench into joint torques
+  std::unique_ptr<KDL::ChainJntToJacSolver> jacobian_solver_;
+  KDL::JntArray kdl_joints_;
+  KDL::Jacobian J_world_ee_;
+  Eigen::Matrix<double, 6, 1> wrench_eigen_;
+  KDL::Chain world_to_ee_chain_;
 };
 }  // namespace royalpanda

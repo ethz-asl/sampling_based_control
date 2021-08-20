@@ -52,6 +52,7 @@
         <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
         <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="wrench_topic" value="/external_force"/>
         <param name="observer_update_frequency" value="200"/>
     </node>
 </launch>

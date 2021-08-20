@@ -30,6 +30,7 @@ struct FilterParams {
   bool second_derivative_limits = false;
 
   bool passivity_constraint = false;
+  double initial_tank_energy = 0.0;
   double min_tank_energy = 0.0;
 
   bool verbose = false;

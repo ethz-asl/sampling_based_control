@@ -31,6 +31,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   base_twist_received_ = false;
   object_pose_received_ = false;
   arm_state_received_ = false;
+  wrench_received_ = false;
 
   std::string base_pose_topic;
   nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
@@ -52,6 +53,11 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
                          "/object_pose");
   object_pose_subscriber_ = nh_.subscribe(
       object_pose_topic, 1, &StateObserver::object_pose_callback, this);
+
+  std::string wrench_topic;
+  nh_.param<std::string>("wrench_topic", wrench_topic, "/wrench");
+  wrench_subscriber_ =
+      nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
 
   // ros publishing
   state_publisher_ =
@@ -130,10 +136,17 @@ bool StateObserver::initialize() {
     return false;
   }
 
+  if (!robot_kinematics.getChain("world", "panda_hand", world_to_ee_chain_)) {
+    ROS_ERROR("Failed to extract chain from world to panda_hand");
+    return false;
+  }
+  kdl_joints_.resize(world_to_ee_chain_.getNrOfJoints());
+  J_world_ee_.resize(world_to_ee_chain_.getNrOfJoints());
+  jacobian_solver_ =
+      std::make_unique<KDL::ChainJntToJacSolver>(world_to_ee_chain_);
+
   KDL::Frame T_base_reference_KDL;
   KDL::JntArray robot_joint_pos(robot_chain.getNrOfJoints());
-  std::cout << "there are: " << robot_chain.getNrOfJoints() << std::endl;
-  std::cout << robot_joint_pos.data.transpose() << std::endl;
   KDL::ChainFkSolverPos_recursive robot_solver(robot_chain);
   robot_solver.JntToCart(robot_joint_pos, T_base_reference_KDL);
   tf::transformKDLToEigen(T_base_reference_KDL.Inverse(), T_reference_base_);
@@ -150,9 +163,11 @@ bool StateObserver::initialize() {
   return true;
 }
 
+// TODO(giuseppe) must replace with a message filter instead (important for real
+// robot experiments)
 void StateObserver::update() {
   if (arm_state_received_ && base_twist_received_ && base_pose_received_ &&
-      object_pose_received_) {
+      object_pose_received_ && wrench_received_) {
     manipulation::conversions::toMsg(
         time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_, ext_tau_.tail<9>(), object_state_.position[0],
         object_state_.velocity[0], false, tank_state_, state_ros_);
@@ -189,7 +204,7 @@ void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
   if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(), (int)msg->effort.size(), (int)msg->velocity.size())){
     ROS_WARN_STREAM_THROTTLE(
-        2.0, "Joint state filds have the wrong size." << msg->name.size());
+        2.0, "Joint state fields have the wrong size." << msg->name.size());
     return;
   }
   time_ = msg->header.stamp.toSec();
@@ -242,20 +257,47 @@ void StateObserver::object_pose_callback(
 }
 
 void StateObserver::wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg) {
-  // TODO
+  if (!base_pose_received_ || !arm_state_received_) return;
+
+  // update kdl joints with the latest measurements
+  kdl_joints_(0) = base_pose_.x();
+  kdl_joints_(1) = base_pose_.y();
+  kdl_joints_(2) = base_pose_.z();
+  for (int i = 0; i < 7; i++) {
+    kdl_joints_(3 + i) = q_(i);
+  }
+
+  int error = jacobian_solver_->JntToJac(kdl_joints_, J_world_ee_);
+  wrench_eigen_(0) = msg->wrench.force.x;
+  wrench_eigen_(1) = msg->wrench.force.y;
+  wrench_eigen_(2) = msg->wrench.force.z;
+  wrench_eigen_(3) = msg->wrench.torque.x;
+  wrench_eigen_(4) = msg->wrench.torque.y;
+  wrench_eigen_(5) = msg->wrench.torque.z;
+
+  // clang-format off
+  J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), - std::sin(base_pose_.z()), 0,
+                                            std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
+                                            0, 0, 1;
+  // clang-format on
+  Eigen::MatrixXd Jt_world_ee_pinv;
+  pseudoInverse(J_world_ee_.data.transpose(), Jt_world_ee_pinv);
+  ext_tau_ = Jt_world_ee_pinv * wrench_eigen_;
+  wrench_time_ = msg->header.stamp.toSec();
+  wrench_received_ = true;
 }
 
 bool StateObserver::state_request_cb(
     manipulation_msgs::StateRequestRequest& req,
     manipulation_msgs::StateRequestResponse& res) {
   if (!(arm_state_received_ && base_twist_received_ && base_pose_received_ &&
-  object_pose_received_)){
+        object_pose_received_ && wrench_received_)) {
     ROS_WARN_THROTTLE(1.0, "Full state not received yet.");
     return false;
   }
 
   if (!are_equal(req.time, base_pose_time_, base_twist_time_, arm_state_time_,
-                object_pose_time_)) {
+                 object_pose_time_, wrench_time_)) {
     ROS_DEBUG_STREAM("Failed to get required synchronized state: "
     << std::endl
     << "base_pose_time=" << base_pose_time_ << std::endl

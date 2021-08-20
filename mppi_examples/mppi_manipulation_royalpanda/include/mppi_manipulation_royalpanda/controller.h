@@ -8,7 +8,10 @@
 #include <string>
 #include <vector>
 
+#include <mppi_manipulation/constraints/safety_filter.h>
 #include <mppi_manipulation/controller_interface.h>
+#include <mppi_manipulation/energy_tank.h>
+#include <mppi_manipulation/params/filter_params.h>
 #include <mppi_manipulation/params/gains.h>
 
 #include <manipulation_msgs/InputState.h>
@@ -62,7 +65,13 @@ class ManipulationController
 
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
 
+  // Apply the safety filter to the optimized velocity
+  void enforce_constraints(const ros::Duration& period);
+
+  // Convert velocity command to effort command using a PI controller
   void send_command_arm(const ros::Duration& period);
+
+  // Directy send velocity commands to the base (via topic on hardware)
   void send_command_base(const ros::Duration& period);
 
   // Saturation
@@ -106,9 +115,9 @@ class ManipulationController
 
   std::mutex observation_mutex_;
   double observation_time_;
-  double last_observation_time_;
   Eigen::VectorXd x_;
   Eigen::VectorXd u_;
+  Eigen::VectorXd u_opt_;
   Eigen::VectorXd x_nom_;
   Eigen::VectorXd arm_position_desired_;
   Eigen::VectorXd arm_velocity_filtered_;
@@ -119,5 +128,11 @@ class ManipulationController
   manipulation_msgs::State x_nom_ros_;
 
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
+
+  // safety filter
+  bool apply_filter_;
+  manipulation::EnergyTank energy_tank_;
+  manipulation::FilterParams safety_filter_params_;
+  std::unique_ptr<manipulation::PandaMobileSafetyFilter> safety_filter_;
 };
 }  // namespace manipulation_royalpanda

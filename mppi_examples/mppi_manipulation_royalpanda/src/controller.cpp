@@ -3,7 +3,6 @@
 //
 
 #include <mppi_manipulation_royalpanda/controller.h>
-#include <mppi_manipulation_royalpanda/utils.h>
 #include <cmath>
 #include <memory>
 
@@ -22,23 +21,17 @@ using namespace manipulation_royalpanda;
 bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
                                   ros::NodeHandle& root_nh,
                                   ros::NodeHandle& controller_nh) {
-  signal_logger::logger->stopLogger();
-
   if (!init_parameters(controller_nh)) return false;
   if (!init_interfaces(robot_hw)) return false;
   init_ros(controller_nh);
 
-  man_interface_ =
-      std::make_unique<manipulation::PandaControllerInterface>(controller_nh);
+  man_interface_ = std::make_unique<PandaControllerInterface>(controller_nh);
   if (!man_interface_->init()) {
     ROS_ERROR("Failed to initialized manipulation interface");
     return false;
   }
   ROS_INFO("Solver initialized correctly.");
 
-  // logging
-  signal_logger::add(arm_torque_command_, "torque_command");
-  signal_logger::logger->startLogger(true);
 
   started_ = false;
   state_ok_ = true;
@@ -87,6 +80,21 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
 
   if (!node_handle.getParam("base_twist_topic", base_twist_topic_)) {
     ROS_ERROR("base_twist_topic not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("base_twist_topic", base_twist_topic_)) {
+    ROS_ERROR("base_twist_topic not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("apply_filter", apply_filter_)) {
+    ROS_ERROR("apply_filter not found");
+    return false;
+  }
+
+  if (!safety_filter_params_.init_from_ros(node_handle)) {
+    ROS_ERROR("Failed to parse safety filter parameters.");
     return false;
   }
 
@@ -186,23 +194,14 @@ void ManipulationController::state_callback(
   }
 
   x_ros_ = *state_msg;
-
-  if (!state_received_) {
-    state_received_ = true;
-  }
-  //  else {
-  //    if ((observation_time_ - last_observation_time_) > 0.01) {
-  //      state_ok_ = false;
-  //      ROS_WARN_STREAM("State update is too slow. Current delay: " <<
-  //      (observation_time_ - last_observation_time_));
-  //    }
-  //  }
-  last_observation_time_ = observation_time_;
+  state_received_ = true;
 }
 
 void ManipulationController::starting(const ros::Time& time) {
   if (started_) return;
 
+  // with sequential execution the optimization needs to be explicitly called
+  // in the update function of the controller (not real-time safe)
   if (!sequential_) {
     started_ = man_interface_->start();
     if (!started_) {
@@ -211,13 +210,60 @@ void ManipulationController::starting(const ros::Time& time) {
     }
   }
 
+  // we do not actively control the gripper
+  u_opt_.setZero(10);
   arm_velocity_filtered_.setZero(7);
   arm_position_desired_.setZero(7);
   for (size_t i = 0; i < 7; i++) {
     arm_position_desired_[i] = joint_handles_[i].getPosition();
   }
+
+  // reset the energy tank initial state
+  double initial_tank_state =
+      std::sqrt(2.0 * safety_filter_params_.initial_tank_energy);
+  energy_tank_.reset(initial_tank_state, time.toSec());
+
+  // reset the safety filter
+  safety_filter_ =
+      std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
+
+  // logging
+  signal_logger::logger->stopLogger();
+  signal_logger::add(arm_torque_command_, "torque_command");
+  for (const auto& constraint : safety_filter_->constraints_) {
+    signal_logger::add(constraint.second->violation_,
+                       constraint.first + "_violation");
+  }
+  signal_logger::logger->startLogger(true);
+
   started_ = true;
   ROS_INFO("Controller started!");
+}
+
+void ManipulationController::enforce_constraints(const ros::Duration& period) {
+  {
+    std::unique_lock<std::mutex> lock(observation_mutex_);
+    x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
+    safety_filter_->update(x_, u_, observation_time_);
+  }
+
+  if (apply_filter_) {
+    safety_filter_->apply(u_opt_);
+  } else {
+    u_opt_ = u_.head<10>();  // safety filter does not account for the gripper
+  }
+
+  // step the tank dynamics
+  std::cout << "Joint velocity opt: " << u_opt_.transpose() << std::endl;
+  std::cout << "Joint torque : "
+            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
+  std::cout << "Energy exchange is: "
+            << u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>()
+            << std::endl;
+  std::cout << "Tank state (for sure) is: " << energy_tank_.get_state()
+            << std::endl;
+  energy_tank_.step(u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>(),
+                    period.toSec());  // time is not used here
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
@@ -234,9 +280,9 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
                                   x_nom_ros_.base_twist.linear.y,
                                   x_nom_ros_.base_twist.angular.z);
 
-    base_twist_publisher_.msg_.linear.x = u_[0];
-    base_twist_publisher_.msg_.linear.y = u_[1];
-    base_twist_publisher_.msg_.angular.z = u_[2];
+    base_twist_publisher_.msg_.linear.x = u_opt_[0];
+    base_twist_publisher_.msg_.linear.y = u_opt_[1];
+    base_twist_publisher_.msg_.angular.z = u_opt_[2];
     base_twist_publisher_.unlockAndPublish();
   }
 }
@@ -252,11 +298,11 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   }
 
   std::array<double, 7> tau_d_calculated{};
-  arm_position_desired_ += u_.segment<7>(3) * period.toSec();
+  arm_position_desired_ += u_opt_.segment<7>(3) * period.toSec();
   for (int i = 0; i < 7; ++i) {
     tau_d_calculated[i] =
         std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (arm_position_desired_[i] - robot_state_.q[i]))) +
-        gains_.arm_gains.Kd[i] * (u_.segment<7>(3)(i) - arm_velocity_filtered_[i]);
+        gains_.arm_gains.Kd[i] * (u_opt_.segment<7>(3)(i) - arm_velocity_filtered_[i]);
   }
 
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
@@ -309,6 +355,7 @@ void ManipulationController::update(const ros::Time& time,
 
   manipulation::conversions::eigenToMsg(x_nom_, time.toSec(), x_nom_ros_);
 
+  enforce_constraints(period);
   send_command_arm(period);
   send_command_base(period);
 
@@ -321,6 +368,9 @@ void ManipulationController::update(const ros::Time& time,
 
 void ManipulationController::stopping(const ros::Time& time) {
   signal_logger::logger->disableElement("torque_command");
+  for (const auto& constraint : safety_filter_->constraints_) {
+    signal_logger::logger->disableElement(constraint.first + "_violation");
+  }
 }
 
 void ManipulationController::saturateTorqueRate(

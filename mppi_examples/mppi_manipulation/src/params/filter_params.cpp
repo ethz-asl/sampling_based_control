@@ -171,6 +171,14 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
           "Failed to parse safety_filter/passivity_constraint/min_tank_energy");
       return false;
     }
+
+    if (!nh.param("safety_filter/passivity_constraint/initial_tank_energy",
+                  initial_tank_energy, 10.0)) {
+      ROS_WARN(
+          "Failed to parse "
+          "safety_filter/passivity_constraint/initial_tank_energy");
+      return false;
+    }
   }
 
   return true;
@@ -202,6 +210,7 @@ std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
 
   os << "passivity_constraint: " << settings.passivity_constraint << std::endl;
   os << " >> min tank energy: " << settings.min_tank_energy << std::endl;
+  os << " >> initial tank energy: " << settings.initial_tank_energy << std::endl;
   os << "verbose: " << settings.verbose << std::endl;
   // clang-format on
   return os;

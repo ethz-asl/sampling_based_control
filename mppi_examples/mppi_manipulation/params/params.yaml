@@ -100,6 +100,7 @@ safety_filter:
 
   passivity_constraint:
     active: true
+    initial_tank_energy: 10.0
     min_tank_energy: 0.01
 
   first_derivative_limits: false

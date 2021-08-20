@@ -24,6 +24,7 @@ manipulation_controller:
   ros_publish_rate: 10.0
   static_optimization: false
 
+  # Cost parameters used by the controller
   cost:
     regularization: 0.0
     linear_weight: 100.0
@@ -73,6 +74,8 @@ manipulation_controller:
       i_max: [ 0.0, 0.0 ]
 
   object_reference_position: 1.57
+
+  # Parameters of the dynamics internal to the controller
   dynamics:
     dt: 0.015
     has_filter: false
@@ -102,6 +105,38 @@ manipulation_controller:
         ki: [ 0.0, 0.0 ]
         i_max: [ 0.0, 0.0 ]
 
+  # Safety filter parameters
+  # It processes the output of the sampled control action and enforces constraints
+  apply_filter: true
+  safety_filter:
+    input_limits: true
+    u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
+    u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+
+    joint_limits: true
+    q_min: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+    q_max: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+
+    cartesian_limits: true
+    max_reach: 0.65
+    min_distance: 0.15
+
+    passivity_constraint:
+      active: false
+      initial_tank_energy: 10.0
+      min_tank_energy: 0.01
+
+    first_derivative_limits: false
+    ud_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
+    ud_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
+
+    second_derivative_limits: false
+    udd_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
+    udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
+    # udd_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+    # udd_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+
+    verbose: false
 panda_position_controller:
   type: effort_controllers/JointGroupPositionController
   joints: ["panda_joint1",
