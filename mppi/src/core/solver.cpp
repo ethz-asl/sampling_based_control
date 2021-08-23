@@ -47,7 +47,7 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
 #ifdef SIGNAL_LOGGER
   signal_logger::add(min_cost_, "solver/rollouts/min_cost");
   signal_logger::add(max_cost_, "solver/rollouts/max_cost");
-  signal_logger::add(rollouts_cost_, "solver/rollouts/consts");
+  signal_logger::add(rollouts_cost_, "solver/rollouts/costs");
   signal_logger::logger->updateLogger();
 #endif
 }
