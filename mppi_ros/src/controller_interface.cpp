@@ -30,6 +30,7 @@ bool ControllerRos::init_default_params() {
     ROS_ERROR("Failed to parse default parameters.");
     return false;
   }
+  ROS_INFO("Default params initialized.");
   return true;
 }
 
@@ -41,6 +42,7 @@ void ControllerRos::init_default_ros() {
   max_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
   data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
+  ROS_INFO("Default ROS initialized.");
 }
 
 bool ControllerRos::init() {

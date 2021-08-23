@@ -308,8 +308,7 @@ void RoyalPandaSim::apply_external_force_callback(const geometry_msgs::WrenchCon
 
 void RoyalPandaSim::publish_ros() { dynamics_->publish_ros(); }
 
-void RoyalPandaSim::write_sim(ros::Time time, ros::Duration period) {
-
+void RoyalPandaSim::advance_sim(ros::Time time, ros::Duration period) {
   // base is velocity controlled
   u_.head<3>() = base_twist_cmd_shared_;
   dynamics_->set_control(u_);

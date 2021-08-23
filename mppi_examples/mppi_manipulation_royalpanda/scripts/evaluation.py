@@ -14,9 +14,8 @@ rospack = rospkg.RosPack()
 ROOT_DIR = rospack.get_path("mppi_manipulation_royalpanda")
 LOG_FILE = os.path.join(ROOT_DIR, "logs", "test.silo")
 REQUIRED_FIELDS = [
-    "log/sim_time", "log/input", "log/input_filtered",
-    "log/joint_limits_violation", "log/solver/rollouts/min_cost",
-    "log/solver/rollouts/max_cost", "log/tank_state"
+    "log/sim_time", "log/stage_cost", "log/cartesian_limits_violation",
+    "log/joint_limits_violation", "log/solver/rollouts/min_cost"
 ]
 
 
@@ -83,6 +82,18 @@ def matrix_plot(t, m: np.ndarray, prefix="value"):
     ax.legend()
 
 
+def matrix_to_mse(t, t_start, t_end, m):
+    # Assume each row in the matrix as a 1-1 correspondence to time stamps
+    # Use time start and time end to crop them matrix and compute MSE only on this portion
+    i1 = sum(t < t_start)
+    i2 = sum(t < t_end)
+
+    if i2 > m.shape[0]:
+        raise NameError(
+            "The index of the final time is larger than rows in the matrix")
+    return np.square(m[i1:i2, :]).sum() / m[i1:i2, :].size
+
+
 def scalar_plot(t, n, prefix="value"):
     fig, ax = plt.subplots()
     ax.plot(t, n, label=prefix)
@@ -98,13 +109,18 @@ if __name__ == "__main__":
     print_keys(silo)
     silo_dict = to_dictionary(silo, REQUIRED_FIELDS)
     time = silo_dict['sim_time']
+    print(min(time))
+    print(max(time))
 
+    scalar_plot(time, silo_dict['stage_cost'], prefix="stage_cost")
     scalar_plot(time, silo_dict['min_cost'], prefix="min_cost")
-    scalar_plot(time, silo_dict['tank_state'], prefix="tank_state")
-    matrix_plot(time, silo_dict['input'], prefix="input")
-    matrix_plot(time, silo_dict['input_filtered'], prefix="input_filtered")
-    matrix_plot(time,
-                silo_dict['joint_limits_violation'],
-                prefix="joint_limits_violation")
 
+    joint_violation_mse = matrix_to_mse(time, 5.0, 20.0,
+                                        silo_dict['joint_limits_violation'])
+    carts_violation_mse = matrix_to_mse(
+        time, 5.0, 20.0, silo_dict['cartesian_limits_violation'])
+
+    fig, ax = plt.subplots()
+    ax.bar(["joint limits", "cartesian limits"],
+           [joint_violation_mse, carts_violation_mse])
     plt.show()

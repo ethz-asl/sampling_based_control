@@ -35,29 +35,47 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
 
   std::string base_pose_topic;
   nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
-  base_pose_subscriber_ = nh_.subscribe(
-      base_pose_topic, 1, &StateObserver::base_pose_callback, this);
 
   std::string base_twist_topic;
   nh_.param<std::string>("base_twist_topic", base_twist_topic, "/base_twist");
-  base_twist_subscriber_ = nh_.subscribe(
-      base_twist_topic, 1, &StateObserver::base_twist_callback, this);
 
   std::string arm_state_topic;
   nh_.param<std::string>("arm_state_topic", arm_state_topic, "/arm_state");
-  arm_state_subscriber_ = nh_.subscribe(
-      arm_state_topic, 1, &StateObserver::arm_state_callback, this);
 
   std::string object_pose_topic;
   nh_.param<std::string>("object_pose_topic", object_pose_topic,
                          "/object_pose");
-  object_pose_subscriber_ = nh_.subscribe(
-      object_pose_topic, 1, &StateObserver::object_pose_callback, this);
 
   std::string wrench_topic;
   nh_.param<std::string>("wrench_topic", wrench_topic, "/wrench");
-  wrench_subscriber_ =
-      nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
+
+  nh_.param<bool>("exact_sync", exact_sync_, false);
+
+  // subscribers for message filter
+  arm_sub_.subscribe(nh_, arm_state_topic, 10);
+  base_pose_sub_.subscribe(nh_, base_pose_topic, 10);
+  base_twist_sub_.subscribe(nh_, base_twist_topic, 10);
+  object_sub_.subscribe(nh_, object_pose_topic, 10);
+  wrench_sub_.subscribe(nh_, wrench_topic, 10);
+
+  // message filter with sync policy (timestamps must be the same -> only
+  // possible in simulation) or approximate timestamp matching policy
+  // (see http://wiki.ros.org/message_filters/ApproximateTime)
+  if (exact_sync_) {
+    exact_message_filter_ =
+        std::make_unique<message_filters::Synchronizer<ExactPolicy>>(
+            ExactPolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+            object_sub_, wrench_sub_);
+    exact_message_filter_->registerCallback(boost::bind(
+        &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+  } else {
+    approx_message_filter_ =
+        std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
+            ApproximatePolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+            object_sub_, wrench_sub_);
+    approx_message_filter_->registerCallback(boost::bind(
+        &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+  }
 
   // ros publishing
   state_publisher_ =
@@ -163,15 +181,23 @@ bool StateObserver::initialize() {
   return true;
 }
 
-// TODO(giuseppe) must replace with a message filter instead (important for real
-// robot experiments)
-void StateObserver::update() {
-  if (arm_state_received_ && base_twist_received_ && base_pose_received_ &&
-      object_pose_received_ && wrench_received_) {
-    manipulation::conversions::toMsg(
-        time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_, ext_tau_.tail<9>(), object_state_.position[0],
-        object_state_.velocity[0], false, tank_state_, state_ros_);
-  }
+void StateObserver::message_filter_cb(
+    const sensor_msgs::JointStateConstPtr& arm_state,
+    const nav_msgs::OdometryConstPtr& base_pose,
+    const nav_msgs::OdometryConstPtr& base_twist,
+    const nav_msgs::OdometryConstPtr& object_odom,
+    const geometry_msgs::WrenchStampedConstPtr& wrench) {
+  arm_state_callback(arm_state);
+  base_pose_callback(base_pose);
+  base_twist_callback(base_twist);
+  object_pose_callback(object_odom);
+  wrench_callback(wrench);
+
+  manipulation::conversions::toMsg(
+      time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
+      ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
+      false, tank_state_, state_ros_);
+
   state_publisher_.publish(state_ros_);
 }
 
@@ -202,13 +228,14 @@ void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
 
 void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
-  if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(), (int)msg->effort.size(), (int)msg->velocity.size())){
+  if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
+                 (int)msg->effort.size(), (int)msg->velocity.size())) {
     ROS_WARN_STREAM_THROTTLE(
         2.0, "Joint state fields have the wrong size." << msg->name.size());
     return;
   }
   time_ = msg->header.stamp.toSec();
-  for (size_t i = 0; i < 9; i++){
+  for (size_t i = 0; i < 9; i++) {
     q_(i) = msg->position[i];
     dq_(i) = msg->velocity[i];
   }
@@ -228,7 +255,7 @@ void StateObserver::object_pose_callback(
     start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
                                        T_hinge_handle_init_.translation().y());
     articulation_first_computation_ = false;
-    previous_time_ = ros::Time::now().toSec();
+    //    previous_time_ = ros::Time::now().toSec();
 
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped T_world_shelf_ros;
@@ -246,17 +273,25 @@ void StateObserver::object_pose_callback(
                                        T_hinge_handle_.translation().y());
 
   double theta_new = current_relative_angle_ - start_relative_angle_;
-  double current_time = ros::Time::now().toSec();
+  //  double current_time = ros::Time::now().toSec();
 
-  object_state_.velocity[0] =
-      (theta_new - object_state_.position[0]) / (current_time - previous_time_);
+  double velocity_norm =
+      std::sqrt(msg->twist.twist.linear.x * msg->twist.twist.linear.x +
+                msg->twist.twist.linear.y + msg->twist.twist.linear.y);
+  double theta_dot = velocity_norm / T_hinge_handle_.translation().x();
+
+  //  object_state_.velocity[0] =
+  //      (theta_new - object_state_.position[0]) / (current_time -
+  //      previous_time_);
   object_state_.position[0] = theta_new;
-  previous_time_ = current_time;
+  object_state_.velocity[0] = theta_dot;
+  //  previous_time_ = current_time;
   object_pose_time_ = msg->header.stamp.toSec();
   object_pose_received_ = true;
 }
 
-void StateObserver::wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg) {
+void StateObserver::wrench_callback(
+    const geometry_msgs::WrenchStampedConstPtr& msg) {
   if (!base_pose_received_ || !arm_state_received_) return;
 
   // update kdl joints with the latest measurements
@@ -299,18 +334,18 @@ bool StateObserver::state_request_cb(
   if (!are_equal(req.time, base_pose_time_, base_twist_time_, arm_state_time_,
                  object_pose_time_, wrench_time_)) {
     ROS_DEBUG_STREAM("Failed to get required synchronized state: "
-    << std::endl
-    << "base_pose_time=" << base_pose_time_ << std::endl
-    << "base_twist_time=" << base_twist_time_ << std::endl
-    << "arm_state_time=" << arm_state_time_ << std::endl
-    << "object_pose_time=" << object_pose_time_);
+                     << std::endl
+                     << "base_pose_time=" << base_pose_time_ << std::endl
+                     << "base_twist_time=" << base_twist_time_ << std::endl
+                     << "arm_state_time=" << arm_state_time_ << std::endl
+                     << "object_pose_time=" << object_pose_time_);
     return false;
   }
 
   manipulation::conversions::toMsg(
-      req.time, base_pose_, base_twist_, ext_tau_.head<3>(),
-          q_, dq_, ext_tau_.tail<9>(), object_state_.position[0],
-      object_state_.velocity[0], false, tank_state_, state_ros_);
+      req.time, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
+      ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
+      false, tank_state_, state_ros_);
   res.state = state_ros_;
   return true;
 }

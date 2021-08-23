@@ -83,6 +83,8 @@ bool PandaControllerInterface::init_ros() {
 
   optimal_path_.header.frame_id = "world";
   optimal_base_path_.header.frame_id = "world";
+  reference_set_ = false;
+  ROS_INFO("[PandaControllerInterface::init_ros] ok!");
   return true;
 }
 
@@ -91,6 +93,7 @@ void PandaControllerInterface::init_model(
     const std::string& object_description) {
   robot_model_.init_from_xml(robot_description);
   object_model_.init_from_xml(object_description);
+  ROS_INFO("[PandaControllerInterface::init_model] ok!");
 }
 
 bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
@@ -140,8 +143,13 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
     ROS_ERROR("Failed to parse cost parameters.");
     return false;
   }
-  auto cost = std::make_shared<PandaCost>(cost_params);
 
+  std::cout << "\n\n Creating local cost\n\n\n";
+  auto cost = std::make_shared<PandaCost>(cost_params);
+  local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);
+  local_cost_->robot().print_info();
+  local_cost_->object().print_info();
+  std::cout << "\n\nDone\n\n\n";
   // -------------------------------
   // policy
   // -------------------------------
@@ -164,21 +172,47 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   // initialize reference
   // -------------------------------
-  double object_reference_position;
-  nh_.param<double>("object_reference_position", object_reference_position,
-                    0.0);
   ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
-  ref_.rr[0](PandaDim::REFERENCE_POSE_DIMENSION +
-             PandaDim::REFERENCE_OBSTACLE) = object_reference_position;
-
-  // TODO(giuseppe) hack just to make sure obst not initialized on the way
-  ref_.rr[0](7) = obstacle_marker_.pose.position.x;
-  ref_.rr[0](8) = obstacle_marker_.pose.position.y;
-  ref_.rr[0](9) = obstacle_marker_.pose.position.z;
+  // init obstacle fare away
+  ref_.rr[0](7) = 100;
+  ref_.rr[0](8) = 100;
+  ref_.rr[0](9) = 100;
+  ref_.rr[0].tail<1>()(0) = 0.0;
   ref_.tt.resize(1, 0.0);
-
-  ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
   return true;
+}
+
+bool PandaControllerInterface::init_reference_to_current_pose(
+    const mppi::observation_t& x, const double t) {
+  auto ee_pose = get_pose_end_effector(x);
+  ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
+  ref_.rr[0].head<3>() = ee_pose.translation;
+  ref_.rr[0].segment<4>(3) = ee_pose.rotation.coeffs();
+
+  // init obstacle fare away
+  ref_.rr[0](7) = 100;
+  ref_.rr[0](8) = 100;
+  ref_.rr[0](9) = 100;
+
+  // mode
+  ref_.rr[0].tail<1>()(0) = 0.0;
+
+  // at time zero
+  ref_.tt.resize(1, t);
+
+  get_controller()->set_reference_trajectory(ref_);
+  local_cost_->set_reference_trajectory(ref_);
+  reference_set_ = true;
+  ROS_INFO_STREAM("Initializing reference to the current pose: \n"
+                  << ref_.rr[0].transpose());
+  return true;
+}
+
+double PandaControllerInterface::get_stage_cost(const mppi::observation_t& x,
+                                                const mppi::input_t& u,
+                                                const double t) {
+  if (!reference_set_) return -1.0;
+  return local_cost_->get_stage_cost(x, u, t);
 }
 
 void PandaControllerInterface::ee_pose_desired_callback(
@@ -194,6 +228,8 @@ void PandaControllerInterface::ee_pose_desired_callback(
   ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
   ref_.rr[0].head<7>()(6) = msg->pose.orientation.w;
   get_controller()->set_reference_trajectory(ref_);
+  local_cost_->set_reference_trajectory(ref_);
+  reference_set_ = true;
 }
 
 void PandaControllerInterface::mode_callback(
@@ -201,6 +237,8 @@ void PandaControllerInterface::mode_callback(
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](11) = msg->data;
   get_controller()->set_reference_trajectory(ref_);
+  local_cost_->set_reference_trajectory(ref_);
+  reference_set_ = true;
   ROS_INFO_STREAM("Switching to mode: " << msg->data);
 }
 
@@ -209,6 +247,8 @@ void PandaControllerInterface::update_reference(const double t) {
     reference_scheduler_.set_reference(t, ref_);
     std::unique_lock<std::mutex> lock(reference_mutex_);
     get_controller()->set_reference_trajectory(ref_);
+    local_cost_->set_reference_trajectory(ref_);
+    reference_set_ = true;
   }
 }
 

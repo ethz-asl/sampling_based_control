@@ -3,6 +3,7 @@
 //
 
 #include "mppi_manipulation/reference_scheduler.h"
+#include <ros/ros.h>
 
 namespace manipulation {
 
@@ -37,9 +38,10 @@ bool ReferenceScheduler::parse_from_file(const std::string& file_path) {
   try {
     config = YAML::LoadFile(file_path);
   } catch (const YAML::ParserException& ex) {
-    std::cout << ex.what() << std::endl;
+    ROS_WARN_STREAM(ex.what());
   } catch (const YAML::BadFile& ex) {
-    std::cout << ex.what() << std::endl;
+    ROS_WARN_STREAM(ex.what());
+    ;
   }
 
   if (!config.IsSequence()) {

@@ -12,6 +12,12 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
+
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/sync_policies/exact_time.h>
+#include <message_filters/synchronizer.h>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <kdl/chainjnttojacsolver.hpp>
@@ -33,7 +39,6 @@ class StateObserver {
 
  public:
   bool initialize();
-  void update();
   void publish();
 
  private:
@@ -45,6 +50,12 @@ class StateObserver {
 
   bool state_request_cb(manipulation_msgs::StateRequestRequest& req,
                         manipulation_msgs::StateRequestResponse& res);
+
+  void message_filter_cb(const sensor_msgs::JointStateConstPtr& arm_state,
+                         const nav_msgs::OdometryConstPtr& base_pose,
+                         const nav_msgs::OdometryConstPtr& base_twist,
+                         const nav_msgs::OdometryConstPtr& object_odom,
+                         const geometry_msgs::WrenchStampedConstPtr& wrench);
 
  private:
   bool base_pose_received_;
@@ -96,6 +107,30 @@ class StateObserver {
   ros::Subscriber arm_state_subscriber_;
   ros::Subscriber wrench_subscriber_;
 
+  // message filter
+  bool exact_sync_;
+  message_filters::Subscriber<sensor_msgs::JointState> arm_sub_;
+  message_filters::Subscriber<nav_msgs::Odometry> base_pose_sub_;
+  message_filters::Subscriber<nav_msgs::Odometry> base_twist_sub_;
+  message_filters::Subscriber<nav_msgs::Odometry> object_sub_;
+  message_filters::Subscriber<geometry_msgs::WrenchStamped> wrench_sub_;
+
+  // clang-format off
+  using ExactPolicy = message_filters::sync_policies::ExactTime<sensor_msgs::JointState,
+                                                                nav_msgs::Odometry,
+                                                                nav_msgs::Odometry,
+                                                                nav_msgs::Odometry,
+                                                                geometry_msgs::WrenchStamped>;
+
+  using ApproximatePolicy = message_filters::sync_policies::ApproximateTime<sensor_msgs::JointState,
+                                                                            nav_msgs::Odometry,
+                                                                            nav_msgs::Odometry,
+                                                                            nav_msgs::Odometry,
+                                                                            geometry_msgs::WrenchStamped>;
+  std::unique_ptr<message_filters::Synchronizer<ExactPolicy>> exact_message_filter_;
+  std::unique_ptr<message_filters::Synchronizer<ApproximatePolicy>> approx_message_filter_;
+  // clang-format off
+
   ///// Articulation
   // articulation
   double object_pose_time_;
@@ -136,4 +171,4 @@ class StateObserver {
   Eigen::Matrix<double, 6, 1> wrench_eigen_;
   KDL::Chain world_to_ee_chain_;
 };
-}  // namespace royalpanda
+}  // namespace manipulation_royalpanda

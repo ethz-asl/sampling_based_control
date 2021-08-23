@@ -49,6 +49,14 @@ class PandaCost : public mppi::Cost {
   PandaCost(const CostParams& param);
   ~PandaCost() = default;
 
+  // debug only
+  inline const mppi_pinocchio::RobotModel& robot() const {
+    return robot_model_;
+  }
+  inline const mppi_pinocchio::RobotModel& object() const {
+    return object_model_;
+  }
+
  private:
   CostParams params_;
 
@@ -61,6 +69,7 @@ class PandaCost : public mppi::Cost {
   int frame_id_;
   int arm_base_frame_id_;
   Eigen::Matrix<double, 6, 1> error_;
+  Eigen::Vector3d distance_vector_;
 
  public:
   mppi::cost_ptr create() override {

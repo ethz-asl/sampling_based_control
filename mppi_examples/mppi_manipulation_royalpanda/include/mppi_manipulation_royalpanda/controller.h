@@ -134,5 +134,8 @@ class ManipulationController
   manipulation::EnergyTank energy_tank_;
   manipulation::FilterParams safety_filter_params_;
   std::unique_ptr<manipulation::PandaMobileSafetyFilter> safety_filter_;
+
+  // metrics
+  double stage_cost_;
 };
 }  // namespace manipulation_royalpanda

@@ -4,6 +4,7 @@ joint_publisher:
 
 manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
+  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
 
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
@@ -16,7 +17,7 @@ manipulation_controller:
   nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
 
-  sequential: true
+  sequential: false
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
@@ -54,7 +55,7 @@ manipulation_controller:
     lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
     joint_limit_cost: 1000 #1000
-    joint_limit_slope: 1000000 #100
+    joint_limit_slope: 100 #100
 
   controller_gains:
     base_gains:
@@ -107,7 +108,7 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: true
+  apply_filter: false
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
@@ -137,6 +138,7 @@ manipulation_controller:
     # udd_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
     verbose: false
+
 panda_position_controller:
   type: effort_controllers/JointGroupPositionController
   joints: ["panda_joint1",

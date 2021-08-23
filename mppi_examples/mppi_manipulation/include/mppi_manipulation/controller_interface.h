@@ -8,18 +8,22 @@
 #pragma once
 #include <mppi_pinocchio/model.h>
 #include <mppi_ros/controller_interface.h>
-
 #include <nav_msgs/Path.h>
+
+#include "mppi_manipulation/cost.h"
+#include "mppi_manipulation/reference_scheduler.h"
+
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
-#include "mppi_manipulation/reference_scheduler.h"
 
 namespace manipulation {
 
 class PandaControllerInterface : public mppi_ros::ControllerRos {
  public:
-  explicit PandaControllerInterface(ros::NodeHandle& nh) : ControllerRos(nh){};
+  explicit PandaControllerInterface(ros::NodeHandle& nh) : ControllerRos(nh) {
+    ROS_INFO("[PandaControllerInterface(ros::NodeHandle& nh)]");
+  };
   ~PandaControllerInterface() = default;
 
   bool init_ros() override;
@@ -33,10 +37,15 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   geometry_msgs::PoseStamped get_pose_end_effector_ros(
       const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
+  double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u,
+                        const double t);
+  bool init_reference_to_current_pose(const mppi::observation_t& x,
+                                      const double t);
 
  private:
   void init_model(const std::string& robot_description,
                   const std::string& object_description);
+
   bool set_controller(mppi::solver_ptr& controller) override;
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
@@ -46,6 +55,9 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi::config_t config_;
 
  private:
+  bool reference_set_;
+  std::unique_ptr<manipulation::PandaCost> local_cost_;
+
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 

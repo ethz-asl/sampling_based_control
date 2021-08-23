@@ -32,7 +32,6 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   }
   ROS_INFO("Solver initialized correctly.");
 
-
   started_ = false;
   state_ok_ = true;
   ROS_INFO("Controller successfully initialized!");
@@ -191,6 +190,13 @@ void ManipulationController::state_callback(
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
+
+    if (!state_received_) {
+      if (!man_interface_->init_reference_to_current_pose(x_,
+                                                          observation_time_)) {
+        ROS_WARN("Failed to set the controller reference to current state.");
+      }
+    }
   }
 
   x_ros_ = *state_msg;
@@ -227,9 +233,13 @@ void ManipulationController::starting(const ros::Time& time) {
   safety_filter_ =
       std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
 
+  // metrics
+  stage_cost_ = 0.0;
+
   // logging
   signal_logger::logger->stopLogger();
   signal_logger::add(arm_torque_command_, "torque_command");
+  signal_logger::add(stage_cost_, "stage_cost");
   for (const auto& constraint : safety_filter_->constraints_) {
     signal_logger::add(constraint.second->violation_,
                        constraint.first + "_violation");
@@ -245,6 +255,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
     safety_filter_->update(x_, u_, observation_time_);
+    safety_filter_->update_violation(x_);
   }
 
   if (apply_filter_) {
@@ -254,14 +265,15 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   }
 
   // step the tank dynamics
-  std::cout << "Joint velocity opt: " << u_opt_.transpose() << std::endl;
-  std::cout << "Joint torque : "
-            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
-  std::cout << "Energy exchange is: "
-            << u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>()
-            << std::endl;
-  std::cout << "Tank state (for sure) is: " << energy_tank_.get_state()
-            << std::endl;
+  //  std::cout << "Joint velocity opt: " << u_opt_.transpose() << std::endl;
+  //  std::cout << "Joint torque : "
+  //            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() <<
+  //            std::endl;
+  //  std::cout << "Energy exchange is: "
+  //            << u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>()
+  //            << std::endl;
+  //  std::cout << "Tank state (for sure) is: " << energy_tank_.get_state()
+  //            << std::endl;
   energy_tank_.step(u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>(),
                     period.toSec());  // time is not used here
 }
@@ -337,6 +349,7 @@ void ManipulationController::update(const ros::Time& time,
     std::unique_lock<std::mutex> lock(observation_mutex_);
     man_interface_->set_observation(x_, time.toSec());
   }
+  man_interface_->update_reference(time.toSec());
 
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
@@ -363,11 +376,18 @@ void ManipulationController::update(const ros::Time& time,
     nominal_state_publisher_.msg_ = x_nom_ros_;
     nominal_state_publisher_.unlockAndPublish();
   }
+
+  {
+    std::unique_lock<std::mutex> lock(observation_mutex_);
+    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
+  }
+
   signal_logger::logger->collectLoggerData();
 }
 
 void ManipulationController::stopping(const ros::Time& time) {
   signal_logger::logger->disableElement("torque_command");
+  signal_logger::logger->disableElement("stage_cost");
   for (const auto& constraint : safety_filter_->constraints_) {
     signal_logger::logger->disableElement(constraint.first + "_violation");
   }

@@ -32,7 +32,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   bool init_sim();
   void read_sim(ros::Time time, ros::Duration period);
-  void write_sim(ros::Time time, ros::Duration period);
+  void advance_sim(ros::Time time, ros::Duration period);
   double get_time_step();
   void publish_ros();
 

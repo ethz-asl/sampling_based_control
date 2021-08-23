@@ -86,14 +86,14 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   // arm reach cost
   double reach;
-  robot_model_.get_error(arm_base_frame_, tracked_frame_, error_);
-  reach = error_.head<2>().norm();
+  robot_model_.get_offset(arm_base_frame_, tracked_frame_, distance_vector_);
+  reach = distance_vector_.head<2>().norm();
   if (reach > params_.max_reach) {
     cost += params_.Q_reach +
             params_.Q_reachs * (std::pow(reach - params_.max_reach, 2));
   }
 
-  if (error_.norm() < params_.min_dist) {
+  if (distance_vector_.norm() < params_.min_dist) {
     cost += params_.Q_reach +
             params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
   }

@@ -71,9 +71,20 @@ class RobotModel {
 
   /**
    *
+   * @param from_frame
+   * @param to_frame
+   * @param offset
+   */
+  void get_offset(const std::string& from_frame, const std::string& to_frame,
+                  Eigen::Vector3d& offset);
+
+  /**
+   *
    * @param frame
    */
   Pose get_pose(const std::string& frame) const;
+
+  void print_info() const;
 
  private:
   pinocchio::Model* model_;

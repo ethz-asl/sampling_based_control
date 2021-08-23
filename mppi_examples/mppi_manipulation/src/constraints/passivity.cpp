@@ -27,8 +27,8 @@ void PassivityConstraint::update_observation(const Eigen::VectorXd& x, const Eig
 
   dt_ = t - t_;
   const double tank_state = x(STATE_DIMENSION - TORQUE_DIMENSION - 1);
-  std::cout << "tank state is " << tank_state << std::endl;
-  std::cout << "dt is: " << dt_ << std::endl;
+  //  std::cout << "tank state is " << tank_state << std::endl;
+  //  std::cout << "dt is: " << dt_ << std::endl;
 
   // I know --- all these numbers make everything messy and bug-prone. This is
   // prototyping, isnt'it?
@@ -40,9 +40,9 @@ void PassivityConstraint::update_observation(const Eigen::VectorXd& x, const Eig
   integration_delta_ += delta;
 
   constraint_matrix_ = dt_ * x.tail<TORQUE_DIMENSION>().transpose();
-  std::cout << "min energy=" << min_energy_ << std::endl;
-  std::cout << "integration delta=" << integration_delta_ << std::endl;
+  //  std::cout << "min energy=" << min_energy_ << std::endl;
+  //  std::cout << "integration delta=" << integration_delta_ << std::endl;
   lower_bound_[0] = min_energy_ + integration_delta_ - 0.5 * (tank_state * tank_state);
-  std::cout << "Setting lower bound to " << lower_bound_[0] << std::endl;
+  //  std::cout << "Setting lower bound to " << lower_bound_[0] << std::endl;
   t_ = t;
 };

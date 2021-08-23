@@ -27,22 +27,33 @@ int main(int argc, char** argv) {
   silo_options.maxLoggingTime_ = 60.0;
   signal_logger::logger->initLogger(silo_options);
 
+  // do not advance until this time.
+  // this is to make sure that all metrics collected by this time on
+  // are comparable as in the previous time some controller switching
+  // might still happen in the background
+  double pause_time;
+  if (!nh_private.getParam("pause_time", pause_time)) {
+    ROS_ERROR("Failed to parse pause_time");
+    return 0;
+  }
+  ROS_INFO_STREAM("The simulation will not advance until t=" << pause_time);
+
   // when enforcing determinism we make sure (through a service call)
   // that the latest state from simulation has been collected as
   // on the real hardware
-  bool enforce_determinism;
-  if(!nh_private.getParam("enforce_determinism", enforce_determinism)){
-    ROS_ERROR("Failed to parse enforce_determinism");
-    return 0;
-  }
+  //  bool enforce_determinism;
+  //  if(!nh_private.getParam("enforce_determinism", enforce_determinism)){
+  //    ROS_ERROR("Failed to parse enforce_determinism");
+  //    return 0;
+  //  }
 
-  ros::ServiceClient state_client =
-      nh.serviceClient<manipulation_msgs::StateRequest>(
-          "/observer/state_request");
-  if (!state_client.waitForExistence(ros::Duration(3))) {
-    ROS_ERROR("Service /observer/state_request does not exist.");
-    return 0;
-  }
+  //  ros::ServiceClient state_client =
+  //      nh.serviceClient<manipulation_msgs::StateRequest>(
+  //          "/observer/state_request");
+  //  if (!state_client.waitForExistence(ros::Duration(3))) {
+  //    ROS_ERROR("Service /observer/state_request does not exist.");
+  //    return 0;
+  //  }
 
   // tell ROS to use the sim time
   nh.setParam("/use_sim_time", true);
@@ -65,8 +76,8 @@ int main(int argc, char** argv) {
   double dt = sim.get_time_step();
   ros::Duration period = ros::Duration().fromSec(dt);
   ros::Time curr_time = ros::Time().fromSec(t);
-
   time_point<steady_clock> start, end;
+
   double elapsed, remaining;
 
   manipulation_msgs::StateRequestRequest req;
@@ -83,40 +94,47 @@ int main(int argc, char** argv) {
                                   << manipulation::conversions::eigenToString(
                                          sim.get_state()));
 
-    if (enforce_determinism){
-      // the server returns successfully only once it "builds" a sync state
-      // at the requested timestamp
-      // we need to keep calling read_sim so that the sim keeps publishing
-      // the most recent state
-      req.time = curr_time.toSec();
-      while (!state_client.call(req, res) && ros::ok()) {
-        sim.read_sim(curr_time, period);
-        ros::Duration(0.001).sleep();
-        ros::spinOnce();
-      }
+    curr_time = ros::Time().fromSec(t);
+    sim.read_sim(curr_time, period);
 
-      Eigen::VectorXd x;
-      double t_req;
-      manipulation::conversions::msgToEigen(res.state, x, t_req);
-      ROS_DEBUG_STREAM("Req state:"
-                       << std::endl
-                       << std::setprecision(2)
-                       << manipulation::conversions::eigenToString(x));
-    }
-
+    //    if (enforce_determinism){
+    //      // the server returns successfully only once it "builds" a sync
+    //      state
+    //      // at the requested timestamp
+    //      // we need to keep calling read_sim so that the sim keeps publishing
+    //      // the most recent state
+    //      req.time = curr_time.toSec();
+    //      while (!state_client.call(req, res) && ros::ok()) {
+    //        partial1 = steady_clock::now();
+    //        sim.read_sim(curr_time, period);
+    //        partial2 = steady_clock::now();
+    //        ros::Duration(0.001).sleep();
+    //        ros::spinOnce();
+    //      }
+    //
+    //      Eigen::VectorXd x;
+    //      double t_req;
+    //      manipulation::conversions::msgToEigen(res.state, x, t_req);
+    //      ROS_DEBUG_STREAM("Req state:"
+    //                       << std::endl
+    //                       << std::setprecision(2)
+    //                       << manipulation::conversions::eigenToString(x));
+    //    }
 
     // update the controller input
     controller_manager.update(curr_time, period);
 
     // send it to the simulation
-    sim.write_sim(curr_time, period);
+    if (t >= pause_time) {
+      ROS_INFO_ONCE("Unpausing simulation!");
+      sim.advance_sim(curr_time, period);
+    }
+    t += dt;
 
     // publish data to ros
     sim.publish_ros();
-
-    // advance time
-    t += dt;
-    curr_time = ros::Time().fromSec(t);
+    ros_time.clock.fromSec(t);
+    clock_publisher.publish(ros_time);
 
     // timing
     end = steady_clock::now();
@@ -124,10 +142,6 @@ int main(int argc, char** argv) {
     remaining = std::max(0.0, dt - elapsed);
     if (remaining > 0.0)
       std::this_thread::sleep_for(microseconds((int)(remaining * 1e6)));
-
-    // publish sim time
-    ros_time.clock.fromSec(t);
-    clock_publisher.publish(ros_time);
 
     // process all general callbacks
     signal_logger::logger->collectLoggerData();
