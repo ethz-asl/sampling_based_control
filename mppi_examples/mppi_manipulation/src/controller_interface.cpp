@@ -144,12 +144,8 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
     return false;
   }
 
-  std::cout << "\n\n Creating local cost\n\n\n";
   auto cost = std::make_shared<PandaCost>(cost_params);
   local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);
-  local_cost_->robot().print_info();
-  local_cost_->object().print_info();
-  std::cout << "\n\nDone\n\n\n";
   // -------------------------------
   // policy
   // -------------------------------

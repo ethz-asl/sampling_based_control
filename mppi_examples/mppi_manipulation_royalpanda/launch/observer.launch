@@ -25,7 +25,7 @@
         <remap from="joint_states" to="/observer/joint_states"/>
     </node>
 
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" launch-prefix="xterm -e">
         <param name="publish_frequency" value="100"/>
         <param name="use_tf_static" value="true"/>
         <param name="tf_prefix" value=""/>
@@ -33,7 +33,7 @@
         <remap from="joint_states" to="/observer/joint_states"/>
     </node>
 
-    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" launch-prefix="xterm -e">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="object_description"/>
         <remap from="joint_states" to="/observer/object/joint_state"/>

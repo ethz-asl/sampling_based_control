@@ -8,8 +8,10 @@
 #include <string>
 #include <vector>
 
-#include <mppi_manipulation/constraints/safety_filter.h>
+// clang-format off
 #include <mppi_manipulation/controller_interface.h>
+// clang-format on
+#include <mppi_manipulation/constraints/safety_filter.h>
 #include <mppi_manipulation/energy_tank.h>
 #include <mppi_manipulation/params/filter_params.h>
 #include <mppi_manipulation/params/gains.h>

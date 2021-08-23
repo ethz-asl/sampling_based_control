@@ -34,10 +34,10 @@ manipulation_controller:
     angular_weight: 10.0
     angular_weight_opening: 1.0
 
-    min_dist: 0.0
-    max_reach: 1.0
-    reach_weight: 100
-    reach_weight_slope: 10
+    min_dist: 0.15
+    max_reach: 0.65
+    reach_weight: 0
+    reach_weight_slope: 0
 
     obstacle_weight: 0
     obstacle_weight_slope: 0
@@ -51,8 +51,12 @@ manipulation_controller:
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
     grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
 
-    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
-    lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+    #upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+    #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+
+    # Safer joint limits (+10 deg safety margin ~0.17)
+    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    lower_joint_limits: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
@@ -108,15 +112,15 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: false
+  apply_filter: true
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
     u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
     joint_limits: true
-    q_min: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
-    q_max: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+    q_max: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     cartesian_limits: true
     max_reach: 0.65

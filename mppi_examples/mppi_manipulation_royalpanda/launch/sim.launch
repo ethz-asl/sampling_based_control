@@ -41,7 +41,7 @@
     <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 
     <include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch"/>
-<!--    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"-->
-<!--          args="manipulation_controller"/>-->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+          args="manipulation_controller"/>
 
 </launch>

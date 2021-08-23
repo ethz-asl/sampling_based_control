@@ -241,6 +241,9 @@ void ManipulationController::starting(const ros::Time& time) {
   signal_logger::add(arm_torque_command_, "torque_command");
   signal_logger::add(stage_cost_, "stage_cost");
   for (const auto& constraint : safety_filter_->constraints_) {
+    std::cout << "Adding " << constraint.first << " violation which has size: "
+              << constraint.second->violation_.rows() << " x "
+              << constraint.second->violation_.cols() << std::endl;
     signal_logger::add(constraint.second->violation_,
                        constraint.first + "_violation");
   }
@@ -255,7 +258,35 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
     safety_filter_->update(x_, u_, observation_time_);
-    safety_filter_->update_violation(x_);
+
+    // this is required for computing some metrics
+    // we provide only the joints position (no gripper) since the implementation
+    // of the joint limits in the safety_filter package assumes that the state
+    // vector is eventually only the joint state
+    // TODO(giuseppe) each problem shuould have its implementation (maybe
+    // inherithed)
+    //   as this is not working anymore if another constraint requires the full
+    //   state instead.
+    safety_filter_->update_violation(x_.head<10>());
+  }
+
+  if (safety_filter_->constraints_["cartesian_limits"]->violation_(0) > 0) {
+    std::cout << "Cart limit[0] violated: "
+              << safety_filter_->constraints_["cartesian_limits"]->violation_(0)
+              << std::endl;
+  }
+  if (safety_filter_->constraints_["cartesian_limits"]->violation_(1) > 0) {
+    std::cout << "Cart limit[1] violated: "
+              << safety_filter_->constraints_["cartesian_limits"]->violation_(1)
+              << std::endl;
+  }
+  if (safety_filter_->constraints_["joint_limits"]
+          ->violation_.cwiseMax(1e-6)
+          .sum() > 1e-3) {
+    std::cout
+        << "Joint limits violated: "
+        << safety_filter_->constraints_["joint_limits"]->violation_.transpose()
+        << std::endl;
   }
 
   if (apply_filter_) {
@@ -381,15 +412,15 @@ void ManipulationController::update(const ros::Time& time,
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
   }
-
   signal_logger::logger->collectLoggerData();
 }
 
 void ManipulationController::stopping(const ros::Time& time) {
-  signal_logger::logger->disableElement("torque_command");
-  signal_logger::logger->disableElement("stage_cost");
+  signal_logger::logger->disableElement("/log/torque_command");
+  signal_logger::logger->disableElement("/log/stage_cost");
   for (const auto& constraint : safety_filter_->constraints_) {
-    signal_logger::logger->disableElement(constraint.first + "_violation");
+    signal_logger::logger->disableElement("/log/" + constraint.first +
+                                          "_violation");
   }
 }
 

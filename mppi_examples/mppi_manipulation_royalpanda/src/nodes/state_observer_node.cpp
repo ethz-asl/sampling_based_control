@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  ros::Rate rate(200);
+  ros::Rate rate(100);
   while (ros::ok()) {
     observer.publish();
     rate.sleep();

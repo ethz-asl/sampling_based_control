@@ -143,8 +143,6 @@ int main(int argc, char** argv) {
     if (remaining > 0.0)
       std::this_thread::sleep_for(microseconds((int)(remaining * 1e6)));
 
-    // process all general callbacks
-    signal_logger::logger->collectLoggerData();
     ros::spinOnce();
   }
 
