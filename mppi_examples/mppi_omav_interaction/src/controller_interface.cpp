@@ -249,6 +249,7 @@ void OMAVControllerInterface::publish_all_trajectories() {
 void OMAVControllerInterface::publish_optimal_rollout() {
   get_controller()->get_optimal_rollout(optimal_rollout_states_,
                                         optimal_rollout_inputs_);
+  x0_ = get_controller()->get_current_observation();
   geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des,
       optimal_inputs_lin_array, optimal_inputs_ang_array,
       optimal_rollout_lin_vel, optimal_rollout_ang_vel;
@@ -281,6 +282,12 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   handle_hook_cost_ = 0;
   pose_cost_ = 0;
   overall_cost_ = 0;
+  omav_interaction::conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7),
+                                                              current_lin_vel);
+  omav_interaction::conversions::PoseMsgForVelocityFromVector(
+      x0_.segment<3>(10), current_ang_vel);
+  optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
+  optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
 
   for (int i = 0; i < optimal_rollout_states_.size(); i++) {
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
