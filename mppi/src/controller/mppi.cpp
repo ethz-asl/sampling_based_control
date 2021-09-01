@@ -65,6 +65,16 @@ void PathIntegral::init_data() {
   rollouts_.resize(config_.rollouts, Rollout(steps_, nu_, nx_));
   rollouts_cost_ = Eigen::ArrayXd::Zero(config_.rollouts);
 
+  shift_int_ = 0;
+  max_solve_time_int_ =
+      std::floor((config_.external_publish_rate - config_.maximal_solve_time) /
+                 config_.step_size);
+  max_publish_int_ =
+      std::ceil(config_.external_publish_rate / config_.step_size);
+  // Since the discretized max_publish_int_ point shouldn't be pertubated by
+  // noise as well a one has to be added
+  max_shift_int_ = max_publish_int_ + 1;
+
   omega = Eigen::ArrayXd::Zero(config_.rollouts);
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
 
@@ -147,9 +157,6 @@ void PathIntegral::update_policy() {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
     copy_observation();
-    // The shift_int_ value is changed by the ros_node hence to prevent changes
-    // between the shift and filtering the internal value is always used
-    shift_int_internal_ = shift_int_;
 
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
@@ -220,6 +227,8 @@ void PathIntegral::set_observation(const observation_t& x, const double t) {
   if (first_step_) {
     copy_observation();
     initialize_rollouts();
+    t0_internal_ = reset_time_;
+    t_timing_ = reset_time_;
     first_step_ = false;
   }
 
@@ -229,6 +238,18 @@ void PathIntegral::set_observation(const observation_t& x, const double t) {
 void PathIntegral::copy_observation() {
   std::shared_lock<std::shared_mutex> lock(state_mutex_);
   x0_internal_ = x0_;
+
+  if (config_.external_publish_rate != 0.0) {
+    t_timing_ += reset_time_ - t0_internal_;
+    if (t_timing_ >= config_.external_publish_rate) {
+      shift_int_ = 0;
+      shift_input_ = true;
+      t_timing_ = 0.0;
+    }
+  }
+  std::cout << "------------------------------" << std::endl;
+  std::cout << "shift_input_: " << shift_input_ << std::endl;
+  std::cout << "t_timing_: " << t_timing_ << std::endl;
   t0_internal_ = reset_time_;
 }
 
@@ -251,24 +272,50 @@ void PathIntegral::prepare_rollouts() {
   // find trim index
   size_t offset;
   {
-    // Wasn't sure if I can remove this here but thick I can..
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
+    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
+                                  opt_roll_cache_.tt.end(), t0_internal_);
+    if (lower == opt_roll_cache_.tt.end()) {
+      std::stringstream warning;
+      warning << "Resetting to time " << t0_internal_
+              << ", greater than the last available time: "
+              << opt_roll_cache_.tt.back();
+      log_warning(warning.str());
+    }
+    offset = std::distance(opt_roll_cache_.tt.begin(), lower);
+    // Set the internal time used for the time vector to the next one in the
+    // opt_roll vector
+    t0_shift_internal_ = opt_roll_cache_.tt[offset];
+
+    shift_int_ += offset;
+    if (true) {
+      std::cout << "---------------------------------" << std::endl;
+      std::cout << "Opt Roll Cache Head: ";
+      for (std::vector<double>::const_iterator i = opt_roll_cache_.tt.begin();
+           i != opt_roll_cache_.tt.end(); ++i)
+        std::cout << *i << ' ';
+      std::cout << std::endl;
+      std::cout << "t0_internal: " << t0_internal_ << std::endl;
+      std::cout << "t0_shift_internal: " << t0_shift_internal_ << std::endl;
+      std::cout << "Offset: " << offset << std::endl;
+    }
   }
 
-  // Normally the input is shifted once by one
-  if (shift_input_ && shift_int_internal_ < 7) {
-    offset = 1;
-    shift_input_ = false;
-  } else if (shift_input_ && shift_int_internal_ == 7) {
-    // In order to ensure continuity despite varying mppi duration we shift
-    // earlier to the "final state" eg. where we want to be if the next
-    // trajectory is sent.
-    offset = 2;
-    shift_input_ = false;
-  } else {
-    offset = 0;
+  // In order to ensure continuity despite varying mppi duration we shift
+  // earlier to the "final state" eg. where we want to be if the next
+  // trajectory is sent. Only happens if an external publish rate different from
+  // 0.0
+  if (config_.external_publish_rate != 0.0) {
+    if (shift_input_ && shift_int_ >= max_solve_time_int_) {
+      offset = ceil(config_.maximal_solve_time / config_.step_size);
+      shift_input_ = false;
+    } else if (!shift_input_) {
+      offset = 0;
+    }
   }
 
+  std::cout << "---------------------------------" << std::endl;
+  std::cout << "Offset: " << offset << std::endl;
 
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
@@ -330,7 +377,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
         // zero.
         // Instead of setting all 7 first "noises" to zero, the indexes of zero
         // noise change.
-        if (t < (8 - shift_int_internal_) && !first_mppi_iteration_) {
+        if (t < (max_shift_int_ - shift_int_) && !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
       }
@@ -347,7 +394,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
         // zero.
         // Instead of setting all 7 first "noises" to zero, the indexes of zero
         // noise change.
-        if (t < (8 - shift_int_internal_) && !first_mppi_iteration_) {
+        if (t < (max_shift_int_ - shift_int_) && !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
         rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
@@ -358,8 +405,9 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
 
       // compute input-state stage cost
       double cost_temp = 0;
-      cost_temp = std::pow(config_.discount_factor, t) *
-                  cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
+      cost_temp =
+          std::pow(config_.discount_factor, t) *
+          cost->get_stage_cost(x, t0_shift_internal_ + t * config_.step_size);
 
       if (std::isnan(cost_temp)) {
         throw std::runtime_error("Something went wrong ... dynamics diverged?");
@@ -380,7 +428,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     }
     rollouts_cost_[k] = rollouts_[k].total_cost;
   }
-  // first_mppi_iteration_ = false;
+  first_mppi_iteration_ = false;
 }
 
 void PathIntegral::sample_trajectories() {
@@ -440,7 +488,7 @@ void PathIntegral::optimize() {
   }
 
   for (size_t t = 0; t < steps_; t++) {
-    opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
+    opt_roll_.tt[t] = t0_shift_internal_ + t * config_.step_size;
     opt_roll_.uu[t] += config_.alpha * momentum_[t];
   }
 
@@ -472,7 +520,8 @@ void PathIntegral::filter_input() {
     }
     // Only the inputs that can be changed in reality should be filtered hence
     // this part
-    for (size_t i = (8 - shift_int_internal_); i < opt_roll_.uu.size(); i++) {
+    for (size_t i = (max_shift_int_ - shift_int_); i < opt_roll_.uu.size();
+         i++) {
       filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
     }
   }

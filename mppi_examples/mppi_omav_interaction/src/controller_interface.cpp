@@ -383,14 +383,4 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_lin_vel_.publish(optimal_rollout_lin_vel);
   optimal_rollout_ang_vel_.publish(optimal_rollout_ang_vel);
 }
-
-void OMAVControllerInterface::manually_shift_input(const int i) {
-  if (i != 0) {
-    get_controller()->shift_input_ = true;
-  }
-  // Set the shift variable of the MPPI
-  get_controller()->shift_int_ = i;
-  get_controller()->first_mppi_iteration_ = false;
-}
-
 // namespace omav_interaction

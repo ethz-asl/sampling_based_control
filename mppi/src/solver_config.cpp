@@ -34,6 +34,8 @@ bool SolverConfig::init_from_file(const std::string& file) {
   lambda          = parse_key<double>(solver_options, "lambda").value_or(lambda);
   h               = parse_key<double>(solver_options, "h").value_or(h);
   substeps        = parse_key_quiet<size_t>(solver_options, "substeps").value_or(substeps);
+  external_publish_rate = parse_key<double>(solver_options, "external_publish_rate").value_or(external_publish_rate);
+  maximal_solve_time = parse_key<double>(solver_options, "maximal_solve_time").value_or(maximal_solve_time);
   caching_factor  = parse_key<double>(solver_options, "caching_factor").value_or(caching_factor);
   step_size       = parse_key<double>(solver_options, "step_size").value_or(step_size);
   horizon         = parse_key<double>(solver_options, "horizon").value_or(horizon);

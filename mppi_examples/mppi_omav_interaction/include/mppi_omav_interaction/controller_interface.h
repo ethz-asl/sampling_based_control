@@ -47,8 +47,6 @@ public:
 
   bool set_initial_reference(const observation_t &x);
 
-  void manually_shift_input(const int i);
-
 private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 

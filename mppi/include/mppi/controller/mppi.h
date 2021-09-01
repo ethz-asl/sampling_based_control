@@ -283,8 +283,6 @@ class PathIntegral {
   inline observation_t get_current_observation() { return x0_internal_; }
   inline data_t get_data() { return data_; }
 
-  int shift_int_internal_ = 0;
-
 public:
   /**
    * @brief Set the reference trajectory to be used in the next optimization
@@ -312,17 +310,24 @@ public:
   int steps_;
 
   bool first_step_ = true;
-  bool shift_input_ = false;
+  bool shift_input_ = true;
   bool first_mppi_iteration_ = true;
-  int shift_int_ = 0;
 
 protected:
   double reset_time_;  // time from which the current optimization has started
   observation_t x0_;   // first state for simulation
   observation_t
-      x_;  // utility variable, store the currently simulated step state
+      x_; // utility variable, store the currently simulated step state
+
+  int shift_int_;
+  int max_solve_time_int_;
+  int max_publish_int_;
+  int max_shift_int_;
+  bool maximum_time_shift_ = false;
 
   double t0_internal_;         // internal t0 for next optimization
+  double t0_shift_internal_;   // internal t0 for input vector shift
+  double t_timing_;
   observation_t x0_internal_;  // internal x0 for next optimization
 
   size_t nx_;  // state dimension

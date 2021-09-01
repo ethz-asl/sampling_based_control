@@ -5,13 +5,16 @@ solver:
   step_size: 0.015
   horizon: 1.0
 
+  external_publish_rate: 0.1  # set 0.0 if not used
+  maximal_solve_time: 0.05    # set 0.0 if not used
+
   gradient_step_size: 1.0
   momentum_step_size: 0.0
 
   cost_ratio: 0.2
   caching_factor: 0.3
   filtering: true
-  substeps: 10
+  substeps: 1
 
   filter_type: 1
   filter_order: 1
