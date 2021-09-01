@@ -263,7 +263,7 @@ void PathIntegral::prepare_rollouts() {
     // In order to ensure continuity despite varying mppi duration we shift
     // earlier to the "final state" eg. where we want to be if the next
     // trajectory is sent.
-    offset = 2;
+    offset = 4;
     shift_input_ = false;
   } else {
     offset = 0;
