@@ -310,16 +310,16 @@ int main(int argc, char **argv) {
       // exception is made when we are close to 0.1s when its crucial the
       // trajectory optimized is continuous
       if (omav_trajectory_node->shift_index_ != index_temp &&
-          omav_trajectory_node->shift_index_ < 6) {
+          omav_trajectory_node->shift_index_ < 4) {
         index_temp = omav_trajectory_node->shift_index_;
-        // Input is shifted in the MPPI as well as the intitial values of the
-        // desired trajectories of the intregrators
+        // Input is shifted in the MPPI as well as the initial values of the
+        // desired trajectories of the integrators
         controller.manually_shift_input(index_temp);
         omav_trajectory_node->set_target(
             omav_trajectory_node->current_trajectory_.points[index_temp]);
       } else if (omav_trajectory_node->shift_index_ != index_temp &&
                  !omav_trajectory_node->shift_lock_) {
-        // To ensure the trajectories are contiunous even if the controller
+        // To ensure the trajectories are continuous even if the controller
         // takes longer than 0.015 to run the "final state" is set earlier
         omav_interaction::conversions::InterpolateTrajectoryPoints(
             omav_trajectory_node->current_trajectory_.points[6],
@@ -329,8 +329,8 @@ int main(int argc, char **argv) {
         omav_trajectory_node->shift_lock_ = true;
       } else if (omav_trajectory_node->target_state_time_ > 0.09) {
         // Experienced some problems where I ran into problems due to
-        // multithreading, so to ensure no funny buissnes happening andded this
-        // saveguard
+        // multithreading, so to ensure no funny business happening added this
+        // safeguard
         controller.manually_shift_input(0);
       }
     }
