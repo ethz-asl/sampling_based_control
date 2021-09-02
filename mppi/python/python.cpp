@@ -48,6 +48,7 @@ PYBIND11_MODULE(pymppi, m) {
       .def_readwrite("horizon", &Config::horizon)
       .def_readwrite("step_size", &Config::step_size)
       .def_readwrite("variance", &Config::input_variance)
+      .def_readwrite("filtering", &Config::filtering)
       .def_readwrite("filters_window", &Config::filters_window)
       .def_readwrite("filters_order", &Config::filters_order)
       .def_readwrite("u_max", &Config::u_max)
