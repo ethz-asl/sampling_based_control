@@ -57,9 +57,14 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
 }
 
 Eigen::VectorXd GaussianPolicy::nominal(double t) {
-  size_t time_idx = std::distance(
-      t_.data(), std::upper_bound(t_.data(), t_.data() + t_.size(), t)) - 1;
-  return nominal_.row(time_idx);
+  size_t time_idx =
+      std::distance(t_.data(),
+                    std::upper_bound(t_.data(), t_.data() + t_.size(), t)) -
+      1;
+
+  double alpha = (t - t_(time_idx)) / (t_(time_idx + 1) - t_(time_idx));
+  return (1 - alpha) * nominal_.row(time_idx) +
+         alpha * nominal_.row(time_idx + 1);
 }
 
 Eigen::VectorXd GaussianPolicy::sample(double t, int k) {
