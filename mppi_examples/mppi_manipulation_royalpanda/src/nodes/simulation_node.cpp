@@ -36,6 +36,13 @@ int main(int argc, char** argv) {
     ROS_ERROR("Failed to parse pause_time");
     return 0;
   }
+
+  std::string experiment_name;
+  if (!nh_private.getParam("experiment_name", experiment_name)) {
+    ROS_ERROR("Failed to parse experiment_name");
+    return 0;
+  }
+
   ROS_INFO_STREAM("The simulation will not advance until t=" << pause_time);
 
   // when enforcing determinism we make sure (through a service call)
@@ -150,7 +157,7 @@ int main(int argc, char** argv) {
   std::cout << "Saving logged data..." << std::endl;
   std::string file_path = __FILE__;
   std::string dir_path = file_path.substr(0, file_path.rfind("/"));
-  file_path = dir_path + "/../../logs/test";
+  file_path = dir_path + "/../../logs/" + experiment_name;
   signal_logger::logger->stopLogger();
   signal_logger::logger->saveLoggerData({signal_logger::LogFileType::BINARY},
                                         file_path);

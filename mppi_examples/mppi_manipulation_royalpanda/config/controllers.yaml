@@ -9,9 +9,6 @@ manipulation_controller:
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
   base_joint_names: [world_x, world_y, theta]
-  i_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
-  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
-  arm_I_max: 0.1
 
   state_topic: /observer/state
   nominal_state_topic: /x_nom
@@ -69,7 +66,7 @@ manipulation_controller:
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      kd: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       ki: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
       i_max: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
     gripper_gains:

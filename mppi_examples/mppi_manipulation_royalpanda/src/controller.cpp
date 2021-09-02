@@ -239,6 +239,7 @@ void ManipulationController::starting(const ros::Time& time) {
   // logging
   signal_logger::logger->stopLogger();
   signal_logger::add(arm_torque_command_, "torque_command");
+  signal_logger::add(u_opt_, "velocity_command");
   signal_logger::add(stage_cost_, "stage_cost");
   for (const auto& constraint : safety_filter_->constraints_) {
     std::cout << "Adding " << constraint.first << " violation which has size: "

@@ -26,6 +26,7 @@
 
     <node name="simulation_node" type="simulation_node" pkg="mppi_manipulation_royalpanda" output="screen"
           launch-prefix="$(arg launch_prefix)">
+        <param name="experiment_name" value="$(arg experiment_name)"/>
         <param name="slow_down" value="100"/>
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
