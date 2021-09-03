@@ -239,12 +239,12 @@ void ManipulationController::starting(const ros::Time& time) {
   // logging
   signal_logger::logger->stopLogger();
   signal_logger::add(arm_torque_command_, "torque_command");
+  signal_logger::add(robot_state_.dq, "velocity_measured");
+  signal_logger::add(arm_velocity_filtered_, "velocity_filtered");
   signal_logger::add(u_opt_, "velocity_command");
+  signal_logger::add(arm_position_desired_, "position_desired");
   signal_logger::add(stage_cost_, "stage_cost");
   for (const auto& constraint : safety_filter_->constraints_) {
-    std::cout << "Adding " << constraint.first << " violation which has size: "
-              << constraint.second->violation_.rows() << " x "
-              << constraint.second->violation_.cols() << std::endl;
     signal_logger::add(constraint.second->violation_,
                        constraint.first + "_violation");
   }
@@ -335,7 +335,7 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   robot_state_ = state_handle_->getRobotState();
 
   // clang-format off
-  static double alpha = 0.99;
+  static double alpha = 0.1;
   for (int i = 0; i < 7; i++) {
     arm_velocity_filtered_[i] = (1 - alpha) * arm_velocity_filtered_[i] +
                                 alpha * robot_state_.dq[i];
@@ -345,8 +345,9 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   arm_position_desired_ += u_opt_.segment<7>(3) * period.toSec();
   for (int i = 0; i < 7; ++i) {
     tau_d_calculated[i] =
-        std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (arm_position_desired_[i] - robot_state_.q[i]))) +
-        gains_.arm_gains.Kd[i] * (u_opt_.segment<7>(3)(i) - arm_velocity_filtered_[i]);
+        std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (arm_position_desired_[i] - robot_state_.q[i])))
+        - gains_.arm_gains.Kd[i] * arm_velocity_filtered_[i];
+// gains_.arm_gains.Kd[i] * (u_opt_.segment<7>(3)(i) - arm_velocity_filtered_[i]);
   }
 
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).

@@ -66,9 +66,9 @@ manipulation_controller:
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      ki: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-      i_max: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      ki: [ 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 ]
+      i_max: [ 30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
       kd: [ 50.0, 50.0 ]
@@ -109,7 +109,7 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: true
+  apply_filter: false
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
