@@ -18,7 +18,7 @@ sim_dynamics:
   dt: 0.015
   has_filter: false
   apply_filter: false
-  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+  initial_state: [ 0.0, -1.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    0.0,                                                                    # object joint position
                    0.0,                                                                    # object joint velocity

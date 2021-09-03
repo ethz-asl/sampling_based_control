@@ -18,7 +18,8 @@ REQUIRED_FIELDS = [
     "log/sim_time", "log/stage_cost", "log/torque_command",
     "log/cartesian_limits_violation", "log/joint_limits_violation",
     "log/solver/rollouts/min_cost", "log/velocity_command",
-    "log/velocity_filtered", "log/velocity_measured", "log/position_desired"
+    "log/velocity_filtered", "log/velocity_measured", "log/position_desired",
+    "log/tank_state"
 ]
 LOG_FILES_PRINT = '\n'.join(LOG_FILES)
 print(f"""
@@ -46,6 +47,9 @@ if __name__ == "__main__":
             f"Min time in experiment={min(time)}, max time in experiment={max(time)}"
         )
 
+        scalar_plot(time,
+                    silo_dict['tank_state'],
+                    prefix=f"{experiment_name}_tank_state")
         scalar_plot(time,
                     silo_dict['stage_cost'],
                     prefix=f"{experiment_name}_stage_cost")

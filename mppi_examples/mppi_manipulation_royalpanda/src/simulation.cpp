@@ -106,6 +106,14 @@ bool RoyalPandaSim::init_dynamics() {
     return false;
   }
   ROS_INFO_STREAM(params);
+
+  // Overwrite the object description to allow using a different one
+  // so to simulate model mismatch
+  if (!nh_.param<std::string>("/object_description_raisim_simulation",
+                              params.object_description, "")) {
+    ROS_ERROR("Failed to parse /object_description_raisim_simulation");
+    return false;
+  }
   dynamics_ = std::make_unique<ManipulatorDynamicsRos>(nh_, params);
   return true;
 }
