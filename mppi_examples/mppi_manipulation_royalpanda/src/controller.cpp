@@ -254,6 +254,7 @@ void ManipulationController::starting(const ros::Time& time) {
   signal_logger::add(position_measured_, "position_measured");
   signal_logger::add(position_desired_, "position_desired");
   signal_logger::add(stage_cost_, "stage_cost");
+  signal_logger::add(power_channels_, "power_channels");
   signal_logger::add(power_from_error_, "power_from_error");
   signal_logger::add(power_from_interaction_, "power_from_interaction");
   signal_logger::add(total_power_exchange_, "total_power_exchange");
@@ -294,9 +295,10 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
 
   // compute the total power exchange with the tank
   external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
+  power_channels_ = -u_opt_.cwiseProduct(external_torque_);
   power_from_error_ = (u_opt_ - velocity_filtered_).transpose() *
                       (position_desired_ - position_initial_);
-  power_from_interaction_ = -u_opt_.transpose() * external_torque_;
+  power_from_interaction_ = power_channels_.sum();
   total_power_exchange_ = power_from_error_ + power_from_interaction_;
   energy_tank_.step(total_power_exchange_, period.toSec());
 }

@@ -230,7 +230,7 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
                                           -std::sin(x_(2)), std::cos(x_(2)), 0,
                                           0, 0, 1;
       // transform contact to force --> to force in world frame --> to reaction torques
-      tau += J_contact_.transpose() * contact.getContactFrame().e().transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
+      tau -= J_contact_.transpose() * contact.getContactFrame().e().transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
       // clang-format on
     }
   }

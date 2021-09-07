@@ -145,6 +145,7 @@ class ManipulationController
 
   // power variables
   Eigen::Matrix<double, 10, 1> external_torque_;
+  Eigen::Matrix<double, 10, 1> power_channels_;
   double power_from_error_;
   double power_from_interaction_;
   double total_power_exchange_;
