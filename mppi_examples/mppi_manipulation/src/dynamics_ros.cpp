@@ -63,8 +63,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
                          constraint.first + "_violation");
     }
   }
-  signal_logger::add(ff_tau_, "ff_torque");
-  signal_logger::add(tank_.get_state(), "tank_state");
   signal_logger::logger->updateLogger();
 }
 
