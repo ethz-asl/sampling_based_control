@@ -192,6 +192,10 @@ void ManipulationController::state_callback(
     manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
 
     if (!state_received_) {
+      position_desired_[0] = state_msg->base_pose.x;
+      position_desired_[1] = state_msg->base_pose.y;
+      position_desired_[2] = state_msg->base_pose.z;
+      position_initial_.head<3>() = position_desired_.head<3>();
       if (!man_interface_->init_reference_to_current_pose(x_,
                                                           observation_time_)) {
         ROS_WARN("Failed to set the controller reference to current state.");
@@ -218,11 +222,16 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // we do not actively control the gripper
   u_opt_.setZero(10);
-  arm_velocity_filtered_.setZero(7);
-  arm_position_desired_.setZero(7);
+  velocity_measured_.setZero(10);
+  velocity_filtered_.setZero(10);
+  position_desired_.setZero(10);
+  position_measured_.setZero(10);
+  position_initial_.setZero(10);
   for (size_t i = 0; i < 7; i++) {
-    arm_position_desired_[i] = joint_handles_[i].getPosition();
+    position_desired_[i + 3] = joint_handles_[i].getPosition();
+    position_initial_[i + 3] = joint_handles_[i].getPosition();
   }
+  position_measured_ = position_desired_;
 
   // reset the energy tank initial state
   double initial_tank_state =
@@ -238,12 +247,18 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // logging
   signal_logger::logger->stopLogger();
-  signal_logger::add(arm_torque_command_, "torque_command");
-  signal_logger::add(robot_state_.dq, "velocity_measured");
-  signal_logger::add(arm_velocity_filtered_, "velocity_filtered");
   signal_logger::add(u_opt_, "velocity_command");
-  signal_logger::add(arm_position_desired_, "position_desired");
+  signal_logger::add(arm_torque_command_, "torque_command");
+  signal_logger::add(velocity_measured_, "velocity_measured");
+  signal_logger::add(velocity_filtered_, "velocity_filtered");
+  signal_logger::add(position_measured_, "position_measured");
+  signal_logger::add(position_desired_, "position_desired");
   signal_logger::add(stage_cost_, "stage_cost");
+  signal_logger::add(power_from_error_, "power_from_error");
+  signal_logger::add(power_from_interaction_, "power_from_interaction");
+  signal_logger::add(total_power_exchange_, "total_power_exchange");
+  signal_logger::add(external_torque_, "external_torque");
+  signal_logger::add(energy_tank_.get_state(), "tank_state");
   for (const auto& constraint : safety_filter_->constraints_) {
     signal_logger::add(constraint.second->violation_,
                        constraint.first + "_violation");
@@ -271,43 +286,19 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
     safety_filter_->update_violation(x_.head<10>());
   }
 
-  if (safety_filter_->constraints_["cartesian_limits"]->violation_(0) > 0) {
-    std::cout << "Cart limit[0] violated: "
-              << safety_filter_->constraints_["cartesian_limits"]->violation_(0)
-              << std::endl;
-  }
-  if (safety_filter_->constraints_["cartesian_limits"]->violation_(1) > 0) {
-    std::cout << "Cart limit[1] violated: "
-              << safety_filter_->constraints_["cartesian_limits"]->violation_(1)
-              << std::endl;
-  }
-  if (safety_filter_->constraints_["joint_limits"]
-          ->violation_.cwiseMax(1e-6)
-          .sum() > 1e-3) {
-    std::cout
-        << "Joint limits violated: "
-        << safety_filter_->constraints_["joint_limits"]->violation_.transpose()
-        << std::endl;
-  }
-
   if (apply_filter_) {
     safety_filter_->apply(u_opt_);
   } else {
     u_opt_ = u_.head<10>();  // safety filter does not account for the gripper
   }
 
-  // step the tank dynamics
-  //  std::cout << "Joint velocity opt: " << u_opt_.transpose() << std::endl;
-  //  std::cout << "Joint torque : "
-  //            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() <<
-  //            std::endl;
-  //  std::cout << "Energy exchange is: "
-  //            << u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>()
-  //            << std::endl;
-  //  std::cout << "Tank state (for sure) is: " << energy_tank_.get_state()
-  //            << std::endl;
-  energy_tank_.step(u_opt_.transpose() * x_.tail<TORQUE_DIMENSION>().head<10>(),
-                    period.toSec());  // time is not used here
+  // compute the total power exchange with the tank
+  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
+  power_from_error_ = (u_opt_ - velocity_filtered_).transpose() *
+                      (position_desired_ - position_initial_);
+  power_from_interaction_ = -u_opt_.transpose() * external_torque_;
+  total_power_exchange_ = power_from_error_ + power_from_interaction_;
+  energy_tank_.step(total_power_exchange_, period.toSec());
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
@@ -332,22 +323,12 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
 }
 
 void ManipulationController::send_command_arm(const ros::Duration& period) {
-  robot_state_ = state_handle_->getRobotState();
-
   // clang-format off
-  static double alpha = 0.1;
-  for (int i = 0; i < 7; i++) {
-    arm_velocity_filtered_[i] = (1 - alpha) * arm_velocity_filtered_[i] +
-                                alpha * robot_state_.dq[i];
-  }
-
   std::array<double, 7> tau_d_calculated{};
-  arm_position_desired_ += u_opt_.segment<7>(3) * period.toSec();
   for (int i = 0; i < 7; ++i) {
     tau_d_calculated[i] =
-        std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (arm_position_desired_[i] - robot_state_.q[i])))
-        - gains_.arm_gains.Kd[i] * arm_velocity_filtered_[i];
-// gains_.arm_gains.Kd[i] * (u_opt_.segment<7>(3)(i) - arm_velocity_filtered_[i]);
+        std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (position_desired_[3+i] - robot_state_.q[i])))
+        - gains_.arm_gains.Kd[i] * velocity_filtered_[3+i];
   }
 
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
@@ -400,6 +381,24 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   manipulation::conversions::eigenToMsg(x_nom_, time.toSec(), x_nom_ros_);
+  robot_state_ = state_handle_->getRobotState();
+
+  static const double alpha = 0.1;
+  position_measured_.head<3>() = x_.head<3>();
+  velocity_measured_.head<3>() = x_.segment<3>(12);
+  velocity_filtered_.head<3>() = (1 - alpha) * velocity_filtered_.head<3>() +
+                                 alpha * velocity_measured_.head<3>();
+  for (int i = 0; i < 7; i++) {
+    position_measured_[i + 3] = robot_state_.q[i];
+    velocity_measured_[i + 3] = robot_state_.dq[i];
+    velocity_filtered_[i + 3] =
+        (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
+  }
+
+  getRotationMatrix(R_world_base, x_(2));
+  position_desired_.tail<7>() += u_opt_.tail<7>() * period.toSec();
+  position_desired_.head<3>() +=
+      R_world_base * u_opt_.head<3>() * period.toSec();
 
   enforce_constraints(period);
   send_command_arm(period);

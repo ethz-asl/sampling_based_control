@@ -75,6 +75,11 @@ bool RoyalPandaSim::init_params() {
     return false;
   }
 
+  if (!nh_.param<std::string>("object_state_topic", object_state_topic_, {})) {
+    ROS_ERROR("Failed to get object_state_topic");
+    return false;
+  }
+
   if (!nh_.param<std::string>("finger_state_topic", finger_state_topic_, {})) {
     ROS_ERROR("Failed to get finger_state_topic");
     return false;
@@ -94,6 +99,11 @@ bool RoyalPandaSim::init_params() {
   finger_state_.position.resize(2);
   finger_state_.velocity.resize(2);
   finger_state_.effort.resize(2);
+
+  object_state_.name = {"articulation_joint"};
+  object_state_.position.resize(1);
+  object_state_.velocity.resize(1);
+  object_state_.effort.resize(1);
 
   tau_ext_base_arm_.setZero(12);
   return true;
@@ -167,6 +177,8 @@ void RoyalPandaSim::init_publishers() {
       nh_.advertise<nav_msgs::Odometry>(handle_odom_topic_, 1);
   arm_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>(arm_state_topic_, 1);
+  object_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>(object_state_topic_, 1);
   finger_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>(finger_state_topic_, 1);
   wrench_publisher_ =
@@ -250,6 +262,11 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
     arm_state_.effort[i] = arm_joint_effort_[i];
   }
   arm_state_publisher_.publish(arm_state_);
+
+  object_state_.header.stamp = time;
+  object_state_.position[0] = object_position_;
+  object_state_.velocity[0] = object_velocity_;
+  object_state_publisher_.publish(object_state_);
 
   // fingers (like on hardware) treated separately
   finger_state_.header.stamp = time;

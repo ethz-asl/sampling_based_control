@@ -41,7 +41,10 @@
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers.yaml" subst_value="true"/>
     <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 
-    <include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch"/>
+    <include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch">
+      <arg name="simulation" value="true"/>
+    </include>
+
     <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
           args="manipulation_controller"/>
 

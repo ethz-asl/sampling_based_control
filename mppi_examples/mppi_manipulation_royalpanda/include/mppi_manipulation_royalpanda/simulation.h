@@ -89,6 +89,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   std::string base_twist_cmd_topic_;
   std::string handle_odom_topic_;
   std::string arm_state_topic_;
+  std::string object_state_topic_;
   std::string finger_state_topic_;
   std::string wrench_topic_;
 
@@ -97,6 +98,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   nav_msgs::Odometry handle_odom_;     // from vicon
   sensor_msgs::JointState arm_state_;
   sensor_msgs::JointState finger_state_;
+  sensor_msgs::JointState object_state_;  // sim only
   geometry_msgs::WrenchStamped wrench_;
 
   ros::Publisher base_pose_publisher_;
@@ -104,6 +106,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   ros::Publisher arm_state_publisher_;
   ros::Publisher finger_state_publisher_;
   ros::Publisher object_pose_publisher_;
+  ros::Publisher object_state_publisher_;
   ros::Publisher wrench_publisher_;
   ros::Subscriber base_twist_cmd_subscriber_;
   ros::Subscriber external_force_subscriber_;

@@ -19,7 +19,7 @@ REQUIRED_FIELDS = [
     "log/cartesian_limits_violation", "log/joint_limits_violation",
     "log/solver/rollouts/min_cost", "log/velocity_command",
     "log/velocity_filtered", "log/velocity_measured", "log/position_desired",
-    "log/tank_state"
+    "log/tank_state", "log/solver/delay_steps"
 ]
 LOG_FILES_PRINT = '\n'.join(LOG_FILES)
 print(f"""
@@ -46,7 +46,9 @@ if __name__ == "__main__":
         print(
             f"Min time in experiment={min(time)}, max time in experiment={max(time)}"
         )
-
+        scalar_plot(time,
+                    silo_dict['delay_steps'],
+                    prefix=f"{experiment_name}_delay_steps")
         scalar_plot(time,
                     silo_dict['tank_state'],
                     prefix=f"{experiment_name}_tank_state")

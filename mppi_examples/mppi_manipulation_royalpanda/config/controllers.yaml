@@ -48,6 +48,10 @@ manipulation_controller:
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
     grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
 
+    # For valve
+    # grasp_translation_offset: [0.0, 0.01, 0.07]
+    # grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x
+
     #upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
     #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
@@ -61,13 +65,13 @@ manipulation_controller:
   controller_gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 1000.0, 1000.0, 1000.0 ]
+      kd: [ 0.0, 0.0, 0.0 ]
       ki: [ 0.0, 0.0, 0.0 ]
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
-      ki: [ 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 ]
+      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
       i_max: [ 30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
@@ -109,7 +113,7 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: false
+  apply_filter: true
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]

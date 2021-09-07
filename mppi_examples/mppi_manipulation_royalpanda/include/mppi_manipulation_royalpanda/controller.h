@@ -121,8 +121,11 @@ class ManipulationController
   Eigen::VectorXd u_;
   Eigen::VectorXd u_opt_;
   Eigen::VectorXd x_nom_;
-  Eigen::VectorXd arm_position_desired_;
-  Eigen::VectorXd arm_velocity_filtered_;
+  Eigen::VectorXd position_initial_;
+  Eigen::VectorXd position_measured_;
+  Eigen::VectorXd position_desired_;
+  Eigen::VectorXd velocity_measured_;
+  Eigen::VectorXd velocity_filtered_;
   Eigen::Matrix3d R_world_base;
   franka::RobotState robot_state_;
 
@@ -139,5 +142,11 @@ class ManipulationController
 
   // metrics
   double stage_cost_;
+
+  // power variables
+  Eigen::Matrix<double, 10, 1> external_torque_;
+  double power_from_error_;
+  double power_from_interaction_;
+  double total_power_exchange_;
 };
 }  // namespace manipulation_royalpanda

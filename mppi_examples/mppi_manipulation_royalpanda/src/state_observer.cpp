@@ -27,11 +27,7 @@
 namespace manipulation_royalpanda {
 
 StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
-  base_pose_received_ = false;
-  base_twist_received_ = false;
-  object_pose_received_ = false;
-  arm_state_received_ = false;
-  wrench_received_ = false;
+  nh_.param<bool>("simulation", simulation_, false);
 
   std::string base_pose_topic;
   nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
@@ -46,6 +42,10 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   nh_.param<std::string>("object_pose_topic", object_pose_topic,
                          "/object_pose");
 
+  std::string object_state_topic;
+  nh_.param<std::string>("object_state_topic", object_state_topic,
+                         "/object_state");
+
   std::string wrench_topic;
   nh_.param<std::string>("wrench_topic", wrench_topic, "/wrench");
 
@@ -56,25 +56,50 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   base_pose_sub_.subscribe(nh_, base_pose_topic, 10);
   base_twist_sub_.subscribe(nh_, base_twist_topic, 10);
   object_sub_.subscribe(nh_, object_pose_topic, 10);
+  obj_state_sub_.subscribe(nh_, object_state_topic, 10);
   wrench_sub_.subscribe(nh_, wrench_topic, 10);
 
   // message filter with sync policy (timestamps must be the same -> only
   // possible in simulation) or approximate timestamp matching policy
   // (see http://wiki.ros.org/message_filters/ApproximateTime)
-  if (exact_sync_) {
-    exact_message_filter_ =
-        std::make_unique<message_filters::Synchronizer<ExactPolicy>>(
-            ExactPolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-            object_sub_, wrench_sub_);
-    exact_message_filter_->registerCallback(boost::bind(
-        &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+
+  // in real experiment we estimate the joint values
+  // this is only implemented for the shelf, would not work for other objects
+  // Estimation is done subscribing to the handle odometry from vicon
+  // In simulation instead, we directly subscribe to the object state published
+  // by the simulator
+  if (!simulation_) {
+    if (exact_sync_) {
+      exact_message_filter_ =
+          std::make_unique<message_filters::Synchronizer<ExactPolicy>>(
+              ExactPolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+              object_sub_, wrench_sub_);
+      exact_message_filter_->registerCallback(boost::bind(
+          &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+    } else {
+      approx_message_filter_ =
+          std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
+              ApproximatePolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+              object_sub_, wrench_sub_);
+      approx_message_filter_->registerCallback(boost::bind(
+          &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+    }
   } else {
-    approx_message_filter_ =
-        std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
-            ApproximatePolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-            object_sub_, wrench_sub_);
-    approx_message_filter_->registerCallback(boost::bind(
-        &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+    if (exact_sync_) {
+      exact_message_filter_sim_ =
+          std::make_unique<message_filters::Synchronizer<ExactPolicySim>>(
+              ExactPolicySim(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+              obj_state_sub_, wrench_sub_);
+      exact_message_filter_sim_->registerCallback(boost::bind(
+          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
+    } else {
+      approx_message_filter_sim_ =
+          std::make_unique<message_filters::Synchronizer<ApproximatePolicySim>>(
+              ApproximatePolicySim(10), arm_sub_, base_pose_sub_,
+              base_twist_sub_, obj_state_sub_, wrench_sub_);
+      approx_message_filter_sim_->registerCallback(boost::bind(
+          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
+    }
   }
 
   // ros publishing
@@ -89,9 +114,6 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   robot_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
 
-  sync_state_service_ = nh_.advertiseService(
-      "/observer/state_request", &StateObserver::state_request_cb, this);
-
   object_state_.name.push_back("articulation_joint");
   object_state_.position.push_back(0.0);
   object_state_.velocity.push_back(0.0);
@@ -101,6 +123,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
   robot_state_.position.resize(robot_state_.name.size());
   robot_state_.velocity.resize(robot_state_.name.size());
   robot_state_.header.frame_id = "world";
+
+  base_twist_ros_.header.frame_id = "world";
 
   ext_tau_.setZero();
 }
@@ -112,34 +136,41 @@ bool StateObserver::initialize() {
     return false;
   }
 
-  KDL::Tree object_kinematics;
-  if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
-    ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
-    return false;
+  if (!simulation_) {
+    KDL::Tree object_kinematics;
+    if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
+      ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
+      return false;
+    }
+
+    KDL::Chain chain;
+    object_kinematics.getChain("shelf", "handle_link", chain);
+    if (chain.getNrOfJoints() > 1) {
+      ROS_ERROR(
+          "The object has more then one joint. Only one joint supported!");
+      return false;
+    }
+    if (chain.getNrOfJoints() == 0) {
+      ROS_ERROR("Failed to parse the object kinematic chain.");
+      return false;
+    }
+
+    // at start-up door is closed
+    KDL::JntArray joint_pos(chain.getNrOfJoints());
+
+    // required to calibrate the initial shelf position
+    KDL::Frame T_shelf_handle_KDL;
+    KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
+    fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
+    tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
+
+    // required to now the origin hinge position
+    KDL::Frame T_door_handle_KDL;
+    object_kinematics.getChain("axis_link", "handle_link", chain);
+    KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
+    fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
+    tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
   }
-
-  KDL::Chain chain;
-  object_kinematics.getChain("shelf", "handle_link", chain);
-  if (chain.getNrOfJoints() != 1) {
-    ROS_ERROR("The object has more then one joint. Only one joint supported!");
-    return false;
-  }
-
-  // at start-up door is closed
-  KDL::JntArray joint_pos(chain.getNrOfJoints());
-
-  // required to calibrate the initial shelf position
-  KDL::Frame T_shelf_handle_KDL;
-  KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
-  fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
-  tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
-
-  // required to now the origin hinge position
-  KDL::Frame T_door_handle_KDL;
-  object_kinematics.getChain("axis_link", "handle_link", chain);
-  KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
-  fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
-  tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
 
   // get the relative pose of base to reference frame
   KDL::Tree robot_kinematics;
@@ -191,6 +222,30 @@ void StateObserver::message_filter_cb(
   base_pose_callback(base_pose);
   base_twist_callback(base_twist);
   object_pose_callback(object_odom);
+
+  // this must be executed last as it requires computation from previous cb
+  wrench_callback(wrench);
+
+  manipulation::conversions::toMsg(
+      time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
+      ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
+      false, tank_state_, state_ros_);
+
+  state_publisher_.publish(state_ros_);
+}
+
+void StateObserver::message_filter_cb_sim(
+    const sensor_msgs::JointStateConstPtr& arm_state,
+    const nav_msgs::OdometryConstPtr& base_pose,
+    const nav_msgs::OdometryConstPtr& base_twist,
+    const sensor_msgs::JointStateConstPtr& object_state,
+    const geometry_msgs::WrenchStampedConstPtr& wrench) {
+  arm_state_callback(arm_state);
+  base_pose_callback(base_pose);
+  base_twist_callback(base_twist);
+  object_state_callback(object_state);
+
+  // this must be executed last as it requires computation from previous cb
   wrench_callback(wrench);
 
   manipulation::conversions::toMsg(
@@ -208,11 +263,30 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   base_pose_.x() = T_world_base_.translation().x();
   base_pose_.y() = T_world_base_.translation().y();
 
-  Eigen::Vector3d ix =
-      T_world_base_.rotation().col(0);  // 2d projection of forward motion axis
+  // 2d projection of forward motion axis
+  Eigen::Vector3d ix = T_world_base_.rotation().col(0);
   base_pose_.z() = std::atan2(ix.y(), ix.x());
-  base_pose_time_ = msg->header.stamp.toSec();
-  base_pose_received_ = true;
+
+  // publish to ros
+  geometry_msgs::PoseStamped base_pose;
+  base_pose.header.stamp = ros::Time::now();
+  base_pose.header.frame_id = "world";
+  base_pose.pose.position.x = base_pose_.x();
+  base_pose.pose.position.y = base_pose_.y();
+  base_pose.pose.position.z = 0.0;
+  Eigen::Quaterniond q(
+      Eigen::AngleAxisd(base_pose_.z(), Eigen::Vector3d::UnitZ()));
+  base_pose.pose.orientation.x = q.x();
+  base_pose.pose.orientation.y = q.y();
+  base_pose.pose.orientation.z = q.z();
+  base_pose.pose.orientation.w = q.w();
+  base_pose_publisher_.publish(base_pose);
+
+  robot_state_.header.stamp = msg->header.stamp;
+  robot_state_.position[0] = base_pose_.x();
+  robot_state_.position[1] = base_pose_.y();
+  robot_state_.position[2] = base_pose_.z();
+  robot_state_publisher_.publish(robot_state_);
 }
 
 void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
@@ -222,8 +296,11 @@ void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
   odom_base_twist = Eigen::AngleAxis(base_pose_.z(), Eigen::Vector3d::UnitZ()) *
                     odom_base_twist;
   base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
-  base_twist_time_ = msg->header.stamp.toSec();
-  base_twist_received_ = true;
+  base_twist_ros_.header.stamp = msg->header.stamp;
+  base_twist_ros_.twist.linear.x = base_twist_.x();
+  base_twist_ros_.twist.linear.y = base_twist_.y();
+  base_twist_ros_.twist.angular.z = base_twist_.z();
+  base_twist_publisher_.publish(base_twist_ros_);
 }
 
 void StateObserver::arm_state_callback(
@@ -239,12 +316,20 @@ void StateObserver::arm_state_callback(
     q_(i) = msg->position[i];
     dq_(i) = msg->velocity[i];
   }
-  arm_state_time_ = msg->header.stamp.toSec();
-  arm_state_received_ = true;
+}
+
+void StateObserver::object_state_callback(
+    const sensor_msgs::JointStateConstPtr& msg) {
+  object_state_.header.stamp = msg->header.stamp;
+  object_state_.position[0] = msg->position[0];
+  object_state_.velocity[0] = msg->velocity[0];
+  object_state_publisher_.publish(object_state_);
 }
 
 void StateObserver::object_pose_callback(
     const nav_msgs::OdometryConstPtr& msg) {
+  std::cout << "In object pose callback" << std::endl;
+  if (simulation_) return;
   tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
   if (articulation_first_computation_) {
     ROS_INFO("First computation of the shelf pose.");
@@ -255,7 +340,6 @@ void StateObserver::object_pose_callback(
     start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
                                        T_hinge_handle_init_.translation().y());
     articulation_first_computation_ = false;
-    //    previous_time_ = ros::Time::now().toSec();
 
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped T_world_shelf_ros;
@@ -273,26 +357,20 @@ void StateObserver::object_pose_callback(
                                        T_hinge_handle_.translation().y());
 
   double theta_new = current_relative_angle_ - start_relative_angle_;
-  //  double current_time = ros::Time::now().toSec();
 
   double velocity_norm =
       std::sqrt(msg->twist.twist.linear.x * msg->twist.twist.linear.x +
                 msg->twist.twist.linear.y + msg->twist.twist.linear.y);
   double theta_dot = velocity_norm / T_hinge_handle_.translation().x();
 
-  //  object_state_.velocity[0] =
-  //      (theta_new - object_state_.position[0]) / (current_time -
-  //      previous_time_);
+  object_state_.header.stamp = msg->header.stamp;
   object_state_.position[0] = theta_new;
   object_state_.velocity[0] = theta_dot;
-  //  previous_time_ = current_time;
-  object_pose_time_ = msg->header.stamp.toSec();
-  object_pose_received_ = true;
+  object_state_publisher_.publish(object_state_);
 }
 
 void StateObserver::wrench_callback(
     const geometry_msgs::WrenchStampedConstPtr& msg) {
-  if (!base_pose_received_ || !arm_state_received_) return;
 
   // update kdl joints with the latest measurements
   kdl_joints_(0) = base_pose_.x();
@@ -318,69 +396,11 @@ void StateObserver::wrench_callback(
   Eigen::MatrixXd Jt_world_ee_pinv;
   pseudoInverse(J_world_ee_.data.transpose(), Jt_world_ee_pinv);
   ext_tau_ = Jt_world_ee_pinv * wrench_eigen_;
-  wrench_time_ = msg->header.stamp.toSec();
-  wrench_received_ = true;
-}
 
-bool StateObserver::state_request_cb(
-    manipulation_msgs::StateRequestRequest& req,
-    manipulation_msgs::StateRequestResponse& res) {
-  if (!(arm_state_received_ && base_twist_received_ && base_pose_received_ &&
-        object_pose_received_ && wrench_received_)) {
-    ROS_WARN_THROTTLE(1.0, "Full state not received yet.");
-    return false;
+  // sanitize wrench (if too high, can be related to singularity in pinv)
+  for (int i = 0; i < ext_tau_.size(); i++) {
+    ext_tau_(i) = std::abs(ext_tau_(i)) > 1e3 ? 0.0 : ext_tau_(i);
   }
-
-  if (!are_equal(req.time, base_pose_time_, base_twist_time_, arm_state_time_,
-                 object_pose_time_, wrench_time_)) {
-    ROS_DEBUG_STREAM("Failed to get required synchronized state: "
-                     << std::endl
-                     << "base_pose_time=" << base_pose_time_ << std::endl
-                     << "base_twist_time=" << base_twist_time_ << std::endl
-                     << "arm_state_time=" << arm_state_time_ << std::endl
-                     << "object_pose_time=" << object_pose_time_);
-    return false;
-  }
-
-  manipulation::conversions::toMsg(
-      req.time, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
-      ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
-      false, tank_state_, state_ros_);
-  res.state = state_ros_;
-  return true;
-}
-
-void StateObserver::publish() {
-  geometry_msgs::PoseStamped base_pose;
-  base_pose.header.stamp = ros::Time::now();
-  base_pose.header.frame_id = "world";
-  base_pose.pose.position.x = base_pose_.x();
-  base_pose.pose.position.y = base_pose_.y();
-  base_pose.pose.position.z = 0.0;
-  Eigen::Quaterniond q(
-      Eigen::AngleAxisd(base_pose_.z(), Eigen::Vector3d::UnitZ()));
-  base_pose.pose.orientation.x = q.x();
-  base_pose.pose.orientation.y = q.y();
-  base_pose.pose.orientation.z = q.z();
-  base_pose.pose.orientation.w = q.w();
-  base_pose_publisher_.publish(base_pose);
-
-  robot_state_.position[0] = base_pose_.x();
-  robot_state_.position[1] = base_pose_.y();
-  robot_state_.position[2] = base_pose_.z();
-
-  base_twist_ros_.header.frame_id = "world";
-  base_twist_ros_.header.stamp = ros::Time::now();
-  base_twist_ros_.twist.linear.x = base_twist_.x();
-  base_twist_ros_.twist.linear.y = base_twist_.y();
-  base_twist_ros_.twist.angular.z = base_twist_.z();
-  base_twist_publisher_.publish(base_twist_ros_);
-
-  robot_state_.header.stamp = ros::Time::now();
-  robot_state_publisher_.publish(robot_state_);
-
-  object_state_.header.stamp = ros::Time::now();
-  object_state_publisher_.publish(object_state_);
 }
 
 }  // namespace manipulation_royalpanda

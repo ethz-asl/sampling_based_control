@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
+    <arg name="simulation" default="false"/>
+
     <!-- joins gripper and arm state -->
     <node name="joint_state_aggregator" type="joint_state_aggregator" pkg="mppi_manipulation_royalpanda" output="screen">
         <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
@@ -25,7 +27,7 @@
         <remap from="joint_states" to="/observer/joint_states"/>
     </node>
 
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" launch-prefix="xterm -e">
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <param name="use_tf_static" value="true"/>
         <param name="tf_prefix" value=""/>
@@ -33,7 +35,7 @@
         <remap from="joint_states" to="/observer/joint_states"/>
     </node>
 
-    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" launch-prefix="xterm -e">
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="object_description"/>
         <remap from="joint_states" to="/observer/object/joint_state"/>
@@ -47,11 +49,13 @@
 
     <!--    State observer node-->
     <node pkg="mppi_manipulation_royalpanda" name="state_observer_node" type="state_observer_node" output="screen">
+        <param name="simulation" value="$(arg simulation)"/>
         <param name="base_alpha" value="0.7"/>
         <param name="base_pose_topic" value="/panda_base/vrpn_client/estimated_odometry"/>
         <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
         <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="object_state_topic" value="/simulation/object_state"/> <!-- only in sim -->
         <param name="wrench_topic" value="/external_force"/>
         <param name="observer_update_frequency" value="200"/>
     </node>

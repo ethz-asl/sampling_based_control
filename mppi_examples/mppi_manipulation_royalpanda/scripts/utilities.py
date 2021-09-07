@@ -71,11 +71,15 @@ def to_dictionary(logger: signal_logger.Silo, fields):
     return d
 
 
-def matrix_plot(t, m: np.ndarray, prefix="value"):
-    fig, ax = plt.subplots()
+def matrix_plot(t, m: np.ndarray, prefix="value", linestyle="-", axis=None):
+    if axis:
+        ax = axis
+    else:
+        fig, ax = plt.subplots()
     for i in range(m.shape[1]):
-        ax.plot(t, m[:, i], label=f"{prefix}_{i}")
+        ax.plot(t, m[:, i], linestyle=linestyle, label=f"{prefix}_{i}")
     ax.legend()
+    return ax
 
 
 def matrix_to_se(t, t_start, t_end, m):
@@ -90,7 +94,11 @@ def matrix_to_se(t, t_start, t_end, m):
     return np.square(m[i1:i2, :]).sum()
 
 
-def scalar_plot(t, n, prefix="value"):
-    fig, ax = plt.subplots()
-    ax.plot(t, n, label=prefix)
+def scalar_plot(t, n, prefix="value", linestyle="-", axis=None):
+    if not axis:
+        fig, ax = plt.subplots()
+    else:
+        ax = axis
+    ax.plot(t, n, linestyle=linestyle, label=prefix)
     ax.legend()
+    return ax

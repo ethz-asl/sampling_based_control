@@ -24,7 +24,6 @@
 #include <kdl/jacobian.hpp>
 
 #include <manipulation_msgs/State.h>
-#include <manipulation_msgs/StateRequest.h>
 
 namespace manipulation_royalpanda {
 
@@ -39,7 +38,6 @@ class StateObserver {
 
  public:
   bool initialize();
-  void publish();
 
  private:
   void base_pose_callback(const nav_msgs::OdometryConstPtr& msg);
@@ -47,9 +45,7 @@ class StateObserver {
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
   void wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg);
-
-  bool state_request_cb(manipulation_msgs::StateRequestRequest& req,
-                        manipulation_msgs::StateRequestResponse& res);
+  void object_state_callback(const sensor_msgs::JointStateConstPtr& msg);
 
   void message_filter_cb(const sensor_msgs::JointStateConstPtr& arm_state,
                          const nav_msgs::OdometryConstPtr& base_pose,
@@ -57,12 +53,15 @@ class StateObserver {
                          const nav_msgs::OdometryConstPtr& object_odom,
                          const geometry_msgs::WrenchStampedConstPtr& wrench);
 
+  void message_filter_cb_sim(
+      const sensor_msgs::JointStateConstPtr& arm_state,
+      const nav_msgs::OdometryConstPtr& base_pose,
+      const nav_msgs::OdometryConstPtr& base_twist,
+      const sensor_msgs::JointStateConstPtr& object_state,
+      const geometry_msgs::WrenchStampedConstPtr& wrench);
+
  private:
-  bool base_pose_received_;
-  bool base_twist_received_;
-  bool object_pose_received_;
-  bool arm_state_received_;
-  bool wrench_received_;
+  bool simulation_;
 
   ros::NodeHandle nh_;
 
@@ -81,13 +80,10 @@ class StateObserver {
   Eigen::Affine3d T_world_reference_;
 
   // base odometry
-  double base_twist_time_;
   Eigen::Vector3d base_twist_;
-  double base_pose_time_;
   Eigen::Vector3d base_pose_;
 
   // arm
-  double arm_state_time_;
   Eigen::Matrix<double, 9, 1> dq_;
   Eigen::Matrix<double, 9, 1> q_;  // arm plus the gripper joints
 
@@ -113,6 +109,7 @@ class StateObserver {
   message_filters::Subscriber<nav_msgs::Odometry> base_pose_sub_;
   message_filters::Subscriber<nav_msgs::Odometry> base_twist_sub_;
   message_filters::Subscriber<nav_msgs::Odometry> object_sub_;
+  message_filters::Subscriber<sensor_msgs::JointState> obj_state_sub_;  // sim
   message_filters::Subscriber<geometry_msgs::WrenchStamped> wrench_sub_;
 
   // clang-format off
@@ -127,14 +124,27 @@ class StateObserver {
                                                                             nav_msgs::Odometry,
                                                                             nav_msgs::Odometry,
                                                                             geometry_msgs::WrenchStamped>;
+
+  using ExactPolicySim = message_filters::sync_policies::ExactTime<sensor_msgs::JointState,
+                                                                   nav_msgs::Odometry,
+                                                                   nav_msgs::Odometry,
+                                                                   sensor_msgs::JointState,
+                                                                   geometry_msgs::WrenchStamped>;
+
+  using ApproximatePolicySim = message_filters::sync_policies::ApproximateTime<sensor_msgs::JointState,
+                                                                               nav_msgs::Odometry,
+                                                                               nav_msgs::Odometry,
+                                                                               sensor_msgs::JointState,
+                                                                               geometry_msgs::WrenchStamped>;
+
   std::unique_ptr<message_filters::Synchronizer<ExactPolicy>> exact_message_filter_;
   std::unique_ptr<message_filters::Synchronizer<ApproximatePolicy>> approx_message_filter_;
+  std::unique_ptr<message_filters::Synchronizer<ExactPolicySim>> exact_message_filter_sim_;
+  std::unique_ptr<message_filters::Synchronizer<ApproximatePolicySim>> approx_message_filter_sim_;
   // clang-format off
 
   ///// Articulation
   // articulation
-  double object_pose_time_;
-  double previous_time_;
   double start_relative_angle_;
   double current_relative_angle_;
   bool articulation_first_computation_;
@@ -157,11 +167,7 @@ class StateObserver {
   // filter base odometry
   double base_alpha_;
 
-  // this is only to enforce determinism in simulation
-  ros::ServiceServer sync_state_service_;
-
   // wrench
-  double wrench_time_;
   Eigen::Matrix<double, 12, 1> ext_tau_;
 
   // get jacobian to convert wrench into joint torques
