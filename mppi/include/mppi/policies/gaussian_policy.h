@@ -21,6 +21,8 @@ public:
 
   void update(const std::vector<double>& weights, const double step_size) override;
 
+  void update_delay(const int delay_steps) override;
+
   void shift(const double t) override;
 
   Eigen::VectorXd nominal(double t) override;
@@ -57,5 +59,7 @@ public:
   Eigen::MatrixXd momentum_;
   Eigen::MatrixXd momentum2_;
   Eigen::MatrixXd momentum2_baseline_;
+
+  int delay_steps_;
 };
 }

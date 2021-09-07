@@ -20,7 +20,7 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   // TODO(giuseppe) make this a parameter or find a better solution
   Eigen::VectorXd multipliers = Eigen::VectorXd::Zero(nt_);
   for (int i = 0; i < nt_; i++) {
-    multipliers[i] = 1 - std::exp(-i / 5);
+    multipliers[i] = 1.0 - std::exp(-i / 20.0);
   }
   multipliers_ = multipliers.asDiagonal();
 
@@ -54,6 +54,17 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
     max_limits_.row(i) = config.u_max;
     min_limits_.row(i) = config.u_min;
   }
+  delay_steps_ = 0;
+}
+
+void GaussianPolicy::update_delay(const int delay_steps) {
+  Eigen::VectorXd multipliers = Eigen::VectorXd::Zero(nt_);
+  for (int i = 0; i < nt_; i++) {
+    multipliers(i) =
+        (i < delay_steps) ? 0 : 1 - std::exp(-(i - delay_steps + 1) / 5.0);
+  }
+  multipliers_ = multipliers.asDiagonal();
+  delay_steps_ = delay_steps;
 }
 
 Eigen::VectorXd GaussianPolicy::nominal(double t) {
@@ -96,7 +107,7 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
     std::vector<size_t> sorted_idxs = sort_indexes(weights);
     for (int i = keep; i < ns_ - 3; i++) {
       dist_->setRandomRow(samples_[sorted_idxs[i]]);
-      samples_[sorted_idxs[i]] = multipliers_ * samples_[sorted_idxs[i]];
+      samples_[sorted_idxs[i]] = samples_[sorted_idxs[i]];
     }
 
     // noise free sample
@@ -106,6 +117,9 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
     samples_[sorted_idxs[ns_ - 1]] = -nominal_;
   }
 
+  for (auto& sample : samples_) {
+    sample = multipliers_ * sample;
+  }
 
   bound(); // TODO should bound each sample so that a convex combination is also within bounds
 }

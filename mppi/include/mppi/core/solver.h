@@ -165,6 +165,11 @@ class Solver {
   void swap_policies();
 
   /**
+   * @brief Estimate optimization delay
+   */
+  void update_delay();
+
+  /**
    * @brief Return the latest optimal input for the current time and observation
    * @param x[in, unused]: current observation
    * @param u[out]: optimal input
@@ -324,6 +329,11 @@ class Solver {
   std::vector<int> rollouts_valid_index_;
   // rollouts costs
   std::vector<double> rollouts_cost_;
+
+  // delay estimation
+  int delay_steps_;
+  int new_delay_steps_;
+  const double delay_filter_alpha_ = 0.9;
 };
 
 }  // namespace mppi

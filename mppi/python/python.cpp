@@ -62,7 +62,8 @@ PYBIND11_MODULE(pymppi, m) {
       .def("shift", &GaussianPolicy::shift)
       .def("get", &GaussianPolicy::nominal)
       .def("get_sample", &GaussianPolicy::sample)
-      .def("get_time", &GaussianPolicy::get_time);
+      .def("get_time", &GaussianPolicy::get_time)
+      .def("update_delay", &GaussianPolicy::update_delay);
 
   py::class_<mppi::SplinePolicy>(m, "SplinePolicy")
       .def(py::init<int, const mppi::Config&>())

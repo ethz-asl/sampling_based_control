@@ -48,6 +48,7 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
   signal_logger::add(min_cost_, "solver/rollouts/min_cost");
   signal_logger::add(max_cost_, "solver/rollouts/max_cost");
   signal_logger::add(rollouts_cost_, "solver/rollouts/costs");
+  signal_logger::add(delay_steps_, "solver/delay_steps");
   signal_logger::logger->updateLogger();
 #endif
 }
@@ -96,6 +97,7 @@ void Solver::init_data() {
 //    }
 //  }
 
+  delay_steps_ = 0;
   step_count_ = 0;
   observation_set_ = false;
   reference_set_ = false;
@@ -138,6 +140,7 @@ void Solver::update_policy() {
   } else if (!reference_set_) {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
+    update_delay();
     copy_observation();
 
     for (size_t i = 0; i < config_.substeps; i++) {
@@ -200,6 +203,13 @@ void Solver::set_observation(const observation_t& x, const double t) {
   }
 
   observation_set_ = true;
+}
+
+void Solver::update_delay() {
+  delay_steps_ = std::ceil((reset_time_ - t0_internal_) / config_.step_size);
+  // delay_steps_ = std::round(delay_filter_alpha_ * delay_steps_ +
+  //   (1.0 - delay_filter_alpha_) * new_delay_steps_);
+  policy_->update_delay(delay_steps_);
 }
 
 void Solver::copy_observation() {

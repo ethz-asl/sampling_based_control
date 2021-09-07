@@ -24,6 +24,8 @@ class Policy {
 
     virtual void bound() = 0;
 
+    virtual void update_delay(const int delay_steps){};
+
    protected:
     int nu_;
   };
