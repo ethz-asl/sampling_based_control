@@ -5,7 +5,7 @@
     <arg name="enable_obstacle" default="false"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot)">
