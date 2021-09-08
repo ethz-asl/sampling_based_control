@@ -276,7 +276,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
-    safety_filter_->update(x_, u_, observation_time_);
+    safety_filter_->update(x_, u_, ros::Time::now().toSec());
 
     // this is required for computing some metrics
     // we provide only the joints position (no gripper) since the implementation
@@ -289,6 +289,8 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
     safety_filter_->update_violation(x_.head<10>());
   }
 
+  std::cout << "Torque vector for new optimization is: "
+            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
   if (apply_filter_) {
     if (!safety_filter_->apply(u_opt_)) {
       ROS_ERROR_THROTTLE(2.0, "Filter failed to find solution.");
@@ -311,6 +313,8 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   std::cout << "New energy in=" << total_power_exchange_
             << ", new state=" << energy_tank_.get_state() << std::endl
             << std::endl;
+  std::cout << "Torque vector is: "
+            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {

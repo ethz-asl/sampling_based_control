@@ -219,6 +219,8 @@ void StateObserver::message_filter_cb(
     const nav_msgs::OdometryConstPtr& base_twist,
     const nav_msgs::OdometryConstPtr& object_odom,
     const geometry_msgs::WrenchStampedConstPtr& wrench) {
+  if (arm_state->header.stamp.toSec() <= previous_publishing_time_) return;
+
   arm_state_callback(arm_state);
   base_pose_callback(base_pose);
   base_twist_callback(base_twist);
@@ -241,6 +243,8 @@ void StateObserver::message_filter_cb_sim(
     const nav_msgs::OdometryConstPtr& base_twist,
     const sensor_msgs::JointStateConstPtr& object_state,
     const geometry_msgs::WrenchStampedConstPtr& wrench) {
+  if (arm_state->header.stamp.toSec() <= previous_publishing_time_) return;
+
   arm_state_callback(arm_state);
   base_pose_callback(base_pose);
   base_twist_callback(base_twist);
@@ -317,6 +321,7 @@ void StateObserver::arm_state_callback(
     q_(i) = msg->position[i];
     dq_(i) = msg->velocity[i];
   }
+  previous_publishing_time_ = time_;
 }
 
 void StateObserver::object_state_callback(
@@ -395,12 +400,21 @@ void StateObserver::wrench_callback(
   }
 
   jacobian_solver_->JntToJac(kdl_joints_, J_world_ee_);
-  wrench_eigen_(0) = msg->wrench.force.x;
-  wrench_eigen_(1) = msg->wrench.force.y;
-  wrench_eigen_(2) = msg->wrench.force.z;
-  wrench_eigen_(3) = msg->wrench.torque.x;
-  wrench_eigen_(4) = msg->wrench.torque.y;
-  wrench_eigen_(5) = msg->wrench.torque.z;
+
+  // filter wrench measurements
+  const static double alpha = 0.9;
+  wrench_eigen_(0) =
+      alpha * wrench_eigen_(0) + (1.0 - alpha) * msg->wrench.force.x;
+  wrench_eigen_(1) =
+      alpha * wrench_eigen_(1) + (1.0 - alpha) * msg->wrench.force.y;
+  wrench_eigen_(2) =
+      alpha * wrench_eigen_(2) + (1.0 - alpha) * msg->wrench.force.z;
+  wrench_eigen_(3) =
+      alpha * wrench_eigen_(3) + (1.0 - alpha) * msg->wrench.torque.x;
+  wrench_eigen_(4) =
+      alpha * wrench_eigen_(4) + (1.0 - alpha) * msg->wrench.torque.y;
+  wrench_eigen_(5) =
+      alpha * wrench_eigen_(5) + (1.0 - alpha) * msg->wrench.torque.z;
   wrench_eigen_.head<3>() = T_world_sensor.rotation() * wrench_eigen_.head<3>();
   wrench_eigen_.tail<3>() = T_world_sensor.rotation() * wrench_eigen_.tail<3>();
 

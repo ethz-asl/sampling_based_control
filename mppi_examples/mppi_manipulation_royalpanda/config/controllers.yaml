@@ -113,7 +113,7 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: false
+  apply_filter: true
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
@@ -129,8 +129,8 @@ manipulation_controller:
 
     passivity_constraint:
       active: true
-      initial_tank_energy: 100.0
-      min_tank_energy: 0.01
+      initial_tank_energy: 10.0
+      min_tank_energy: 2.0
 
     first_derivative_limits: false
     ud_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]

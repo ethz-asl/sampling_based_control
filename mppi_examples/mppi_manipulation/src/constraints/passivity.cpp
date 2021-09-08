@@ -27,13 +27,14 @@ void PassivityConstraint::update_observation(const Eigen::VectorXd& x, const Eig
 
   dt_ = t - t_;
   const double tank_state = x(STATE_DIMENSION - TORQUE_DIMENSION - 1);
-  double power =
-      u.head<10>().transpose() * x.tail<TORQUE_DIMENSION>().head<10>();
 
-  double delta = std::pow(power * dt_ / tank_state, 2) / 2.0;
-  integration_delta_ += delta;
-
+  std::cout << "torque vector in const matrix: "
+            << x.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
+  std::cout << "dt=" << dt_ << std::endl;
   constraint_matrix_ = dt_ * x.tail<TORQUE_DIMENSION>().head<10>().transpose();
-  lower_bound_[0] = min_energy_ + integration_delta_ - 0.5 * (tank_state * tank_state);
+  std::cout << "const matrix: " << constraint_matrix_ << std::endl;
+  lower_bound_[0] = min_energy_ - 0.5 * (tank_state * tank_state);
+  std::cout << "lower bound = " << lower_bound_[0]
+            << ", tank_state=" << tank_state << std::endl;
   t_ = t;
 };

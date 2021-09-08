@@ -72,6 +72,7 @@ class StateObserver {
 
   // time: will be the one received on the arm state
   double time_;
+  double previous_publishing_time_;
 
   // tank
   double tank_state_;
