@@ -96,6 +96,8 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     ROS_ERROR("Failed to parse safety filter parameters.");
     return false;
   }
+  ROS_INFO_STREAM("Controller Safety Filter initialized\n"
+                  << safety_filter_params_);
 
   ROS_INFO("Parameters successfully initialized.");
   return true;
@@ -288,19 +290,27 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   }
 
   if (apply_filter_) {
-    safety_filter_->apply(u_opt_);
+    if (!safety_filter_->apply(u_opt_)) {
+      ROS_ERROR_THROTTLE(2.0, "Filter failed to find solution.");
+    };
   } else {
     u_opt_ = u_.head<10>();  // safety filter does not account for the gripper
   }
 
   // compute the total power exchange with the tank
   external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
-  power_channels_ = -u_opt_.cwiseProduct(external_torque_);
-  power_from_error_ = (u_opt_ - velocity_filtered_).transpose() *
-                      (position_desired_ - position_initial_);
+  power_channels_ = u_opt_.cwiseProduct(external_torque_);
   power_from_interaction_ = power_channels_.sum();
+  power_from_error_ = -(u_opt_ - velocity_filtered_).transpose() *
+                      (position_desired_ - position_initial_);
   total_power_exchange_ = power_from_error_ + power_from_interaction_;
+  std::cout << "Stepping energy tank. Current state="
+            << energy_tank_.get_state()
+            << ", current energy=" << energy_tank_.get_energy() << std::endl;
   energy_tank_.step(total_power_exchange_, period.toSec());
+  std::cout << "New energy in=" << total_power_exchange_
+            << ", new state=" << energy_tank_.get_state() << std::endl
+            << std::endl;
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {

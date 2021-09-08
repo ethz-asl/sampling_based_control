@@ -81,6 +81,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
 
   double get_object_displacement() const;
   void get_external_torque(Eigen::VectorXd& tau_ext);
+  void get_external_wrench(Eigen::VectorXd& wrench);
   void get_ee_jacobian(Eigen::MatrixXd& J);
   void set_external_ee_force(const Eigen::Vector3d& f);
 

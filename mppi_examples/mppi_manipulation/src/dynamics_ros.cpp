@@ -63,6 +63,7 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
                          constraint.first + "_violation");
     }
   }
+  signal_logger::add(tau_ext_, "ground_truth_external_torque");
   signal_logger::logger->updateLogger();
 }
 

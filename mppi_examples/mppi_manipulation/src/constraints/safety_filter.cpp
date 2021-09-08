@@ -116,9 +116,10 @@ void PandaMobileSafetyFilter::update_violation(const Eigen::VectorXd& x) {
 
 bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
   if (params_.verbose) filter_->print_problem();
-  filter_->solve(u_opt);
-
-  // TODO(giuseppe) must return the correct status
+  if (!filter_->solve(u_opt)) {
+    filter_->print_problem();
+    throw std::runtime_error("Failed to find solution to problem.");
+  }
   return true;
 }
 

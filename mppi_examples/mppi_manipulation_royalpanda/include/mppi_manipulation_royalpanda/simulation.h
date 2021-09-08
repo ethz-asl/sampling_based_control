@@ -99,7 +99,9 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   sensor_msgs::JointState arm_state_;
   sensor_msgs::JointState finger_state_;
   sensor_msgs::JointState object_state_;  // sim only
-  geometry_msgs::WrenchStamped wrench_;
+
+  Eigen::VectorXd wrench_;
+  geometry_msgs::WrenchStamped wrench_ros_;
 
   ros::Publisher base_pose_publisher_;
   ros::Publisher base_twist_publisher_;

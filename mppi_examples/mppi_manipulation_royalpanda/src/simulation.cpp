@@ -291,30 +291,31 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
   handle_odom_.pose.pose.orientation.w = handle_orientation.w();
   object_pose_publisher_.publish(handle_odom_);
 
-  dynamics_->get_ee_jacobian(ee_jacobian_);
-  pseudoInverse(ee_jacobian_.transpose(), ee_jacobian_transpose_pinv_);
-  tau_ext_base_arm_.head<3>() = base_effort_;
-  tau_ext_base_arm_.tail<9>() = arm_joint_effort_;
-  ee_wrench_ = ee_jacobian_transpose_pinv_ * tau_ext_base_arm_;
+  //  dynamics_->get_ee_jacobian(ee_jacobian_);
+  //  pseudoInverse(ee_jacobian_.transpose(), ee_jacobian_transpose_pinv_);
+  //  tau_ext_base_arm_.head<3>() = base_effort_;
+  //  tau_ext_base_arm_.tail<9>() = arm_joint_effort_;
+  //  ee_wrench_ = ee_jacobian_transpose_pinv_ * tau_ext_base_arm_;
+  //
+  //  // this wrench is indeed in the world frame
+  //  // rotate it back to the end effector frame
+  //  Eigen::Vector3d ee_position;
+  //  Eigen::Quaterniond ee_rotation;
+  //  dynamics_->get_end_effector_pose(ee_position, ee_rotation);
+  //  Eigen::Matrix3d R_world_ee(ee_rotation);
+  //  ee_wrench_.head<3>() = R_world_ee.transpose() * ee_wrench_.head<3>();
+  //  ee_wrench_.tail<3>() = R_world_ee.transpose() * ee_wrench_.tail<3>();
 
-  // this wrench is indeed in the world frame
-  // rotate it back to the end effector frame
-  Eigen::Vector3d ee_position;
-  Eigen::Quaterniond ee_rotation;
-  dynamics_->get_end_effector_pose(ee_position, ee_rotation);
-  Eigen::Matrix3d R_world_ee(ee_rotation);
-  ee_wrench_.head<3>() = R_world_ee.transpose() * ee_wrench_.head<3>();
-  ee_wrench_.tail<3>() = R_world_ee.transpose() * ee_wrench_.tail<3>();
-
-  wrench_.header.stamp = time;
-  wrench_.header.frame_id = "panda_hand";
-  wrench_.wrench.force.x = ee_wrench_(0);
-  wrench_.wrench.force.y = ee_wrench_(1);
-  wrench_.wrench.force.z = ee_wrench_(2);
-  wrench_.wrench.torque.x = ee_wrench_(3);
-  wrench_.wrench.torque.y = ee_wrench_(4);
-  wrench_.wrench.torque.z = ee_wrench_(5);
-  wrench_publisher_.publish(wrench_);
+  dynamics_->get_external_wrench(wrench_);
+  wrench_ros_.header.stamp = time;
+  wrench_ros_.header.frame_id = "panda_hand";
+  wrench_ros_.wrench.force.x = wrench_(0);
+  wrench_ros_.wrench.force.y = wrench_(1);
+  wrench_ros_.wrench.force.z = wrench_(2);
+  wrench_ros_.wrench.torque.x = wrench_(3);
+  wrench_ros_.wrench.torque.y = wrench_(4);
+  wrench_ros_.wrench.torque.z = wrench_(5);
+  wrench_publisher_.publish(wrench_ros_);
 }
 
 void RoyalPandaSim::base_twist_cmd_callback(

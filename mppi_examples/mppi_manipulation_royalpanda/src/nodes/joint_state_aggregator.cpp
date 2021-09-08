@@ -22,6 +22,8 @@ class JointStateAggregator{
  public:
   void callback(const JointStateConstPtr& arm_state, const JointStateConstPtr& finger_state)
   {
+    if (arm_state->header.stamp.toSec() == previous_time_) return;
+
     size_t arm_dim = arm_state->name.size();
     size_t finger_dim = finger_state->name.size();
 
@@ -49,9 +51,11 @@ class JointStateAggregator{
     aggregate_state.header.frame_id = arm_state->header.frame_id;
     aggregate_state.header.stamp = arm_state->header.stamp;
     state_publisher_.publish(aggregate_state);
+    previous_time_ = arm_state->header.stamp.toSec();
   }
 
  private:
+  double previous_time_;
   ros::Publisher state_publisher_;
 };
 

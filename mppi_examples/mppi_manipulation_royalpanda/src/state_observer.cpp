@@ -26,7 +26,8 @@
 
 namespace manipulation_royalpanda {
 
-StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
+StateObserver::StateObserver(const ros::NodeHandle& nh)
+    : nh_(nh), tf_listener_(tf_buffer_) {
   nh_.param<bool>("simulation", simulation_, false);
 
   std::string base_pose_topic;
@@ -371,6 +372,19 @@ void StateObserver::object_pose_callback(
 
 void StateObserver::wrench_callback(
     const geometry_msgs::WrenchStampedConstPtr& msg) {
+  // wrench is in the end effector frame. Need to convert to world frame
+  Eigen::Affine3d T_world_sensor;
+  geometry_msgs::TransformStamped transform;
+
+  try {
+    transform = tf_buffer_.lookupTransform("world", msg->header.frame_id,
+                                           ros::Time(0), ros::Duration(1.0));
+  } catch (tf2::TransformException& ex) {
+    ROS_WARN("%s", ex.what());
+    return;
+  }
+
+  tf::transformMsgToEigen(transform.transform, T_world_sensor);
 
   // update kdl joints with the latest measurements
   kdl_joints_(0) = base_pose_.x();
@@ -380,24 +394,24 @@ void StateObserver::wrench_callback(
     kdl_joints_(3 + i) = q_(i);
   }
 
-  int error = jacobian_solver_->JntToJac(kdl_joints_, J_world_ee_);
+  jacobian_solver_->JntToJac(kdl_joints_, J_world_ee_);
   wrench_eigen_(0) = msg->wrench.force.x;
   wrench_eigen_(1) = msg->wrench.force.y;
   wrench_eigen_(2) = msg->wrench.force.z;
   wrench_eigen_(3) = msg->wrench.torque.x;
   wrench_eigen_(4) = msg->wrench.torque.y;
   wrench_eigen_(5) = msg->wrench.torque.z;
+  wrench_eigen_.head<3>() = T_world_sensor.rotation() * wrench_eigen_.head<3>();
+  wrench_eigen_.tail<3>() = T_world_sensor.rotation() * wrench_eigen_.tail<3>();
 
   // clang-format off
   J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), - std::sin(base_pose_.z()), 0,
                                             std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
                                             0, 0, 1;
   // clang-format on
-  Eigen::MatrixXd Jt_world_ee_pinv;
-  pseudoInverse(J_world_ee_.data.transpose(), Jt_world_ee_pinv);
-  ext_tau_ = Jt_world_ee_pinv * wrench_eigen_;
+  ext_tau_ = J_world_ee_.data.transpose() * wrench_eigen_;
 
-  // sanitize wrench (if too high, can be related to singularity in pinv)
+  // sanitize torque
   for (int i = 0; i < ext_tau_.size(); i++) {
     ext_tau_(i) = std::abs(ext_tau_(i)) > 1e3 ? 0.0 : ext_tau_(i);
   }

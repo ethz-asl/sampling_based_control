@@ -9,10 +9,8 @@ using namespace manipulation;
 
 // TODO (giuseppe verify these equations)
 void EnergyTank::step(double e, double dt) {
-  double delta = std::pow(e * dt / (std::sqrt(2) * tank_state_), 2);
-  integration_delta_ += delta;
-  tank_energy_ += dt * e + delta;
-  tank_state_ += dt * e;
+  tank_energy_ = std::max(0.0, tank_energy_ + dt * e);
+  tank_state_ = std::sqrt(2.0 * tank_energy_);
 }
 
 void EnergyTank::reset(double x, double t){

@@ -245,6 +245,31 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
   }
 }
 
+void PandaRaisimDynamics::get_external_wrench(Eigen::VectorXd& wrench) {
+  wrench.setZero(6);
+  size_t frame_id = panda->getFrameIdxByName("panda_grasp_joint");
+  raisim::Vec<3> pos;
+  raisim::Mat<3, 3> rot;
+  panda->getFramePosition(frame_id, pos);
+  panda->getFrameOrientation(frame_id, rot);
+
+  for (const auto contact : panda->getContacts()) {
+    if (!contact.skip() && !contact.isSelfCollision()) {
+      // ee_frame <-- world_frame <-- force <-- impulse
+      Eigen::Vector3d force_ee_frame =
+          -rot.e().transpose() * contact.getContactFrame().e().transpose() *
+          contact.getImpulse()->e() / sim_.getTimeStep();
+      Eigen::Vector3d relative_position =
+          rot.e().transpose() * (contact.getPosition().e() - pos.e());
+      wrench.head<3>() += force_ee_frame;
+      wrench.tail<3>() = relative_position.cross(force_ee_frame);
+    }
+  }
+  if (ee_force_applied_) {
+    wrench.head<3>() += panda->getExternalForce()[0].e();
+  }
+}
+
 void PandaRaisimDynamics::get_reference_link_pose(Eigen::Vector3d& position,
                              Eigen::Quaterniond& orientation){
   size_t frame_id = panda->getFrameIdxByName("reference_link_joint");

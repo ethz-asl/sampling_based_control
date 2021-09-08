@@ -15,6 +15,7 @@ class EnergyTank {
   void step(double e, double dt);
   void reset(double x, double t);
   inline const double& get_state() { return tank_state_; }
+  inline const double& get_energy() { return tank_energy_; }
 
  private:
   double tank_state_;

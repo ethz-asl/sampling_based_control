@@ -24,6 +24,8 @@
 #include <kdl/jacobian.hpp>
 
 #include <manipulation_msgs/State.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 
 namespace manipulation_royalpanda {
 
@@ -176,5 +178,9 @@ class StateObserver {
   KDL::Jacobian J_world_ee_;
   Eigen::Matrix<double, 6, 1> wrench_eigen_;
   KDL::Chain world_to_ee_chain_;
+
+  // tf2_ros
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
 };
 }  // namespace manipulation_royalpanda
