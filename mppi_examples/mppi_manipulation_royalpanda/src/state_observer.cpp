@@ -402,7 +402,7 @@ void StateObserver::wrench_callback(
   jacobian_solver_->JntToJac(kdl_joints_, J_world_ee_);
 
   // filter wrench measurements
-  const static double alpha = 0.9;
+  const static double alpha = 0.1;
   wrench_eigen_(0) =
       alpha * wrench_eigen_(0) + (1.0 - alpha) * msg->wrench.force.x;
   wrench_eigen_(1) =
@@ -419,8 +419,8 @@ void StateObserver::wrench_callback(
   wrench_eigen_.tail<3>() = T_world_sensor.rotation() * wrench_eigen_.tail<3>();
 
   // clang-format off
-  J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), - std::sin(base_pose_.z()), 0,
-                                            std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
+  J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), std::sin(base_pose_.z()), 0,
+                                            -std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
                                             0, 0, 1;
   // clang-format on
   ext_tau_ = J_world_ee_.data.transpose() * wrench_eigen_;

@@ -224,6 +224,7 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // we do not actively control the gripper
   u_opt_.setZero(10);
+  u_filter_.setZero(10);
   velocity_measured_.setZero(10);
   velocity_filtered_.setZero(10);
   position_desired_.setZero(10);
@@ -249,6 +250,7 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // logging
   signal_logger::logger->stopLogger();
+  signal_logger::add(u_filter_, "velocity_safety_filter");
   signal_logger::add(u_opt_, "velocity_command");
   signal_logger::add(arm_torque_command_, "torque_command");
   signal_logger::add(velocity_measured_, "velocity_measured");
@@ -289,14 +291,15 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
     safety_filter_->update_violation(x_.head<10>());
   }
 
-  std::cout << "Torque vector for new optimization is: "
-            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
-  if (apply_filter_) {
-    if (!safety_filter_->apply(u_opt_)) {
-      ROS_ERROR_THROTTLE(2.0, "Filter failed to find solution.");
-    };
+  // compute new optimal input
+  bool filter_ok = safety_filter_->apply(u_filter_);
+
+  // safety filter does not account for the gripper -> extract only the base+arm
+  // part
+  if (apply_filter_ && filter_ok) {
+    u_opt_ = u_filter_.head<10>();
   } else {
-    u_opt_ = u_.head<10>();  // safety filter does not account for the gripper
+    u_opt_ = u_.head<10>();
   }
 
   // compute the total power exchange with the tank
@@ -306,15 +309,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   power_from_error_ = -(u_opt_ - velocity_filtered_).transpose() *
                       (position_desired_ - position_initial_);
   total_power_exchange_ = power_from_error_ + power_from_interaction_;
-  std::cout << "Stepping energy tank. Current state="
-            << energy_tank_.get_state()
-            << ", current energy=" << energy_tank_.get_energy() << std::endl;
   energy_tank_.step(total_power_exchange_, period.toSec());
-  std::cout << "New energy in=" << total_power_exchange_
-            << ", new state=" << energy_tank_.get_state() << std::endl
-            << std::endl;
-  std::cout << "Torque vector is: "
-            << x_.tail<TORQUE_DIMENSION>().head<10>().transpose() << std::endl;
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {

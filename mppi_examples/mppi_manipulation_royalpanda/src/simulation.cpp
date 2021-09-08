@@ -3,6 +3,7 @@
 //
 
 #include "mppi_manipulation_royalpanda/simulation.h"
+#include <signal_logger/signal_logger.hpp>
 #include "manipulation_msgs/conversions.h"
 #include "mppi_manipulation_royalpanda/utils.h"
 
@@ -24,6 +25,12 @@ bool RoyalPandaSim::init_sim() {
 
   init_handles();
   init_publishers();
+
+  // logging
+  signal_logger::logger->stopLogger();
+  signal_logger::add(wrench_, "external_wrench");
+  signal_logger::logger->startLogger(true);
+
   return true;
 }
 
@@ -187,6 +194,7 @@ void RoyalPandaSim::init_publishers() {
       base_twist_cmd_topic_, 1, &RoyalPandaSim::base_twist_cmd_callback, this);
   external_force_subscriber_ = nh_.subscribe(
       "/apply_external_force", 1, &RoyalPandaSim::apply_external_force_callback, this);
+  wrench_.setZero(6);
 }
 
 void RoyalPandaSim::print_state() {

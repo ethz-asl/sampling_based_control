@@ -58,7 +58,7 @@
     <!-- This object description is used in simulation and can differ from the model used in the controller -->
     <param name="object_description_raisim_simulation"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
-           shelf_x:=0.903
+           shelf_x:=0.943
            height:=$(arg object_height)"/>
 
     <param name="obstacle_description"

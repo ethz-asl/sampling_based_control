@@ -113,7 +113,7 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: true
+  apply_filter: false
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]

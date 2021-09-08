@@ -118,7 +118,7 @@ bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
   if (params_.verbose) filter_->print_problem();
   if (!filter_->solve(u_opt)) {
     filter_->print_problem();
-    throw std::runtime_error("Failed to find solution to problem.");
+    return false;
   }
   return true;
 }
