@@ -59,7 +59,9 @@
     <param name="object_description_raisim_simulation"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
            shelf_x:=0.943
-           height:=$(arg object_height)"/>
+           height:=$(arg object_height)
+           articulation_mismatch_offset:=0.0
+           prefix:='sim_'"/>
 
     <param name="obstacle_description"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/box.urdf.xacro
@@ -76,13 +78,23 @@
         </node>
 
         <node name="object_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
-            <remap from="robot_description" to="object_description"/>
-            <remap from="joint_states" to="/object/joint_states"/>
+            <remap from="robot_description" to="object_description_raisim"/>
+            <remap from="joint_states" to="/model/object/joint_states"/>
         </node>
         <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
-            <remap from="robot_description" to="object_description"/>
-            <remap from="joint_states" to="/object/joint_states"/>
+            <remap from="robot_description" to="object_description_raisim"/>
+            <remap from="joint_states" to="/model/object/joint_states"/>
         </node>
+
+        <node name="sim_object_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="object_description_raisim_simulation"/>
+            <remap from="joint_states" to="/sim/object/joint_states"/>
+        </node>
+        <node name="sim_object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="object_description_raisim_simulation"/>
+            <remap from="joint_states" to="/sim/object/joint_states"/>
+        </node>
+
         <node name="rviz" pkg="rviz" type="rviz" output="screen"
               args="-d $(find mppi_manipulation)/config/rviz/debug_urdf.rviz"/>
 

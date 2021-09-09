@@ -133,6 +133,23 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
+  if (!nh.getParam("cost/handle_frame", handle_frame) || handle_frame.empty()) {
+    ROS_ERROR("Failed to parse cost/handle_frame or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/tracked_frame", tracked_frame) ||
+      tracked_frame.empty()) {
+    ROS_ERROR("Failed to parse cost/tracked_frame or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/arm_base_frame", arm_base_frame) ||
+      arm_base_frame.empty()) {
+    ROS_ERROR("Failed to parse cost/arm_base_frame or invalid!");
+    return false;
+  }
+
   return true;
 }
 

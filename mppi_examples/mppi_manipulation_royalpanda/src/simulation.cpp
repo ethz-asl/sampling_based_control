@@ -29,6 +29,7 @@ bool RoyalPandaSim::init_sim() {
   // logging
   signal_logger::logger->stopLogger();
   signal_logger::add(wrench_, "external_wrench");
+  signal_logger::add(wrench_filtered_, "external_wrench_filtered");
   signal_logger::logger->startLogger(true);
 
   return true;
@@ -113,6 +114,15 @@ bool RoyalPandaSim::init_params() {
   object_state_.effort.resize(1);
 
   tau_ext_base_arm_.setZero(12);
+
+  wrench_temp_.resize(6, 0.0);
+  wrench_filtered_.resize(6, 0.0);
+  wrench_filter_ =
+      std::make_unique<filters::MultiChannelMedianFilter<double>>();
+  if (!wrench_filter_->configure(6, "wrench_median_filter", nh_)) {
+    ROS_ERROR("Failed to initialize the wrench median filter");
+    return false;
+  }
   return true;
 }
 
@@ -315,14 +325,18 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
   //  ee_wrench_.tail<3>() = R_world_ee.transpose() * ee_wrench_.tail<3>();
 
   dynamics_->get_external_wrench(wrench_);
+  for (int i = 0; i < 6; i++) {
+    wrench_temp_[i] = wrench_[i];
+  }
+  wrench_filter_->update(wrench_temp_, wrench_filtered_);
   wrench_ros_.header.stamp = time;
   wrench_ros_.header.frame_id = "panda_hand";
-  wrench_ros_.wrench.force.x = wrench_(0);
-  wrench_ros_.wrench.force.y = wrench_(1);
-  wrench_ros_.wrench.force.z = wrench_(2);
-  wrench_ros_.wrench.torque.x = wrench_(3);
-  wrench_ros_.wrench.torque.y = wrench_(4);
-  wrench_ros_.wrench.torque.z = wrench_(5);
+  wrench_ros_.wrench.force.x = wrench_filtered_[0];
+  wrench_ros_.wrench.force.y = wrench_filtered_[1];
+  wrench_ros_.wrench.force.z = wrench_filtered_[2];
+  wrench_ros_.wrench.torque.x = wrench_filtered_[3];
+  wrench_ros_.wrench.torque.y = wrench_filtered_[4];
+  wrench_ros_.wrench.torque.z = wrench_filtered_[5];
   wrench_publisher_.publish(wrench_ros_);
 }
 

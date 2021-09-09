@@ -39,7 +39,8 @@ int main(int argc, char** argv) {
     ROS_ERROR("Failed to parse dynamics parameters");
     return 0;
   }
-  ROS_INFO_STREAM(dynamics_params);
+  ROS_INFO_STREAM(
+      "Successfully parsed simulation dynamics parameter: " << dynamics_params);
   auto simulation =
       std::make_shared<ManipulatorDynamicsRos>(nh, dynamics_params);
 

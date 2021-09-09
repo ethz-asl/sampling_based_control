@@ -31,7 +31,7 @@ void PandaRaisimDynamics::initialize_world(
   dt_ = params_.dt;
   sim_.setTimeStep(params_.dt);
   sim_.setERP(0., 0.);
-  sim_.setMaterialPairProp("steel", "steel", 0.01, 0.0, 0.0);
+  sim_.setMaterialPairProp("steel", "steel", 0.0001, 0.0, 0.0);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
   panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
@@ -190,7 +190,7 @@ void PandaRaisimDynamics::get_end_effector_pose(
 
 void PandaRaisimDynamics::get_handle_pose(Eigen::Vector3d& position,
                                           Eigen::Quaterniond& orientation) {
-  size_t frame_id = object->getFrameIdxByName("handle_joint");
+  size_t frame_id = object->getFrameIdxByName(params_.object_handle_joint);
   raisim::Vec<3> pos;
   raisim::Mat<3, 3> rot;
   object->getFramePosition(frame_id, pos);

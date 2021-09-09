@@ -63,9 +63,6 @@ class PandaCost : public mppi::Cost {
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
 
-  std::string handle_frame_ = "handle_link";
-  std::string tracked_frame_ = "panda_grasp";
-  std::string arm_base_frame_ = "panda_link0";
   int frame_id_;
   int arm_base_frame_id_;
   Eigen::Matrix<double, 6, 1> error_;

@@ -115,12 +115,13 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // dynamics
   // -------------------------------
   mppi::dynamics_ptr dynamics;
-  DynamicsParams dynamics_params;
-  if (!dynamics_params.init_from_ros(nh_)) {
+  if (!dynamics_params_.init_from_ros(nh_)) {
     ROS_ERROR("Failed to init dynamics parameters.");
     return false;
   };
-  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params);
+  ROS_INFO_STREAM("Successfully parsed controller dynamics parameters: "
+                  << dynamics_params_);
+  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_);
 
   // -------------------------------
   // config
@@ -258,7 +259,7 @@ mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(
     const Eigen::VectorXd& x) {
   object_model_.update_state(
       x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
-  return object_model_.get_pose("handle_link");
+  return object_model_.get_pose(dynamics_params_.object_handle_link);
 }
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_base(

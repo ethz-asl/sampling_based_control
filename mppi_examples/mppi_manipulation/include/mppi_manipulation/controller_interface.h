@@ -8,11 +8,12 @@
 #pragma once
 #include <mppi_pinocchio/model.h>
 #include <mppi_ros/controller_interface.h>
-#include <nav_msgs/Path.h>
 
 #include "mppi_manipulation/cost.h"
+#include "mppi_manipulation/params/dynamics_params.h"
 #include "mppi_manipulation/reference_scheduler.h"
 
+#include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
@@ -67,6 +68,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
 
+  DynamicsParams dynamics_params_;
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
 

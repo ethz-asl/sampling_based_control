@@ -6,20 +6,21 @@
 
 #pragma once
 
-#include <Eigen/Core>
-#include <hardware_interface/robot_hw.h>
 #include <franka/robot_state.h>
 #include <franka_hw/franka_model_interface.h>
 #include <franka_hw/franka_state_interface.h>
 #include <franka_hw/model_base.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include <hardware_interface/internal/hardware_resource_manager.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
+#include <hardware_interface/robot_hw.h>
 #include <mppi_manipulation/dynamics_ros.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/WrenchStamped.h>
 #include <ros/ros.h>
+#include <Eigen/Core>
 #include <cmath>
+#include <filters/median.hpp>
 #include <map>
 #include <memory>
 
@@ -100,9 +101,6 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   sensor_msgs::JointState finger_state_;
   sensor_msgs::JointState object_state_;  // sim only
 
-  Eigen::VectorXd wrench_;
-  geometry_msgs::WrenchStamped wrench_ros_;
-
   ros::Publisher base_pose_publisher_;
   ros::Publisher base_twist_publisher_;
   ros::Publisher arm_state_publisher_;
@@ -113,7 +111,14 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   ros::Subscriber base_twist_cmd_subscriber_;
   ros::Subscriber external_force_subscriber_;
 
-  // External force computation
+  // External wrench variables
+  Eigen::VectorXd wrench_;
+  geometry_msgs::WrenchStamped wrench_ros_;
+
+  std::vector<double> wrench_temp_;
+  std::vector<double> wrench_filtered_;
+  std::unique_ptr<filters::MultiChannelFilterBase<double>> wrench_filter_;
+
   Eigen::VectorXd tau_ext_base_arm_;
   Eigen::MatrixXd ee_jacobian_;
   Eigen::MatrixXd ee_jacobian_transpose_pinv_;

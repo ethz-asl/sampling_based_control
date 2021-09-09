@@ -35,7 +35,7 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   joint_state_.position.resize(joint_state_.name.size());
   joint_state_.velocity.resize(joint_state_.name.size());
   joint_state_.header.frame_id = "world";
-  object_state_.name = {"articulation_joint"};
+  object_state_.name = {params_.articulation_joint};
   object_state_.position.resize(1);
 
   force_marker_.type = visualization_msgs::Marker::ARROW;

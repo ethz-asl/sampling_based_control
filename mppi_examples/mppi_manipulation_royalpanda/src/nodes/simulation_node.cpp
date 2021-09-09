@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   // start logging
   signal_logger::setSignalLoggerStd();
   signal_logger::SignalLoggerOptions silo_options;
-  // silo_options.maxLoggingTime_ = 60.0;
+  silo_options.maxLoggingTime_ = 0.0;  // exponentially growing buffer
   signal_logger::logger->initLogger(silo_options);
 
   // do not advance until this time.

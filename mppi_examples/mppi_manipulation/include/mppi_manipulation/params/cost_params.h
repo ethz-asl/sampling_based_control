@@ -33,6 +33,11 @@ struct CostParams {
   std::vector<double> upper_joint_limits;
   std::vector<double> lower_joint_limits;
 
+  // frames
+  std::string handle_frame = "handle_link";
+  std::string tracked_frame = "panda_grasp";
+  std::string arm_base_frame = "panda_link0";
+
   bool init_from_ros(const ros::NodeHandle& nh);
 };
 

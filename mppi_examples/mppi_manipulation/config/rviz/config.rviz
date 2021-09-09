@@ -6,8 +6,7 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /World1
-        - /World1/Object1
-        - /World1/Panda1
+        - /World1/Object Model1/Links1
         - /Observer1/Vicon Odometry1/Shape1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 719
@@ -138,6 +137,24 @@ Visualization Manager:
           Value: false
         shelf:
           Value: true
+        sim_axis_link:
+          Value: true
+        sim_door:
+          Value: true
+        sim_door_hinge:
+          Value: true
+        sim_handle_link:
+          Value: true
+        sim_handle_support_left:
+          Value: true
+        sim_handle_support_right:
+          Value: true
+        sim_measured_joint_link:
+          Value: true
+        sim_measured_joint_link_test:
+          Value: true
+        sim_shelf:
+          Value: true
         top_link:
           Value: false
         world:
@@ -214,6 +231,18 @@ Visualization Manager:
                         {}
                       measured_joint_link_test:
                         {}
+          sim_shelf:
+            sim_door_hinge:
+              sim_axis_link:
+                sim_measured_joint_link:
+                  sim_door:
+                    sim_handle_link:
+                      sim_handle_support_left:
+                        {}
+                      sim_handle_support_right:
+                        {}
+                      sim_measured_joint_link_test:
+                        {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -270,6 +299,67 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            sim_axis_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            sim_door:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            sim_door_hinge:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            sim_handle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            sim_handle_support_left:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            sim_handle_support_right:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            sim_measured_joint_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            sim_measured_joint_link_test:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            sim_shelf:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            world:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+          Name: Object Sim
+          Robot Description: object_description_raisim_simulation
+          TF Prefix: ""
+          Update Interval: 0
+          Value: true
+          Visual Enabled: true
+        - Alpha: 0.30000001192092896
+          Class: rviz/RobotModel
+          Collision Enabled: false
+          Enabled: true
+          Links:
+            All Links Enabled: true
+            Expand Joint Details: false
+            Expand Link Details: false
+            Expand Tree: false
+            Link Tree Style: Links in Alphabetic Order
             axis_link:
               Alpha: 1
               Show Axes: false
@@ -315,8 +405,8 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-          Name: Object
-          Robot Description: object_description_raisim_simulation
+          Name: Object Model
+          Robot Description: object_description_raisim
           TF Prefix: ""
           Update Interval: 0
           Value: true
@@ -509,7 +599,7 @@ Visualization Manager:
           Marker Topic: /contact_forces
           Name: Contact Forces
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 0.20000000298023224
@@ -721,7 +811,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.265815019607544
+      Distance: 2.5290470123291016
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -737,9 +827,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6297978162765503
+      Pitch: 0.5247979164123535
       Target Frame: <Fixed Frame>
-      Yaw: 3.035524368286133
+      Yaw: 4.210526466369629
     Saved: ~
 Window Geometry:
   Displays:

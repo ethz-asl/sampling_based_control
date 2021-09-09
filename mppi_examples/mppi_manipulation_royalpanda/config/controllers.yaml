@@ -42,7 +42,7 @@ manipulation_controller:
 
     contact_weight: 10.0
 
-    object_weight: 10
+    object_weight: 1000
     object_tolerance: 0.01
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -61,6 +61,11 @@ manipulation_controller:
 
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
+
+    handle_frame: handle_link
+    tracked_frame: panda_grasp
+    arm_base_frame: panda_link0
+
 
   controller_gains:
     base_gains:
@@ -84,6 +89,10 @@ manipulation_controller:
   # Parameters of the dynamics internal to the controller
   dynamics:
     dt: 0.015
+    object_handle_link: handle_link
+    object_handle_joint: handle_joint
+    articulation_joint: articulation_joint
+
     has_filter: false
     apply_filter: false
     initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position

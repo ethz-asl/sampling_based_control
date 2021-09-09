@@ -34,7 +34,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   if (mode == 0) {
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
-    robot_model_.get_error(tracked_frame_, ref_q, ref_t, error_);
+    robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
@@ -47,8 +47,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   else if (mode == 1) {
     object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
     error_ = mppi_pinocchio::diff(
-        robot_model_.get_pose(tracked_frame_),
-        object_model_.get_pose(handle_frame_) * params_.grasp_offset);
+        robot_model_.get_pose(params_.tracked_frame),
+        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
@@ -64,8 +64,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   else if (mode == 2) {
     object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
     error_ = mppi_pinocchio::diff(
-        robot_model_.get_pose(tracked_frame_),
-        object_model_.get_pose(handle_frame_) * params_.grasp_offset);
+        robot_model_.get_pose(params_.tracked_frame),
+        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt2;
     cost +=
@@ -86,7 +86,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   // arm reach cost
   double reach;
-  robot_model_.get_offset(arm_base_frame_, tracked_frame_, distance_vector_);
+  robot_model_.get_offset(params_.arm_base_frame, params_.tracked_frame,
+                          distance_vector_);
   reach = distance_vector_.head<2>().norm();
   if (reach > params_.max_reach) {
     cost += params_.Q_reach +

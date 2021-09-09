@@ -2,8 +2,8 @@
 // Created by giuseppe on 09.08.21.
 //
 
-#include "mppi_manipulation/dimensions.h"
 #include "mppi_manipulation/params/dynamics_params.h"
+#include "mppi_manipulation/dimensions.h"
 
 using namespace manipulation;
 
@@ -12,6 +12,23 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
 
   if (!nh.getParam(prefix + "dynamics/dt", dt) || dt <= 0) {
     ROS_ERROR("Failed to parse dynamics/dt or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam(prefix + "dynamics/object_handle_link",
+                   object_handle_link)) {
+    ROS_ERROR("Failed to parse dynamics/object_handle_link or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam(prefix + "dynamics/object_handle_joint",
+                   object_handle_joint)) {
+    ROS_ERROR("Failed to parse dynamics/object_handle_joint");
+  }
+
+  if (!nh.getParam(prefix + "dynamics/articulation_joint",
+                   articulation_joint)) {
+    ROS_ERROR("Failed to parse dynamics/articulation_joint or invalid!");
     return false;
   }
 
@@ -32,8 +49,9 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     ROS_ERROR("Failed to parse dynamics/initial_state or invalid");
     return false;
   }
-  if (x0.size() != STATE_DIMENSION){
-    ROS_ERROR_STREAM("Initial state with the wrong dimension: " << initial_state.size() << "!=" << (int)STATE_DIMENSION);
+  if (x0.size() != STATE_DIMENSION) {
+    ROS_ERROR_STREAM("Initial state with the wrong dimension: "
+                     << initial_state.size() << "!=" << (int)STATE_DIMENSION);
     return false;
   }
 
@@ -46,9 +64,14 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  if (!nh.getParam("/object_description_raisim", object_description) ||
+  std::string object_description_name =
+      (is_sim) ? "/object_description_raisim_simulation"
+               : "/object_description_raisim";
+
+  if (!nh.getParam(object_description_name, object_description) ||
       object_description.empty()) {
-    ROS_ERROR("Failed to parse /object_description_raisim or invalid!");
+    ROS_ERROR_STREAM("Failed to parse " << object_description_name
+                                        << " or invalid!");
     return false;
   }
 
@@ -71,7 +94,10 @@ std::ostream& operator<<(std::ostream& os,
   os << "dt=" << params.dt << std::endl;
   os << "has filter = " << params.has_filter << std::endl;
   os << "apply filter = " << params.apply_filter << std::endl;
-  os << params.gains << std::endl;
+  os << params.gains;
+  os << "object handle link = " << params.object_handle_link << std::endl;
+  os << "object handle joint = " << params.object_handle_joint << std::endl;
+  os << "articulation joint = " << params.articulation_joint << std::endl;
   return os;
   // clang-format on
 }
