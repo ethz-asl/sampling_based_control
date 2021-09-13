@@ -117,9 +117,9 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
     samples_[sorted_idxs[ns_ - 1]] = -nominal_;
   }
 
-  for (auto& sample : samples_) {
-    sample = multipliers_ * sample;
-  }
+  //  for (auto& sample : samples_) {
+  //    sample = multipliers_ * sample;
+  //  }
 
   bound(); // TODO should bound each sample so that a convex combination is also within bounds
 }

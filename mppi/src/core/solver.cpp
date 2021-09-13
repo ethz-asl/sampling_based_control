@@ -150,11 +150,13 @@ void Solver::update_policy() {
       optimize();
       // filter_input();
 
-      // TODO move this away. This goes year since there might be filtering
+      // TODO move this away. This goes hear since there might be filtering
       // happening before optimal rollout
       dynamics_->reset(x0_internal_, t0_internal_);
-      for (size_t t = 0; t < steps_; t++) {
-        opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+      opt_roll_.xx[0] = x0_internal_;
+      for (size_t t = 1; t < steps_; t++) {
+        opt_roll_.xx[t] =
+            dynamics_->step(opt_roll_.uu[t - 1], config_.step_size);
       }
       stage_cost_ =
           cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
@@ -353,6 +355,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
       rollouts_[k].total_cost += cost_temp;
+
       // TODO(giuseppe) move input cost all in the cost function
 //          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
 //              rollouts_[k].nn[t] +
@@ -550,6 +553,7 @@ void Solver::get_input_state(const observation_t& x, observation_t& x_nom,
     }
 
     size_t idx = std::distance(opt_roll_cache_.tt.begin(), lower);
+
     // first
     if (idx == 0) {
       x_nom = opt_roll_cache_.xx.front();
