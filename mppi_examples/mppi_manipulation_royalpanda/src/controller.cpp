@@ -223,6 +223,8 @@ void ManipulationController::starting(const ros::Time& time) {
   }
 
   // we do not actively control the gripper
+  x_.setZero(PandaDim::STATE_DIMENSION);
+  x_nom_.setZero(PandaDim::STATE_DIMENSION);
   u_opt_.setZero(10);
   u_filter_.setZero(10);
   velocity_measured_.setZero(10);
@@ -250,6 +252,8 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // logging
   signal_logger::logger->stopLogger();
+  signal_logger::add(x_, "state");
+  signal_logger::add(x_nom_, "nominal_state");
   signal_logger::add(u_filter_, "velocity_safety_filter");
   signal_logger::add(u_opt_, "velocity_command");
   signal_logger::add(arm_torque_command_, "torque_command");
@@ -383,7 +387,6 @@ void ManipulationController::update(const ros::Time& time,
 
   if (sequential_) {
     man_interface_->update_policy();
-    //    man_interface_->get_input(x_, u_, time.toSec());
     man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
     man_interface_->publish_ros_default();
     man_interface_->publish_ros();
@@ -428,12 +431,12 @@ void ManipulationController::update(const ros::Time& time,
 }
 
 void ManipulationController::stopping(const ros::Time& time) {
-  signal_logger::logger->disableElement("/log/torque_command");
-  signal_logger::logger->disableElement("/log/stage_cost");
-  for (const auto& constraint : safety_filter_->constraints_) {
-    signal_logger::logger->disableElement("/log/" + constraint.first +
-                                          "_violation");
-  }
+  //  signal_logger::logger->disableElement("/log/torque_command");
+  //  signal_logger::logger->disableElement("/log/stage_cost");
+  //  for (const auto& constraint : safety_filter_->constraints_) {
+  //    signal_logger::logger->disableElement("/log/" + constraint.first +
+  //                                          "_violation");
+  //  }
 }
 
 void ManipulationController::saturateTorqueRate(
