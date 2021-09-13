@@ -92,6 +92,12 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam("apply_filter_to_rollouts",
+                            apply_filter_to_rollouts_)) {
+    ROS_ERROR("apply_filter_to_rollouts not found");
+    return false;
+  }
+
   if (!safety_filter_params_.init_from_ros(node_handle)) {
     ROS_ERROR("Failed to parse safety filter parameters.");
     return false;
@@ -246,6 +252,13 @@ void ManipulationController::starting(const ros::Time& time) {
   // reset the safety filter
   safety_filter_ =
       std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
+
+  // this is the filter that is used to sanitize the rollouts
+  if (apply_filter_to_rollouts_) {
+    mppi::filter_ptr safety_filter_ctrl =
+        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
+    man_interface_->get_controller()->set_filter(safety_filter_ctrl);
+  }
 
   // metrics
   stage_cost_ = 0.0;

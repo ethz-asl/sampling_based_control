@@ -42,7 +42,7 @@ manipulation_controller:
 
     contact_weight: 10.0
 
-    object_weight: 1000
+    object_weight: 100
     object_tolerance: 0.01
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -122,7 +122,8 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: false
+  apply_filter: true
+  apply_filter_to_rollouts: true
   safety_filter:
     input_limits: true
     u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]

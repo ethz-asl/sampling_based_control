@@ -37,6 +37,12 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  double max_sim_time;
+  if (!nh_private.getParam("max_sim_time", max_sim_time)) {
+    ROS_ERROR("Failed to parse max_sim_time");
+    return 0;
+  }
+
   std::string experiment_name;
   if (!nh_private.getParam("experiment_name", experiment_name)) {
     ROS_ERROR("Failed to parse experiment_name");
@@ -44,23 +50,6 @@ int main(int argc, char** argv) {
   }
 
   ROS_INFO_STREAM("The simulation will not advance until t=" << pause_time);
-
-  // when enforcing determinism we make sure (through a service call)
-  // that the latest state from simulation has been collected as
-  // on the real hardware
-  //  bool enforce_determinism;
-  //  if(!nh_private.getParam("enforce_determinism", enforce_determinism)){
-  //    ROS_ERROR("Failed to parse enforce_determinism");
-  //    return 0;
-  //  }
-
-  //  ros::ServiceClient state_client =
-  //      nh.serviceClient<manipulation_msgs::StateRequest>(
-  //          "/observer/state_request");
-  //  if (!state_client.waitForExistence(ros::Duration(3))) {
-  //    ROS_ERROR("Service /observer/state_request does not exist.");
-  //    return 0;
-  //  }
 
   // tell ROS to use the sim time
   nh.setParam("/use_sim_time", true);
@@ -94,7 +83,7 @@ int main(int argc, char** argv) {
   signal_logger::logger->updateLogger();
   signal_logger::logger->startLogger();
 
-  while (ros::ok()) {
+  while (ros::ok() && t <= max_sim_time) {
     start = steady_clock::now();
     ROS_DEBUG_STREAM("Sim state:" << std::endl
                                   << std::setprecision(2)

@@ -136,6 +136,7 @@ class ManipulationController
 
   // safety filter
   bool apply_filter_;
+  bool apply_filter_to_rollouts_;
   Eigen::VectorXd u_filter_;
   manipulation::EnergyTank energy_tank_;
   manipulation::FilterParams safety_filter_params_;
