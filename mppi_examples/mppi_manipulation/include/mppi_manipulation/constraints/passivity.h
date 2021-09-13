@@ -16,6 +16,7 @@ class PassivityConstraint : public safety_filter::ConstraintBase {
   void update(const Eigen::VectorXd& x) override;
   void update_observation(const Eigen::VectorXd& x, const Eigen::VectorXd& u,
                           const double t) override;
+  void reset_constraint() override;
 
  private:
   double t_;

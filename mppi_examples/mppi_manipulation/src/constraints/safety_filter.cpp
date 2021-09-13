@@ -28,6 +28,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
     : params_(params) {
   std::cout << params_ << std::endl;
   ConstraintsManager cm(10);
+  u_f_.setZero(10);
 
   if (params_.input_limits) {
     safety_filter::InputLimitsSettings ul_settings;
@@ -117,7 +118,7 @@ void PandaMobileSafetyFilter::update_violation(const Eigen::VectorXd& x) {
 bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
   if (params_.verbose) filter_->print_problem();
   if (!filter_->solve(u_opt)) {
-    filter_->print_problem();
+    // filter_->print_problem();
     return false;
   }
   return true;
@@ -125,4 +126,16 @@ bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
 
 void PandaMobileSafetyFilter::reset_constraints() {
   filter_->reset_constraints();
+}
+
+void PandaMobileSafetyFilter::reset(const mppi::observation_t& x, const double t){
+  filter_->reset_constraints();
+}
+
+void PandaMobileSafetyFilter::apply(const mppi::observation_t& x, mppi::input_t& u,
+           const double t){
+  update(x, u, t);
+  if (apply(u_f_)){
+    u.head<10>() = u_f_;
+  }
 }

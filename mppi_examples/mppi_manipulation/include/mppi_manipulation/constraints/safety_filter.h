@@ -6,6 +6,8 @@
 #include <ros/ros.h>
 #include <map>
 
+#include <mppi/core/filter.h>
+
 #include "safety_filter/constraints/joint_limits.hpp"
 #include "safety_filter/filter/filter.hpp"
 
@@ -24,7 +26,7 @@ class PandaMobileJointLimitsConstraints
   void update_jacobian(const Eigen::VectorXd& x) override;
 };
 
-class PandaMobileSafetyFilter {
+class PandaMobileSafetyFilter : public mppi::Filter {
  public:
   PandaMobileSafetyFilter(const FilterParams& settings);
 
@@ -33,6 +35,10 @@ class PandaMobileSafetyFilter {
   void update_violation(const Eigen::VectorXd& x);
   void reset_constraints();
   bool apply(Eigen::VectorXd& u_opt);
+
+  void reset(const mppi::observation_t& x, const double t) override;
+  void apply(const mppi::observation_t& x, mppi::input_t& u,
+             const double t) override;
 
   inline const FilterParams get_settings() const { return params_; }
   inline const std::string get_urdf_string() const { return params_.urdf; }
@@ -48,6 +54,7 @@ class PandaMobileSafetyFilter {
   std::string urdf_;
   FilterParams params_;
   std::unique_ptr<safety_filter::SafetyFilter> filter_;
+  Eigen::VectorXd u_f_;
 };
 
 }  // namespace manipulation

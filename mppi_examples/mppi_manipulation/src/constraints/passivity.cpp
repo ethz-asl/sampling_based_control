@@ -16,6 +16,10 @@ PassivityConstraint::PassivityConstraint(
 }
 
 
+void PassivityConstraint::reset_constraint() {
+  first_update_ = true;
+}
+
 void PassivityConstraint::update(const Eigen::VectorXd& x){};
 
 void PassivityConstraint::update_observation(const Eigen::VectorXd& x, const Eigen::VectorXd& u,
@@ -23,6 +27,8 @@ void PassivityConstraint::update_observation(const Eigen::VectorXd& x, const Eig
   if (first_update_){
     t_ = t;
     first_update_ = false;
+    lower_bound_[0] = -1;
+    constraint_matrix_.setZero();
   }
 
   dt_ = t - t_;
