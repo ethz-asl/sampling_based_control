@@ -20,6 +20,7 @@ class Renderer;
 class Expert;
 class GaussianSampler;
 class Policy;
+class Filter;
 
 typedef std::shared_ptr<Cost> cost_ptr;
 typedef std::shared_ptr<Dynamics> dynamics_ptr;
@@ -29,6 +30,7 @@ typedef std::shared_ptr<Policy> policy_ptr;
 typedef Config config_t;
 typedef std::shared_ptr<Renderer> renderer_ptr;
 typedef std::shared_ptr<Expert> expert_ptr;
+typedef std::shared_ptr<Filter> filter_ptr;
 
 typedef Eigen::VectorXd input_t;
 typedef std::vector<input_t> input_array_t;

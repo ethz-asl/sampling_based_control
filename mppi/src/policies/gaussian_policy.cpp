@@ -13,7 +13,6 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   dist_ = std::make_shared<multivariate_normal>(C);
   dt_ = config.step_size;
   ns_ = config.rollouts;
-
   nt_ = static_cast<int>(std::ceil(config.horizon / dt_));
   samples_.resize(ns_, Eigen::MatrixXd::Zero(nt_, nu));
 
@@ -55,6 +54,10 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
     min_limits_.row(i) = config.u_min;
   }
   delay_steps_ = 0;
+}
+
+void GaussianPolicy::set_nominal(const Eigen::MatrixXd& nominal) {
+  nominal_ = nominal;
 }
 
 void GaussianPolicy::update_delay(const int delay_steps) {
@@ -133,9 +136,9 @@ void GaussianPolicy::update(const std::vector<double>& weights,
   }
 
   if (adam_) {
-    momentum_ = beta_1_ * momentum_ + (1 - beta_1_) * gradient_;
+    momentum_ = beta_1_ * momentum_ + (1.0 - beta_1_) * gradient_;
     gradient2_ = gradient_.cwiseProduct(gradient_);
-    momentum2_ = beta_2_ * momentum2_ + (1 - beta_2_) * gradient2_;
+    momentum2_ = beta_2_ * momentum2_ + (1.0 - beta_2_) * gradient2_;
     nominal_ +=
         0.01 *
         momentum_.cwiseProduct(

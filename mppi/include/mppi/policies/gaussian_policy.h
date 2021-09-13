@@ -33,6 +33,8 @@ public:
 
   void bound() override;
 
+  void set_nominal(const Eigen::MatrixXd& nominal) override;
+
  private:
   Config config_;
   double dt_;

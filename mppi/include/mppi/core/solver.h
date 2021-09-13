@@ -22,6 +22,7 @@
 #include "mppi/core/cost.h"
 #include "mppi/core/data.h"
 #include "mppi/core/dynamics.h"
+#include "mppi/core/filter.h"
 #include "mppi/core/policy.h"
 #include "mppi/core/rollout.h"
 
@@ -70,6 +71,8 @@ class Solver {
   void time_it();
 
  public:
+  void set_filter(filter_ptr& filter) { filter_ = filter; }
+
   /**
    * @brief Filter the input according to chosen filter
    */
@@ -257,7 +260,6 @@ class Solver {
 
   cost_ptr cost_;
   config_t config_;
-  SavGolFilter filter_;
   sampler_ptr sampler_;
 
   dynamics_ptr dynamics_;
@@ -334,6 +336,11 @@ class Solver {
   int delay_steps_;
   int new_delay_steps_;
   const double delay_filter_alpha_ = 0.9;
+
+  // filter input
+  Eigen::MatrixXd nominal_;  // the nominal u-traj after filtering to reset the
+                             // policy warm start
+  filter_ptr filter_;
 };
 
 }  // namespace mppi

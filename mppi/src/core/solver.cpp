@@ -54,12 +54,14 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
 }
 
 void Solver::init_data() {
-  steps_ = std::floor(config_.horizon / config_.step_size);
+  // TODO(giuseppe) this should be automatically computed when config is parsed
+  steps_ = static_cast<int>(std::ceil(config_.horizon / config_.step_size));
   nx_ = dynamics_->get_state_dimension();
   nu_ = dynamics_->get_input_dimension();
 
   opt_roll_ = Rollout(steps_, nu_, nx_);
   opt_roll_cache_ = Rollout(steps_, nu_, nx_);
+  nominal_.setZero(steps_, nu_);
 
   weights_.resize(config_.rollouts, 1.0 / config_.rollouts);
   rollouts_.resize(config_.rollouts, Rollout(steps_, nu_, nx_));
@@ -148,16 +150,8 @@ void Solver::update_policy() {
       update_reference();
       sample_trajectories();
       optimize();
-      // filter_input();
+      filter_input();
 
-      // TODO move this away. This goes hear since there might be filtering
-      // happening before optimal rollout
-      dynamics_->reset(x0_internal_, t0_internal_);
-      opt_roll_.xx[0] = x0_internal_;
-      for (size_t t = 1; t < steps_; t++) {
-        opt_roll_.xx[t] =
-            dynamics_->step(opt_roll_.uu[t - 1], config_.step_size);
-      }
       stage_cost_ =
           cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
     }
@@ -430,7 +424,6 @@ void Solver::compute_weights() {
 
 void Solver::optimize() {
   compute_weights();
-  // double alpha_adaptive = (max_cost_ - min_cost_) / max_cost_;
   policy_->update(weights_, config_.alpha);
 
   // rollouts averaging
@@ -443,7 +436,6 @@ void Solver::optimize() {
 
   for (int t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
-//    opt_roll_.uu[t] += config_.alpha * momentum_[t];
     opt_roll_.uu[t] = policy_->nominal(t0_internal_ + t * config_.step_size);
   }
 
@@ -467,16 +459,25 @@ void Solver::optimize() {
 }
 
 void Solver::filter_input() {
-  if (config_.filter_type) {
-    filter_.reset(t0_internal_);
+  if (filter_) filter_->reset(x0_internal_, t0_internal_);
 
-    for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
-      filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
-    }
+  dynamics_->reset(x0_internal_, t0_internal_);
+  opt_roll_.xx[0] = x0_internal_;
 
-    for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
-      filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
+  for (size_t t = 0; t < steps_ - 1; t++) {
+    if (filter_) {
+      filter_->apply(opt_roll_.xx[t], opt_roll_.uu[t], opt_roll_.tt[t]);
+      nominal_.row(t) = opt_roll_.uu[t].transpose();
     }
+    opt_roll_.xx[t + 1] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+  }
+
+  // filter the last input in the sequence (if filter is available)
+  if (filter_) {
+    filter_->apply(opt_roll_.xx.back(), opt_roll_.uu.back(),
+                   opt_roll_.tt.back());
+    nominal_.bottomRows(1) = opt_roll_.uu.back().transpose();
+    policy_->set_nominal(nominal_);
   }
 }
 

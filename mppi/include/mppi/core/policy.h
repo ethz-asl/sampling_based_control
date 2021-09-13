@@ -26,6 +26,8 @@ class Policy {
 
     virtual void update_delay(const int delay_steps){};
 
+    virtual void set_nominal(const Eigen::MatrixXd& nominal){};
+
    protected:
     int nu_;
   };
