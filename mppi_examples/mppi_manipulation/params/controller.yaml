@@ -7,6 +7,8 @@ ros_publish_rate: 10.0
 gaussian_policy: true
 sequential: false
 
+default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
+object_tolerance: 0.09 # ~5 deg
 solver:
   rollouts: 20
   lambda: 0.0001 #0.001

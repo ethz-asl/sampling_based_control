@@ -8,7 +8,6 @@
 using namespace manipulation;
 
 void EnergyTank::step(double e, double dt) {
-  tank_energy_ += dt * e;
   tank_energy_ = std::max(
       0.0,
       tank_energy_ + dt * e);  // should not kick in if const always satisfied

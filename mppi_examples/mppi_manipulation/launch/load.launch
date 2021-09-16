@@ -30,7 +30,7 @@
       collision_format:='obj'
       add_finger:=true
       custom_fingers:=true
-      no_position_limits:=true
+      no_position_limits:=false
       friction:=0.0
       damping:=10.0
       fixed_base:=false"/>
@@ -53,12 +53,14 @@
     <param name="object_description_raisim"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
            shelf_x:=0.943
+           door_x:=1.0
            height:=$(arg object_height)"/>
 
     <!-- This object description is used in simulation and can differ from the model used in the controller -->
     <param name="object_description_raisim_simulation"
            command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
            shelf_x:=0.943
+           door_x:=1.0
            height:=$(arg object_height)
            articulation_mismatch_offset:=0.0
            prefix:='sim_'"/>

@@ -7,6 +7,7 @@ Panels:
         - /TF1/Frames1
         - /World1
         - /World1/Object Model1/Links1
+        - /World1/Panda1
         - /Observer1/Vicon Odometry1/Shape1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 719
@@ -59,17 +60,15 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        axis_link:
-          Value: true
         axle_link:
           Value: false
         base_link:
           Value: false
         chassis_link:
           Value: false
-        door:
+        door_frame:
           Value: true
-        door_hinge:
+        door_link:
           Value: true
         franka_mount_link:
           Value: false
@@ -79,18 +78,10 @@ Visualization Manager:
           Value: false
         handle_link:
           Value: true
-        handle_support_left:
-          Value: true
-        handle_support_right:
-          Value: true
         imu_link:
           Value: false
         left_side_cover_link:
           Value: false
-        measured_joint_link:
-          Value: true
-        measured_joint_link_test:
-          Value: true
         mid_mount:
           Value: false
         obstacle:
@@ -135,25 +126,11 @@ Visualization Manager:
           Value: false
         right_side_cover_link:
           Value: false
-        shelf:
+        sim_door_frame:
           Value: true
-        sim_axis_link:
-          Value: true
-        sim_door:
-          Value: true
-        sim_door_hinge:
+        sim_door_link:
           Value: true
         sim_handle_link:
-          Value: true
-        sim_handle_support_left:
-          Value: true
-        sim_handle_support_right:
-          Value: true
-        sim_measured_joint_link:
-          Value: true
-        sim_measured_joint_link_test:
-          Value: true
-        sim_shelf:
           Value: true
         top_link:
           Value: false
@@ -171,6 +148,10 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          door_frame:
+            door_link:
+              handle_link:
+                {}
           obstacle:
             {}
           omni_base_root_link:
@@ -219,30 +200,10 @@ Visualization Manager:
                         {}
                       ridgeback_sensor_mount_link:
                         {}
-          shelf:
-            door_hinge:
-              axis_link:
-                measured_joint_link:
-                  door:
-                    handle_link:
-                      handle_support_left:
-                        {}
-                      handle_support_right:
-                        {}
-                      measured_joint_link_test:
-                        {}
-          sim_shelf:
-            sim_door_hinge:
-              sim_axis_link:
-                sim_measured_joint_link:
-                  sim_door:
-                    sim_handle_link:
-                      sim_handle_support_left:
-                        {}
-                      sim_handle_support_right:
-                        {}
-                      sim_measured_joint_link_test:
-                        {}
+          sim_door_frame:
+            sim_door_link:
+              sim_handle_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -299,43 +260,17 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            sim_axis_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            sim_door:
+            sim_door_frame:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            sim_door_hinge:
+            sim_door_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             sim_handle_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            sim_handle_support_left:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            sim_handle_support_right:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            sim_measured_joint_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            sim_measured_joint_link_test:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            sim_shelf:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -360,43 +295,17 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            axis_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            door:
+            door_frame:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            door_hinge:
+            door_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             handle_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            handle_support_left:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            handle_support_right:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            measured_joint_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            measured_joint_link_test:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            shelf:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -411,7 +320,7 @@ Visualization Manager:
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Alpha: 0.20000000298023224
+        - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -599,7 +508,7 @@ Visualization Manager:
           Marker Topic: /contact_forces
           Name: Contact Forces
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Alpha: 0.20000000298023224
@@ -811,7 +720,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.5290470123291016
+      Distance: 3.9687390327453613
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -827,9 +736,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5247979164123535
+      Pitch: 0.2597979009151459
       Target Frame: <Fixed Frame>
-      Yaw: 4.210526466369629
+      Yaw: 2.1955254077911377
     Saved: ~
 Window Geometry:
   Displays:

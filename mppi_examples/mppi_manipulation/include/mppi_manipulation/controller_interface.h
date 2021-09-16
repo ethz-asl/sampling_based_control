@@ -29,7 +29,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   bool init_ros() override;
   void publish_ros() override;
-  void update_reference(const double t);
+  void update_reference(const mppi::observation_t& x, const double t);
 
   mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
@@ -62,6 +62,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi::input_array_t u_opt_;
   mppi::observation_array_t x_opt_;
 
+  double object_tolerance_;
+  Eigen::VectorXd default_pose_;
   ReferenceScheduler reference_scheduler_;
   size_t last_ee_ref_id_;
   size_t last_ob_ref_id_;

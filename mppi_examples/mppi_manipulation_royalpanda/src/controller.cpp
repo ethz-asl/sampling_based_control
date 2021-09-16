@@ -62,6 +62,15 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  max_position_error_.setZero(10);
+  std::vector<double> max_position_error;
+  if (!node_handle.getParam("max_position_error", max_position_error) ||
+      max_position_error.size() != 10) {
+    ROS_ERROR("Failed to get max_position_error parameter");
+    return false;
+  }
+  for (int i = 0; i < 10; i++) max_position_error_[i] = max_position_error[i];
+
   if (!gains_.init_from_ros(node_handle, "controller_")) {
     ROS_ERROR("Failed to parse gains.");
     return false;
@@ -231,6 +240,7 @@ void ManipulationController::starting(const ros::Time& time) {
   // we do not actively control the gripper
   x_.setZero(PandaDim::STATE_DIMENSION);
   x_nom_.setZero(PandaDim::STATE_DIMENSION);
+  u_.setZero(PandaDim::INPUT_DIMENSION);
   u_opt_.setZero(10);
   u_filter_.setZero(10);
   velocity_measured_.setZero(10);
@@ -267,7 +277,7 @@ void ManipulationController::starting(const ros::Time& time) {
   signal_logger::logger->stopLogger();
   signal_logger::add(x_, "state");
   signal_logger::add(x_nom_, "nominal_state");
-  signal_logger::add(u_filter_, "velocity_safety_filter");
+  signal_logger::add(u_, "velocity_mppi");
   signal_logger::add(u_opt_, "velocity_command");
   signal_logger::add(arm_torque_command_, "torque_command");
   signal_logger::add(velocity_measured_, "velocity_measured");
@@ -323,10 +333,25 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
   power_channels_ = u_opt_.cwiseProduct(external_torque_);
   power_from_interaction_ = power_channels_.sum();
-  power_from_error_ = -(u_opt_ - velocity_filtered_).transpose() *
-                      (position_desired_ - position_initial_);
+
+  // Only the arm has integral control
+  power_from_error_ = 0.0;
+  //(u_opt_ - velocity_filtered_).tail<7>().transpose() *
+  //gains_.arm_gains.Ki.asDiagonal() *
+  //                    (position_desired_ - position_initial_).tail<7>();
   total_power_exchange_ = power_from_error_ + power_from_interaction_;
   energy_tank_.step(total_power_exchange_, period.toSec());
+}
+
+void ManipulationController::update_position_reference(
+    const ros::Duration& period) {
+  position_desired_.tail<7>() += u_opt_.tail<7>() * period.toSec();
+  position_desired_.head<3>() +=
+      R_world_base * u_opt_.head<3>() * period.toSec();
+  position_desired_ =
+      position_measured_ + (position_desired_ - position_measured_)
+                               .cwiseMax(-max_position_error_)
+                               .cwiseMin(max_position_error_);
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
@@ -354,8 +379,7 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   // clang-format off
   std::array<double, 7> tau_d_calculated{};
   for (int i = 0; i < 7; ++i) {
-    tau_d_calculated[i] =
-        std::min(gains_.arm_gains.Imax[i], std::max(-gains_.arm_gains.Imax[i], gains_.arm_gains.Ki[i] * (position_desired_[3+i] - robot_state_.q[i])))
+    tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[3+i] - robot_state_.q[i])
         - gains_.arm_gains.Kd[i] * velocity_filtered_[3+i];
   }
 
@@ -390,8 +414,9 @@ void ManipulationController::update(const ros::Time& time,
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     man_interface_->set_observation(x_, time.toSec());
+    man_interface_->update_reference(x_, time.toSec());
+    getRotationMatrix(R_world_base, x_(2));
   }
-  man_interface_->update_reference(time.toSec());
 
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
@@ -422,12 +447,8 @@ void ManipulationController::update(const ros::Time& time,
         (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
   }
 
-  getRotationMatrix(R_world_base, x_(2));
-  position_desired_.tail<7>() += u_opt_.tail<7>() * period.toSec();
-  position_desired_.head<3>() +=
-      R_world_base * u_opt_.head<3>() * period.toSec();
-
   enforce_constraints(period);
+  update_position_reference(period);
   send_command_arm(period);
   send_command_base(period);
 
@@ -467,8 +488,8 @@ void ManipulationController::saturateTorqueRate(
 void ManipulationController::getRotationMatrix(Eigen::Matrix3d& R,
                                                const double theta) {
   // clang-format off
-  R << std::cos(theta), std::sin(theta), 0.0,
-      -std::sin(theta), std::cos(theta), 0.0,
+  R << std::cos(theta), -std::sin(theta), 0.0,
+       std::sin(theta), std::cos(theta), 0.0,
        0.0, 0.0, 1.0;
   // clang-format on
 }

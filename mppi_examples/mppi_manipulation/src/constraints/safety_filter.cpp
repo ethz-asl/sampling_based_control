@@ -3,6 +3,7 @@
 //
 
 #include "mppi_manipulation/constraints/safety_filter.h"
+#include "mppi_manipulation/constraints/base_collision_limit.h"
 #include "mppi_manipulation/constraints/passivity.h"
 #include "safety_filter/constraints/cartesian_limit.hpp"
 #include "safety_filter/constraints/constraints_manager.hpp"
@@ -64,7 +65,8 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
     jl_setting.q_max = params_.q_max;
     std::shared_ptr<ConstraintBase> jl_const =
         std::make_shared<PandaMobileJointLimitsConstraints>(10, 10, jl_setting);
-    cm.add_constraint("joint_limits", jl_const);
+    cm.add_constraint("joint_limits", jl_const, params_.joint_limits_soft,
+                      params_.joint_limits_slack_multiplier);
     constraints_["joint_limits"] = jl_const;
   }
 
@@ -89,14 +91,34 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
     cart_const_settings.limits.push_back(end_effector_reach);
     std::shared_ptr<ConstraintBase> cart_const =
         std::make_shared<CartesianLimitConstraints>(10, cart_const_settings);
-    cm.add_constraint("cartesian_limits", cart_const);
+    cm.add_constraint("cartesian_limits", cart_const,
+                      params_.cartesian_limits_soft,
+                      params_.cartesian_limits_slack_multiplier);
     constraints_["cartesian_limits"] = cart_const;
+  }
+
+  std::string object_frame_id;
+  std::string object_urdf;
+  double min_distance;
+
+  if (params_.object_avoidance) {
+    BaseCollsionSettings base_const_settings;
+    base_const_settings.object_frame_id = params_.object_frame_id;
+    base_const_settings.object_urdf = params_.object_urdf;
+    base_const_settings.min_distance = params_.min_object_distance;
+    std::shared_ptr<ConstraintBase> base_const =
+        std::make_shared<BaseCollisionLimit>(10, base_const_settings);
+    cm.add_constraint("object_avoidance", base_const,
+                      params_.object_avoidance_soft,
+                      params_.object_avoidance_slack_multiplier);
   }
 
   if (params_.passivity_constraint) {
     std::shared_ptr<ConstraintBase> pass_const =
         std::make_shared<PassivityConstraint>(10, params_.min_tank_energy);
-    cm.add_constraint("passivity_constraint", pass_const);
+    cm.add_constraint("passivity_constraint", pass_const,
+                      params_.passivity_constraint_soft,
+                      params_.passivity_constraint_slack_multiplier);
     constraints_["passivity_constraint"] = pass_const;
   }
 
@@ -118,6 +140,7 @@ void PandaMobileSafetyFilter::update_violation(const Eigen::VectorXd& x) {
 bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
   if (params_.verbose) filter_->print_problem();
   if (!filter_->solve(u_opt)) {
+    std::cout << "Failed to solve the problem" << std::endl;
     // filter_->print_problem();
     return false;
   }

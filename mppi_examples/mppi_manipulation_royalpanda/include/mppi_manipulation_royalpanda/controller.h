@@ -70,6 +70,9 @@ class ManipulationController
   // Apply the safety filter to the optimized velocity
   void enforce_constraints(const ros::Duration& period);
 
+  // Update the desired position reference
+  void update_position_reference(const ros::Duration& period);
+
   // Convert velocity command to effort command using a PI controller
   void send_command_arm(const ros::Duration& period);
 
@@ -127,6 +130,7 @@ class ManipulationController
   Eigen::VectorXd velocity_measured_;
   Eigen::VectorXd velocity_filtered_;
   Eigen::Matrix3d R_world_base;
+  Eigen::VectorXd max_position_error_;
   franka::RobotState robot_state_;
 
   manipulation_msgs::State x_ros_;

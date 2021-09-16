@@ -5,6 +5,8 @@ joint_publisher:
 manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
   references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
+  default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
+  object_tolerance: 0.09 # ~5 deg
 
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
@@ -15,6 +17,7 @@ manipulation_controller:
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
 
   sequential: false
+  max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
@@ -40,7 +43,7 @@ manipulation_controller:
     obstacle_weight_slope: 0
     obstacle_radius: 0.8
 
-    contact_weight: 10.0
+    contact_weight: 100.0
 
     object_weight: 100
     object_tolerance: 0.01
@@ -77,7 +80,7 @@ manipulation_controller:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
       ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
-      i_max: [ 30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
       kd: [ 50.0, 50.0 ]
@@ -125,30 +128,50 @@ manipulation_controller:
   apply_filter: true
   apply_filter_to_rollouts: true
   safety_filter:
-    input_limits: true
-    u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
-    u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    input_limits: 
+      active: true
+      soft: false
+      slack_multiplier: 0.0
+      u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
+      u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
-    joint_limits: true
-    q_max: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-    q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
+    joint_limits: 
+      active: true
+      soft: true
+      slack_multiplier: 1000.0
+      q_max: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+      q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
-    cartesian_limits: true
-    max_reach: 0.65
-    min_distance: 0.15
+    cartesian_limits: 
+      active: true
+      soft: true
+      slack_multiplier: 1000.0
+      max_reach: 0.65
+      min_distance: 0.15
 
+    object_avoidance:
+      active: false
+      soft: false
+      slack_multiplier: 0.0
+      min_distance: 0.2
+      object_frame_id: ""
+  
     passivity_constraint:
       active: true
+      soft: true
+      slack_multiplier: 1000.0
       initial_tank_energy: 10.0
       min_tank_energy: 2.0
 
-    first_derivative_limits: false
-    ud_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
-    ud_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
+    first_derivative_limits: 
+      active: true
+      ud_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
+      ud_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
 
-    second_derivative_limits: false
-    udd_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
-    udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
+    second_derivative_limits: 
+      active: true
+      udd_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
+      udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
     # udd_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
     # udd_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 

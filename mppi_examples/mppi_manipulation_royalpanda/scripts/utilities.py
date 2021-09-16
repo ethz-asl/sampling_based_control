@@ -105,7 +105,12 @@ def matrix_to_se(t, t_start, t_end, m):
     return np.square(m[i1:i2, :]).sum()
 
 
-def average_col_norm(t, t_start, t_end, m):
+def average_col_norm(t, t_start, t_end, m, threshold=0):
+    norms = col_norm(t, t_start, t_end, m)
+    return np.mean(norms[norms > threshold])
+
+
+def col_norm(t, t_start, t_end, m):
     # Assume each row in the matrix as a 1-1 correspondence to time stamps
     # Use time start and time end to crop them matrix and compute MSE only on this portion
     i1 = sum(t < t_start)
@@ -115,7 +120,7 @@ def average_col_norm(t, t_start, t_end, m):
         raise NameError(
             "The index of the final time is larger than rows in the matrix")
 
-    return np.mean(np.sqrt(np.diagonal(np.dot(m[i1:i2, :], m[i1:i2, :].T))))
+    return np.sqrt(np.diagonal(np.dot(m[i1:i2, :], m[i1:i2, :].T)))
 
 
 def bar_plot(index, labels, *args):

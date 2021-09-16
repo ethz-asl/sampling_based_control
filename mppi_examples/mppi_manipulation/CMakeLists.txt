@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME}
         src/params/dynamics_params.cpp
         src/params/cost_params.cpp
         src/constraints/passivity.cpp
+        src/constraints/base_collision_limit.cpp
         src/constraints/safety_filter.cpp
         src/dynamics.cpp
         src/cost.cpp

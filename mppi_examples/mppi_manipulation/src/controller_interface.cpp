@@ -42,6 +42,23 @@ bool PandaControllerInterface::init_ros() {
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaControllerInterface::ee_pose_desired_callback, this);
 
+  std::vector<double> default_pose;
+  if (!nh_.param<std::vector<double>>("default_pose", default_pose, {}) ||
+      default_pose.size() != 7) {
+    ROS_ERROR("Failed to parse the default pose or wrong params.");
+    return false;
+  }
+  default_pose_.setZero(7);
+  for (int i = 0; i < 7; i++) {
+    default_pose_[i] = default_pose[i];
+  }
+
+  if (!nh_.param<double>("object_tolerance", object_tolerance_, 0.0) ||
+      object_tolerance_ < 0) {
+    ROS_ERROR("Failed to parse the object_tolerance or wrong params.");
+    return false;
+  }
+
   // initialize obstacle
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener(tfBuffer);
@@ -147,6 +164,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
 
   auto cost = std::make_shared<PandaCost>(cost_params);
   local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);
+
   // -------------------------------
   // policy
   // -------------------------------
@@ -239,9 +257,11 @@ void PandaControllerInterface::mode_callback(
   ROS_INFO_STREAM("Switching to mode: " << msg->data);
 }
 
-void PandaControllerInterface::update_reference(const double t) {
+void PandaControllerInterface::update_reference(const mppi::observation_t& x,
+                                                const double t) {
   if (reference_scheduler_.has_reference(t)) {
     reference_scheduler_.set_reference(t, ref_);
+
     std::unique_lock<std::mutex> lock(reference_mutex_);
     get_controller()->set_reference_trajectory(ref_);
     local_cost_->set_reference_trajectory(ref_);

@@ -97,20 +97,36 @@ cost:
 
 
 safety_filter:
-  input_limits: true
-  u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
-  u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  input_limits: 
+    active: true
+    u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
+    u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
-  joint_limits: true
-  q_min: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
-  q_max: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+  joint_limits: 
+    active: true
+    soft: false
+    slack_multiplier: 0.0
+    q_min: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+    q_max: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
 
-  cartesian_limits: true
-  max_reach: 0.65
-  min_distance: 0.15
+  cartesian_limits: 
+    active: true
+    soft: false
+    slack_multiplier: 0.0
+    max_reach: 0.65
+    min_distance: 0.15
 
+  object_avoidance:
+      active: false
+      soft: false
+      slack_multiplier: 0.0
+      min_distance: 0.2
+      object_frame_id: ""
+    
   passivity_constraint:
     active: true
+    soft: false
+    slack_multiplier: 0.0
     initial_tank_energy: 10.0
     min_tank_energy: 0.01
 

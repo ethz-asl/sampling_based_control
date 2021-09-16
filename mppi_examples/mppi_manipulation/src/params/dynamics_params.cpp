@@ -94,6 +94,9 @@ std::ostream& operator<<(std::ostream& os,
   os << "dt=" << params.dt << std::endl;
   os << "has filter = " << params.has_filter << std::endl;
   os << "apply filter = " << params.apply_filter << std::endl;
+  os << "filter params: " << std::endl;
+  os << params.filter_params << std::endl;
+  os << "dynamics gains: " << std::endl;
   os << params.gains;
   os << "object handle link = " << params.object_handle_link << std::endl;
   os << "object handle joint = " << params.object_handle_joint << std::endl;

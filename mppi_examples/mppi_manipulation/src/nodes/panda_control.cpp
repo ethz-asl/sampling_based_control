@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
-    controller.update_reference(sim_time);
+    controller.update_reference(x, sim_time);
     if (sequential) {
       controller.set_observation(x, sim_time);
       controller.update_policy();
