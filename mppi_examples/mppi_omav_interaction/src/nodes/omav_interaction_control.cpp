@@ -56,7 +56,7 @@ void OmavTrajectoryGenerator::initializePublishers() {
 void OmavTrajectoryGenerator::odometryCallback(
     const nav_msgs::OdometryConstPtr &odometry_msg) {
   mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
-  ROS_INFO_ONCE("MPPI got odometry message");
+  ROS_INFO_ONCE("MPPI got first OMAV odometry message");
   odometry_bool_ = false;
 }
 
@@ -73,7 +73,6 @@ void OmavTrajectoryGenerator::TargetCallback(
   first_trajectory_sent_ = true;
   set_target(position_target_msg.points[0]);
   current_trajectory_ = position_target_msg;
-  shift_lock_ = false;
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
@@ -198,7 +197,7 @@ int main(int argc, char **argv) {
   // ros interface
   auto controller = OMAVControllerInterface(nh, nh_public);
   ROS_INFO_STREAM("Controller Created");
-
+  // Load the descriptions
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
   auto robot_description_pinocchio =
@@ -255,13 +254,17 @@ int main(int argc, char **argv) {
   double elapsed;
   std::chrono::time_point<std::chrono::steady_clock> start, end;
   ros::Rate r(250);
+  // Last state utilized by impedance controller form the 0.1s trajectory
+  int final_state_index = std::ceil(0.1 / 0.015);
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
+    // Check if cost weights were changed
     if (omav_trajectory_node->rqt_cost_bool_) {
       omav_trajectory_node->rqt_cost_bool_ =
           controller.update_cost_param(omav_trajectory_node->rqt_cost_);
       ROS_INFO_STREAM("New Cost Param Set");
     }
+    // Check if reset of the object was demanded
     if (omav_trajectory_node->reset_object_) {
       x(13) = 0;
       simulation->reset(x);
@@ -274,15 +277,12 @@ int main(int argc, char **argv) {
       controller.update_policy();
       controller.get_input_state(x, x_nom, u, sim_time);
       controller.publish_ros_default();
-      if (omav_trajectory_node->target_state_time_ > 0.1) {
-        controller.publish_ros();
-      }
       // Additional publisher for additional visualization
       controller.publish_optimal_rollout();
       controller.publish_all_trajectories();
-
     } else {
       if (running_rotors) {
+        // Calculate current time
         omav_trajectory_node->get_odometry(x);
         sim_time += 1.0 / 250.0;
         omav_trajectory_node->target_state_time_ += 1.0 / 250.0;
@@ -306,20 +306,21 @@ int main(int argc, char **argv) {
       // on the time the last trajectory that was sent
       omav_trajectory_node->shift_index_ =
           std::ceil(omav_trajectory_node->target_state_time_ / 0.015);
+      index_temp = omav_trajectory_node->shift_index_;
       if (omav_trajectory_node->target_state_time_ < 0.05) {
         omav_trajectory_node->set_target(
             omav_trajectory_node->current_trajectory_.points[index_temp]);
       } else {
         omav_interaction::conversions::InterpolateTrajectoryPoints(
-            omav_trajectory_node->current_trajectory_.points[6],
-            omav_trajectory_node->current_trajectory_.points[7],
+            omav_trajectory_node->current_trajectory_
+                .points[final_state_index - 1],
+            omav_trajectory_node->current_trajectory_.points[final_state_index],
             &omav_trajectory_node->target_state_);
       }
       }
-
     // Set new observation
     controller.set_observation(x, sim_time);
-    // controller.get_input_state(x, x_nom, u, sim_time);
+    controller.get_input_state(x, x_nom, u, sim_time);
     // Timing Tasks
     if (running_rotors) {
       r.sleep();

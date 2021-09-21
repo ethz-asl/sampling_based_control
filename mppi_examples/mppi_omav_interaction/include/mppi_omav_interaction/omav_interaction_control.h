@@ -49,8 +49,6 @@ public:
 
   bool first_trajectory_sent_ = false;
 
-  bool shift_lock_ = false;
-
   double target_state_time_ = 0.0;
 
   int shift_index_ = 0;

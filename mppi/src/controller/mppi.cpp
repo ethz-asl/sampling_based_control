@@ -247,9 +247,6 @@ void PathIntegral::copy_observation() {
       t_timing_ = 0.0;
     }
   }
-  std::cout << "------------------------------" << std::endl;
-  std::cout << "shift_input_: " << shift_input_ << std::endl;
-  std::cout << "t_timing_: " << t_timing_ << std::endl;
   t0_internal_ = reset_time_;
 }
 
@@ -288,17 +285,6 @@ void PathIntegral::prepare_rollouts() {
     t0_shift_internal_ = opt_roll_cache_.tt[offset];
 
     shift_int_ += offset;
-    if (true) {
-      std::cout << "---------------------------------" << std::endl;
-      std::cout << "Opt Roll Cache Head: ";
-      for (std::vector<double>::const_iterator i = opt_roll_cache_.tt.begin();
-           i != opt_roll_cache_.tt.end(); ++i)
-        std::cout << *i << ' ';
-      std::cout << std::endl;
-      std::cout << "t0_internal: " << t0_internal_ << std::endl;
-      std::cout << "t0_shift_internal: " << t0_shift_internal_ << std::endl;
-      std::cout << "Offset: " << offset << std::endl;
-    }
   }
 
   // In order to ensure continuity despite varying mppi duration we shift
@@ -313,10 +299,6 @@ void PathIntegral::prepare_rollouts() {
       offset = 0;
     }
   }
-
-  std::cout << "---------------------------------" << std::endl;
-  std::cout << "Offset: " << offset << std::endl;
-
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
   // shift and trim so they restart from current time
@@ -364,7 +346,6 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                                              const size_t start_idx,
                                              const size_t end_idx) {
   observation_t x;
-  // std::cout << "First iteration: " << first_mppi_iteration_ << std::endl;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_);
     x = x0_internal_;

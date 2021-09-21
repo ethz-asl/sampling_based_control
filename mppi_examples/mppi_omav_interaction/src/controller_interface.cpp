@@ -18,16 +18,10 @@ bool OMAVControllerInterface::init_ros() {
   // Initialize publisher
   optimal_rollout_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
-  optimal_rollout_des_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout_desired", 1);
   optimal_linear_input_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_linear", 1);
   optimal_angular_input_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_angular", 1);
-  optimal_rollout_ang_vel_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_ang_vel", 1);
-  optimal_rollout_lin_vel_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_lin_vel", 1);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
@@ -39,7 +33,12 @@ bool OMAVControllerInterface::init_ros() {
   if (detailed_publishing_) {
     trajectory_publisher_ =
         nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1);
-
+    optimal_rollout_des_publisher_ =
+        nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout_desired", 1);
+    optimal_rollout_ang_vel_ =
+        nh_.advertise<geometry_msgs::PoseArray>("/optimal_ang_vel", 1);
+    optimal_rollout_lin_vel_ =
+        nh_.advertise<geometry_msgs::PoseArray>("/optimal_lin_vel", 1);
     cost_publisher_ = nh_.advertise<mppi_ros::Array>("/cost_parts", 10);
     normalized_force_publisher_ =
         nh_.advertise<visualization_msgs::MarkerArray>("/normalized_forces",
@@ -250,6 +249,8 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   get_controller()->get_optimal_rollout(optimal_rollout_states_,
                                         optimal_rollout_inputs_);
   x0_ = get_controller()->get_current_observation();
+  // Also linear and angular desired velocity is published as pose_array,
+  // because it was easy to set up.
   geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des,
       optimal_inputs_lin_array, optimal_inputs_ang_array,
       optimal_rollout_lin_vel, optimal_rollout_ang_vel;
@@ -340,24 +341,30 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   }
   if (detailed_publishing_) {
     mppi_ros::Array cost_array_message_;
+    // All cost parts published
     cost_array_message_.array.push_back(velocity_cost_);
     cost_array_message_.array.push_back(power_cost_);
     cost_array_message_.array.push_back(object_cost_);
     cost_array_message_.array.push_back(torque_cost_);
     cost_array_message_.array.push_back(handle_hook_cost_);
+    // Contact force
     cost_array_message_.array.push_back(optimal_rollout_states_[0](15));
     cost_array_message_.array.push_back(optimal_rollout_states_[0](16));
     cost_array_message_.array.push_back(optimal_rollout_states_[0](17));
+    // Norm of contact force
     cost_array_message_.array.push_back(
         optimal_rollout_states_[0].segment<3>(15).norm());
+    // Calculated torque
     cost_array_message_.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
     cost_array_message_.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
     cost_array_message_.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
+    // Norm of calculated torque
     cost_array_message_.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
+    // Angle between force vector and com to hook vector
     cost_array_message_.array.push_back(
         acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
             com_hook_.normalized())) *
