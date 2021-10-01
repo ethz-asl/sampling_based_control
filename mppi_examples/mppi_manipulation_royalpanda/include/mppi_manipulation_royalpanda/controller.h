@@ -10,8 +10,9 @@
 
 // clang-format off
 #include <mppi_manipulation/controller_interface.h>
-// clang-format on
 #include <mppi_manipulation/constraints/safety_filter.h>
+// clang-format on
+
 #include <mppi_manipulation/energy_tank.h>
 #include <mppi_manipulation/params/filter_params.h>
 #include <mppi_manipulation/params/gains.h>
@@ -34,6 +35,10 @@
 
 #include <geometry_msgs/TwistStamped.h>
 #include <manipulation_msgs/State.h>
+#include <mppi_ros/Rollout.h>
+#include <mppi_ros/conversions.h>
+#include <rosbag/bag.h>  
+#include <std_msgs/Float64MultiArray.h>
 
 namespace manipulation_royalpanda {
 
@@ -155,5 +160,19 @@ class ManipulationController
   double power_from_error_;
   double power_from_interaction_;
   double total_power_exchange_;
+
+  // optimal rollout info
+  bool publish_rollout_;
+  mppi::Rollout optimal_rollout_;
+  mppi_ros::Rollout optimal_rollout_ros_;
+  std_msgs::Float64MultiArray u_curr_ros_;
+  rosbag::Bag bag_;
+  std::string bag_path_;
+  bool record_bag_;
+
+  // logging
+  int log_counter_ = 0;
+  int log_every_steps_;
+  double opt_time_;
 };
 }  // namespace manipulation_royalpanda

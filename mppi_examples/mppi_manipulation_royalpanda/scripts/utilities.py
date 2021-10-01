@@ -102,7 +102,7 @@ def matrix_to_se(t, t_start, t_end, m):
     if i2 > m.shape[0]:
         raise NameError(
             "The index of the final time is larger than rows in the matrix")
-    return np.square(m[i1:i2, :]).sum()
+    return np.square(m[i1:i2]).sum()
 
 
 def average_col_norm(t, t_start, t_end, m, threshold=0):

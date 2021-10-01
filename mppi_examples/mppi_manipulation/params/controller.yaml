@@ -10,7 +10,7 @@ sequential: false
 default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
 object_tolerance: 0.09 # ~5 deg
 solver:
-  rollouts: 20
+  rollouts: 40
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.015
@@ -21,8 +21,8 @@ solver:
   filtering: true
   substeps: 1
 
-  gradient_step_size: 1.0
-  momentum_step_size: 0.0
+  gradient_step_size: 1.0 #1.0
+  momentum_step_size: 0.0 #0.0
 
   filter_type: 1
   filter_order: 1

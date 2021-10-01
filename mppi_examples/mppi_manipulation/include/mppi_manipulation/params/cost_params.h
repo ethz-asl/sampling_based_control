@@ -33,11 +33,20 @@ struct CostParams {
   std::vector<double> upper_joint_limits;
   std::vector<double> lower_joint_limits;
 
+  // power cost
+  double max_power = 0.0;
+  double Q_power = 0.0;
+
   // frames
   std::string handle_frame = "handle_link";
   std::string tracked_frame = "panda_grasp";
   std::string arm_base_frame = "panda_link0";
-
+  
+  std::string collision_link_0;
+  std::string collision_link_1;
+  double collision_threshold;
+  double Q_collision;
+  
   bool init_from_ros(const ros::NodeHandle& nh);
 };
 

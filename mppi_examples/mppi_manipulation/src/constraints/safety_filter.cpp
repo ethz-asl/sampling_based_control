@@ -2,8 +2,8 @@
 // Created by giuseppe on 20.07.21.
 //
 
-#include "mppi_manipulation/constraints/safety_filter.h"
 #include "mppi_manipulation/constraints/base_collision_limit.h"
+#include "mppi_manipulation/constraints/safety_filter.h"
 #include "mppi_manipulation/constraints/passivity.h"
 #include "safety_filter/constraints/cartesian_limit.hpp"
 #include "safety_filter/constraints/constraints_manager.hpp"
@@ -71,10 +71,17 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
   }
 
   if (params_.cartesian_limits) {
+    // TODO(giuseppe) parse from params
     CartesianLimitSettings end_effector_self_collision;
     end_effector_self_collision.direction = CartesianLimitSettings::COLLISION;
     end_effector_self_collision.frame_a = "panda_link1";
-    end_effector_self_collision.frame_b = "panda_hand";
+    end_effector_self_collision.frame_b = "panda_link7";
+    end_effector_self_collision.distance = params_.min_dist;
+
+    CartesianLimitSettings end_effector_self_collision_2;
+    end_effector_self_collision_2.direction = CartesianLimitSettings::COLLISION;
+    end_effector_self_collision_2.frame_a = "panda_link0";
+    end_effector_self_collision_2.frame_b = "panda_link7";
     end_effector_self_collision.distance = params_.min_dist;
 
     CartesianLimitSettings end_effector_reach;
@@ -88,6 +95,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
     cart_const_settings.urdf_string = params_.urdf;
     cart_const_settings.verbosity = params_.verbose;
     cart_const_settings.limits.push_back(end_effector_self_collision);
+    cart_const_settings.limits.push_back(end_effector_self_collision_2);
     cart_const_settings.limits.push_back(end_effector_reach);
     std::shared_ptr<ConstraintBase> cart_const =
         std::make_shared<CartesianLimitConstraints>(10, cart_const_settings);
@@ -96,10 +104,6 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
                       params_.cartesian_limits_slack_multiplier);
     constraints_["cartesian_limits"] = cart_const;
   }
-
-  std::string object_frame_id;
-  std::string object_urdf;
-  double min_distance;
 
   if (params_.object_avoidance) {
     BaseCollsionSettings base_const_settings;
@@ -111,6 +115,7 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
     cm.add_constraint("object_avoidance", base_const,
                       params_.object_avoidance_soft,
                       params_.object_avoidance_slack_multiplier);
+    constraints_["object_avoidance"] = base_const;
   }
 
   if (params_.passivity_constraint) {
@@ -141,7 +146,6 @@ bool PandaMobileSafetyFilter::apply(Eigen::VectorXd& u_opt) {
   if (params_.verbose) filter_->print_problem();
   if (!filter_->solve(u_opt)) {
     std::cout << "Failed to solve the problem" << std::endl;
-    // filter_->print_problem();
     return false;
   }
   return true;

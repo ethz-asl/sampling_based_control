@@ -34,26 +34,44 @@ void to_msg(const mppi::config_t& config, Config& config_ros) {
   config_ros.tree_search = config.use_tree_search;
 }
 
-void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros) {
+void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros, const bool input_only, const size_t max_length) {
   rollout_ros.steps = rollout.steps_;
   rollout_ros.input_dim = rollout.input_dim_;
   rollout_ros.state_dim = rollout.state_dim_;
   rollout_ros.total_cost = rollout.total_cost;
 
+  rollout_ros.cost_vector.array.clear();
+  rollout_ros.time_vector.array.clear();
+  rollout_ros.input_vector.clear();
+  rollout_ros.state_vector.clear();
+  rollout_ros.noise_vector.clear();
+
   rollout_ros.cost_vector.array.assign(rollout.cc.data(),
-                                       rollout.cc.data() + rollout.cc.size());
-  rollout_ros.time_vector.array.assign(rollout.tt.begin(), rollout.tt.end());
+                                       rollout.cc.data() + std::min((size_t)rollout.cc.size(), max_length));
+  rollout_ros.time_vector.array.assign(rollout.tt.begin(), 
+                                       rollout.tt.begin() + std::min((size_t)rollout.tt.size(), max_length));
 
   mppi_ros::Array state, input, noise;
-  for (size_t i = 0; i < rollout.steps_; i++) {
-    state.array.assign(rollout.xx[i].data(),
-                       rollout.xx[i].data() + rollout.xx[i].size());
+  
+  
+  for (size_t i = 0; i < std::min(rollout.uu.size(), max_length); i++) {
     input.array.assign(rollout.uu[i].data(),
                        rollout.uu[i].data() + rollout.uu[i].size());
+    rollout_ros.input_vector.push_back(input);
+  }
+
+  if (input_only) return;
+
+  for (size_t i = 0; i < std::min(rollout.xx.size(), max_length); i++) {
+    state.array.assign(rollout.xx[i].data(),
+                       rollout.xx[i].data() + rollout.xx[i].size());
+    rollout_ros.state_vector.push_back(state);
+  }
+
+
+  for (size_t i = 0; i < std::min(rollout.nn.size(), max_length); i++) {
     noise.array.assign(rollout.nn[i].data(),
                        rollout.nn[i].data() + rollout.nn[i].size());
-    rollout_ros.state_vector.push_back(state);
-    rollout_ros.input_vector.push_back(input);
     rollout_ros.noise_vector.push_back(noise);
   }
 }

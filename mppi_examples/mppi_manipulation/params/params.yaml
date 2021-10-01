@@ -91,11 +91,18 @@ cost:
   joint_limit_cost: 1000 #1000
   joint_limit_slope: 1000000 #100
 
+  max_power: 0.0
+  power_weight: 0.0
+
   handle_frame: handle_link
   tracked_frame: panda_grasp
   arm_base_frame: panda_link0
 
-
+  collision_link_0: panda_link1
+  collision_link_1: panda_link7
+  collision_threshold: 0.35
+  collision_weight: 1000
+  
 safety_filter:
   input_limits: 
     active: true

@@ -67,6 +67,7 @@ class PandaCost : public mppi::Cost {
   int arm_base_frame_id_;
   Eigen::Matrix<double, 6, 1> error_;
   Eigen::Vector3d distance_vector_;
+  Eigen::Vector3d collision_vector_;
 
  public:
   mppi::cost_ptr create() override {

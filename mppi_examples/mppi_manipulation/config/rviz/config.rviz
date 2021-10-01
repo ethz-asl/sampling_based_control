@@ -97,7 +97,7 @@ Visualization Manager:
         panda_link0:
           Value: false
         panda_link1:
-          Value: false
+          Value: true
         panda_link2:
           Value: false
         panda_link3:
@@ -109,7 +109,7 @@ Visualization Manager:
         panda_link6:
           Value: false
         panda_link7:
-          Value: false
+          Value: true
         panda_link8:
           Value: false
         panda_rightfinger:
@@ -224,13 +224,13 @@ Visualization Manager:
       Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
-      Enabled: true
+      Enabled: false
       Name: Interactive EE Reference
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
       Update Topic: /reference_marker_server/update
-      Value: true
+      Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: true
@@ -285,7 +285,7 @@ Visualization Manager:
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Alpha: 0.30000001192092896
+        - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -339,6 +339,7 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             chassis_link:
               Alpha: 1
               Show Axes: false
@@ -681,14 +682,14 @@ Visualization Manager:
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
       Enabled: true
-      Force Arrow Scale: 2
+      Force Arrow Scale: 0.10000000149011612
       Force Color: 204; 51; 51
       Hide Small Values: true
       History Length: 1
       Name: WrenchStamped
       Queue Size: 10
       Topic: /external_force
-      Torque Arrow Scale: 2
+      Torque Arrow Scale: 0
       Torque Color: 204; 204; 51
       Unreliable: false
       Value: true
@@ -720,7 +721,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.9687390327453613
+      Distance: 5.142553329467773
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -728,17 +729,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.719605028629303
-        Y: -0.29526272416114807
-        Z: 0.8343390822410583
+        X: 0.42221570014953613
+        Y: -1.3225024938583374
+        Z: 0.43037983775138855
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2597979009151459
+      Pitch: 0.499798059463501
       Target Frame: <Fixed Frame>
-      Yaw: 2.1955254077911377
+      Yaw: 1.6605315208435059
     Saved: ~
 Window Geometry:
   Displays:

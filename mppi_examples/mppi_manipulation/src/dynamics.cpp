@@ -31,18 +31,20 @@ void PandaRaisimDynamics::initialize_world(
   dt_ = params_.dt;
   sim_.setTimeStep(params_.dt);
   sim_.setERP(0., 0.);
+
+  gravity_.e() << 0.0, 0.0, -9.81;
+  sim_.setGravity(gravity_);
+
   sim_.setMaterialPairProp("steel", "steel", 0.0001, 0.0, 0.0);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
-  panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
-  J_contact_.setZero(3, panda->getDOF());
+
   tau_ext_ = Eigen::VectorXd::Zero(panda->getDOF());
+  J_contact_.setZero(3, panda->getDOF());
 
   /// create raisim objects
   object_description_ = object_description;
   object = sim_.addArticulatedSystem(object_description_, "/");
-  object->setGeneralizedForce(Eigen::VectorXd::Zero(object->getDOF()));
-  object->setGeneralizedCoordinate(Eigen::VectorXd::Zero(1));
 
   // robot dof
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
@@ -77,6 +79,11 @@ void PandaRaisimDynamics::initialize_pd() {
 
   panda->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   panda->setPdGains(joint_p_gain, joint_d_gain);
+  panda->setGeneralizedForce(Eigen::VectorXd::Zero(panda->getDOF()));
+
+  object->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+  object->setPdGains(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
+  object->setGeneralizedForce({0.0});
 }
 
 void PandaRaisimDynamics::set_collision() {
@@ -113,10 +120,10 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
 
   cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
   panda->setPdTarget(cmd, cmdv);
-  panda->setGeneralizedForce(panda->getNonlinearities());
+  panda->setGeneralizedForce(panda->getNonlinearities(gravity_));
 
   // gravity compensated object
-  object->setGeneralizedForce(object->getNonlinearities());
+  object->setGeneralizedForce(object->getNonlinearities(gravity_));
 }
 
 void PandaRaisimDynamics::advance() {
@@ -207,7 +214,7 @@ std::vector<force_t> PandaRaisimDynamics::get_contact_forces() {
                  /// 'skip'
     if (contact.isSelfCollision()) continue;
     force_t force;
-    force.force = -contact.getContactFrame().e().transpose() * contact.getImpulse()->e() /
+    force.force = -contact.getContactFrame().e().transpose() * contact.getImpulse().e() /
                   sim_.getTimeStep();
     force.position = contact.getPosition().e();
     forces.push_back(force);
@@ -230,7 +237,7 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
                                           -std::sin(x_(2)), std::cos(x_(2)), 0,
                                           0, 0, 1;
       // transform contact to force --> to force in world frame --> to reaction torques
-      tau -= J_contact_.transpose() * contact.getContactFrame().e().transpose() * contact.getImpulse()->e() / sim_.getTimeStep();
+      tau -= J_contact_.transpose() * contact.getContactFrame().e().transpose() * contact.getImpulse().e() / sim_.getTimeStep();
       // clang-format on
     }
   }
@@ -258,7 +265,7 @@ void PandaRaisimDynamics::get_external_wrench(Eigen::VectorXd& wrench) {
       // ee_frame <-- world_frame <-- force <-- impulse
       Eigen::Vector3d force_ee_frame =
           -rot.e().transpose() * contact.getContactFrame().e().transpose() *
-          contact.getImpulse()->e() / sim_.getTimeStep();
+          contact.getImpulse().e() / sim_.getTimeStep();
       Eigen::Vector3d relative_position =
           rot.e().transpose() * (contact.getPosition().e() - pos.e());
       wrench.head<3>() += force_ee_frame;
@@ -307,6 +314,25 @@ void PandaRaisimDynamics::set_external_ee_force(const Eigen::Vector3d& f) {
 
 double PandaRaisimDynamics::get_object_displacement() const {
   return x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
+}
+
+void PandaRaisimDynamics::fix_object() {
+  object->getState(object_p, object_v);
+  std::vector<raisim::Vec<2>> object_limits;
+  raisim::Vec<2> limit;
+  limit[0] = object_p[0] - 0.001;
+  limit[1] = object_p[0] + 0.001;
+  object_limits.push_back(limit);
+  object->setJointLimits(object_limits);
+}
+
+void PandaRaisimDynamics::release_object() {
+  std::vector<raisim::Vec<2>> object_limits;
+  raisim::Vec<2> limit;
+  limit[0] = 0.0;
+  limit[1] = M_PI_2;
+  object_limits.push_back(limit);
+  object->setJointLimits(object_limits);
 }
 
 }  // namespace manipulation

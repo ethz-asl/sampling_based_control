@@ -22,6 +22,15 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const mppi::ExactMovingExtendedWindow& emew){
+   os << "Window is: [";
+   for (auto it=emew.u_.begin(); it!=emew.u_.end(); it++){
+       os << "(" << it->first << ", " << it->second << ") "; 
+   }
+   os << "]" << std::endl;
+   return os; 
+};
+
 namespace mppi {
 
 SavGolFilter::SavGolFilter(const int steps, const int nu, const int window,
@@ -62,6 +71,7 @@ void SavGolFilter::add_measurement(const Eigen::VectorXd& u, const double t) {
 void SavGolFilter::apply(Eigen::Ref<Eigen::VectorXd, 0, Eigen::InnerStride<>> u, const double t) {
   for (size_t i = 0; i < u.size(); i++) {
     u[i] = filters_[i].filter(windows_[i].extract(t));
+    windows_[i].set(u[i], t); // update the window with the filtered value
   }
 }
 

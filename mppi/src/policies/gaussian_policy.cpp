@@ -23,8 +23,9 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   }
   multipliers_ = multipliers.asDiagonal();
 
-  t_ = Eigen::ArrayXd::LinSpaced(nt_, 0.0, nt_) * dt_;
+  t_ = Eigen::ArrayXd::LinSpaced(nt_, 0.0, nt_-1) * dt_;
   nominal_ = Eigen::MatrixXd::Zero(nt_, nu);
+  nominal_temp_ = Eigen::MatrixXd::Zero(nu_, nu);
   delta_ = Eigen::MatrixXd::Zero(nt_, nu);
   gradient_ = Eigen::MatrixXd::Zero(nt_, nu);
   gradient2_ = Eigen::MatrixXd::Zero(nt_, nu);
@@ -42,12 +43,15 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   // Initialize filter
   if (config_.filtering) {
     filter_ =
-        SavGolFilter(nt_, nu_, config.filters_window, config.filters_order);
+        SavGolFilter(nt_, nu_, config.filters_window, config.filters_order, 0, dt_);
   }
 
   // initialize limits
   max_limits_ = Eigen::MatrixXd::Ones(nt_, nu_);
   min_limits_ = -Eigen::MatrixXd::Ones(nt_, nu_);
+
+  // used to clip the gradient
+  max_gradient_ = Eigen::MatrixXd::Ones(nt_, nu_) * 0.2;
 
   for (int i = 0; i < nt_; i++) {
     max_limits_.row(i) = config.u_max;
@@ -64,7 +68,7 @@ void GaussianPolicy::update_delay(const int delay_steps) {
   Eigen::VectorXd multipliers = Eigen::VectorXd::Zero(nt_);
   for (int i = 0; i < nt_; i++) {
     multipliers(i) =
-        (i < delay_steps) ? 0 : 1 - std::exp(-(i - delay_steps + 1) / 5.0);
+        (i < delay_steps) ? 0 : 1 - std::exp(-(i - delay_steps + 1) / 10.0);
   }
   multipliers_ = multipliers.asDiagonal();
   delay_steps_ = delay_steps;
@@ -130,11 +134,16 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
 void GaussianPolicy::update(const std::vector<double>& weights,
                             const double step_size) {
   delta_ = nominal_;
+  nominal_temp_ = nominal_;
   gradient_.setZero();
   for (int i=0; i < ns_; i++){
     gradient_ += samples_[i] * weights[i];
   }
 
+  // clip gradient
+  gradient_ = gradient_.cwiseMax(-max_gradient_).cwiseMin(max_gradient_);
+
+  
   if (adam_) {
     momentum_ = beta_1_ * momentum_ + (1.0 - beta_1_) * gradient_;
     gradient2_ = gradient_.cwiseProduct(gradient_);
@@ -147,6 +156,21 @@ void GaussianPolicy::update(const std::vector<double>& weights,
     nominal_ += step_size * gradient_;
   }
 
+  // filter the temporary nominal 
+  // if (config_.filtering) {
+  //   filter_.reset(t_[0]);
+  //   for (size_t i = 0; i < t_.size(); i++) {
+  //     filter_.add_measurement(nominal_temp_.row(i), t_(i));
+  //   }
+  //   for (size_t i = 0; i < t_.size(); i++) {
+  //     filter_.apply(nominal_temp_.row(i), t_(i));
+  //   }
+  // }
+
+  // blend nominal trajectory with updates 
+  //nominal_ = multipliers_ * (nominal_temp_ - nominal_) + nominal_;
+
+  // update filter with new nominal
   if (config_.filtering) {
     filter_.reset(t_[0]);
     for (size_t i = 0; i < t_.size(); i++) {

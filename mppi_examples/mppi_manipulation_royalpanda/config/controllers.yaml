@@ -19,13 +19,19 @@ manipulation_controller:
   sequential: false
   max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
+  log_every_steps: 15
+
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
   ros_publish_rate: 10.0
   static_optimization: false
-
+  
+  record_bag: false
+  bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
+  
   # Cost parameters used by the controller
+  rollouts: $(arg rollouts)
   cost:
     regularization: 0.0
     linear_weight: 100.0
@@ -36,8 +42,8 @@ manipulation_controller:
 
     min_dist: 0.15
     max_reach: 0.65
-    reach_weight: 0
-    reach_weight_slope: 0
+    reach_weight: 100
+    reach_weight_slope: 10
 
     obstacle_weight: 0
     obstacle_weight_slope: 0
@@ -59,22 +65,31 @@ manipulation_controller:
     #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
     # Safer joint limits (+10 deg safety margin ~0.17)
-    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    upper_joint_limits: [ 0.543, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
     lower_joint_limits: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
 
+    max_power: 0.0
+    power_weight: 10.0
+  
     handle_frame: handle_link
     tracked_frame: panda_grasp
     arm_base_frame: panda_link0
+
+    collision_link_0: panda_link1
+    collision_link_1: panda_link7
+
+    collision_threshold: 0.35
+    collision_weight: 1000
 
 
   controller_gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
       kd: [ 0.0, 0.0, 0.0 ]
-      ki: [ 0.0, 0.0, 0.0 ]
+      ki: [ 1.0, 1.0, 1.0 ]
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
@@ -125,8 +140,8 @@ manipulation_controller:
 
   # Safety filter parameters
   # It processes the output of the sampled control action and enforces constraints
-  apply_filter: true
-  apply_filter_to_rollouts: true
+  apply_filter: $(arg filter_out)
+  apply_filter_to_rollouts: $(arg filter_in)
   safety_filter:
     input_limits: 
       active: true
@@ -138,38 +153,38 @@ manipulation_controller:
     joint_limits: 
       active: true
       soft: true
-      slack_multiplier: 1000.0
-      q_max: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+      slack_multiplier: 10.0
+      q_max: [ 0.543, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
       q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     cartesian_limits: 
       active: true
       soft: true
-      slack_multiplier: 1000.0
+      slack_multiplier: 10000.0
       max_reach: 0.65
-      min_distance: 0.15
+      min_distance: 0.35
 
     object_avoidance:
       active: false
-      soft: false
-      slack_multiplier: 0.0
-      min_distance: 0.2
-      object_frame_id: ""
+      soft: true
+      slack_multiplier: 1.0
+      min_distance: 0.9
+      object_frame_id: shelf
   
     passivity_constraint:
       active: true
       soft: true
-      slack_multiplier: 1000.0
+      slack_multiplier: 100.0
       initial_tank_energy: 10.0
       min_tank_energy: 2.0
 
     first_derivative_limits: 
-      active: true
+      active: false
       ud_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
       ud_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
 
     second_derivative_limits: 
-      active: true
+      active: false
       udd_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
       udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
     # udd_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]

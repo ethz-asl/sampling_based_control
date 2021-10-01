@@ -8,6 +8,11 @@ object_state_topic: /simulation/object_state
 finger_state_topic: /franka_gripper/joint_states
 wrench_topic: /external_force
 
+# Object fix
+object_fix: false
+object_fix_position: 0.525  # ~60deg = 1.05
+object_fix_time: 5.0
+
 # Window for median filtering of the wrench
 wrench_median_filter:
   name: wrench_median_filter
@@ -22,11 +27,13 @@ finger_joint_names: [ panda_finger_joint1, panda_finger_joint2 ]
 base_joint_names: [ world_x, world_y, theta ]
 
 sim_dynamics:
-  dt: 0.004
+  dt: 0.001
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
 
+  #0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69
+  #-3.0, -3.0, 0.0, 0.0, 0.49, 1.77, -2.94, 0.0, 1.2, -0.56,
   has_filter: false
   apply_filter: false
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position

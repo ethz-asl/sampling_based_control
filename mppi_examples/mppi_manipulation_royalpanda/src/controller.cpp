@@ -14,6 +14,7 @@
 #include <franka/robot_state.h>
 
 #include <manipulation_msgs/conversions.h>
+#include <chrono>
 
 using namespace manipulation;
 using namespace manipulation_royalpanda;
@@ -41,6 +42,11 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
 bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   if (!node_handle.getParam("arm_id", arm_id_)) {
     ROS_ERROR("Could not read parameter arm_id");
+    return false;
+  }
+
+  if (!node_handle.getParam("log_every_steps", log_every_steps_)) {
+    ROS_ERROR("log_every_steps not found");
     return false;
   }
 
@@ -96,6 +102,16 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam("record_bag", record_bag_)) {
+    ROS_ERROR("record_bag not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("bag_path", bag_path_)) {
+    ROS_ERROR("bag_path not found");
+    return false;
+  }
+  
   if (!node_handle.getParam("apply_filter", apply_filter_)) {
     ROS_ERROR("apply_filter not found");
     return false;
@@ -192,6 +208,7 @@ bool ManipulationController::init_interfaces(
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   base_twist_publisher_.init(nh, base_twist_topic_, 1);
   nominal_state_publisher_.init(nh, nominal_state_topic_, 1);
+
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
 
@@ -207,6 +224,8 @@ void ManipulationController::state_callback(
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
+    x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
+    
 
     if (!state_received_) {
       position_desired_[0] = state_msg->base_pose.x;
@@ -225,6 +244,10 @@ void ManipulationController::state_callback(
 }
 
 void ManipulationController::starting(const ros::Time& time) {
+  if (record_bag_) {
+    bag_.open(bag_path_, rosbag::bagmode::Write);
+  }
+
   if (started_) return;
 
   // with sequential execution the optimization needs to be explicitly called
@@ -275,6 +298,7 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // logging
   signal_logger::logger->stopLogger();
+  signal_logger::add(opt_time_, "opt_time");
   signal_logger::add(x_, "state");
   signal_logger::add(x_nom_, "nominal_state");
   signal_logger::add(u_, "velocity_mppi");
@@ -302,9 +326,21 @@ void ManipulationController::starting(const ros::Time& time) {
 }
 
 void ManipulationController::enforce_constraints(const ros::Duration& period) {
+  // compute the total power exchange with the tank
+  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
+  power_channels_ = u_opt_.cwiseProduct(external_torque_);
+  power_from_interaction_ = power_channels_.sum();
+
+  // Only the arm has integral control
+  power_from_error_ = 0.0;
+  //(u_opt_ - velocity_filtered_).tail<7>().transpose() *
+  //gains_.arm_gains.Ki.asDiagonal() *
+  //                    (position_desired_ - position_initial_).tail<7>();
+  total_power_exchange_ = power_from_error_ + power_from_interaction_;
+  energy_tank_.step(total_power_exchange_, period.toSec());
+
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
     safety_filter_->update(x_, u_, ros::Time::now().toSec());
 
     // this is required for computing some metrics
@@ -319,7 +355,10 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   }
 
   // compute new optimal input
+  auto start = std::chrono::steady_clock::now();
   bool filter_ok = safety_filter_->apply(u_filter_);
+  auto end = std::chrono::steady_clock::now();
+  opt_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9;
 
   // safety filter does not account for the gripper -> extract only the base+arm
   // part
@@ -328,19 +367,6 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   } else {
     u_opt_ = u_.head<10>();
   }
-
-  // compute the total power exchange with the tank
-  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
-  power_channels_ = u_opt_.cwiseProduct(external_torque_);
-  power_from_interaction_ = power_channels_.sum();
-
-  // Only the arm has integral control
-  power_from_error_ = 0.0;
-  //(u_opt_ - velocity_filtered_).tail<7>().transpose() *
-  //gains_.arm_gains.Ki.asDiagonal() *
-  //                    (position_desired_ - position_initial_).tail<7>();
-  total_power_exchange_ = power_from_error_ + power_from_interaction_;
-  energy_tank_.step(total_power_exchange_, period.toSec());
 }
 
 void ManipulationController::update_position_reference(
@@ -355,10 +381,14 @@ void ManipulationController::update_position_reference(
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
+  // compute feedforward as function of the error in global position
+  // and then convert to base frame
+  Eigen::Vector3d u_ff = R_world_base.transpose() * (position_desired_.head<3>() - position_measured_.head<3>());
+
   // In simulation, we can use directly the hardware interface
   if (has_base_handles_) {
     for (int i = 0; i < 3; i++) {
-      base_joint_handles_[i].setCommand(u_[i]);
+      base_joint_handles_[i].setCommand(gains_.base_gains.Ki[i] * u_ff[i] + u_opt_[i]);
     }
     return;
   }
@@ -368,9 +398,9 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
                                   x_nom_ros_.base_twist.linear.y,
                                   x_nom_ros_.base_twist.angular.z);
 
-    base_twist_publisher_.msg_.linear.x = u_opt_[0];
-    base_twist_publisher_.msg_.linear.y = u_opt_[1];
-    base_twist_publisher_.msg_.angular.z = u_opt_[2];
+    base_twist_publisher_.msg_.linear.x = u_opt_[0] + gains_.base_gains.Ki[0] * u_ff[0];
+    base_twist_publisher_.msg_.linear.y = u_opt_[1] + gains_.base_gains.Ki[1] * u_ff[1];
+    base_twist_publisher_.msg_.angular.z = u_opt_[2] + gains_.base_gains.Ki[2] * u_ff[2];
     base_twist_publisher_.unlockAndPublish();
   }
 }
@@ -435,6 +465,15 @@ void ManipulationController::update(const ros::Time& time,
   manipulation::conversions::eigenToMsg(x_nom_, time.toSec(), x_nom_ros_);
   robot_state_ = state_handle_->getRobotState();
 
+  if (record_bag_){
+    optimal_rollout_.clear();
+    man_interface_->get_controller()->get_optimal_rollout(optimal_rollout_);
+    mppi_ros::to_msg(optimal_rollout_, optimal_rollout_ros_, true, 30);
+    u_curr_ros_.data.assign(u_.data(), u_.data() + u_.size()); 
+    bag_.write("optimal_rollout", time, optimal_rollout_ros_);
+    bag_.write("current_input", time, u_curr_ros_);
+  }
+
   static const double alpha = 0.1;
   position_measured_.head<3>() = x_.head<3>();
   velocity_measured_.head<3>() = x_.segment<3>(12);
@@ -461,10 +500,19 @@ void ManipulationController::update(const ros::Time& time,
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
   }
-  signal_logger::logger->collectLoggerData();
+
+  if (log_counter_ == log_every_steps_){
+    signal_logger::logger->collectLoggerData();
+    log_counter_ = 0;
+  }
+  log_counter_++;
 }
 
 void ManipulationController::stopping(const ros::Time& time) {
+  if(record_bag_) {
+    ROS_INFO("Closing bag...");
+    bag_.close();
+  }
   //  signal_logger::logger->disableElement("/log/torque_command");
   //  signal_logger::logger->disableElement("/log/stage_cost");
   //  for (const auto& constraint : safety_filter_->constraints_) {

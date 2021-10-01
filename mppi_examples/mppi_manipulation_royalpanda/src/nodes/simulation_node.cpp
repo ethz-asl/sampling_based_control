@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   // start logging
   signal_logger::setSignalLoggerStd();
   signal_logger::SignalLoggerOptions silo_options;
-  silo_options.maxLoggingTime_ = 0.0;  // exponentially growing buffer
+  //silo_options.maxLoggingTime_ = 0.0;  // exponentially growing buffer
   signal_logger::logger->initLogger(silo_options);
 
   // do not advance until this time.
@@ -40,6 +40,12 @@ int main(int argc, char** argv) {
   double max_sim_time;
   if (!nh_private.getParam("max_sim_time", max_sim_time)) {
     ROS_ERROR("Failed to parse max_sim_time");
+    return 0;
+  }
+
+  std::string log_folder;
+  if (!nh_private.getParam("log_folder", log_folder)) {
+    ROS_ERROR("Failed to parse log_folder");
     return 0;
   }
 
@@ -144,9 +150,7 @@ int main(int argc, char** argv) {
 
   // save logs
   std::cout << "Saving logged data..." << std::endl;
-  std::string file_path = __FILE__;
-  std::string dir_path = file_path.substr(0, file_path.rfind("/"));
-  file_path = dir_path + "/../../logs/" + experiment_name;
+  std::string file_path = log_folder + experiment_name;
   signal_logger::logger->stopLogger();
   signal_logger::logger->saveLoggerData({signal_logger::LogFileType::BINARY},
                                         file_path);

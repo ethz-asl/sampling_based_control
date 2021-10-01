@@ -40,6 +40,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void set_collision();
 
  protected:
+  const std::vector<raisim::Vec<2>> object_limits_;
 
  public:
   double get_dt() { return dt_; }
@@ -84,6 +85,8 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void get_external_wrench(Eigen::VectorXd& wrench);
   void get_ee_jacobian(Eigen::MatrixXd& J);
   void set_external_ee_force(const Eigen::Vector3d& f);
+  void fix_object();
+  void release_object();
 
  protected:
   size_t robot_dof_;
@@ -99,6 +102,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   }
 
  protected:
+  raisim::Vec<3> gravity_;
   DynamicsParams params_;
   double dt_;
   std::string robot_description_;

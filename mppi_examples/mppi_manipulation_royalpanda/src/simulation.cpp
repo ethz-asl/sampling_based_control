@@ -30,6 +30,7 @@ bool RoyalPandaSim::init_sim() {
   signal_logger::logger->stopLogger();
   signal_logger::add(wrench_, "external_wrench");
   signal_logger::add(wrench_filtered_, "external_wrench_filtered");
+  signal_logger::add(simulation_step_, "simulation_step");
   signal_logger::logger->startLogger(true);
 
   return true;
@@ -97,6 +98,23 @@ bool RoyalPandaSim::init_params() {
     ROS_ERROR("Failed to get wrench_topic");
     return false;
   }
+
+  if (!nh_.param<bool>("object_fix", object_fix_, false)) {
+    ROS_ERROR("Failed to get object_fix");
+    return false;
+  }
+
+  if (!nh_.param<double>("object_fix_position", object_fix_position_, 0.0)) {
+    ROS_ERROR("Failed to get object_fix_position");
+    return false;
+  }
+
+  if (!nh_.param<double>("object_fix_time", object_fix_time_, 0.0)) {
+    ROS_ERROR("Failed to get object_fix_time");
+    return false;
+  }
+  object_fixed_ = false;
+  object_released_ = false;
 
   arm_state_.name = arm_joint_name_;
   arm_state_.position.resize(7);
@@ -357,18 +375,36 @@ void RoyalPandaSim::apply_external_force_callback(const geometry_msgs::WrenchCon
 void RoyalPandaSim::publish_ros() { dynamics_->publish_ros(); }
 
 void RoyalPandaSim::advance_sim(ros::Time time, ros::Duration period) {
+  // fix object if specified
+  if (object_fix_ && !object_released_){
+    if (object_fixed_ && (time.toSec() - object_fix_start_) > object_fix_time_){
+      dynamics_->release_object();
+      object_released_ = true;
+      ROS_INFO("Object released!");
+    }
+    else if (!object_fixed_ && std::abs(object_position_ - object_fix_position_) < 0.01){
+      dynamics_->fix_object();
+      object_fix_start_ = time.toSec();
+      object_fixed_ = true;
+      ROS_INFO("Object fixed!");
+    }
+  }
   // base is velocity controlled
   u_.head<3>() = base_twist_cmd_shared_;
   dynamics_->set_control(u_);
 
   // arm has imperfect gravity compensation
-  Eigen::VectorXd tau = 0.99 * dynamics_->get_panda()->getNonlinearities().e();
+  Eigen::VectorXd tau = 0.99 * dynamics_->get_panda()->getNonlinearities(dynamics_->get_world()->getGravity()).e();
 
   // control only the arm joints (leave out gripper)
   tau.segment<7>(3) += arm_joint_effort_desired_.head<7>();
   dynamics_->get_panda()->setGeneralizedForce(tau);
   dynamics_->set_external_ee_force(user_force_);
+
+  auto start = std::chrono::steady_clock::now();
   dynamics_->advance();
+  auto end = std::chrono::steady_clock::now();
+  simulation_step_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9; 
 }
 
 double RoyalPandaSim::get_time_step() { return dynamics_->get_dt(); }

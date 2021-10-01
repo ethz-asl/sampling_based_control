@@ -201,6 +201,11 @@ class Solver {
   bool get_optimal_rollout(observation_array_t& x, input_array_t& u);
 
   /**
+   * @brief Another signature to get the optimal rollout
+   */
+  void get_optimal_rollout(Rollout& r);
+  
+  /**
    * @brief Get only the diagonal of the sampler's covariance matrix
    * @param var[in/out]: the diagonal variance
    */
@@ -341,6 +346,9 @@ class Solver {
   Eigen::MatrixXd nominal_;  // the nominal u-traj after filtering to reset the
                              // policy warm start
   filter_ptr filter_;
+
+  // rate measurements
+  double rate_;
 };
 
 }  // namespace mppi

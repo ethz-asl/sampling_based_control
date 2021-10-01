@@ -256,7 +256,7 @@ void StateObserver::message_filter_cb_sim(
   manipulation::conversions::toMsg(
       time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
       ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
-      false, tank_state_, state_ros_);
+      contact_state_, tank_state_, state_ros_);
 
   state_publisher_.publish(state_ros_);
 }
@@ -418,6 +418,9 @@ void StateObserver::wrench_callback(
   wrench_eigen_.head<3>() = T_world_sensor.rotation() * wrench_eigen_.head<3>();
   wrench_eigen_.tail<3>() = T_world_sensor.rotation() * wrench_eigen_.tail<3>();
 
+  // detect contact from wrench using small threshold
+  contact_state_ = wrench_eigen_.norm() > 0.1;
+  
   // clang-format off
   J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), std::sin(base_pose_.z()), 0,
                                             -std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,

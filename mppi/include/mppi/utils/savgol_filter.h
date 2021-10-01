@@ -13,12 +13,17 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <map>
+#include <iostream>
 
 namespace mppi {
 struct MovingExtendedWindow;
+class ExactMovingExtendedWindow;
 }
 
 std::ostream& operator<<(std::ostream& os, const mppi::MovingExtendedWindow& w);
+
+std::ostream& operator<<(std::ostream& os, const mppi::ExactMovingExtendedWindow& emew);
 
 namespace mppi {
 
@@ -113,6 +118,14 @@ struct MovingExtendedWindow {
                                uu.begin() + idx + window + 1);
   }
 
+  void set(const double u, const double t) {
+    auto upper = std::upper_bound(
+        tt.begin(), tt.end(), t);  // index to the first element larger than t
+    assert(lower != tt.end());
+    size_t idx = std::distance(tt.begin(), upper) - 1;
+    uu[idx] = u;
+  }
+
   /**
    * Extend the window until the end with the latest received measurement
    */
@@ -121,6 +134,84 @@ struct MovingExtendedWindow {
     std::fill(tt.begin() + start_idx + 1, tt.end(), tt[start_idx]);
   }
 };
+
+class ExactMovingExtendedWindow {
+  public: 
+    ExactMovingExtendedWindow(const int size, const int w, const double dt) {
+      w_ = w;
+      dt_ = dt * 1000;
+      for (int i=0; i<size + 2 * w_ + 1; i++){
+        u_[i*dt_ - w_*dt_] = 0;
+      }
+      
+      last_trim_t_ = -1;
+    }
+
+  public:
+    double dt_;
+    int w_;
+    double last_trim_t_;
+    std::map<double, double> u_;
+  
+  public:
+
+    void trim(const double t) {
+      int t_ms = (int)(t * 1000);
+      std::cout << "Trimming at " << t_ms << std::endl;
+      std::cout << *this;
+
+      if (t_ms < last_trim_t_) {
+        std::stringstream ss;
+        ss << "Resetting the window back in the past. Can reset only to larger "
+              "times than last "
+              "reset!!!"
+           << "last reset=" << last_trim_t_ << ", trying to reset to t=" << t;
+        throw std::runtime_error(ss.str());
+      }
+      last_trim_t_ = t_ms;
+
+      double new_first_time = last_trim_t_ - w_ * dt_;
+
+      u_.erase(u_.begin(), u_.find(new_first_time));
+
+      // extend with the last input
+      double last_time = std::next(u_.end(),-1)->first;
+      for (int i=0; i<w_; i++){
+        u_[last_time + i*dt_] = u_[last_time];
+      }
+
+    }
+
+    void add_point(const double u, const double t) { 
+      int t_ms = (int)(t*1000);
+      u_[t_ms] = u; 
+
+      // extend with the newly added value
+      for (auto it=std::next(u_.find(t_ms), 1); it != u_.end(); it++){
+        it->second = u;
+      }
+    }
+
+    /**
+     * Extract a window centered at the query time
+     * @param t: query time
+     * @return
+     */
+    std::vector<double> extract(const double t) {
+      int t_ms = (int)(t*1000);
+      std::vector<double> v;
+      v.resize(2*w_ + 1);
+      v[w_] = u_[t_ms];
+
+      for (int i=0; i<w_; i++){
+        v[i] = u_[t_ms - (w_-i)*dt_];
+        v[2*w_ - i] = u_[t_ms + (w_ + i)*dt_];
+      }
+      
+      return v;  
+    }
+};
+
 
 class SavGolFilter {
  public:

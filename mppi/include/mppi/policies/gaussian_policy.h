@@ -46,6 +46,7 @@ public:
   Eigen::MatrixXd multipliers_;  // scale samples for each time step
   std::vector<Eigen::MatrixXd> samples_;
   Eigen::MatrixXd nominal_;
+  Eigen::MatrixXd nominal_temp_;
   Eigen::MatrixXd delta_;
   Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> L_;  // matrix for shift operation of all the samples
 
@@ -58,6 +59,7 @@ public:
   double beta_2_ = 0.999;
   Eigen::MatrixXd gradient_;
   Eigen::MatrixXd gradient2_;
+  Eigen::MatrixXd max_gradient_;  
   Eigen::MatrixXd momentum_;
   Eigen::MatrixXd momentum2_;
   Eigen::MatrixXd momentum2_baseline_;

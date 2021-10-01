@@ -312,6 +312,7 @@ std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
   os << "soft: " << settings.object_avoidance_soft << std::endl;
   os << "slack_multiplier: " << settings.object_avoidance_slack_multiplier << std::endl;
   os << "max_distance: " << settings.min_object_distance << std::endl;
+  os << "object_frame_id: " << settings.object_frame_id << std::endl; 
   os << "-----------------------------------------------" << std::endl;
   os << "Passivity constraint: " << std::endl;
   os << "active: " << settings.passivity_constraint << std::endl;

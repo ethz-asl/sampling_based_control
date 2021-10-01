@@ -16,6 +16,8 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
+#include <pthread.h>
+
 
 class ThreadPool {
  public:
@@ -34,12 +36,18 @@ class ThreadPool {
   // synchronization
   std::mutex queue_mutex;
   std::condition_variable condition;
+
+  // custom priority
+  std::vector<pthread_attr_t> tattrs;
+  std::vector<sched_param> tparams;
+
   bool stop;
 };
 
 // the constructor just launches some amount of workers
 inline ThreadPool::ThreadPool(size_t threads) : stop(false) {
   for (size_t i = 0; i < threads; ++i)
+    {
     // the thread continuosly pops new tasks
     workers.emplace_back([this] {
       for (;;) {
@@ -57,6 +65,8 @@ inline ThreadPool::ThreadPool(size_t threads) : stop(false) {
         task();
       }
     });
+    pthread_setschedprio(workers[i].native_handle(), 0);
+  }
 }
 
 // add new work item to the pool

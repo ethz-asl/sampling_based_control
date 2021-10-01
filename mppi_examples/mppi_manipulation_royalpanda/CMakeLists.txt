@@ -10,6 +10,7 @@ set(PACKAGE_DEPENDENCIES
     sensor_msgs
     std_msgs
     roscpp
+    rosbag
     mppi_ros
     mppi_manipulation
     roslib

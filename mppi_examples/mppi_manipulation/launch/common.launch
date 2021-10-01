@@ -3,9 +3,10 @@
 
     <arg name="plot" default="false"/>
     <arg name="enable_obstacle" default="false"/>
+    <arg name="rviz" default="true"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e" if="$(arg rviz)"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot)">

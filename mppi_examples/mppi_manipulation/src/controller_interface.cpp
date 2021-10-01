@@ -153,6 +153,12 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
     return false;
   }
 
+  double rollouts;
+  if (nh_.param<double>("rollouts", rollouts, 0.0)){
+    ROS_INFO_STREAM("Overriding default rollouts to " << rollouts);
+    config_.rollouts = rollouts;
+  }
+
   // -------------------------------
   // cost
   // -------------------------------

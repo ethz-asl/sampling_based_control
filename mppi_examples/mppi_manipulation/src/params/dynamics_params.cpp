@@ -70,7 +70,7 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
 
   if (!nh.getParam(object_description_name, object_description) ||
       object_description.empty()) {
-    ROS_ERROR_STREAM("Failed to parse " << object_description_name
+    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << object_description_name
                                         << " or invalid!");
     return false;
   }

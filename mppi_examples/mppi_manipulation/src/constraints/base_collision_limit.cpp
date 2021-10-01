@@ -2,11 +2,9 @@
 // Created by giuseppe on 11.08.21.
 //
 
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/parsers/urdf.hpp>
+#include "mppi_manipulation/constraints/base_collision_limit.h"
 
 #include <iostream>
-#include "mppi_manipulation/constraints/base_collision_limit.h"
 #include "mppi_manipulation/dimensions.h"
 
 using namespace manipulation;
@@ -17,10 +15,13 @@ BaseCollisionLimit::BaseCollisionLimit(const size_t nx,
   reset(nc_, nx_);
 
   min_distance_ = settings_.min_distance;
-  pinocchio::urdf::buildModelFromXML(settings_.object_urdf, *model_);
-  data_ = std::make_shared<pinocchio::Data>(*model_);
-  frame_idx_ = model_->getFrameId(settings_.object_frame_id);
-  frame_position_ = data_->oMf[frame_idx_].translation().head<2>();
+
+  object_.init_from_xml(settings_.object_urdf);
+
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(1);
+  object_.update_state(q);
+
+  frame_position_ = object_.get_pose(settings_.object_frame_id).translation.head<2>();
 }
 
 void BaseCollisionLimit::reset_constraint() {}
@@ -38,5 +39,9 @@ void BaseCollisionLimit::update_observation(const Eigen::VectorXd& x,
   dist_ = x.head<2>() - frame_position_;
 
   lower_bound_[0] = -0.5 * (dist_.norm() - min_distance_ * min_distance_);
-  constraint_matrix_ = dist_.transpose() * J_;
+  constraint_matrix_.block(0, 0, 1, 2) = dist_.transpose() * J_;
 };
+
+void BaseCollisionLimit::update_violation(const Eigen::VectorXd& x) {
+  violation_[0] = std::max(lower_bound_[0], 0.0);
+}

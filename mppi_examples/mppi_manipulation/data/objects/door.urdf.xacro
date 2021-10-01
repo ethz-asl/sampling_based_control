@@ -2,11 +2,11 @@
 <robot name="door" xmlns:xacro="http://www.ros.org/wiki/xacro" >
     <xacro:arg name="prefix" default=""/>
     <xacro:arg name="height" default="0.0"/>
-    <xacro:arg name="door_x" default="1.0"/>
+    <xacro:arg name="origin_x" default="1.0"/>
     <xacro:arg name="articulation_mismatch_offset" default="0.0"/>
 
     <xacro:property name="prefix" default="$(arg prefix)"/>
-    <xacro:property name="door_x" default="$(arg door_x)"/>
+    <xacro:property name="origin_x" default="$(arg origin_x)"/>
     <xacro:property name="articulation_mismatch_offset" default="$(arg articulation_mismatch_offset)"/>
     <xacro:property name="height" default="$(arg height)"/>
 
@@ -14,7 +14,7 @@
     <joint name="fixed" type="fixed">
         <parent link="world"/>
         <child link="${prefix}door_frame"/>
-        <origin xyz="${door_x} 0.3 ${height + 0.01}" rpy="0 0 3.14"/>
+        <origin xyz="${origin_x} 0.3 ${height + 0.01}" rpy="0 0 3.14"/>
     </joint>
 
     <link name="${prefix}door_frame">
@@ -34,32 +34,6 @@
             </geometry>
         </collision>
     </link>
-
-    <!--link name="door_frame_step">
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.25"/>
-            <geometry>
-                <box size="0.081 0.6 0.10"/>
-            </geometry>
-            <material name="frame_material">
-                <color rgba="0.5 0.0 0.0 1" />
-            </material>
-        </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.25"/>
-            <geometry>
-                <box size="0.081 0.6 0.10"/>
-            </geometry>
-        </collision>
-    </link>
-
-    <joint name="step_joint" type="fixed">
-        <parent link="door_frame"/>
-        <child link="door_frame_step"/>
-        <origin xyz="0.0155 0 0.31" rpy="0 0 0"/>
-        <dynamics damping="1.0" friction="2.0"/>
-        <axis xyz="0 1 0"/>
-    </joint-->
 
     <link name="${prefix}door_link">
         <inertial>

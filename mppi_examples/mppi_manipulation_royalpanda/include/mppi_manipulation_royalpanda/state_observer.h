@@ -183,5 +183,8 @@ class StateObserver {
   // tf2_ros
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
+
+  // contact state
+  bool contact_state_ = false;
 };
 }  // namespace manipulation_royalpanda

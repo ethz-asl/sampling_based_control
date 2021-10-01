@@ -49,6 +49,7 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
   signal_logger::add(max_cost_, "solver/rollouts/max_cost");
   signal_logger::add(rollouts_cost_, "solver/rollouts/costs");
   signal_logger::add(delay_steps_, "solver/delay_steps");
+  signal_logger::add(rate_, "solver/rate");
   signal_logger::logger->updateLogger();
 #endif
 }
@@ -79,10 +80,6 @@ void Solver::init_data() {
 //    sampler_ = std::make_shared<mppi::GaussianSampler>(nu_);
 //    sampler_->set_covariance(config_.input_variance);
 //  }
-
-  if (config_.logging) {
-    data_.config = config_;
-  }
 
 //  if (config_.bound_input) {
 //    if (config_.u_min.size() != nu_) {
@@ -142,12 +139,13 @@ void Solver::update_policy() {
   } else if (!reference_set_) {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
+    auto start = std::chrono::steady_clock::now();  
     update_delay();
     copy_observation();
 
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
-      update_reference();
+      update_reference();      
       sample_trajectories();
       optimize();
       filter_input();
@@ -156,18 +154,8 @@ void Solver::update_policy() {
           cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
     }
     swap_policies();
-
-    if (config_.logging) {
-      // data_.rollouts = rollouts_;
-      data_.step_count = step_count_;
-      data_.stage_cost = stage_cost_;
-      data_.rollouts_cost = rollouts_cost_;
-      data_.weights = weights_;
-      data_.optimization_time = 0.0;
-      data_.reset_time = t0_internal_;
-      data_.optimal_rollout = opt_roll_;
-      step_count_++;
-    }
+    auto end = std::chrono::steady_clock::now();
+    rate_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e9;
   }
 }
 
@@ -296,6 +284,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
                                        const size_t start_idx,
                                        const size_t end_idx) {
   observation_t x;
+  double rollouts_sim_time = 0.0;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_, t0_internal_);
     x = x0_internal_;
@@ -356,7 +345,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
 //          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
 //              opt_roll_.uu[t];
 
-      // integrate dynamics
+      // integrate dynamics    auto start = std::chrono::steady_clock::now();
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
     }
   }
@@ -591,6 +580,20 @@ bool Solver::get_optimal_rollout(observation_array_t& xx, input_array_t& uu) {
   return true;
 }
 
+void Solver::get_optimal_rollout(Rollout& r) {
+  std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
+  
+  // fill with portion of vector starting from current reset time
+  r.tt = time_array_t(opt_roll_cache_.tt.begin(),
+                      opt_roll_cache_.tt.end());
+
+  r.xx = observation_array_t(opt_roll_cache_.xx.begin(),
+                             opt_roll_cache_.xx.end());
+  
+  r.uu = input_array_t(opt_roll_cache_.uu.begin(),
+                       opt_roll_cache_.uu.end());
+}
+
 void Solver::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);
   opt_roll_cache_ = opt_roll_;
@@ -600,7 +603,7 @@ input_array_t Solver::offline_control(const observation_t& x, const int subit,
                                       const double t) {
   set_observation(x, t);
   for (size_t i = 0; i < subit; i++) update_policy();
-}
+} 
 
 template <typename T>
 void Solver::shift_back(std::vector<T>& v_out, const T& fill,

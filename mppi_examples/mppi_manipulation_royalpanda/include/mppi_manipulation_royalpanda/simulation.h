@@ -127,6 +127,16 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
   // external force from user
   Eigen::Vector3d user_force_;
 
+  // fix object to test robust behavior
+  bool object_fix_;
+  double object_fix_position_;
+  double object_fix_time_;
+  double object_fix_start_;
+  bool object_fixed_;
+  bool object_released_;
+
+  // sim time measurements
+  double simulation_step_;
 };
 
 }  // namespace manipulation_royalpanda

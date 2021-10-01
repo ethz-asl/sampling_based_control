@@ -133,6 +133,16 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
+  if (!nh.getParam("cost/power_weight", Q_power) || Q_power < 0) {
+    ROS_ERROR("Failed to parse cost/power_weight or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/max_power", max_power) || max_power < 0) {
+    ROS_ERROR("Failed to parse cost/max_power or invalid!");
+    return false;
+  }
+
   if (!nh.getParam("cost/handle_frame", handle_frame) || handle_frame.empty()) {
     ROS_ERROR("Failed to parse cost/handle_frame or invalid!");
     return false;
@@ -147,6 +157,28 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
   if (!nh.getParam("cost/arm_base_frame", arm_base_frame) ||
       arm_base_frame.empty()) {
     ROS_ERROR("Failed to parse cost/arm_base_frame or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/collision_link_0", collision_link_0) ||
+      collision_link_0.empty()) {
+    ROS_ERROR("Failed to parse cost/collision_link_0 or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/collision_link_1", collision_link_1) ||
+      collision_link_1.empty()) {
+    ROS_ERROR("Failed to parse cost/collision_link_1 or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/collision_threshold", collision_threshold)) {
+    ROS_ERROR("Failed to parse cost/collision_threshold or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/collision_weight", Q_collision)) {
+    ROS_ERROR("Failed to parse cost/collision_weight or invalid!");
     return false;
   }
 
