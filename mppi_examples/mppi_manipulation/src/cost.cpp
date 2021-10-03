@@ -27,12 +27,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
-  
 
   // regularization cost
-  cost += params_.Qreg *
-          x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
-  
+  // cost += u.head<BASE_ARM_DIM>().transpose() *
+  // u.head<BASE_ARM_DIM>().cwiseProduct(params_.Qreg);
+
   // end effector reaching cost
   if (mode == 0) {
     Eigen::Vector3d ref_t = ref.head<3>();

@@ -389,7 +389,8 @@ void RoyalPandaSim::advance_sim(ros::Time time, ros::Duration period) {
       ROS_INFO("Object fixed!");
     }
   }
-  // base is velocity controlled
+
+  // // base is velocity controlled
   u_.head<3>() = base_twist_cmd_shared_;
   dynamics_->set_control(u_);
 
@@ -397,7 +398,10 @@ void RoyalPandaSim::advance_sim(ros::Time time, ros::Duration period) {
   Eigen::VectorXd tau = 0.99 * dynamics_->get_panda()->getNonlinearities(dynamics_->get_world()->getGravity()).e();
 
   // control only the arm joints (leave out gripper)
+  // while interpret the base cmd as effective torques sent to the base
   tau.segment<7>(3) += arm_joint_effort_desired_.head<7>();
+  tau.head<3>() += base_twist_cmd_shared_;
+
   dynamics_->get_panda()->setGeneralizedForce(tau);
   dynamics_->set_external_ee_force(user_force_);
 

@@ -23,6 +23,9 @@ struct DynamicsParams {
   bool apply_filter;
   FilterParams filter_params;
 
+  Eigen::Matrix<double, BASE_ARM_GRIPPER_DIM, 1> lower_limits;
+  Eigen::Matrix<double, BASE_ARM_GRIPPER_DIM, 1> upper_limits;
+
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };
 

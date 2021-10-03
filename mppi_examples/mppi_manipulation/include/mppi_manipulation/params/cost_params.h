@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <mppi_manipulation/dimensions.h>
 #include <mppi_pinocchio/model.h>
 #include <ros/ros.h>
 
@@ -12,7 +13,8 @@ struct CostParams {
   std::string robot_description;
   std::string object_description;
 
-  double Qreg;  // robot velocity regularization
+  Eigen::Matrix<double, BASE_ARM_DIM, 1> Qreg;  // command
+
   double Qt;    // translation cost
   double Qt2;
   double Qr;  // rotation cost

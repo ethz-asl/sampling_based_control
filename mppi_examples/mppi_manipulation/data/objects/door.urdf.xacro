@@ -87,6 +87,9 @@
             <geometry>
                 <cylinder radius="0.005" length="0.10"/>
             </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
         </collision>
     </link>
 

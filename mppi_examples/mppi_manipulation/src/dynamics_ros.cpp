@@ -25,6 +25,8 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
       nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
   power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
   tank_energy_publisher_ = nh_.advertise<std_msgs::Float64>("/tank_energy", 1);
+  desired_joint_state_publisher_ =
+      nh_.advertise<std_msgs::Float64MultiArray>("/desired_joint_state", 1);
 
   joint_state_.name = {
       "x_base_joint", "y_base_joint",        "pivot_joint",
@@ -51,6 +53,8 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   force_marker_.color.a = 1.0;
 
   tau_ext_msg_.data.resize(get_panda()->getDOF());
+  desired_joint_msg_.data.resize(BASE_ARM_DIM);
+
   ff_tau_.setZero(get_panda()->getDOF());
   integral_term_.setZero(ARM_DIMENSION);
 
@@ -115,16 +119,16 @@ void ManipulatorDynamicsRos::publish_ros() {
   }
   tau_ext_publisher_.publish(tau_ext_msg_);
 
+  // publish desired joint state
+  for (size_t i = 0; i < BASE_ARM_DIM; i++) {
+    desired_joint_msg_.data[i] = x_.tail<BASE_ARM_DIM>()(i);
+  }
+  desired_joint_state_publisher_.publish(desired_joint_msg_);
+
   // publish power exchanged
   std_msgs::Float64 power;
   power.data = tau_ext_.transpose() * joint_v;
   power_publisher_.publish(power);
-
-  // publish tank energy if available
-  if (get_filter()) {
-    tank_energy_.data = x_.tail<1>()(0);
-    tank_energy_publisher_.publish(tank_energy_);
-  }
 
   // publish end effector pose
   Eigen::Vector3d ee_position;

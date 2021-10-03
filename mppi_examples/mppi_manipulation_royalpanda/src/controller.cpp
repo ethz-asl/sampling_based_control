@@ -327,7 +327,7 @@ void ManipulationController::starting(const ros::Time& time) {
 
 void ManipulationController::enforce_constraints(const ros::Duration& period) {
   // compute the total power exchange with the tank
-  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
+  external_torque_ = x_.tail<TORQUE_DIMENSION + BASE_ARM_DIM>().head<10>();
   power_channels_ = u_opt_.cwiseProduct(external_torque_);
   power_from_interaction_ = power_channels_.sum();
 
@@ -381,14 +381,16 @@ void ManipulationController::update_position_reference(
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
-  // compute feedforward as function of the error in global position
-  // and then convert to base frame
+  // PI base velocity control
   Eigen::Vector3d u_ff = R_world_base.transpose() * (position_desired_.head<3>() - position_measured_.head<3>());
 
   // In simulation, we can use directly the hardware interface
   if (has_base_handles_) {
     for (int i = 0; i < 3; i++) {
-      base_joint_handles_[i].setCommand(gains_.base_gains.Ki[i] * u_ff[i] + u_opt_[i]);
+      // do not use velocity in sim since it is very noisy
+      base_joint_handles_[i].setCommand(
+          gains_.base_gains.Kp[i] *
+          u_ff[i]);  //- gains_.base_gains.Kd[i] * velocity_filtered_[i]);
     }
     return;
   }
@@ -398,9 +400,15 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
                                   x_nom_ros_.base_twist.linear.y,
                                   x_nom_ros_.base_twist.angular.z);
 
-    base_twist_publisher_.msg_.linear.x = u_opt_[0] + gains_.base_gains.Ki[0] * u_ff[0];
-    base_twist_publisher_.msg_.linear.y = u_opt_[1] + gains_.base_gains.Ki[1] * u_ff[1];
-    base_twist_publisher_.msg_.angular.z = u_opt_[2] + gains_.base_gains.Ki[2] * u_ff[2];
+    base_twist_publisher_.msg_.linear.x =
+        gains_.base_gains.Kp[0] * u_ff[0] -
+        gains_.base_gains.Kd[0] * velocity_filtered_[0];
+    base_twist_publisher_.msg_.linear.y =
+        gains_.base_gains.Kp[1] * u_ff[1] -
+        gains_.base_gains.Kd[1] * velocity_filtered_[1];
+    base_twist_publisher_.msg_.angular.z =
+        gains_.base_gains.Kp[2] * u_ff[2] -
+        gains_.base_gains.Kd[2] * velocity_filtered_[2];
     base_twist_publisher_.unlockAndPublish();
   }
 }
@@ -408,10 +416,13 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
 void ManipulationController::send_command_arm(const ros::Duration& period) {
   // clang-format off
   std::array<double, 7> tau_d_calculated{};
+  // std::cout << "Arm error: ";
   for (int i = 0; i < 7; ++i) {
-    tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[3+i] - robot_state_.q[i])
+    // std::cout << position_desired_[3+i] - robot_state_.q[i] << ", ";
+    tau_d_calculated[i] = gains_.arm_gains.Kp[i] * (position_desired_[3+i] - robot_state_.q[i])
         - gains_.arm_gains.Kd[i] * velocity_filtered_[3+i];
   }
+  // std::cout << std::endl;
 
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
   saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
@@ -443,6 +454,9 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
+
+    // reset the current reference
+    x_.tail<10>() = position_desired_;
     man_interface_->set_observation(x_, time.toSec());
     man_interface_->update_reference(x_, time.toSec());
     getRotationMatrix(R_world_base, x_(2));

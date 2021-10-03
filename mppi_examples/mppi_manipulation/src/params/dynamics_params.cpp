@@ -64,6 +64,36 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  std::vector<double> ll;
+  if (!nh.param<std::vector<double>>(prefix + "dynamics/lower_limits", ll,
+                                     {}) ||
+      ll.empty()) {
+    ROS_ERROR("Failed to parse dynamics/lower_limits or invalid");
+    return false;
+  }
+  if (ll.size() != BASE_ARM_GRIPPER_DIM) {
+    ROS_ERROR_STREAM("Initial state with the wrong dimension: "
+                     << initial_state.size()
+                     << "!=" << (int)BASE_ARM_GRIPPER_DIM);
+    return false;
+  }
+  for (int i = 0; i < ll.size(); i++) lower_limits(i) = ll[i];
+
+  std::vector<double> ul;
+  if (!nh.param<std::vector<double>>(prefix + "dynamics/upper_limits", ul,
+                                     {}) ||
+      ul.empty()) {
+    ROS_ERROR("Failed to parse dynamics/upper_limits or invalid");
+    return false;
+  }
+  if (ul.size() != BASE_ARM_GRIPPER_DIM) {
+    ROS_ERROR_STREAM("Initial state with the wrong dimension: "
+                     << initial_state.size()
+                     << "!=" << (int)BASE_ARM_GRIPPER_DIM);
+    return false;
+  }
+  for (int i = 0; i < ul.size(); i++) upper_limits(i) = ul[i];
+
   std::string object_description_name =
       (is_sim) ? "/object_description_raisim_simulation"
                : "/object_description_raisim";
@@ -101,6 +131,8 @@ std::ostream& operator<<(std::ostream& os,
   os << "object handle link = " << params.object_handle_link << std::endl;
   os << "object handle joint = " << params.object_handle_joint << std::endl;
   os << "articulation joint = " << params.articulation_joint << std::endl;
+  os << "upper limits = " << params.upper_limits.transpose() << std::endl;
+  os << "lower limits = " << params.lower_limits.transpose() << std::endl;
   return os;
   // clang-format on
 }

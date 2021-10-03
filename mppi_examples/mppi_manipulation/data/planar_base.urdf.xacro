@@ -20,14 +20,14 @@
         <link name="x_slider">
             <inertial>
                 <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-                <mass value="0.01"/>
+                <mass value="5.0"/>
                 <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
             </inertial>
         </link>
         <link name="y_slider">
             <inertial>
                 <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-                <mass value="0.01"/>
+                <mass value="5.0"/>
                 <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
             </inertial>
         </link>
@@ -35,7 +35,7 @@
             <inertial>
                 <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
                 <mass value="0.01"/>
-                <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+                <inertia ixx="5.0" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
             </inertial>
         </link>
 
@@ -45,7 +45,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="1 0 0"/>
             <limit effort="1000.0" lower="-10" upper="10" velocity="1.0"/>
-            <dynamics damping="0.0" friction="10"/>
+            <dynamics damping="1.0" friction="0.0"/>
         </joint>
         <xacro:add_transmission joint_name="x_base_joint"/>
 
@@ -55,7 +55,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="0 1 0"/>
             <limit effort="1000.0" lower="-10" upper="10" velocity="1.0"/>
-            <dynamics damping="0.0" friction="10"/>
+            <dynamics damping="1.0" friction="0.0"/>
         </joint>
         <xacro:add_transmission joint_name="y_base_joint"/>
 
@@ -65,7 +65,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
             <axis xyz="0 0 1"/>
             <limit effort="1000.0" velocity="1.0" upper="10.0" lower="-10.0"/>
-            <dynamics damping="0.0" friction="10"/>
+            <dynamics damping="1.0" friction="0.0"/>
         </joint>
         <xacro:add_transmission joint_name="pivot_joint"/>
 

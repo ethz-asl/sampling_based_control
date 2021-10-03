@@ -31,9 +31,9 @@ sim_dynamics:
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
-
-  #0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69
-  #-3.0, -3.0, 0.0, 0.0, 0.49, 1.77, -2.94, 0.0, 1.2, -0.56,
+  upper_limits: [ 200.0, 200.0, 600.28, 200.72, 100.59, 200.72, 100.1, 200.72, 300.58, 200.72, 1, 1]
+  lower_limits: [ -200.0, -200.0, -600.28, -200.72, -100.59, -200.72, -200.90, -200.55, -100.152, -200.72, -1, -1]
+     
   has_filter: false
   apply_filter: false
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
@@ -42,11 +42,12 @@ sim_dynamics:
                    0.0,                                                                    # object joint velocity
                    0,                                                                      # contact flag
                    100,                                                                    # tank energy
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]             # external torques
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # external torques
+                   0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69 ]               # desired position
   gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 1000.0, 1000.0, 1000.0 ]
+      kd: [ 600.0, 600.0, 600.0 ]  # just for damping
       ki: [ 0.0, 0.0, 0.0 ]
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:

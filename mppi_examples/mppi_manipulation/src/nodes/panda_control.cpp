@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
 
   // init state and input
   mppi::observation_t x = simulation->get_state();
+  x_nom = x;
   mppi::input_t u = simulation->get_zero_input(x);
 
   // init the controller
@@ -79,6 +80,7 @@ int main(int argc, char** argv) {
 
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
+
     controller.update_reference(x, sim_time);
     if (sequential) {
       controller.set_observation(x, sim_time);

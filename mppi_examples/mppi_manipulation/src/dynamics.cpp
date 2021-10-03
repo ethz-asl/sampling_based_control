@@ -16,6 +16,8 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
   initialize_world(params_.robot_description, params_.object_description);
   initialize_pd();
   set_collision();
+  reset(params_.initial_state, t_);
+
   if (params_.has_filter) {
     sf_ = std::make_unique<PandaMobileSafetyFilter>(params_.filter_params);
   } else {
@@ -51,14 +53,13 @@ void PandaRaisimDynamics::initialize_world(
   state_dimension_ = STATE_DIMENSION;
   input_dimension_ = INPUT_DIMENSION;
   x_ = mppi::observation_t::Zero(STATE_DIMENSION);
-
-  reset(params_.initial_state, t_);
 }
 
 void PandaRaisimDynamics::initialize_pd() {
   /// panda
-  cmd.setZero(robot_dof_);
-  cmdv.setZero(robot_dof_);
+  cmd_.setZero(robot_dof_);
+  cmdv_.setZero(robot_dof_);
+  cmdv_zero_.setZero(robot_dof_);
   joint_p.setZero(robot_dof_);
   joint_v.setZero(robot_dof_);
   joint_p_gain.setZero(robot_dof_);
@@ -108,18 +109,20 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
     u_opt_ = u;
   }
 
-  // keep the gripper in the current position
-  cmd.tail<PandaDim::GRIPPER_DIMENSION>()
+  // keep the gripper in the current position and integrate velocity for the
+  // arm and the base using previous velocity command
+  cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
       << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
+  cmd_.head<PandaDim::BASE_ARM_DIM>() += cmdv_.head<BASE_ARM_DIM>() * dt_;
+  cmd_ = cmd_.cwiseMax(params_.lower_limits).cwiseMin(params_.upper_limits);
 
-  cmdv(0) = u_opt_(0) * std::cos(x_(2)) - u_opt_(1) * std::sin(x_(2));
-  cmdv(1) = u_opt_(0) * std::sin(x_(2)) + u_opt_(1) * std::cos(x_(2));
-  cmdv(2) = u_opt_(2);
-  cmdv.segment<ARM_DIMENSION>(BASE_DIMENSION) =
+  cmdv_(0) = u_opt_(0) * std::cos(x_(2)) - u_opt_(1) * std::sin(x_(2));
+  cmdv_(1) = u_opt_(0) * std::sin(x_(2)) + u_opt_(1) * std::cos(x_(2));
+  cmdv_(2) = u_opt_(2);
+  cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) =
       u_opt_.segment<ARM_DIMENSION>(BASE_DIMENSION);
 
-  cmdv.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
-  panda->setPdTarget(cmd, cmdv);
+  panda->setPdTarget(cmd_, cmdv_zero_);
   panda->setGeneralizedForce(panda->getNonlinearities(gravity_));
 
   // gravity compensated object
@@ -153,7 +156,9 @@ void PandaRaisimDynamics::advance() {
   x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v(0);
   x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;
   x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1) = tank_.get_state();
-  x_.tail<TORQUE_DIMENSION>() = tau_ext_;
+  x_.segment<TORQUE_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION +
+                               1) = tau_ext_;
+  x_.tail<BASE_ARM_DIM>() = cmd_.head<BASE_ARM_DIM>();
 }
 
 mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
@@ -174,6 +179,8 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
   object->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
                    x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
   tank_.reset(x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1), t);
+  cmd_.head<PandaDim::BASE_ARM_DIM>() = x_.tail<PandaDim::BASE_ARM_DIM>();
+
   if (sf_) {
     sf_->reset_constraints();
   }

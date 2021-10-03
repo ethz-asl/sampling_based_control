@@ -5,21 +5,24 @@ dynamics:
   articulation_joint: articulation_joint
   has_filter: false
   apply_filter: false
+  upper_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973, 1, 1]
+  lower_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973, -1, -1]
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    0.0,                                                                    # object joint position
                    0.0,                                                                    # object joint velocity
                    0,                                                                      # contact flag
                    100,                                                                    # tank energy
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # external torques
+                   0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]                # desired robot position
   gains:
     base_gains:
-      kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 1000.0, 1000.0, 1000.0 ]
+      kp: [ 5000.0, 5000.0, 5000.0 ]
+      kd: [ 600.0, 600.0, 600.0 ]
       ki: [ 0.0, 0.0, 0.0 ]
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
-      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kp: [ 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 ]
       kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
       ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
@@ -36,21 +39,24 @@ sim_dynamics:
   articulation_joint: articulation_joint
   has_filter: false
   apply_filter: false
+  upper_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973, 1, 1]
+  lower_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973, -1, -1]
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    0.0,                                                                    # object joint position
                    0.0,                                                                    # object joint velocity
                    0,                                                                      # contact flag
                    100,                                                                    # tank energy
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # external torques
+                   0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69]                # desired robot position
   gains:
     base_gains:
-      kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 1000.0, 1000.0, 1000.0 ]
+      kp: [ 5000.0, 5000.0, 5000.0 ]
+      kd: [ 600.0, 600.0, 600.0 ]
       ki: [ 0.0, 0.0, 0.0 ]
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
-      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kp: [ 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 ]
       kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
       ki: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
@@ -61,17 +67,17 @@ sim_dynamics:
       i_max: [ 0.0, 0.0 ]
 
 cost:
-  regularization: 0.0
-  linear_weight: 100.0
-  linear_weight_opening: 100.0
+  regularization: [1.0, 1.0, 1.0, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+  linear_weight: 1000.0
+  linear_weight_opening: 10.0
 
-  angular_weight: 10.0
+  angular_weight: 100.0
   angular_weight_opening: 1.0
 
   min_dist: 0.0
-  max_reach: 1.0
-  reach_weight: 100
-  reach_weight_slope: 10
+  max_reach: 0.65
+  reach_weight: 0 #100
+  reach_weight_slope: 0 #10
 
   obstacle_weight: 0
   obstacle_weight_slope: 0
@@ -79,7 +85,7 @@ cost:
 
   contact_weight: 10.0
 
-  object_weight: 1000
+  object_weight: 10000
   object_tolerance: 0.01
 
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -100,7 +106,7 @@ cost:
 
   collision_link_0: panda_link1
   collision_link_1: panda_link7
-  collision_threshold: 0.35
+  collision_threshold: -1.0 #0.35
   collision_weight: 1000
   
 safety_filter:
@@ -144,8 +150,6 @@ safety_filter:
   second_derivative_limits: false
   udd_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
   udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
-  # udd_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-  # udd_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
   verbose: false
 

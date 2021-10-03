@@ -202,7 +202,7 @@ std::string eigenToString(const Eigen::VectorXd &x) {
   ss << "object state  =" << x.segment<2>(24).transpose() << std::endl;
   ss << "contact state =" << x.segment<1>(26).transpose() << std::endl;
   ss << "tank state    =" << x(27) << std::endl;
-  ss << "ext tau       =" << x.tail<12>().transpose() << std::endl;
+  ss << "ext tau       =" << x.segment<12>(27).transpose() << std::endl;
   return ss.str();
 }
 

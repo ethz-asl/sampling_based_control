@@ -33,11 +33,13 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   ros::Publisher handle_publisher_;
   ros::Publisher tau_ext_publisher_;
   ros::Publisher power_publisher_;
+  ros::Publisher desired_joint_state_publisher_;
 
   sensor_msgs::JointState joint_state_;
   sensor_msgs::JointState object_state_;
   visualization_msgs::Marker force_marker_;
   std_msgs::Float64MultiArray tau_ext_msg_;
+  std_msgs::Float64MultiArray desired_joint_msg_;
   std_msgs::Float64 tank_energy_;
   ros::Publisher tank_energy_publisher_;
 

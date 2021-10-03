@@ -4,14 +4,14 @@
     <arg name="object" default="door"/>
     <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
     <arg name="object_height" default="1.0"/>
-    <arg name="load_simulation_object" default="false"/>
+    <arg name="load_simulation_object" default="true"/>
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
       resources_directory:='package://mppi_panda'
       collision_links:=false
       collision_hand:=true
       add_finger:=true
-      custom_fingers:=false
+      custom_fingers:=true
       fixed_base:=false"/>
 
     <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
@@ -20,7 +20,7 @@
       collision_links:=false
       collision_hand:=true
       add_finger:=true
-      custom_fingers:=false
+      custom_fingers:=true
       fixed_base:=true"/>
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
@@ -30,7 +30,7 @@
       collision_finger:=true
       collision_format:='obj'
       add_finger:=true
-      custom_fingers:=false
+      custom_fingers:=true
       no_position_limits:=false
       friction:=0.0
       damping:=10.0

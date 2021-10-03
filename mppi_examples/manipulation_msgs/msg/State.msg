@@ -8,4 +8,4 @@ float64 object_velocity
 bool in_contact
 float64 tank_state
 
-int64 SIZE = 40
+int64 SIZE = 50

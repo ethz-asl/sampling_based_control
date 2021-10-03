@@ -115,7 +115,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   raisim::World sim_;
 
   Eigen::VectorXd object_p, object_v;
-  Eigen::VectorXd cmd, cmdv;
+  Eigen::VectorXd cmd_, cmdv_, cmdv_zero_;
   Eigen::VectorXd joint_p_gain, joint_d_gain;
   Eigen::VectorXd joint_p_desired, joint_v_desired;
 
