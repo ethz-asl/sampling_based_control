@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
-
+    
     controller.update_reference(x, sim_time);
     if (sequential) {
       controller.set_observation(x, sim_time);
@@ -94,6 +94,11 @@ int main(int argc, char** argv) {
       controller.get_input(x, u, sim_time);
     }
 
+    // hack to reset the desired position to the nominal at the previous time step
+    x.tail<10>() = x_nom.tail<10>();
+    simulation->reset(x, sim_time);
+
+    u.setZero();
     x = simulation->step(u, simulation->get_dt());
     sim_time += simulation->get_dt();
 

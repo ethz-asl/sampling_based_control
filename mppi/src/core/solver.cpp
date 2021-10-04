@@ -219,41 +219,13 @@ void Solver::initialize_rollouts() {
 
 void Solver::prepare_rollouts() {
   // cleanup
-  //rollouts_valid_index_.clear();
   rollouts_cost_.clear();
-//  weights_.clear();
-
-  // find trim index
-//  size_t offset;
-//  {
-//    std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-//    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
-//                                  opt_roll_cache_.tt.end(), t0_internal_);
-//    if (lower == opt_roll_cache_.tt.end()) {
-//      std::stringstream warning;
-//      warning << "Resetting to time " << t0_internal_
-//              << ", greater than the last available time: "
-//              << opt_roll_cache_.tt.back();
-//      log_warning(warning.str());
-//    }
-//    offset = std::distance(opt_roll_cache_.tt.begin(), lower);
-//  }
-
-  // sort rollouts for easier caching
-//  std::sort(rollouts_.begin(), rollouts_.end());
 
   // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
-//    shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
     roll.clear_cost();
-//    roll.clear_observation();
     roll.valid = true;
   }
-
-  // shift and trim the previously optimized trajectory
-//  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
-//             offset);
-  //shift_back(momentum_, momentum_.back(), offset);
 }
 
 void Solver::set_reference_trajectory(mppi::reference_trajectory_t& ref) {
@@ -293,24 +265,6 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       ts = t0_internal_ + t * config_.step_size;
       rollouts_[k].tt[t] = ts;
       rollouts_[k].uu[t] = policy_->sample(ts, k);
-//
-//      // cached rollout (recompute noise)
-//      if (k < cached_rollouts_) {
-//        rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
-//      }
-//      // noise free trajectory
-//      else if (k == cached_rollouts_) {
-//        rollouts_[k].nn[t].setZero();
-//        rollouts_[k].uu[t] = opt_roll_.uu[t];
-//      }
-//      // perturbed trajectory
-//      else {
-//        sample_noise(rollouts_[k].nn[t]);
-//        rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
-//      }
-
-      // impose input constraints
-      //bound_input(rollouts_[k].uu[t]);
 
       // compute input-state stage cost
       double cost_temp;
@@ -339,13 +293,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       rollouts_[k].cc(t) = cost_temp;
       rollouts_[k].total_cost += cost_temp;
 
-      // TODO(giuseppe) move input cost all in the cost function
-//          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-//              rollouts_[k].nn[t] +
-//          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-//              opt_roll_.uu[t];
-
-      // integrate dynamics    auto start = std::chrono::steady_clock::now();
+      // integrate dynamics
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
     }
   }
@@ -382,8 +330,6 @@ void Solver::compute_weights() {
       const double& cost = rollouts_[k].total_cost;
       min_cost = (cost < min_cost) ? cost : min_cost;
       max_cost = (cost > max_cost) ? cost : max_cost;
-//      rollouts_cost_.push_back(rollouts_[k].total_cost);
-//      rollouts_valid_index_.push_back(k);
     }
   }
 
@@ -397,11 +343,11 @@ void Solver::compute_weights() {
 
     if (!rollouts_[k].valid) {
       weights_[k] = 0;
-    } else if (rollouts_[k].total_cost < 0.2) {
+    // } else if (rollouts_[k].total_cost < 0.2) {
       // TODO(giuseppe) remove hard coded threshold
-      weights_[k] =
-          std::exp(-modified_cost) * (0.2 * 0.2 / modified_cost + 1 - 0.2);
-      if (weights_[k] > 1e10) weights_[k] = 1e10;
+      // weights_[k] =
+      //     std::exp(-modified_cost) * (0.2 * 0.2 / modified_cost + 1 - 0.2);
+      // if (weights_[k] > 1e10) weights_[k] = 1e10;
     } else {
       weights_[k] = std::exp(-modified_cost);
     }
@@ -559,7 +505,8 @@ void Solver::get_input_state(const observation_t& x, observation_t& x_nom,
       double coeff = (t - *(lower - 1)) / (*lower - *(lower - 1));
       u_nom = (1 - coeff) * opt_roll_cache_.uu[idx - 1] +
               coeff * opt_roll_cache_.uu[idx];
-      x_nom = opt_roll_cache_.xx[idx];  // TODO offer a way to also do
+      x_nom = (1 - coeff) * opt_roll_cache_.xx[idx - 1] +
+              coeff * opt_roll_cache_.xx[idx];;  // TODO offer a way to also do
                                         // interpolation of the state
     }
   }

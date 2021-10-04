@@ -66,7 +66,7 @@ bool Config::init_from_file(const std::string& file) {
   spline_dt = parse_key_quiet<double>(solver_options, "spline_dt").value_or(spline_dt);
   spline_verbose = parse_key_quiet<double>(solver_options, "spline_verbose").value_or(spline_verbose);
   spline_step_size = parse_key_quiet<double>(solver_options, "spline_step_size").value_or(spline_step_size);
-  
+  max_gradient = parse_key_quiet<double>(solver_options, "max_gradient").value_or(max_gradient);
   display_update_freq = parse_key_quiet<bool>(solver_options, "display_update_freq").value_or(display_update_freq);
   //clang-format on
 
@@ -87,6 +87,7 @@ std::ostream &operator<<(std::ostream &os, const mppi::Config &config) {
   os << " substeps:         " << config.substeps << std::endl;
   os << " gradient_step_size: " << config.alpha << std::endl;
   os << " momentum_step_size: " << config.beta << std::endl;
+  os << " max gradient:       " << config.max_gradient << std::endl; 
   os << " adaptive sampling " << config.adaptive_sampling << std::endl;
   os << " input_variance:   " << config.input_variance.transpose() << std::endl; 
   

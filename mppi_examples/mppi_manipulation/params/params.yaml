@@ -67,8 +67,8 @@ sim_dynamics:
       i_max: [ 0.0, 0.0 ]
 
 cost:
-  regularization: [1.0, 1.0, 1.0, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-  linear_weight: 1000.0
+  regularization: [0.2, 0.2, 0.2, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+  linear_weight: 100.0
   linear_weight_opening: 10.0
 
   angular_weight: 100.0

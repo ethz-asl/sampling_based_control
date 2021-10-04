@@ -35,6 +35,7 @@ struct Config {
 
   double alpha = 1.0;
   double beta = 0.0;
+  double max_gradient = 1.0;
   bool adaptive_sampling = false;
   Eigen::VectorXd input_variance;
 

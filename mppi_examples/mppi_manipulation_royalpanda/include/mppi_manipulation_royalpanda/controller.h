@@ -120,12 +120,14 @@ class ManipulationController
   RTPublisher<geometry_msgs::Twist> base_twist_publisher_;
   RTPublisher<geometry_msgs::Twist> world_twist_publisher_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
+  RTPublisher<std_msgs::Float64MultiArray> position_desired_publisher_;
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
   std::mutex observation_mutex_;
   double observation_time_;
   Eigen::VectorXd x_;
+  Eigen::VectorXd x_copy_;
   Eigen::VectorXd u_;
   Eigen::VectorXd u_opt_;
   Eigen::VectorXd x_nom_;
@@ -140,6 +142,7 @@ class ManipulationController
 
   manipulation_msgs::State x_ros_;
   manipulation_msgs::State x_nom_ros_;
+  std_msgs::Float64MultiArray position_desired_ros_;
 
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
 
@@ -174,5 +177,7 @@ class ManipulationController
   int log_counter_ = 0;
   int log_every_steps_;
   double opt_time_;
+
+
 };
 }  // namespace manipulation_royalpanda

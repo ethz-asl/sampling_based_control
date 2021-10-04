@@ -27,11 +27,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
+  
 
   // regularization cost
-  // cost += u.head<BASE_ARM_DIM>().transpose() *
-  // u.head<BASE_ARM_DIM>().cwiseProduct(params_.Qreg);
-
+  cost += u.head<BASE_ARM_DIM>().transpose() * u.head<BASE_ARM_DIM>().cwiseProduct(params_.Qreg);
+  
   // end effector reaching cost
   if (mode == 0) {
     Eigen::Vector3d ref_t = ref.head<3>();
@@ -86,7 +86,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   
   // power cost
-  cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
+  cost += params_.Q_power * std::max(0.0, (-x.tail<BASE_ARM_DIM + TORQUE_DIMENSION>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
   
   // self collision cost
   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,

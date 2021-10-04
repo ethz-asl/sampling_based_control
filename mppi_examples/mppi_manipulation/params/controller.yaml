@@ -23,6 +23,7 @@ solver:
 
   gradient_step_size: 1.0 #1.0
   momentum_step_size: 0.0 #0.0
+  max_gradient: 0.2
 
   filter_type: 1
   filter_order: 1
@@ -41,7 +42,7 @@ solver:
   spline_step_size: 0.1
 
   adaptive_sampling: false
-  input_variance: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+  input_variance: [0.1, 0.1, 0.1, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   discount_factor: 1.0
   verbose: false

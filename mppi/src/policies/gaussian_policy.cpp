@@ -51,7 +51,7 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   min_limits_ = -Eigen::MatrixXd::Ones(nt_, nu_);
 
   // used to clip the gradient
-  max_gradient_ = Eigen::MatrixXd::Ones(nt_, nu_) * 0.2;
+  max_gradient_ = Eigen::MatrixXd::Ones(nt_, nu_) * config_.max_gradient;
 
   for (int i = 0; i < nt_; i++) {
     max_limits_.row(i) = config.u_max;

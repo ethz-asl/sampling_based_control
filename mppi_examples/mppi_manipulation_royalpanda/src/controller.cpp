@@ -208,6 +208,8 @@ bool ManipulationController::init_interfaces(
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   base_twist_publisher_.init(nh, base_twist_topic_, 1);
   nominal_state_publisher_.init(nh, nominal_state_topic_, 1);
+  position_desired_publisher_.init(nh, "/controller/position_desired", 1);
+  position_desired_ros_.data.resize(10, 0.0);
 
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
@@ -224,7 +226,7 @@ void ManipulationController::state_callback(
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
-    x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
+    x_(STATE_DIMENSION - TORQUE_DIMENSION - BASE_ARM_DIM - 1) = energy_tank_.get_state();
     
 
     if (!state_received_) {
@@ -236,6 +238,11 @@ void ManipulationController::state_callback(
                                                           observation_time_)) {
         ROS_WARN("Failed to set the controller reference to current state.");
       }
+      x_.tail<10>() = x_.head<10>();
+      x_nom_ = x_;
+
+      // set the very first observation
+      man_interface_->set_observation(x_, observation_time_);
     }
   }
 
@@ -263,6 +270,7 @@ void ManipulationController::starting(const ros::Time& time) {
   // we do not actively control the gripper
   x_.setZero(PandaDim::STATE_DIMENSION);
   x_nom_.setZero(PandaDim::STATE_DIMENSION);
+  x_copy_.setZero(PandaDim::STATE_DIMENSION);
   u_.setZero(PandaDim::INPUT_DIMENSION);
   u_opt_.setZero(10);
   u_filter_.setZero(10);
@@ -378,11 +386,20 @@ void ManipulationController::update_position_reference(
       position_measured_ + (position_desired_ - position_measured_)
                                .cwiseMax(-max_position_error_)
                                .cwiseMin(max_position_error_);
+  for (int i=0; i<10; i++){
+    position_desired_ros_.data[i] = x_copy_.tail<10>()[i];
+  }
+
+  // debug publishing of current desired position
+  if (position_desired_publisher_.trylock()){
+    position_desired_publisher_.msg_ = position_desired_ros_;
+    position_desired_publisher_.unlockAndPublish();
+  }
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
   // PI base velocity control
-  Eigen::Vector3d u_ff = R_world_base.transpose() * (position_desired_.head<3>() - position_measured_.head<3>());
+  Eigen::Vector3d u_ff = R_world_base.transpose() * (x_copy_.tail<10>().head<3>() - position_measured_.head<3>());
 
   // In simulation, we can use directly the hardware interface
   if (has_base_handles_) {
@@ -419,7 +436,7 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   // std::cout << "Arm error: ";
   for (int i = 0; i < 7; ++i) {
     // std::cout << position_desired_[3+i] - robot_state_.q[i] << ", ";
-    tau_d_calculated[i] = gains_.arm_gains.Kp[i] * (position_desired_[3+i] - robot_state_.q[i])
+    tau_d_calculated[i] = gains_.arm_gains.Kp[i] * (x_copy_.tail<10>()[3+i] - robot_state_.q[i])
         - gains_.arm_gains.Kd[i] * velocity_filtered_[3+i];
   }
   // std::cout << std::endl;
@@ -455,8 +472,11 @@ void ManipulationController::update(const ros::Time& time,
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
 
-    // reset the current reference
-    x_.tail<10>() = position_desired_;
+    // reset the current reference to the one according to the nominal trajectory
+    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
+
+    x_copy_ = x_nom_;
+    x_.tail<10>() = x_nom_.tail<10>();
     man_interface_->set_observation(x_, time.toSec());
     man_interface_->update_reference(x_, time.toSec());
     getRotationMatrix(R_world_base, x_(2));

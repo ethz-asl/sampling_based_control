@@ -120,7 +120,7 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
   cmdv_(1) = u_opt_(0) * std::sin(x_(2)) + u_opt_(1) * std::cos(x_(2));
   cmdv_(2) = u_opt_(2);
   cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) =
-      u_opt_.segment<ARM_DIMENSION>(BASE_DIMENSION);
+    u_opt_.segment<ARM_DIMENSION>(BASE_DIMENSION);
 
   panda->setPdTarget(cmd_, cmdv_zero_);
   panda->setGeneralizedForce(panda->getNonlinearities(gravity_));
@@ -156,8 +156,7 @@ void PandaRaisimDynamics::advance() {
   x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v(0);
   x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;
   x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1) = tank_.get_state();
-  x_.segment<TORQUE_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION +
-                               1) = tau_ext_;
+  x_.segment<TORQUE_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION + 1) = tau_ext_;
   x_.tail<BASE_ARM_DIM>() = cmd_.head<BASE_ARM_DIM>();
 }
 
