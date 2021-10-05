@@ -18,7 +18,6 @@ set(PACKAGE_DEPENDENCIES
         safety_filter
         mppi_ros
         mppi_pinocchio
-        mppi_panda_mobile
         roslib
         roscpp
         manipulation_msgs
