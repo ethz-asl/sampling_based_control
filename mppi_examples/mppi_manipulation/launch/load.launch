@@ -13,7 +13,7 @@
       collision_hand:=true
       add_finger:=true
       custom_fingers:=false
-      wrench_sensor:=$(arg wrench_sensor)
+      add_wrench_sensor:=$(arg wrench_sensor)
       fixed_base:=false"/>
 
     <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
@@ -23,7 +23,7 @@
       collision_hand:=true
       add_finger:=true
       custom_fingers:=false
-      wrench_sensor:=$(arg wrench_sensor)
+      add_wrench_sensor:=$(arg wrench_sensor)
       fixed_base:=true"/>
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
@@ -37,7 +37,7 @@
       no_position_limits:=false
       friction:=0.0
       damping:=10.0
-      wrench_sensor:=$(arg wrench_sensor)
+      add_wrench_sensor:=$(arg wrench_sensor)
       fixed_base:=false"/>
 
     <!-- The safety filter is hard coded to not consider the gripper -->
@@ -48,7 +48,7 @@
       no_position_limits:=false
       friction:=0.0
       damping:=10.0
-      wrench_sensor:=$(arg wrench_sensor)
+      add_wrench_sensor:=$(arg wrench_sensor)
       fixed_base:=false"/>
 
     <param name="object_description"

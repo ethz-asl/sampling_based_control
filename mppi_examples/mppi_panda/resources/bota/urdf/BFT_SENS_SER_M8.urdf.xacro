@@ -34,7 +34,7 @@
           rpy="0 0 0" />
         <geometry>
           <mesh
-            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/mounting.STL" />
+            filename="package://mppi_panda/resources/bota/meshes/BFT_SENS_SER_M8/mounting.STL" />
         </geometry>
         <material
           name="">
@@ -48,7 +48,7 @@
           rpy="0 0 0" />
         <geometry>
           <mesh
-            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/mounting.STL" />
+            filename="package://mppi_panda/resources/bota/meshes/BFT_SENS_SER_M8/mounting.STL" />
         </geometry>
       </collision> -->
     </link>
@@ -75,7 +75,7 @@
           rpy="0 0 0" />
         <geometry>
           <mesh
-            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/wrench.STL" />
+            filename="package://mppi_panda/resources/bota/meshes/BFT_SENS_SER_M8/wrench.STL" />
         </geometry>
         <material
           name="">
@@ -89,7 +89,7 @@
           rpy="0 0 0" />
         <geometry>
           <mesh
-            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/wrench.STL" />
+            filename="package://mppi_panda/resources/bota/meshes/BFT_SENS_SER_M8/wrench.STL" />
         </geometry>
       </collision> -->
     </link>

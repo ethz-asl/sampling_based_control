@@ -28,7 +28,7 @@
     <xacro:property name="add_wrench_sensor" default="$(arg add_wrench_sensor)"/>
 
     <xacro:include filename="$(find mppi_panda)/resources/panda/custom_fingers.urdf"/>
-    <xacro:include filename="$(find mppi_panda)/sensors/bota/urdf/BFT_SENS_SER_M8.urdf.xacro"/>
+    <xacro:include filename="$(find mppi_panda)/resources/bota/urdf/BFT_SENS_SER_M8.urdf.xacro"/>
   
 
     <xacro:macro name="panda_robot" params="parent_link:='world' robot_description:=''">
@@ -445,12 +445,12 @@
             </xacro:BFT_SENS_SER_M8>
             
             <joint name="hand_flange_joint" type="fixed">
-                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <origin xyz="0 0 0" rpy="0 0 -2.355"/>
                 <parent link="ft_sensor0_wrench"/>
                 <child link="hand_flange"/>
             </joint>
         </xacro:if>
-        <xacro:unless>
+        <xacro:unless value="${add_wrench_sensor}">
             <joint name="hand_flange_joint" type="fixed">
                 <origin xyz="0 0 0" rpy="0 0 -0.785398163397"/>
                 <parent link="panda_link8"/>
