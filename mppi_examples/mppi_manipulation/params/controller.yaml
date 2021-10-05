@@ -14,7 +14,7 @@ solver:
   lambda: 0.0001 #0.001
   h: 10.0
   step_size: 0.015
-  horizon: 1.0
+  horizon: 0.5
 
   cost_ratio: 0.2
   caching_factor: 0.3
@@ -23,7 +23,7 @@ solver:
 
   gradient_step_size: 1.0 #1.0
   momentum_step_size: 0.0 #0.0
-  max_gradient: 0.2
+  max_gradient: 1.0
 
   filter_type: 1
   filter_order: 1
@@ -42,7 +42,7 @@ solver:
   spline_step_size: 0.1
 
   adaptive_sampling: false
-  input_variance: [0.1, 0.1, 0.1, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [0.1, 0.1, 0.1, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25]
 
   discount_factor: 1.0
   verbose: false

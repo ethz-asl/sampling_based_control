@@ -7,8 +7,10 @@ Panels:
         - /Global Options1
         - /Status1
         - /Object Sim1/Links1
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
-    Tree Height: 866
+    Tree Height: 746
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -72,6 +74,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         chassis_link:
           Alpha: 1
           Show Axes: false
@@ -230,51 +233,25 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        door_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        door_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        handle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         world:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        "{prefix}axis_link":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}door":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}door_hinge":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}handle_link":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}handle_support_left":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}handle_support_right":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}measured_joint_link":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}measured_joint_link_test":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}shelf":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: Object Model
       Robot Description: object_description_raisim
       TF Prefix: ""
@@ -291,57 +268,177 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        sim_door_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        sim_door_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        sim_handle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         world:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        "{prefix}axis_link":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}door":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}door_hinge":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}handle_link":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}handle_support_left":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}handle_support_right":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        "{prefix}measured_joint_link":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}measured_joint_link_test":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        "{prefix}shelf":
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: Object Sim
       Robot Description: object_description_raisim_simulation
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        axle_link:
+          Value: false
+        base_link:
+          Value: false
+        chassis_link:
+          Value: false
+        door_frame:
+          Value: false
+        door_link:
+          Value: false
+        franka_mount_link:
+          Value: false
+        front_cover_link:
+          Value: false
+        front_lights_link:
+          Value: false
+        handle_link:
+          Value: false
+        imu_link:
+          Value: false
+        left_side_cover_link:
+          Value: false
+        mid_mount:
+          Value: false
+        omni_base_root_link:
+          Value: false
+        panda_grasp:
+          Value: true
+        panda_hand:
+          Value: false
+        panda_leftfinger:
+          Value: false
+        panda_link0:
+          Value: false
+        panda_link1:
+          Value: false
+        panda_link2:
+          Value: false
+        panda_link3:
+          Value: false
+        panda_link4:
+          Value: false
+        panda_link5:
+          Value: false
+        panda_link6:
+          Value: false
+        panda_link7:
+          Value: false
+        panda_link8:
+          Value: false
+        panda_rightfinger:
+          Value: true
+        pivot:
+          Value: false
+        rear_cover_link:
+          Value: false
+        rear_lights_link:
+          Value: false
+        reference_link:
+          Value: false
+        ridgeback_sensor_mount_link:
+          Value: false
+        right_side_cover_link:
+          Value: false
+        sim_door_frame:
+          Value: false
+        sim_door_link:
+          Value: false
+        sim_handle_link:
+          Value: false
+        top_link:
+          Value: false
+        world:
+          Value: false
+        x_slider:
+          Value: false
+        y_slider:
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          door_frame:
+            door_link:
+              handle_link:
+                {}
+          omni_base_root_link:
+            x_slider:
+              y_slider:
+                pivot:
+                  base_link:
+                    chassis_link:
+                      axle_link:
+                        {}
+                      front_cover_link:
+                        {}
+                      front_lights_link:
+                        {}
+                      imu_link:
+                        {}
+                      left_side_cover_link:
+                        {}
+                      rear_cover_link:
+                        {}
+                      rear_lights_link:
+                        {}
+                      right_side_cover_link:
+                        {}
+                      top_link:
+                        {}
+                    mid_mount:
+                      franka_mount_link:
+                        panda_link0:
+                          panda_link1:
+                            panda_link2:
+                              panda_link3:
+                                panda_link4:
+                                  panda_link5:
+                                    panda_link6:
+                                      panda_link7:
+                                        panda_link8:
+                                          panda_hand:
+                                            panda_leftfinger:
+                                              {}
+                                            panda_rightfinger:
+                                              panda_grasp:
+                                                {}
+                      reference_link:
+                        {}
+                      ridgeback_sensor_mount_link:
+                        {}
+          sim_door_frame:
+            sim_door_link:
+              sim_handle_link:
+                {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -370,7 +467,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.473128318786621
+      Distance: 1.1876475811004639
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -378,25 +475,25 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.34593647718429565
-        Y: -0.06339526176452637
-        Z: 0.503183126449585
+        X: 0.05214361101388931
+        Y: -0.42635035514831543
+        Z: 1.5508859157562256
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.44726479053497314
+      Pitch: -0.002735082060098648
       Target Frame: <Fixed Frame>
-      Yaw: 1.8001141548156738
+      Yaw: 0.9951149225234985
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1163
+  Height: 1043
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000025e000003edfc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000003ed000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000003edfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d000003ed000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000003efc0100000002fb0000000800540069006d0065010000000000000780000002eb00fffffffb0000000800540069006d0065010000000000000450000000000000000000000407000003ed00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000025e00000375fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000375000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000375fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000375000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000003efc0100000002fb0000000800540069006d0065010000000000000780000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000004070000037500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

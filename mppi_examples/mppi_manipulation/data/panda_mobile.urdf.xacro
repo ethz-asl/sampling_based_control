@@ -45,10 +45,10 @@
     <xacro:if value="${add_finger}">
         <link name="panda_grasp"/>
         <joint name="panda_grasp_joint" type="fixed">
-            <parent link="panda_hand"/>
+            <parent link="panda_rightfinger"/>
             <child link="panda_grasp"/>
             <axis xyz="0 1 0"/>
-            <origin xyz="0 0 0.095" rpy="0 0 0"/> <!-- 0.106-->
+            <origin xyz="0 -0.005 0.045" rpy="0 0 0"/> <!--origin xyz="0 0 0.095" rpy="0 0 0"/-->
         </joint>
     </xacro:if>
 
