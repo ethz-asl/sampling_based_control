@@ -6,6 +6,8 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(Franka 0.7.0 REQUIRED)
 find_package(orocos_kdl)
 
+option(BUILD_ROYALPANDA_SIM "Build the raisim based simulation node" OFF)
+
 set(PACKAGE_DEPENDENCIES
     sensor_msgs
     std_msgs
@@ -23,6 +25,7 @@ set(PACKAGE_DEPENDENCIES
     kdl_parser
     manipulation_msgs
     message_filters
+    filters
     eigen_conversions
 )
 
@@ -38,9 +41,10 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ### Simulation
-add_executable(simulation_node src/simulation.cpp src/nodes/simulation_node.cpp)
-target_link_libraries(simulation_node ${catkin_LIBRARIES})
-
+if($BUILD_ROYALPANDA_SIM)
+  add_executable(simulation_node src/simulation.cpp src/nodes/simulation_node.cpp)
+  target_link_libraries(simulation_node ${catkin_LIBRARIES})
+endif()
 ### Ros controller
 add_library(manipulation_controller src/controller.cpp)
 target_include_directories(manipulation_controller PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
