@@ -11,6 +11,7 @@
     <xacro:arg name="no_position_limits" default="true"/>
     <xacro:arg name="friction" default="0.0"/>
     <xacro:arg name="damping"  default="0.0"/>
+    <xacro:arg name="add_wrench_sensor" default="false"/>
 
     <xacro:arg name="add_finger" default="false"/>
 
@@ -24,8 +25,11 @@
     <xacro:property name="add_finger" value="$(arg add_finger)"/>
     <xacro:property name="friction" default="$(arg friction)"/>
     <xacro:property name="damping"  default="$(arg damping)"/>
+    <xacro:property name="add_wrench_sensor" default="$(arg add_wrench_sensor)"/>
 
     <xacro:include filename="$(find mppi_panda)/resources/panda/custom_fingers.urdf"/>
+    <xacro:include filename="$(find mppi_panda)/sensors/bota/urdf/BFT_SENS_SER_M8.urdf.xacro"/>
+  
 
     <xacro:macro name="panda_robot" params="parent_link:='world' robot_description:=''">
         <joint name="panda_joint_${parent_link}" type="fixed">
@@ -431,11 +435,35 @@
             <child link="panda_link8"/>
             <axis xyz="0 0 0"/>
         </joint>
+
+        <!-- Common link to connect the hand (with or without the sensor) -->
+        <link name="hand_flange"/>
+            
+        <xacro:if value="${add_wrench_sensor}">
+            <xacro:BFT_SENS_SER_M8 parent="panda_link8">
+                <origin xyz="0 0 0" rpy="0 0 ${3.14/2}"/>
+            </xacro:BFT_SENS_SER_M8>
+            
+            <joint name="hand_flange_joint" type="fixed">
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <parent link="ft_sensor0_wrench"/>
+                <child link="hand_flange"/>
+            </joint>
+        </xacro:if>
+        <xacro:unless>
+            <joint name="hand_flange_joint" type="fixed">
+                <origin xyz="0 0 0" rpy="0 0 -0.785398163397"/>
+                <parent link="panda_link8"/>
+                <child link="hand_flange"/>
+            </joint>
+        </xacro:unless>
+
         <joint name="panda_hand_joint" type="fixed">
-            <parent link="panda_link8"/>
+            <parent link="hand_flange"/>
             <child link="panda_hand"/>
-            <origin rpy="0 0 -0.785398163397" xyz="0 0 0"/>
+            <origin rpy="0 0 0.0" xyz="0 0 0"/>
         </joint>
+
         <link name="panda_hand">
             <inertial>
                 <mass value="0.73"/>
@@ -463,6 +491,7 @@
                 </collision>
             </xacro:if>
         </link>
+
         <xacro:if value="${add_finger}">
             <gazebo reference="panda_hand"/>
             <gazebo reference="panda_leftfinger"/>

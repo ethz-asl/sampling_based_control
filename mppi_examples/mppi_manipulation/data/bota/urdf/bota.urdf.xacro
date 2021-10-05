@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<robot name="bota_sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="bota_interface_height" default="0.06"/>
+  <xacro:macro name="bota_sensor" params="parent *origin">
+  
+    <joint name="bota_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="ft_sensor0"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <link name="ft_sensor0">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://moma_description/sensors/bota/meshes/bota_sensor.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.75294 0.75294 0.75294 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://moma_description/sensors/bota/meshes/bota_sensor.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.75294 0.75294 0.75294 1" />
+        </material>
+      </collision>
+    </link>
+
+
+  </xacro:macro>    
+</robot>
+
+
+
+
+
+
+
+
+
+
+
+
+

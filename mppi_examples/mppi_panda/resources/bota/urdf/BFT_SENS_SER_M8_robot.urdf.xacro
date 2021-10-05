@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro"
+       name="sensor" >
+
+ 
+  <xacro:arg name="prefix" default="ft_sensor0"/>
+
+  <xacro:include filename="$(find rokubimini_description)/urdf/BFT_SENS_SER_M8.urdf.xacro" />
+
+  <xacro:BFT_SENS_SER_M8 prefix="$(arg prefix)" />
+
+  <link name="world" />
+
+  <joint name="world_joint" type="fixed">
+    <parent link="world" />
+    <child link = "ft_sensor0_mounting" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+  </joint>
+
+</robot>

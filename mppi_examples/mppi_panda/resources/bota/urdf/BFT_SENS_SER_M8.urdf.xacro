@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="BFT_SENS_SER_M8" params="parent prefix:='ft_sensor0' *origin">
+    
+    <joint name="bota_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${prefix}_mounting"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+
+    <link
+      name="${prefix}_mounting">
+      <inertial>
+        <origin
+          xyz="-1.4429E-05 -0.0012322 0.010377"
+          rpy="0 0 0" />
+        <mass
+          value="0.12949" />
+        <inertia
+          ixx="4.7439E-05"
+          ixy="3.8988E-09"
+          ixz="-9.7261E-10"
+          iyy="5.4492E-05"
+          iyz="2.413E-07"
+          izz="8.7816E-05" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/mounting.STL" />
+        </geometry>
+        <material
+          name="">
+          <color
+            rgba="0.6902 0.61176 0.52941 1" />
+        </material>
+      </visual>
+<!--       <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/mounting.STL" />
+        </geometry>
+      </collision> -->
+    </link>
+
+    <link
+      name="${prefix}_wrench">
+      <inertial>
+        <origin
+          xyz="-1.9753E-07 0.00017443 -0.0070758"
+          rpy="0 0 0" />
+        <mass
+          value="0.081117" />
+        <inertia
+          ixx="2.1858E-05"
+          ixy="-1.9153E-12"
+          ixz="3.7592E-11"
+          iyy="2.2215E-05"
+          iyz="-4.9937E-08"
+          izz="4.0048E-05" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/wrench.STL" />
+        </geometry>
+        <material
+          name="">
+          <color
+            rgba="0.6902 0.61176 0.52941 1" />
+        </material>
+      </visual>
+<!--       <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://moma_description/sensors/bota/meshes/BFT_SENS_SER_M8/wrench.STL" />
+        </geometry>
+      </collision> -->
+    </link>
+
+    <joint
+      name="mounting_to_wrench"
+      type="fixed">
+      <origin
+        xyz="0 0 0.035"
+        rpy="0 0 0" />
+      <parent
+        link="${prefix}_mounting" />
+      <child
+        link="${prefix}_wrench" />
+      <axis
+        xyz="0 0 0" />
+    </joint>
+
+    <link
+      name="${prefix}_mech1">
+    </link>
+
+    <joint
+      name="mounting_to_mech1"
+      type="fixed">
+      <origin
+        xyz="-0.032879 0 0.0105"
+        rpy="1.5625 0 -1.5708" />
+      <parent
+        link="${prefix}_mounting" />
+      <child
+        link="${prefix}_mech1" />
+      <axis
+        xyz="0 0 0" />
+    </joint>
+    <link
+      name="${prefix}_mech2">
+    </link>
+
+    <joint
+      name="mounting_to_mech2"
+      type="fixed">
+      <origin
+        xyz="0 -0.032879 0.0105"
+        rpy="1.5708 0 0" />
+      <parent
+        link="${prefix}_mounting" />
+      <child
+        link="${prefix}_mech2" />
+      <axis
+        xyz="0 0 0" />
+    </joint>
+
+    <link
+      name="${prefix}_mech3">
+    </link>
+
+    <joint
+      name="mounting_to_mech3"
+      type="fixed">
+      <origin
+        xyz="0.032879 0 0.0105"
+        rpy="1.5708 0 1.5708" />
+      <parent
+        link="${prefix}_mounting" />
+      <child
+        link="${prefix}_mech3" />
+      <axis
+        xyz="0 0 0" />
+    </joint>
+
+  </xacro:macro>
+</robot>
