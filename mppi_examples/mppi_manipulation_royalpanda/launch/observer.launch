@@ -64,6 +64,15 @@
         <param name="object_state_topic" value="/simulation/object_state"/> <!-- only in sim -->
         <param name="wrench_topic" value="/external_force"/>
         <param name="observer_update_frequency" value="200"/>
+
+        <param name="wrench_threshold" value="2"/>
+        <param name="wrench_contact_threshold" value="1"/>
+        <rosparam>
+          wrench_median_filter:
+            name: wrench_median_filter
+            type: MultiChannelMedianFilterDouble
+            params: {number_of_observations: 5}
+        </rosparam>
     </node>
 </launch>
 

@@ -27,6 +27,16 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#ifdef MELODIC
+#include <filters/median.h>
+#endif
+
+#ifndef MELODIC
+#include <filters/median.hpp>
+#endif
+
+#include <mppi_manipulation_royalpanda/butter.h>
+
 namespace manipulation_royalpanda {
 
 /// The scope of this class is to collect info and return the complete mobile
@@ -61,6 +71,8 @@ class StateObserver {
       const nav_msgs::OdometryConstPtr& base_twist,
       const sensor_msgs::JointStateConstPtr& object_state,
       const geometry_msgs::WrenchStampedConstPtr& wrench);
+
+  void filter_wrench();
 
  private:
   bool simulation_;
@@ -177,8 +189,20 @@ class StateObserver {
   std::unique_ptr<KDL::ChainJntToJacSolver> jacobian_solver_;
   KDL::JntArray kdl_joints_;
   KDL::Jacobian J_world_ee_;
-  Eigen::Matrix<double, 6, 1> wrench_eigen_;
   KDL::Chain world_to_ee_chain_;
+
+  double wrench_threshold_;
+  double wrench_contact_threshold_;
+
+  std::vector<double> wrench_meas_v_; // wrench measured as std vector (input median filter)
+  std::vector<double> wrench_medf_; // wrench filtered by median filter
+
+  Eigen::VectorXd wrench_meas_;
+  Eigen::VectorXd wrench_filt_;
+
+  std::array<Butter2, 6> wrench_lp_filters_;
+  std::unique_ptr<filters::MultiChannelFilterBase<double>> wrench_median_filter_;
+
 
   // tf2_ros
   tf2_ros::Buffer tf_buffer_;
@@ -186,5 +210,7 @@ class StateObserver {
 
   // contact state
   bool contact_state_ = false;
+
+
 };
 }  // namespace manipulation_royalpanda

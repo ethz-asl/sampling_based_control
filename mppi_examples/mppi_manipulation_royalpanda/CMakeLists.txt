@@ -8,6 +8,14 @@ find_package(orocos_kdl)
 
 option(BUILD_ROYALPANDA_SIM "Build the raisim based simulation node" OFF)
 
+if (DEFINED ENV{ROS_DISTRO})
+  if ($ENV{ROS_DISTRO} MATCHES "melodic")
+    add_definitions(-DMELODIC)
+  endif()
+else()
+  message(WARN "Defaulting to noetic: no ROS_DISTRO found.")
+endif()
+
 set(PACKAGE_DEPENDENCIES
     sensor_msgs
     std_msgs

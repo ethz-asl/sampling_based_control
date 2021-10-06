@@ -126,7 +126,6 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   robot_state_.header.frame_id = "world";
 
   base_twist_ros_.header.frame_id = "world";
-
   ext_tau_.setZero();
 }
 
@@ -209,6 +208,30 @@ bool StateObserver::initialize() {
                   << T_handle0_hinge_.inverse().matrix() << std::endl
                   << " T_base_reference:\n "
                   << T_reference_base_.inverse().matrix() << std::endl);
+
+  if (!nh_.getParam("wrench_threshold", wrench_threshold_) ||
+      wrench_threshold_ < 0) {
+    ROS_ERROR("Failed to parse wrench_threshold param or invalid.");
+    return false;
+  }
+
+  if (!nh_.getParam("wrench_contact_threshold", wrench_contact_threshold_)) {
+    ROS_ERROR("Failed to parse wrench_contact_threshold param or invalid.");
+    return false;
+  }
+
+  wrench_median_filter_ =
+      std::make_unique<filters::MultiChannelMedianFilter<double>>();
+  if (!wrench_median_filter_->configure(6, "wrench_median_filter", nh_)) {
+    ROS_ERROR("Failed to initialize the wrench median filter");
+    return false;
+  }
+
+  wrench_meas_v_.resize(6, 0.0);
+  wrench_medf_.resize(6, 0.0);
+
+  wrench_meas_.setZero(6);
+  wrench_filt_.setZero(6);
   ROS_INFO("Robot observer correctly initialized.");
   return true;
 }
@@ -232,7 +255,7 @@ void StateObserver::message_filter_cb(
   manipulation::conversions::toMsg(
       time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
       ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
-      false, tank_state_, state_ros_);
+      contact_state_, tank_state_, state_ros_);
 
   state_publisher_.publish(state_ros_);
 }
@@ -375,6 +398,26 @@ void StateObserver::object_pose_callback(
   object_state_publisher_.publish(object_state_);
 }
 
+void StateObserver::filter_wrench() {
+  // median filter to get rid of spikes
+  for (int i = 0; i < 6; i++) {
+    wrench_meas_v_[i] = wrench_meas_[i];
+  }
+  wrench_median_filter_->update(wrench_meas_v_, wrench_medf_);
+
+  // low pass filter to remove vibrations
+  for (int i = 0; i < 6; i++) {
+    wrench_filt_[0] = wrench_lp_filters_[i].apply(wrench_medf_[i]);
+  }
+
+  // thresholding to remove uncompensated bias/payload
+  if (wrench_filt_.norm() < wrench_threshold_) {
+    wrench_filt_.setZero();
+  } else {
+    wrench_filt_ -= wrench_threshold_ * wrench_filt_ / wrench_filt_.norm();
+  }
+}
+
 void StateObserver::wrench_callback(
     const geometry_msgs::WrenchStampedConstPtr& msg) {
   // wrench is in the end effector frame. Need to convert to world frame
@@ -403,30 +446,29 @@ void StateObserver::wrench_callback(
 
   // filter wrench measurements
   const static double alpha = 0.1;
-  wrench_eigen_(0) =
-      alpha * wrench_eigen_(0) + (1.0 - alpha) * msg->wrench.force.x;
-  wrench_eigen_(1) =
-      alpha * wrench_eigen_(1) + (1.0 - alpha) * msg->wrench.force.y;
-  wrench_eigen_(2) =
-      alpha * wrench_eigen_(2) + (1.0 - alpha) * msg->wrench.force.z;
-  wrench_eigen_(3) =
-      alpha * wrench_eigen_(3) + (1.0 - alpha) * msg->wrench.torque.x;
-  wrench_eigen_(4) =
-      alpha * wrench_eigen_(4) + (1.0 - alpha) * msg->wrench.torque.y;
-  wrench_eigen_(5) =
-      alpha * wrench_eigen_(5) + (1.0 - alpha) * msg->wrench.torque.z;
-  wrench_eigen_.head<3>() = T_world_sensor.rotation() * wrench_eigen_.head<3>();
-  wrench_eigen_.tail<3>() = T_world_sensor.rotation() * wrench_eigen_.tail<3>();
+  wrench_meas_(0) = msg->wrench.force.x;
+  wrench_meas_(1) = msg->wrench.force.y;
+  wrench_meas_(2) = msg->wrench.force.z;
+  wrench_meas_(3) = msg->wrench.torque.x;
+  wrench_meas_(4) = msg->wrench.torque.y;
+  wrench_meas_(5) = msg->wrench.torque.z;
+
+  // rotate to world frame to filter wrench in a inertial frame
+  wrench_meas_.head<3>() = T_world_sensor.rotation() * wrench_meas_.head<3>();
+  wrench_meas_.tail<3>() = T_world_sensor.rotation() * wrench_meas_.tail<3>();
 
   // detect contact from wrench using small threshold
-  contact_state_ = wrench_eigen_.norm() > 0.1;
-  
+  contact_state_ = wrench_meas_.norm() > wrench_contact_threshold_;
+
+  // filter wrench to eliminate spikes and small bias
+  filter_wrench();
+
   // clang-format off
   J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), std::sin(base_pose_.z()), 0,
                                             -std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
                                             0, 0, 1;
   // clang-format on
-  ext_tau_ = J_world_ee_.data.transpose() * wrench_eigen_;
+  ext_tau_ = J_world_ee_.data.transpose() * wrench_filt_;
 
   // sanitize torque
   for (int i = 0; i < ext_tau_.size(); i++) {
