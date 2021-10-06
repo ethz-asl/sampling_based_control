@@ -84,7 +84,7 @@ int main(int argc, char** argv){
 
   bool exact_sync = false;
   if (!nh.getParam("exact_sync", exact_sync)){
-    ROS_ERROR("Failed to parse arm_state_topic");
+    ROS_ERROR("Failed to parse exact_sync");
     return 0;
   }
 

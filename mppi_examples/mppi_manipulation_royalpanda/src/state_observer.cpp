@@ -53,55 +53,30 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   nh_.param<bool>("exact_sync", exact_sync_, false);
 
   // subscribers for message filter
-  arm_sub_.subscribe(nh_, arm_state_topic, 10);
-  base_pose_sub_.subscribe(nh_, base_pose_topic, 10);
-  base_twist_sub_.subscribe(nh_, base_twist_topic, 10);
-  object_sub_.subscribe(nh_, object_pose_topic, 10);
-  obj_state_sub_.subscribe(nh_, object_state_topic, 10);
-  wrench_sub_.subscribe(nh_, wrench_topic, 10);
+  arm_sub_.subscribe(nh_, arm_state_topic, 1);
+  ROS_INFO_STREAM("Subscribing arm state to: " << arm_state_topic);
 
-  // message filter with sync policy (timestamps must be the same -> only
-  // possible in simulation) or approximate timestamp matching policy
-  // (see http://wiki.ros.org/message_filters/ApproximateTime)
+  base_pose_sub_.subscribe(nh_, base_pose_topic, 1);
+  ROS_INFO_STREAM("Subscribing base pose to: " << base_pose_topic);
+  
+  base_twist_sub_.subscribe(nh_, base_twist_topic, 1);
+  ROS_INFO_STREAM("Subscribing base twist to: " << base_twist_topic);
+  
+  object_sub_.subscribe(nh_, object_pose_topic, 1);
+  ROS_INFO_STREAM("Subscribing object pose to: " << object_pose_topic);
+  
+  obj_state_sub_.subscribe(nh_, object_state_topic, 1);
+  ROS_INFO_STREAM("Subscribing object state to: " << object_state_topic);
+  
+  wrench_sub_.subscribe(nh_, wrench_topic, 1);
+  ROS_INFO_STREAM("Subscribing wrench to: " << wrench_topic);
+  
 
-  // in real experiment we estimate the joint values
-  // this is only implemented for the shelf, would not work for other objects
-  // Estimation is done subscribing to the handle odometry from vicon
-  // In simulation instead, we directly subscribe to the object state published
-  // by the simulator
-  if (!simulation_) {
-    if (exact_sync_) {
-      exact_message_filter_ =
-          std::make_unique<message_filters::Synchronizer<ExactPolicy>>(
-              ExactPolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-              object_sub_, wrench_sub_);
-      exact_message_filter_->registerCallback(boost::bind(
-          &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
-    } else {
-      approx_message_filter_ =
-          std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
-              ApproximatePolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-              object_sub_, wrench_sub_);
-      approx_message_filter_->registerCallback(boost::bind(
-          &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
-    }
-  } else {
-    if (exact_sync_) {
-      exact_message_filter_sim_ =
-          std::make_unique<message_filters::Synchronizer<ExactPolicySim>>(
-              ExactPolicySim(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-              obj_state_sub_, wrench_sub_);
-      exact_message_filter_sim_->registerCallback(boost::bind(
-          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
-    } else {
-      approx_message_filter_sim_ =
-          std::make_unique<message_filters::Synchronizer<ApproximatePolicySim>>(
-              ApproximatePolicySim(10), arm_sub_, base_pose_sub_,
-              base_twist_sub_, obj_state_sub_, wrench_sub_);
-      approx_message_filter_sim_->registerCallback(boost::bind(
-          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
-    }
-  }
+  arm_sub2_ = nh_.subscribe(arm_state_topic, 1, &StateObserver::arm_state_callback, this);
+  base_pose_sub2_ = nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback, this);
+  base_twist_sub2_ = nh_.subscribe(base_pose_topic, 1, &StateObserver::base_twist_callback, this);
+  object_sub2_ = nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
+  wrench_sub2_ = nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
 
   // ros publishing
   state_publisher_ =
@@ -114,6 +89,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
       nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
   robot_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
+  wrench_filt_publisher_ =
+      nh_.advertise<geometry_msgs::WrenchStamped>("/observer/wrench_filtered_sensor", 1);
 
   object_state_.name.push_back("articulation_joint");
   object_state_.position.push_back(0.0);
@@ -232,6 +209,56 @@ bool StateObserver::initialize() {
 
   wrench_meas_.setZero(6);
   wrench_filt_.setZero(6);
+  wrench_filt_sensor_.setZero(6);
+
+    // message filter with sync policy (timestamps must be the same -> only
+  // possible in simulation) or approximate timestamp matching policy
+  // (see http://wiki.ros.org/message_filters/ApproximateTime)
+
+  // in real experiment we estimate the joint values
+  // this is only implemented for the shelf, would not work for other objects
+  // Estimation is done subscribing to the handle odometry from vicon
+  // In simulation instead, we directly subscribe to the object state published
+  // by the simulator
+  // if (!simulation_) {
+  //   if (exact_sync_) {
+  //     exact_message_filter_ =
+  //         std::make_unique<message_filters::Synchronizer<ExactPolicy>>(
+  //             ExactPolicy(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+  //             object_sub_, wrench_sub_);
+  //     exact_message_filter_->registerCallback(boost::bind(
+  //         &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+  //     ROS_INFO("Syncing messages (real robot) with ExactPolicy");
+  //   } else {
+  //     approx_message_filter_ =
+  //         std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
+  //             ApproximatePolicy(100), arm_sub_, base_pose_sub_, base_twist_sub_,
+  //             object_sub_, wrench_sub_);
+  //     approx_message_filter_->registerCallback(boost::bind(
+  //         &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
+  //     ROS_INFO("Syncing messages (real robot) with ApproximatePolicy");
+  //   }
+  // } else 
+  if (simulation_) {
+    if (exact_sync_) {
+      exact_message_filter_sim_ =
+          std::make_unique<message_filters::Synchronizer<ExactPolicySim>>(
+              ExactPolicySim(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+              obj_state_sub_, wrench_sub_);
+      exact_message_filter_sim_->registerCallback(boost::bind(
+          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
+      ROS_INFO("Syncing messages (simulation) with ExactPolicy");
+    } else {
+      approx_message_filter_sim_ =
+          std::make_unique<message_filters::Synchronizer<ApproximatePolicySim>>(
+              ApproximatePolicySim(10), arm_sub_, base_pose_sub_,
+              base_twist_sub_, obj_state_sub_, wrench_sub_);
+      approx_message_filter_sim_->registerCallback(boost::bind(
+          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
+      ROS_INFO("Syncing message (simulation) with ApproximatePolicy");
+    }
+  }
+
   ROS_INFO("Robot observer correctly initialized.");
   return true;
 }
@@ -288,12 +315,15 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   tf::poseMsgToEigen(msg->pose.pose, T_world_reference_);
   T_world_base_ = T_world_reference_ * T_reference_base_;
 
-  base_pose_.x() = T_world_base_.translation().x();
-  base_pose_.y() = T_world_base_.translation().y();
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);  
+    base_pose_.x() = T_world_base_.translation().x();
+    base_pose_.y() = T_world_base_.translation().y();
 
-  // 2d projection of forward motion axis
-  Eigen::Vector3d ix = T_world_base_.rotation().col(0);
-  base_pose_.z() = std::atan2(ix.y(), ix.x());
+    // 2d projection of forward motion axis
+    Eigen::Vector3d ix = T_world_base_.rotation().col(0);
+    base_pose_.z() = std::atan2(ix.y(), ix.x());
+  }
 
   // publish to ros
   geometry_msgs::PoseStamped base_pose;
@@ -314,6 +344,7 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   robot_state_.position[0] = base_pose_.x();
   robot_state_.position[1] = base_pose_.y();
   robot_state_.position[2] = base_pose_.z();
+
   robot_state_publisher_.publish(robot_state_);
 }
 
@@ -323,7 +354,11 @@ void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
                                   msg->twist.twist.angular.z);
   odom_base_twist = Eigen::AngleAxis(base_pose_.z(), Eigen::Vector3d::UnitZ()) *
                     odom_base_twist;
-  base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);  
+    base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
+  }
+
   base_twist_ros_.header.stamp = msg->header.stamp;
   base_twist_ros_.twist.linear.x = base_twist_.x();
   base_twist_ros_.twist.linear.y = base_twist_.y();
@@ -339,11 +374,16 @@ void StateObserver::arm_state_callback(
         2.0, "Joint state fields have the wrong size." << msg->name.size());
     return;
   }
-  time_ = msg->header.stamp.toSec();
-  for (size_t i = 0; i < 9; i++) {
-    q_(i) = msg->position[i];
-    dq_(i) = msg->velocity[i];
+
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);  
+    for (size_t i = 0; i < 9; i++) {
+      q_(i) = msg->position[i];
+      dq_(i) = msg->velocity[i];
+    }
   }
+
+  time_ = msg->header.stamp.toSec();
   previous_publishing_time_ = time_;
 }
 
@@ -357,11 +397,9 @@ void StateObserver::object_state_callback(
 
 void StateObserver::object_pose_callback(
     const nav_msgs::OdometryConstPtr& msg) {
-  std::cout << "In object pose callback" << std::endl;
   if (simulation_) return;
   tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
   if (articulation_first_computation_) {
-    ROS_INFO("First computation of the shelf pose.");
     T_world_shelf_ = T_world_handle_ * T_handle0_shelf_;
     T_hinge_world_ = (T_world_handle_ * T_handle0_hinge_).inverse();
     T_hinge_handle_init_ = T_hinge_world_ * T_world_handle_;
@@ -392,10 +430,13 @@ void StateObserver::object_pose_callback(
                 msg->twist.twist.linear.y + msg->twist.twist.linear.y);
   double theta_dot = velocity_norm / T_hinge_handle_.translation().x();
 
-  object_state_.header.stamp = msg->header.stamp;
-  object_state_.position[0] = theta_new;
-  object_state_.velocity[0] = theta_dot;
-  object_state_publisher_.publish(object_state_);
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);  
+    object_state_.header.stamp = msg->header.stamp;
+    object_state_.position[0] = theta_new;
+    object_state_.velocity[0] = theta_dot;
+    object_state_publisher_.publish(object_state_);
+  }
 }
 
 void StateObserver::filter_wrench() {
@@ -405,12 +446,12 @@ void StateObserver::filter_wrench() {
   }
   wrench_median_filter_->update(wrench_meas_v_, wrench_medf_);
 
-  // low pass filter to remove vibrations
   for (int i = 0; i < 6; i++) {
-    wrench_filt_[0] = wrench_lp_filters_[i].apply(wrench_medf_[i]);
+    wrench_filt_[i] = wrench_medf_[i]; //wrench_lp_filters_[i].apply(wrench_medf_[i]);
   }
 
   // thresholding to remove uncompensated bias/payload
+
   if (wrench_filt_.norm() < wrench_threshold_) {
     wrench_filt_.setZero();
   } else {
@@ -457,12 +498,23 @@ void StateObserver::wrench_callback(
   wrench_meas_.head<3>() = T_world_sensor.rotation() * wrench_meas_.head<3>();
   wrench_meas_.tail<3>() = T_world_sensor.rotation() * wrench_meas_.tail<3>();
 
-  // detect contact from wrench using small threshold
-  contact_state_ = wrench_meas_.norm() > wrench_contact_threshold_;
 
   // filter wrench to eliminate spikes and small bias
   filter_wrench();
 
+  // publish wrench filtered
+  wrench_filt_sensor_.head<3>() = T_world_sensor.rotation().transpose() * wrench_filt_.head<3>();
+  wrench_filt_sensor_.tail<3>() = T_world_sensor.rotation().transpose() * wrench_filt_.tail<3>();
+  wrench_filt_ros_.wrench.force.x = wrench_filt_sensor_(0);
+  wrench_filt_ros_.wrench.force.y = wrench_filt_sensor_(1);
+  wrench_filt_ros_.wrench.force.z = wrench_filt_sensor_(2);
+  wrench_filt_ros_.wrench.torque.x = wrench_filt_sensor_(3);
+  wrench_filt_ros_.wrench.torque.y = wrench_filt_sensor_(4);
+  wrench_filt_ros_.wrench.torque.z = wrench_filt_sensor_(5);
+  wrench_filt_ros_.header = msg->header;
+  wrench_filt_publisher_.publish(wrench_filt_ros_);
+  
+  
   // clang-format off
   J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), std::sin(base_pose_.z()), 0,
                                             -std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
@@ -471,9 +523,25 @@ void StateObserver::wrench_callback(
   ext_tau_ = J_world_ee_.data.transpose() * wrench_filt_;
 
   // sanitize torque
-  for (int i = 0; i < ext_tau_.size(); i++) {
-    ext_tau_(i) = std::abs(ext_tau_(i)) > 1e3 ? 0.0 : ext_tau_(i);
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);  
+    for (int i = 0; i < ext_tau_.size(); i++) {
+      ext_tau_(i) = std::abs(ext_tau_(i)) > 1e3 ? 0.0 : ext_tau_(i);
+    }
+    // detect contact from wrench using small threshold
+    contact_state_ = wrench_meas_.norm() > wrench_contact_threshold_;
   }
 }
 
+void StateObserver::publish_state(){
+  std::unique_lock<std::mutex> lock(state_mutex_);
+  manipulation::conversions::toMsg(
+      ros::Time::now().toSec(), 
+      base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
+      ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
+      contact_state_, tank_state_, state_ros_);
+
+  state_publisher_.publish(state_ros_);
+
+}
 }  // namespace manipulation_royalpanda

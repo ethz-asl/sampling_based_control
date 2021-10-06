@@ -12,20 +12,29 @@
     <include file="$(find mppi_manipulation)/launch/load.launch">
         <arg name="debug" value="false"/>
         <arg name="object" value="$(arg object)"/>
-        <arg name="load_simulation_object" value="false"/>
+        <arg name="load_simulation_object" value="true"/>
         <arg name="wrench_sensor" value="true"/>
     </include>
-
+<!-- 
     <include file="$(find franka_gripper)/launch/franka_gripper.launch">
         <arg name="robot_ip" value="$(arg robot_ip)" />
     </include>
+ -->
+    <!-- Gripper state controller -->
+    <arg name="joint_names" default="[panda_finger_joint1, panda_finger_joint2]" />
+    <node name="franka_gripper" pkg="franka_gripper" type="franka_gripper_node" output="screen">
+      <param name="robot_ip" value="$(arg robot_ip)"/>
+      <param name="stop_at_shutdown" value="false" />
+      <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_gripper_node.yaml" />
+      <rosparam param="joint_names" subst_value="true">$(arg joint_names)</rosparam>
+    </node>
 
     <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
         <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_control_node.yaml" />
         <param name="robot_ip" value="$(arg robot_ip)" />
     </node>
 
-    <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
+    <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_state_controller.yaml" />
     <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>
 
     <group if="$(arg debug)">

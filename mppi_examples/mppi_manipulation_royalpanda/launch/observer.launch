@@ -2,12 +2,12 @@
 <launch>
 
     <arg name="simulation" default="false"/>
-    <arg name="use_base_odometry" value="false"/>
-    <arg name="debug" value="false"/>
+    <arg name="use_base_odometry" default="false"/>
+    <arg name="debug" default="false"/>
 
     <arg name="base_odometry_topic" default="/panda_base/vrpn_client/estimated_odometry" 
         unless="$(arg use_base_odometry)"/>
-    <arg name="base_odometry" default="/ridgeback_velocity_controller/odom" 
+    <arg name="base_odometry_topic" default="/ridgeback_velocity_controller/odom" 
         if="$(arg use_base_odometry)"/>
     
     <node pkg="mppi_manipulation_royalpanda" type="fake_object_odometry_publisher.py" name="fake_object_odometry_publisher" output="screen" if="$(arg debug)"/>
@@ -17,7 +17,7 @@
         <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
         <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
         <param name="output_topic" value="/panda/joint_states"/>
-        <param name="exact_sync" value="true"/>
+        <param name="exact_sync" value="false"/>
     </node>
 
     <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state
@@ -59,15 +59,15 @@
     <node pkg="mppi_manipulation_royalpanda" name="state_observer_node" type="state_observer_node" output="screen">
         <param name="simulation" value="$(arg simulation)"/>
         <param name="base_alpha" value="0.7"/>
-        <param name="base_pose_topic" value="$(arg base_odometry)"/>
+        <param name="base_pose_topic" value="$(arg base_odometry_topic)"/>
         <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
         <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
         <param name="object_state_topic" value="/simulation/object_state"/> <!-- only in sim -->
-        <param name="wrench_topic" value="/external_force"/>
+        <param name="wrench_topic" value="/ft_compensated"/>
         <param name="observer_update_frequency" value="200"/>
-
-        <param name="wrench_threshold" value="2"/>
+        <param name="exact_sync" value="false"/>
+        <param name="wrench_threshold" value="2.0"/>
         <param name="wrench_contact_threshold" value="1"/>
         <rosparam>
           wrench_median_filter:

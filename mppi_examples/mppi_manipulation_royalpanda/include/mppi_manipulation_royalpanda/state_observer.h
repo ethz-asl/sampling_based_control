@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -73,6 +74,9 @@ class StateObserver {
       const geometry_msgs::WrenchStampedConstPtr& wrench);
 
   void filter_wrench();
+
+public:
+  void publish_state();
 
  private:
   bool simulation_;
@@ -199,10 +203,20 @@ class StateObserver {
 
   Eigen::VectorXd wrench_meas_;
   Eigen::VectorXd wrench_filt_;
+  Eigen::VectorXd wrench_filt_sensor_;
+  geometry_msgs::WrenchStamped wrench_filt_ros_;
+  ros::Publisher wrench_filt_publisher_;
 
   std::array<Butter2, 6> wrench_lp_filters_;
   std::unique_ptr<filters::MultiChannelFilterBase<double>> wrench_median_filter_;
 
+
+  // non "message_filters" subscribers for state
+  ros::Subscriber arm_sub2_;
+  ros::Subscriber base_pose_sub2_;
+  ros::Subscriber base_twist_sub2_;
+  ros::Subscriber object_sub2_;
+  ros::Subscriber wrench_sub2_;
 
   // tf2_ros
   tf2_ros::Buffer tf_buffer_;
@@ -210,6 +224,9 @@ class StateObserver {
 
   // contact state
   bool contact_state_ = false;
+
+  // mutex acces to the state
+  std::mutex state_mutex_;
 
 
 };

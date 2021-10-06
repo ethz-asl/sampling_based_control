@@ -19,8 +19,9 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  ros::Rate rate(100);
+  ros::Rate rate(200);
   while (ros::ok()) {
+    observer.publish_state();
     rate.sleep();
   }
   spinner.stop();

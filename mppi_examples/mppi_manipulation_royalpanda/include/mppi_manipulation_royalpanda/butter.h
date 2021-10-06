@@ -3,7 +3,7 @@
 class Butter2 {
  public:
   // constructor
-  // Coefficients from http://www-users.cs.york.ac.uk/~fisher/mkfilter
+  // Coefficients from https://www.meme.net.au/butterworth.html
   //
 
   // filtertype  = Butterworth
