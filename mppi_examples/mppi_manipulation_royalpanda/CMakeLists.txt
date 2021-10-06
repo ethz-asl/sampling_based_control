@@ -71,3 +71,6 @@ target_link_libraries(joint_state_aggregator ${catkin_LIBRARIES})
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+catkin_install_python(PROGRAMS scripts/fake_object_odometry_publisher.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
