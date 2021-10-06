@@ -415,6 +415,13 @@ void StateObserver::object_pose_callback(
     T_world_shelf_ros.header.frame_id = "world";
     T_world_shelf_ros.child_frame_id = "shelf";
     static_broadcaster.sendTransform(T_world_shelf_ros);
+    ROS_INFO_STREAM(
+        "T_world_shelf is:"
+        << std::endl
+        << "translation: " << T_world_shelf_.translation().transpose()
+        << std::endl
+        << "rotation: "
+        << T_world_shelf_.rotation().eulerAngles(0, 1, 2).transpose());
     ROS_INFO_STREAM("Published initial transform from world to shelf frame.");
     return;
   }
