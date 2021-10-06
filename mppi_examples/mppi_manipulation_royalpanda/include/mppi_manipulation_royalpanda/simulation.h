@@ -20,7 +20,15 @@
 #include <ros/ros.h>
 #include <Eigen/Core>
 #include <cmath>
+
+#ifdef MELODIC
+#include <filters/median.h>
+#endif
+
+#ifndef MELODIC
 #include <filters/median.hpp>
+#endif
+
 #include <map>
 #include <memory>
 
