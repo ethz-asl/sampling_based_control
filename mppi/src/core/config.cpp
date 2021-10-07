@@ -42,10 +42,6 @@ bool Config::init_from_file(const std::string& file) {
   beta            = parse_key_quiet<double>(solver_options, "momentum_step_size").value_or(beta);
   adaptive_sampling = parse_key_quiet<bool>(solver_options, "adaptive_sampling").value_or(adaptive_sampling);
   input_variance  = parse_key<Eigen::VectorXd>(solver_options, "input_variance").value_or(Eigen::VectorXd(0));
-  filter_type     = (InputFilterType)parse_key_quiet<int>(solver_options, "filter_type").value_or(filter_type);
-  filter_window   = parse_key_quiet<int>(solver_options, "filter_window").value_or(filter_window);
-  filter_order    = parse_key_quiet<int>(solver_options, "filter_order").value_or(filter_order);
-  filtering       = parse_key_quiet<bool>(solver_options, "filtering").value_or(filtering);
   bound_input     = parse_key_quiet<bool>(solver_options, "bound_input").value_or(false);
   u_min           = parse_key_quiet<Eigen::VectorXd>(solver_options, "u_min").value_or(Eigen::VectorXd(0));
   u_max           = parse_key_quiet<Eigen::VectorXd>(solver_options, "u_max").value_or(Eigen::VectorXd(0));
@@ -54,14 +50,10 @@ bool Config::init_from_file(const std::string& file) {
   verbose         = parse_key_quiet<bool>(solver_options, "verbose").value_or(verbose);
   debug_print     = parse_key_quiet<bool>(solver_options, "debug_print").value_or(debug_print);
   threads         = parse_key_quiet<int>(solver_options, "threads").value_or(threads);
-  filters_type    = parse_key_quiet<std::vector<int>>(solver_options, "filters_type").value_or(std::vector<int>{});
+  filtering       = parse_key_quiet<bool>(solver_options, "filtering").value_or(filtering);
   filters_window  = parse_key_quiet<std::vector<int>>(solver_options, "filters_window").value_or(std::vector<int>{});
   filters_order   = parse_key_quiet<std::vector<uint>>(solver_options, "filters_order").value_or(std::vector<uint>{});
   logging         = parse_key_quiet<bool>(solver_options, "logging").value_or(logging);
-  use_tree_search = parse_key_quiet<bool>(solver_options, "use_tree_search").value_or(use_tree_search);
-  pruning_threshold = parse_key_quiet<double>(solver_options, "pruning_threshold").value_or(pruning_threshold);
-  expert_weights   = parse_key_quiet<Eigen::VectorXd>(solver_options, "expert_weights").value_or(expert_weights);
-  expert_types 	   = {NORM, IMP};
   spline_degree = parse_key_quiet<int>(solver_options, "spline_degree").value_or(spline_degree);
   spline_dt = parse_key_quiet<double>(solver_options, "spline_dt").value_or(spline_dt);
   spline_verbose = parse_key_quiet<double>(solver_options, "spline_verbose").value_or(spline_verbose);
@@ -91,6 +83,7 @@ std::ostream &operator<<(std::ostream &os, const mppi::Config &config) {
   os << " input_variance:   " << config.input_variance.transpose() << std::endl; 
   
   os << " caching_factor:   " << config.caching_factor << std::endl;
+  os << " cost ratio:       " << config.cost_ratio << std::endl;
   os << " step_size:        " << config.step_size << "s" << std::endl;
   os << " horizon:          " << config.horizon << "s" << std::endl;
   os << " steps:            " << std::floor(config.horizon / config.step_size) << std::endl;
@@ -106,26 +99,14 @@ std::ostream &operator<<(std::ostream &os, const mppi::Config &config) {
   os << " verbose: " << config.spline_verbose << std::endl;
   os << " step_size: " << config.spline_step_size << std::endl;
   
-  
   os << "Filter: " << std::endl;
-  os << " filter type:      " << config.filter_type << std::endl;
-  os << " filter window:    " << config.filter_window << std::endl;
-  os << " filter order:     " << config.filter_order << std::endl;
-
-  os << " filters type:    [";
-  for (const auto& type :  config.filters_type) os << type << " ";
-  os << "]" << std::endl;
-
+  os << " filtering:        " << config.filtering << std::endl;
   os << " filters window:  [";
   for (const auto& window :  config.filters_window) os << window << " ";
   os << "]" << std::endl;
-
   os << " filters order:   [";
   for (const auto& order :  config.filters_order) os << order << " ";
   os << "]" << std::endl;
-
-  os << " filtering:        " << config.filtering << std::endl;
-  os << " cost ratio:       " << config.cost_ratio << std::endl;
 
   os << "Other stuff: " << std::endl;
   os << " discount factor:  " << config.discount_factor << std::endl;

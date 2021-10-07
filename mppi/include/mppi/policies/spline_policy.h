@@ -8,6 +8,7 @@
 #include "mppi/core/policy.h"
 #include "mppi/policies/receding_horizon_spline.h"
 
+/// Spline Policy in development state
 namespace mppi {
 class SplinePolicy : public Policy {
  public:

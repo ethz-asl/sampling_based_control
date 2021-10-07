@@ -7,6 +7,7 @@
 
 namespace mppi {
 
+/// Generic interface class for filtering the input
 class Filter {
  public:
   Filter() = default;

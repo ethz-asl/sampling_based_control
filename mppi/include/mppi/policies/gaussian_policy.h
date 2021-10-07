@@ -11,6 +11,10 @@
 #include "mppi/utils/savgol_filter.h"
 #include "mppi/utils/multivariate_normal_eigen.h"
 
+/// Implementation of a gaussian policy that perturbs the nominal 
+/// trajectory with gaussian noise and applies a Savitzky-Golay filter
+/// to the resulting nominal input sequence 
+
 namespace mppi {
 
 class  GaussianPolicy : public Policy {

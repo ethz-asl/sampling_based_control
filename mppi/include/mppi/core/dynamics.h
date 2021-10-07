@@ -25,12 +25,27 @@ class Dynamics {
   virtual dynamics_ptr create() = 0;       // virtual constructor
   virtual dynamics_ptr clone() const = 0;  // virtual copy constructor
 
+  /**
+   * Reset the current state of the world to x at the time t
+   */
   virtual void reset(const observation_t& x, const double t) = 0;
-  virtual void render() {}
+
+  /**
+   * Given the current input and simulation dt, predicts the state at
+   * the next time step. Notice that dt does not need to be used, 
+   * as the dynamics function might have its own internal dt fixed at 
+   * creation time (e.g when using simulators)
+   */
   virtual observation_t step(const input_t& u, const double dt) = 0;
+
+  /**
+   * Return the current state of the dynamics
+   */
   virtual const observation_t get_state() const = 0;
 
-  // TODO(giuseppe): param x is never used!
+  /**
+   * Used to extend the input sequence when extening the horizon
+   */
   virtual input_t get_zero_input(const observation_t& x) {
     return input_t::Zero(this->get_input_dimension());
   }

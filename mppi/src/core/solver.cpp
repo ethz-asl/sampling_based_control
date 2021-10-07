@@ -33,10 +33,10 @@ namespace mppi {
 
 Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
                const Config& config)
-    : config_(config),
+    : dynamics_(std::move(dynamics)),
       cost_(std::move(cost)),
-      dynamics_(std::move(dynamics)),
-      policy_(std::move(policy)) {
+      policy_(std::move(policy)),
+      config_(config){
   init_data();
   init_threading();
 
@@ -68,55 +68,13 @@ void Solver::init_data() {
   rollouts_.resize(config_.rollouts, Rollout(steps_, nu_, nx_));
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
 
-
-  //momentum_.resize(steps_, input_t::Zero(nu_));
-
-//  if (sampler_ == nullptr) {
-//    log_info("No sampler provided, using gaussian sampler");
-//    if (config_.input_variance.size() != nu_)
-//      throw std::runtime_error(
-//          "The input variance size is different from the input size");
-//
-//    sampler_ = std::make_shared<mppi::GaussianSampler>(nu_);
-//    sampler_->set_covariance(config_.input_variance);
-//  }
-
-//  if (config_.bound_input) {
-//    if (config_.u_min.size() != nu_) {
-//      std::stringstream error;
-//      error << "Bounding input and min constraint size " << config_.u_min.size()
-//            << " != " << nu_;
-//      throw std::runtime_error(error.str());
-//    }
-//    if (config_.u_max.size() != nu_) {
-//      std::stringstream error;
-//      error << "Bounding input and max constraint size " << config_.u_max.size()
-//            << " != " << nu_;
-//      throw std::runtime_error(error.str());
-//    }
-//  }
-
   delay_steps_ = 0;
   step_count_ = 0;
   observation_set_ = false;
   reference_set_ = false;
 }
 
-void Solver::init_filter() {
-//  switch (config_.filter_type) {
-//    case InputFilterType::NONE: {
-//      break;
-//    }
-//    case InputFilterType::SAVITZKY_GOLEY: {
-//      filter_ = SavGolFilter(steps_, nu_, config_.filters_window,
-//                             config_.filters_order);
-//      break;
-//    }
-//    default: {
-//      throw std::runtime_error("Unrecognized filter type.");
-//    }
-//  }
-}
+void Solver::init_filter() {}
 
 void Solver::init_threading() {
   if (config_.threads > 1) {
@@ -191,8 +149,6 @@ void Solver::set_observation(const observation_t& x, const double t) {
 
 void Solver::update_delay() {
   delay_steps_ = std::ceil((reset_time_ - t0_internal_) / config_.step_size);
-  // delay_steps_ = std::round(delay_filter_alpha_ * delay_steps_ +
-  //   (1.0 - delay_filter_alpha_) * new_delay_steps_);
   policy_->update_delay(delay_steps_);
 }
 
@@ -212,48 +168,18 @@ void Solver::initialize_rollouts() {
   std::fill(opt_roll_cache_.xx.begin(), opt_roll_cache_.xx.end(), x0_internal_);
   std::fill(opt_roll_cache_.uu.begin(), opt_roll_cache_.uu.end(),
             dynamics_->get_zero_input(x0_internal_));
-  for (size_t i = 0; i < steps_; i++) {
+  for (int i = 0; i < steps_; i++) {
     opt_roll_cache_.tt[i] = t0_internal_ + config_.step_size * i;
   }
 }
 
 void Solver::prepare_rollouts() {
   // cleanup
-  //rollouts_valid_index_.clear();
   rollouts_cost_.clear();
-//  weights_.clear();
-
-  // find trim index
-//  size_t offset;
-//  {
-//    std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-//    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
-//                                  opt_roll_cache_.tt.end(), t0_internal_);
-//    if (lower == opt_roll_cache_.tt.end()) {
-//      std::stringstream warning;
-//      warning << "Resetting to time " << t0_internal_
-//              << ", greater than the last available time: "
-//              << opt_roll_cache_.tt.back();
-//      log_warning(warning.str());
-//    }
-//    offset = std::distance(opt_roll_cache_.tt.begin(), lower);
-//  }
-
-  // sort rollouts for easier caching
-//  std::sort(rollouts_.begin(), rollouts_.end());
-
-  // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
-//    shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
     roll.clear_cost();
-//    roll.clear_observation();
     roll.valid = true;
   }
-
-  // shift and trim the previously optimized trajectory
-//  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
-//             offset);
-  //shift_back(momentum_, momentum_.back(), offset);
 }
 
 void Solver::set_reference_trajectory(mppi::reference_trajectory_t& ref) {
@@ -284,33 +210,14 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
                                        const size_t start_idx,
                                        const size_t end_idx) {
   observation_t x;
-  double rollouts_sim_time = 0.0;
   for (size_t k = start_idx; k < end_idx; k++) {
     dynamics->reset(x0_internal_, t0_internal_);
     x = x0_internal_;
     double ts;
-    for (size_t t = 0; t < steps_; t++) {
+    for (int t = 0; t < steps_; t++) {
       ts = t0_internal_ + t * config_.step_size;
       rollouts_[k].tt[t] = ts;
       rollouts_[k].uu[t] = policy_->sample(ts, k);
-//
-//      // cached rollout (recompute noise)
-//      if (k < cached_rollouts_) {
-//        rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
-//      }
-//      // noise free trajectory
-//      else if (k == cached_rollouts_) {
-//        rollouts_[k].nn[t].setZero();
-//        rollouts_[k].uu[t] = opt_roll_.uu[t];
-//      }
-//      // perturbed trajectory
-//      else {
-//        sample_noise(rollouts_[k].nn[t]);
-//        rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
-//      }
-
-      // impose input constraints
-      //bound_input(rollouts_[k].uu[t]);
 
       // compute input-state stage cost
       double cost_temp;
@@ -338,12 +245,6 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
       rollouts_[k].total_cost += cost_temp;
-
-      // TODO(giuseppe) move input cost all in the cost function
-//          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-//              rollouts_[k].nn[t] +
-//          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-//              opt_roll_.uu[t];
 
       // integrate dynamics    auto start = std::chrono::steady_clock::now();
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
@@ -382,8 +283,6 @@ void Solver::compute_weights() {
       const double& cost = rollouts_[k].total_cost;
       min_cost = (cost < min_cost) ? cost : min_cost;
       max_cost = (cost > max_cost) ? cost : max_cost;
-//      rollouts_cost_.push_back(rollouts_[k].total_cost);
-//      rollouts_valid_index_.push_back(k);
     }
   }
 
@@ -391,20 +290,11 @@ void Solver::compute_weights() {
   max_cost_ = max_cost;   //*std::max_element(rollouts_cost_.begin(), rollouts_cost_.end());
 
   double sum = 0.0;
-  for (int k=0; k<config_.rollouts; k++){
+  for (size_t k=0; k<config_.rollouts; k++){
     double modified_cost = config_.h * (rollouts_[k].total_cost - min_cost_) /
                            (max_cost_ - min_cost_);
 
-    if (!rollouts_[k].valid) {
-      weights_[k] = 0;
-    } else if (rollouts_[k].total_cost < 0.2) {
-      // TODO(giuseppe) remove hard coded threshold
-      weights_[k] =
-          std::exp(-modified_cost) * (0.2 * 0.2 / modified_cost + 1 - 0.2);
-      if (weights_[k] > 1e10) weights_[k] = 1e10;
-    } else {
-      weights_[k] = std::exp(-modified_cost);
-    }
+    weights_[k] = rollouts_[k].valid ? std::exp(-modified_cost) : 0.0;
     sum += weights_[k];
   }
   std::transform(weights_.begin(), weights_.end(), weights_.begin(),
@@ -412,48 +302,33 @@ void Solver::compute_weights() {
 }
 
 void Solver::optimize() {
+  // get new rollouts weights
   compute_weights();
+
+  // update policy according to new weights 
   policy_->update(weights_, config_.alpha);
 
-  // rollouts averaging
-//  for (size_t t = 0; t < steps_; t++) {
-//    momentum_[t] = config_.beta * momentum_[t];
-//    for (size_t i = 0; i < rollouts_valid_index_.size(); i++) {
-//      momentum_[t] += weights_[i] * rollouts_[rollouts_valid_index_[i]].nn[t];
-//    }
-//  }
-
+  // retrieve the nominal policy for each time step
   for (int t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
     opt_roll_.uu[t] = policy_->nominal(t0_internal_ + t * config_.step_size);
   }
 
-  // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
-//  if (config_.adaptive_sampling) {
-//    input_t delta = input_t::Zero(nu_);
-//
-//    // TODO(giuseppe) remove the hardcoded baseline variance
-//    Eigen::MatrixXd new_covariance =
-//        Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
-//    for (size_t j = 0; j < rollouts_valid_index_.size(); j++) {
-//      for (size_t i = 0; i < steps_; i++) {
-//        delta = rollouts_[rollouts_valid_index_[j]].uu[i] - opt_roll_.uu[i];
-//        new_covariance += weights_[j] * (delta * delta.transpose()) / steps_;
-//      }
-//    }
-//    // I could filter the covariance update using a first order
-//    // new_covariance = alpha * new_covariance + (1-alpha) old_covariance
-//    sampler_->set_covariance(new_covariance);
-//  }
 }
 
 void Solver::filter_input() {
-  if (filter_) filter_->reset(x0_internal_, t0_internal_);
-
+  // only if filter is available reset to the initial opt time
+  if (filter_) {
+    filter_->reset(x0_internal_, t0_internal_);
+  }
+  
+  // reset the dynamics such that we rollout the dynamics again
+  // with the input we filter step after step (sequentially)
   dynamics_->reset(x0_internal_, t0_internal_);
   opt_roll_.xx[0] = x0_internal_;
 
-  for (size_t t = 0; t < steps_ - 1; t++) {
+  // sequential filtering otherwise just nominal rollout
+  for (int t = 0; t < steps_ - 1; t++) {
     if (filter_) {
       filter_->apply(opt_roll_.xx[t], opt_roll_.uu[t], opt_roll_.tt[t]);
       nominal_.row(t) = opt_roll_.uu[t].transpose();
@@ -495,11 +370,11 @@ void Solver::get_input(const observation_t& x, input_t& u, const double t) {
     }
 
     idx = std::distance(opt_roll_cache_.tt.begin(), lower);
-    // first
+    // first index (time)
     if (idx == 0) {
       u = opt_roll_cache_.uu.front();
     }
-    // last
+    // last index (time larget then last step)
     else if (idx > opt_roll_cache_.steps_) {
       u = opt_roll_cache_.uu.back();
     }
@@ -599,12 +474,6 @@ void Solver::swap_policies() {
   opt_roll_cache_ = opt_roll_;
 }
 
-input_array_t Solver::offline_control(const observation_t& x, const int subit,
-                                      const double t) {
-  set_observation(x, t);
-  for (size_t i = 0; i < subit; i++) update_policy();
-} 
-
 template <typename T>
 void Solver::shift_back(std::vector<T>& v_out, const T& fill,
                         const int offset) {
@@ -633,11 +502,6 @@ void Solver::print_cost_histogram() const {
               << '\n';
   }
   std::cout << std::endl << std::endl;
-}
-
-void Solver::bound_input(input_t& u) {
-  if (config_.bound_input)
-    u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
 }
 
 }  // namespace mppi

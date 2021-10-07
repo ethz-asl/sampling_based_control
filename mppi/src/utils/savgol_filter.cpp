@@ -51,7 +51,7 @@ SavGolFilter::SavGolFilter(const int steps, const int nu,
     windows_.resize(nu, MovingExtendedWindow(steps, window[0]));
     return;
   }
-  for (size_t i = 0; i < nu; i++) {
+  for (int i = 0; i < nu; i++) {
     filters_.emplace_back(window[i], 0, poly_order[i], der_order);
     windows_.emplace_back(steps, window[i]);
   }
@@ -63,13 +63,13 @@ void SavGolFilter::reset(const double t) {
 
 void SavGolFilter::add_measurement(const Eigen::VectorXd& u, const double t) {
   assert(u.size() == windows_.size());
-  for (size_t i = 0; i < u.size(); i++) {
+  for (long int i = 0; i < u.size(); i++) {
     windows_[i].add_point(u(i), t);
   }
 }
 
 void SavGolFilter::apply(Eigen::Ref<Eigen::VectorXd, 0, Eigen::InnerStride<>> u, const double t) {
-  for (size_t i = 0; i < u.size(); i++) {
+  for (long int i = 0; i < u.size(); i++) {
     u[i] = filters_[i].filter(windows_[i].extract(t));
     windows_[i].set(u[i], t); // update the window with the filtered value
   }

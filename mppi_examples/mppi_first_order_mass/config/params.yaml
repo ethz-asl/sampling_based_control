@@ -7,14 +7,9 @@ solver:
 
   cost_ratio: 0.2
   caching_factor: 0.3
-  filtering: false
   substeps: 1
 
-  filter_type: 0
-  filter_order: 2
-  filter_window: 10
-
-  filters_type: [0, 0]
+  filtering: true
   filters_order: [1, 1]
   filters_window: [5, 5]
 
@@ -34,16 +29,13 @@ solver:
   threads: 8
   debug_print: false
 
-  use_tree_search: false
-  pruning_threshold: 0.01      # check with 9999999
-  expert_weights: [ 0.5, 0.5 ]
-  log_data: true
+  log_data: false
 
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
 ros_publish_rate: 10.0
-gaussian_policy: false
+gaussian_policy: true
 
 static_optimization: false
 sim_dt: 0.01

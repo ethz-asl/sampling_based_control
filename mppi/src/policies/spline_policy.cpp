@@ -38,7 +38,7 @@ void SplinePolicy::shift(const double t) {
 
 void SplinePolicy::update_samples(const std::vector<double> &weights, const int keep) {
   Eigen::VectorXd v = Eigen::VectorXd::Zero((int)weights.size()); // TODO this can be made more efficient
-  for (int i=0; i<weights.size(); i++) v(i) = weights[i];
+  for (long unsigned int i=0; i<weights.size(); i++) v(i) = weights[i];
 
   for (auto& policy : policies_) {
     policy.update_samples(v, keep);
@@ -48,7 +48,7 @@ void SplinePolicy::update_samples(const std::vector<double> &weights, const int 
 Eigen::VectorXd SplinePolicy::sample(double t, int k) {
   int t_idx = policies_[0].get_time_idx(t);
   Eigen::VectorXd v = Eigen::VectorXd::Zero(nu_);
-  for (int i=0; i<policies_.size(); i++)
+  for (size_t i=0; i<policies_.size(); i++)
     v(i) = policies_[i].P_(t_idx, k);
   return v;
 }
@@ -56,14 +56,14 @@ Eigen::VectorXd SplinePolicy::sample(double t, int k) {
 Eigen::VectorXd SplinePolicy::nominal(double t){
   int t_idx = policies_[0].get_time_idx(t);
   Eigen::VectorXd v = Eigen::VectorXd::Zero(nu_);
-  for (int i=0; i<policies_.size(); i++)
+  for (size_t i=0; i<policies_.size(); i++)
     v(i) = policies_[i].Pn_(t_idx);
   return v;
 }
 
 void SplinePolicy::update(const std::vector<double> &weights, const double step_size) {
   Eigen::VectorXd v = Eigen::VectorXd::Zero((int)weights.size());
-  for (int i = 0; i < weights.size(); i++) v(i) = weights[i];
+  for (size_t i = 0; i < weights.size(); i++) v(i) = weights[i];
 
   for (auto& policy : policies_) {
     policy.update(v, step_size);

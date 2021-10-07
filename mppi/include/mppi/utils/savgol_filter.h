@@ -45,7 +45,7 @@ struct MovingExtendedWindow {
   }
 
   double last_trim_t;
-  int start_idx;
+  size_t start_idx;
   int window;
   std::vector<double> uu;
   std::vector<double> tt;

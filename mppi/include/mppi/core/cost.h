@@ -63,7 +63,10 @@ class Cost {
                                      const double t);
 
  private:
+  // single reference point in time
   reference_t r_;
+
+  // timed sequence of references
   reference_trajectory_t timed_ref_;
 };
 

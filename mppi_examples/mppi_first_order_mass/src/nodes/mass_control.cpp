@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
   Eigen::VectorXd x = Eigen::VectorXd::Zero(FOMDim::STATE_DIMENSION);
   x(0) = 0.0;
   x(1) = 0.0;
-  simulation.reset(x);
+  simulation.reset(x, 0.0);
 
   mppi::input_t u;
   u = simulation.get_zero_input(x);

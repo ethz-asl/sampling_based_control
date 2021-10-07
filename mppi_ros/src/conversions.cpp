@@ -29,9 +29,6 @@ void to_msg(const mppi::config_t& config, Config& config_ros) {
                                     config.u_min.data() + config.u_min.size());
   config_ros.input_max.array.assign(config.u_max.data(),
                                     config.u_max.data() + config.u_max.size());
-  config_ros.filter_order = config.filter_order;
-  config_ros.filter_window = config.filter_window;
-  config_ros.tree_search = config.use_tree_search;
 }
 
 void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros, const bool input_only, const size_t max_length) {

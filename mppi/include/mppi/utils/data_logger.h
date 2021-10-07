@@ -20,7 +20,7 @@ struct DataStreamer{
   template<typename T>
   void stream_array(const T& v){
     *file_ << "[";
-    for(int i=0; i<v.size()-1; i++) *file_ << v[i] << ",";
+    for(int i=0; i<(int)v.size()-1; i++) *file_ << v[i] << ",";
     *file_ << v[v.size()-1];
     *file_ << "]";
   }
@@ -45,7 +45,7 @@ template<> void DataStreamer::operator()<std::vector<double>>(const std::vector<
 template<> void DataStreamer::operator()<std::vector<Eigen::VectorXd>>(const std::vector<Eigen::VectorXd>& v){
   *file_ << "[";
 
-  for (int i=0; i<v.size()-1; i++){
+  for (size_t i=0; i<v.size()-1; i++){
     stream_array(v[i]);
     *file_ << ",";
   }
@@ -79,7 +79,7 @@ class DataLogger {
   }
 
   void write_header(){
-    for(int i=0; i<header_.size()-1; i++)
+    for(size_t i=0; i<header_.size()-1; i++)
       *file_ << header_[i] << ";";
     *file_ << header_.back() << std::endl;
   }
@@ -98,7 +98,7 @@ class DataLogger {
   }
 
   void write_line(){
-    for (int i=0; i<header_.size()-1; i++){
+    for (size_t i=0; i<header_.size()-1; i++){
       std::visit(streamer_, collection_[header_[i]]);
       *file_ << ";";
     };

@@ -142,17 +142,6 @@ class Solver {
                   const int offset = 1);
 
   /**
-   * @brief Applies path integral repeteadly from the first starting condition
-   * for multiple times.
-   * @param x the intial state
-   * @param subit number of sub-iterations consisting or rollouts + optimization
-   * @param t the current time
-   * @return the optimized trajectory over the time horizon
-   */
-  input_array_t offline_control(const observation_t& x, const int subit = 1,
-                                const double t = 0);
-
-  /**
    * @brief Print to screen the cost histogram split in a fixes number of bins
    */
   void print_cost_histogram() const;
@@ -212,12 +201,6 @@ class Solver {
   void get_diagonal_variance(Eigen::VectorXd& var) const;
 
   /**
-   * @brief Bounds the input (if specified in the params)
-   * @param u[in/out]: the input to bound
-   */
-  void bound_input(input_t& u);
-
-  /**
    * @brief Reset the initial observation (state) and time for next optimization
    * @param x: current observation
    * @param t: current time
@@ -263,11 +246,12 @@ class Solver {
   std::vector<double> weights_;
   Eigen::ArrayXd exponential_cost_;
 
+  dynamics_ptr dynamics_;
   cost_ptr cost_;
+  policy_ptr policy_;
   config_t config_;
   sampler_ptr sampler_;
 
-  dynamics_ptr dynamics_;
   size_t cached_rollouts_;
 
   std::vector<Rollout> rollouts_;
@@ -318,8 +302,6 @@ class Solver {
   std::vector<dynamics_ptr> dynamics_v_;
   // vector of cost functions used per each thread
   std::vector<cost_ptr> cost_v_;
-  // adds optional visualization of rollouts
-  policy_ptr policy_;
   // summary
   data_t data_;
   // stage_cost used for logging
