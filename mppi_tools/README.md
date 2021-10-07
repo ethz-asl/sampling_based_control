@@ -1,3 +1,2 @@
-### Visual debugger
+# mppi_tools
 
-`sudo apt-get install libglfw3-dev`
