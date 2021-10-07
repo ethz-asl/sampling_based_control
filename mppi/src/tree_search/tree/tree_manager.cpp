@@ -206,7 +206,7 @@ void TreeManager::eval_depth_level() {
     }
   }
 
-  const double pruning_threshold = 1.0; // TODO HARD CODED
+  const double pruning_threshold = 1.0;  // TODO HARD CODED
   for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     auto& active_leaf = leaf_handles_[leaf_pos];
     if (active_leaf->c_cum_ <=
@@ -297,7 +297,7 @@ void TreeManager::gen_rollout_expert_mapping(size_t mapping_type_input) {
   size_t mapping_type = mapping_type_input;
 
   double weight_sum = 0;
-  static const int num_experts = 2;   // same weight to the 2 experts
+  static const int num_experts = 2;  // same weight to the 2 experts
   for (auto i = 0; i < num_experts; ++i) {
     weight_sum += 1;
   }

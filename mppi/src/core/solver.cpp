@@ -36,7 +36,7 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
     : dynamics_(std::move(dynamics)),
       cost_(std::move(cost)),
       policy_(std::move(policy)),
-      config_(config){
+      config_(config) {
   init_data();
   init_threading();
 
@@ -290,7 +290,7 @@ void Solver::compute_weights() {
   max_cost_ = max_cost;   //*std::max_element(rollouts_cost_.begin(), rollouts_cost_.end());
 
   double sum = 0.0;
-  for (size_t k=0; k<config_.rollouts; k++){
+  for (size_t k = 0; k < config_.rollouts; k++) {
     double modified_cost = config_.h * (rollouts_[k].total_cost - min_cost_) /
                            (max_cost_ - min_cost_);
 
@@ -305,7 +305,7 @@ void Solver::optimize() {
   // get new rollouts weights
   compute_weights();
 
-  // update policy according to new weights 
+  // update policy according to new weights
   policy_->update(weights_, config_.alpha);
 
   // retrieve the nominal policy for each time step
@@ -321,7 +321,7 @@ void Solver::filter_input() {
   if (filter_) {
     filter_->reset(x0_internal_, t0_internal_);
   }
-  
+
   // reset the dynamics such that we rollout the dynamics again
   // with the input we filter step after step (sequentially)
   dynamics_->reset(x0_internal_, t0_internal_);

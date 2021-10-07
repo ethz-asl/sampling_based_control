@@ -9,17 +9,17 @@
 namespace mppi {
 
 /// Generic policy class for implementing a policy
-/// Here the policy is intended as stochastic, therefore this class implements also the 
-/// methods to generate samples out of a nominal policy. These can be used by the 
-/// controller to generate rollouts
+/// Here the policy is intended as stochastic, therefore this class implements
+/// also the methods to generate samples out of a nominal policy. These can be
+/// used by the controller to generate rollouts
 class Policy {
    public:
     Policy(int nu) : nu_(nu){}
 
     /**
      * Update the samples using "performance" weights assigned to each of them.
-     * The parameter keep can be used to tell the policy to keep the best n out of
-     * all the samples (according to the associated weights) 
+     * The parameter keep can be used to tell the policy to keep the best n out
+     * of all the samples (according to the associated weights)
      */
     virtual void update_samples(const std::vector<double>& weights, const int keep) = 0;
 
@@ -34,8 +34,8 @@ class Policy {
     virtual Eigen::VectorXd sample(double t, int k) = 0;
 
     /**
-     * Update the policy, given a set of sample weights and a step size for the gradient
-     * step
+     * Update the policy, given a set of sample weights and a step size for the
+     * gradient step
      */
     virtual void update(const std::vector<double>& weights, const double step_size) = 0;
 
@@ -50,10 +50,10 @@ class Policy {
     virtual void bound() = 0;
 
     /**
-     * Used to change policy behavior according to the "real time" number of 
+     * Used to change policy behavior according to the "real time" number of
      * delay steps in computing the solution. E.g if the solver takes n steps
-     * to solve the new optimization (sampling + optimization), the policy can 
-     * update only samples n steps in the future as they will be the ones 
+     * to solve the new optimization (sampling + optimization), the policy can
+     * update only samples n steps in the future as they will be the ones
      * eventually used
      */
     virtual void update_delay(const int delay_steps){};

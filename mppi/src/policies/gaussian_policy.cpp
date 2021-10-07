@@ -93,7 +93,7 @@ Eigen::VectorXd GaussianPolicy::sample(double t, int k) {
 
 void GaussianPolicy::update_samples(const std::vector<double>& weights,
                                     const int keep) {
-  if ((int)weights.size() != ns_){
+  if ((int)weights.size() != ns_) {
     std::stringstream err;
     err << "Weights size does not match number of samples "
         << weights.size() << " != " << ns_ << std::endl;

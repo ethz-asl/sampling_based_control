@@ -32,8 +32,8 @@ class Dynamics {
 
   /**
    * Given the current input and simulation dt, predicts the state at
-   * the next time step. Notice that dt does not need to be used, 
-   * as the dynamics function might have its own internal dt fixed at 
+   * the next time step. Notice that dt does not need to be used,
+   * as the dynamics function might have its own internal dt fixed at
    * creation time (e.g when using simulators)
    */
   virtual observation_t step(const input_t& u, const double dt) = 0;
