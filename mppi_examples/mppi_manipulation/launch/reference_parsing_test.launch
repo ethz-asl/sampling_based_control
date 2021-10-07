@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<launch>
-    <arg name="reference_file" default="$(find mppi_manipulation)/config/experiments/references.yaml"/>
-    <node name="parser_test" pkg="mppi_manipulation" type="reference_parsing_test" output="screen"
-          args="$(arg reference_file)"/>
-</launch>
