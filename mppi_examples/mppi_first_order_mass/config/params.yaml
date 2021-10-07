@@ -1,0 +1,41 @@
+solver:
+  rollouts: 50
+  lambda: 0.0001 #0.001
+  h: 10.0
+  step_size: 0.01
+  horizon: 1.0
+
+  cost_ratio: 0.2
+  caching_factor: 0.3
+  substeps: 1
+
+  filtering: true
+  filters_order: [1, 1]
+  filters_window: [5, 5]
+
+  bound_input: true
+  u_min: [-1.0, -1.0]
+  u_max: [1.0, 1.0]
+
+  spline_degree: 3
+  spline_dt: 0.1
+  spline_step_size: 0.5 #0.01
+
+  adaptive_sampling: false
+  input_variance: [0.01, 0.01]
+
+  discount_factor: 1.0
+  verbose: false
+  threads: 8
+  debug_print: false
+
+  log_data: false
+
+policy_update_rate: 0.0  # execute as fast as possible
+reference_update_rate: 10.0
+publish_ros: true
+ros_publish_rate: 10.0
+gaussian_policy: true
+
+static_optimization: false
+sim_dt: 0.01

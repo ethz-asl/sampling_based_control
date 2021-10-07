@@ -49,5 +49,7 @@ mppi::observation_t PoleCartDynamics::step(const mppi::input_t &u,
 
 const mppi::observation_t PoleCartDynamics::get_state() const { return x_; }
 
-void PoleCartDynamics::reset(const mppi::observation_t &x) { x_ = x; }
+void PoleCartDynamics::reset(const mppi::observation_t &x, const double t) {
+  x_ = x;
+}
 }  // namespace pole_cart

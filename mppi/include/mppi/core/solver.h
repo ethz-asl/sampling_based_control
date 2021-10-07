@@ -22,7 +22,8 @@
 #include "mppi/core/cost.h"
 #include "mppi/core/data.h"
 #include "mppi/core/dynamics.h"
-#include "mppi/core/rederer.h"
+#include "mppi/core/filter.h"
+#include "mppi/core/policy.h"
 #include "mppi/core/rollout.h"
 
 #include "mppi/utils/gaussian_sampler.h"
@@ -30,24 +31,20 @@
 #include "mppi/utils/thread_pool.h"
 #include "mppi/utils/timer.h"
 
-#include "mppi/tree_search/experts/expert.h"
-#include "mppi/tree_search/tree/tree_manager.h"
-
 namespace mppi {
 
 class Solver {
  public:
-
   /**
    * @brief Path Integral Control class
    * @param dynamics: used to forward simulate the system and produce rollouts
    * @param cost: to obtain running cost as function of the stage observation
-   * @param sampler: class used to draw random samples
+   * @param policy: implementation of stochastic policy
    * @param config: the solver configuration
    * @param verbose: (bool) flag to turn on/off verbosity
    */
-  Solver(dynamics_ptr dynamics, cost_ptr cost, const config_t& config,
-         sampler_ptr sampler = nullptr, renderer_ptr renderer = nullptr);
+  Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
+         const config_t& config);
   Solver() = default;
   ~Solver() = default;
 
@@ -69,16 +66,13 @@ class Solver {
   void init_threading();
 
   /**
-   * @brief Initializes the variables for the tree manager
-   */
-  void init_tree_manager_dynamics();
-
-  /**
    * @brief Calculates and displays the frequency of the control loop
    */
   void time_it();
 
  public:
+  void set_filter(filter_ptr& filter) { filter_ = filter; }
+
   /**
    * @brief Filter the input according to chosen filter
    */
@@ -86,7 +80,7 @@ class Solver {
 
   /**
    * @brief Transforms the cost to go into the corresponding sample weights
-   * @return 
+   * @return
    */
   void compute_weights();
 
@@ -122,19 +116,6 @@ class Solver {
   void sample_trajectories();
 
   /**
-   * @brief Samples multiple control trajectories using a FD-MCTS. Based on a
-   * pruning threshold the structure of the tree can be controlled. The last
-   * optimal rollout is always fully propagated through the tree.
-   */
-  void sample_trajectories_via_tree();
-
-  /**
-   * @brief Overwrites the rollouts, since the tree has no direct access to the
-   * Solver class.
-   */
-  void overwrite_rollouts();
-
-  /**
    * @brief Use the data collected from rollouts and return the optimal input
    */
   void optimize();
@@ -161,17 +142,6 @@ class Solver {
                   const int offset = 1);
 
   /**
-   * @brief Applies path integral repeteadly from the first starting condition
-   * for multiple times.
-   * @param x the intial state
-   * @param subit number of sub-iterations consisting or rollouts + optimization
-   * @param t the current time
-   * @return the optimized trajectory over the time horizon
-   */
-  input_array_t offline_control(const observation_t& x, const int subit = 1,
-                                const double t = 0);
-
-  /**
    * @brief Print to screen the cost histogram split in a fixes number of bins
    */
   void print_cost_histogram() const;
@@ -182,14 +152,14 @@ class Solver {
   void initialize_rollouts();
 
   /**
-   * @brief Update the experts based on data from last iteration
-   */
-  void update_experts();
-
-  /**
    * @brief Fill the optimized policy cache with the latest policy and set flags
    */
   void swap_policies();
+
+  /**
+   * @brief Estimate optimization delay
+   */
+  void update_delay();
 
   /**
    * @brief Return the latest optimal input for the current time and observation
@@ -220,16 +190,15 @@ class Solver {
   bool get_optimal_rollout(observation_array_t& x, input_array_t& u);
 
   /**
+   * @brief Another signature to get the optimal rollout
+   */
+  void get_optimal_rollout(Rollout& r);
+  
+  /**
    * @brief Get only the diagonal of the sampler's covariance matrix
    * @param var[in/out]: the diagonal variance
    */
   void get_diagonal_variance(Eigen::VectorXd& var) const;
-
-  /**
-   * @brief Bounds the input (if specified in the params)
-   * @param u[in/out]: the input to bound
-   */
-  void bound_input(input_t& u);
 
   /**
    * @brief Reset the initial observation (state) and time for next optimization
@@ -277,12 +246,12 @@ class Solver {
   std::vector<double> weights_;
   Eigen::ArrayXd exponential_cost_;
 
+  dynamics_ptr dynamics_;
   cost_ptr cost_;
+  policy_ptr policy_;
   config_t config_;
-  SavGolFilter filter_;
   sampler_ptr sampler_;
 
-  dynamics_ptr dynamics_;
   size_t cached_rollouts_;
 
   std::vector<Rollout> rollouts_;
@@ -333,16 +302,8 @@ class Solver {
   std::vector<dynamics_ptr> dynamics_v_;
   // vector of cost functions used per each thread
   std::vector<cost_ptr> cost_v_;
-  // adds optional visualization of rollouts
-  renderer_ptr renderer_;
   // summary
   data_t data_;
-  // expert class gives access to all experts implemented
-  Expert expert_;
-  // tree_manager class controls the building of the tree
-  TreeManager tree_manager_;
-  // vector of dynamics functions (dim = n_rollouts) for multithreading
-  std::vector<dynamics_ptr> tree_dynamics_v_;
   // stage_cost used for logging
   double stage_cost_ = 0;
   // time to measure the frequency of the control loop
@@ -357,6 +318,19 @@ class Solver {
   std::vector<int> rollouts_valid_index_;
   // rollouts costs
   std::vector<double> rollouts_cost_;
+
+  // delay estimation
+  int delay_steps_;
+  int new_delay_steps_;
+  const double delay_filter_alpha_ = 0.9;
+
+  // filter input
+  Eigen::MatrixXd nominal_;  // the nominal u-traj after filtering to reset the
+                             // policy warm start
+  filter_ptr filter_;
+
+  // rate measurements
+  double rate_;
 };
 
 }  // namespace mppi

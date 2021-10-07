@@ -1,3 +1,9 @@
+//
+// Created by giuseppe on 01.06.21.
+//
+
+#pragma once
+
 /*!
  * @file     multivariate_normal_eigen.h
  * @author   Giuseppe Rizzi
@@ -44,6 +50,18 @@ struct multivariate_normal {
 
     return mean + transform * Eigen::VectorXd{mean.size()}.unaryExpr(
                                   [&](auto x) { return dist(gen); });
+  }
+
+  // Sample each column in the matrix from a multivariate normal
+  void setRandom(Eigen::Ref<Eigen::MatrixXd> m) {
+    for (int i = 0; i < m.cols(); i++)
+      m.col(i) = (*this)();
+  }
+
+  // Sample each column in the matrix from a multivariate normal
+  void setRandomRow(Eigen::Ref<Eigen::MatrixXd> m) {
+    for (int i = 0; i < m.rows(); i++)
+      m.row(i) = (*this)();
   }
 };
 

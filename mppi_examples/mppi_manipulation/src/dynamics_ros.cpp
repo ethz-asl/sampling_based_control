@@ -4,16 +4,14 @@
 
 #include "mppi_manipulation/dynamics_ros.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Float64.h>
+#include <signal_logger/signal_logger.hpp>
 
 namespace manipulation {
 
-ManipulatorDynamicsRos::ManipulatorDynamicsRos(
-    const ros::NodeHandle& nh, const std::string& robot_description,
-    const std::string& object_description, const double dt,
-    const bool fixed_base)
-    : nh_(nh),
-      PandaRaisimDynamics(robot_description, object_description, dt,
-                          fixed_base) {
+ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
+                                               const DynamicsParams& params)
+    : nh_(nh), PandaRaisimDynamics(params) {
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
   object_state_publisher_ =
@@ -23,23 +21,20 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   ee_publisher_ =
       nh_.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   handle_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/handle", 10);
+  tau_ext_publisher_ =
+      nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
+  power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
 
-  if (fixed_base) {
-    joint_state_.name = {
-        "panda_joint1", "panda_joint2",        "panda_joint3",
-        "panda_joint4", "panda_joint5",        "panda_joint6",
-        "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
-  } else {
-    joint_state_.name = {
-        "x_base_joint", "y_base_joint",        "pivot_joint",
-        "panda_joint1", "panda_joint2",        "panda_joint3",
-        "panda_joint4", "panda_joint5",        "panda_joint6",
-        "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
-  }
+  joint_state_.name = {
+      "x_base_joint", "y_base_joint",        "pivot_joint",
+      "panda_joint1", "panda_joint2",        "panda_joint3",
+      "panda_joint4", "panda_joint5",        "panda_joint6",
+      "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
+
   joint_state_.position.resize(joint_state_.name.size());
   joint_state_.velocity.resize(joint_state_.name.size());
   joint_state_.header.frame_id = "world";
-  object_state_.name = {"articulation_joint"};
+  object_state_.name = {params_.articulation_joint};
   object_state_.position.resize(1);
 
   force_marker_.type = visualization_msgs::Marker::ARROW;
@@ -53,17 +48,20 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(
   force_marker_.color.b = 0.0;
   force_marker_.color.g = 0.0;
   force_marker_.color.a = 1.0;
+
+  tau_ext_msg_.data.resize(get_panda()->getDOF());
+  ff_tau_.setZero(get_panda()->getDOF());
+  integral_term_.setZero(ARM_DIMENSION);
+
+  signal_logger::add(tau_ext_, "ground_truth_external_torque");
+  signal_logger::logger->updateLogger();
 }
 
 void ManipulatorDynamicsRos::reset_to_default() {
   x_.setZero();
-  if (fixed_base_)
-    x_.head<ARM_GRIPPER_DIM>() << 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69,
-        0.04, 0.04;
-  else
-    x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
-        0.0, 1.10, 0.69, 0.04, 0.04;
-  reset(x_);
+  x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
+      0.0, 1.10, 0.69, 0.04, 0.04;
+  reset(x_, 0.0);
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
 }
 
@@ -95,6 +93,18 @@ void ManipulatorDynamicsRos::publish_ros() {
     force_markers.markers.push_back(force_marker_);
   }
   contact_forces_publisher_.publish(force_markers);
+
+  // publish external torques
+  get_external_torque(tau_ext_);
+  for (size_t i = 0; i < get_panda()->getDOF(); i++) {
+    tau_ext_msg_.data[i] = tau_ext_[i];
+  }
+  tau_ext_publisher_.publish(tau_ext_msg_);
+
+  // publish power exchanged
+  std_msgs::Float64 power;
+  power.data = tau_ext_.transpose() * joint_v_;
+  power_publisher_.publish(power);
 
   // publish end effector pose
   Eigen::Vector3d ee_position;

@@ -25,96 +25,56 @@
 #include "mppi/utils/logging.h"
 #include "mppi/utils/savgol_filter.h"
 
-#include "mppi/tree_search/experts/expert.h"
-#include "mppi/tree_search/tree/tree_manager.h"
+#ifdef SIGNAL_LOGGER
+#include <signal_logger/signal_logger.hpp>
+#endif
 
 namespace mppi {
 
-Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, const Config& config,
-               sampler_ptr sampler, renderer_ptr renderer)
-    : cost_(std::move(cost)),
-      dynamics_(std::move(dynamics)),
-      config_(config),
-      sampler_(std::move(sampler)),
-      renderer_(std::move(renderer)),
-      expert_(config_, dynamics_),
-      tree_manager_(dynamics_, cost_, sampler_, config_, &expert_) {
+Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
+               const Config& config)
+    : dynamics_(std::move(dynamics)),
+      cost_(std::move(cost)),
+      policy_(std::move(policy)),
+      config_(config) {
   init_data();
-  init_filter();
-  if (!config_.use_tree_search) {
-    init_threading();
-  }
-
-  if (config_.use_tree_search) {
-    init_tree_manager_dynamics();
-  }
+  init_threading();
 
   if (config_.display_update_freq) {
     start_time_ = std::chrono::high_resolution_clock::now();
   }
+
+#ifdef SIGNAL_LOGGER
+  signal_logger::add(min_cost_, "solver/rollouts/min_cost");
+  signal_logger::add(max_cost_, "solver/rollouts/max_cost");
+  signal_logger::add(rollouts_cost_, "solver/rollouts/costs");
+  signal_logger::add(delay_steps_, "solver/delay_steps");
+  signal_logger::add(rate_, "solver/rate");
+  signal_logger::logger->updateLogger();
+#endif
 }
 
 void Solver::init_data() {
-  steps_ = std::floor(config_.horizon / config_.step_size);
+  // TODO(giuseppe) this should be automatically computed when config is parsed
+  steps_ = static_cast<int>(std::ceil(config_.horizon / config_.step_size));
   nx_ = dynamics_->get_state_dimension();
   nu_ = dynamics_->get_input_dimension();
 
   opt_roll_ = Rollout(steps_, nu_, nx_);
   opt_roll_cache_ = Rollout(steps_, nu_, nx_);
+  nominal_.setZero(steps_, nu_);
 
+  weights_.resize(config_.rollouts, 1.0 / config_.rollouts);
   rollouts_.resize(config_.rollouts, Rollout(steps_, nu_, nx_));
   cached_rollouts_ = std::ceil(config_.caching_factor * config_.rollouts);
 
-  momentum_.resize(steps_, input_t::Zero(nu_));
-
-  if (sampler_ == nullptr) {
-    log_info("No sampler provided, using gaussian sampler");
-    if (config_.input_variance.size() != nu_)
-      throw std::runtime_error(
-          "The input variance size is different from the input size");
-
-    sampler_ = std::make_shared<mppi::GaussianSampler>(nu_);
-    sampler_->set_covariance(config_.input_variance);
-  }
-
-  if (config_.logging) {
-    data_.config = config_;
-  }
-
-  if (config_.bound_input) {
-    if (config_.u_min.size() != nu_) {
-      std::stringstream error;
-      error << "Bounding input and min constraint size " << config_.u_min.size()
-            << " != " << nu_;
-      throw std::runtime_error(error.str());
-    }
-    if (config_.u_max.size() != nu_) {
-      std::stringstream error;
-      error << "Bounding input and max constraint size " << config_.u_max.size()
-            << " != " << nu_;
-      throw std::runtime_error(error.str());
-    }
-  }
+  delay_steps_ = 0;
   step_count_ = 0;
   observation_set_ = false;
   reference_set_ = false;
 }
 
-void Solver::init_filter() {
-  switch (config_.filter_type) {
-    case InputFilterType::NONE: {
-      break;
-    }
-    case InputFilterType::SAVITZKY_GOLEY: {
-      filter_ = SavGolFilter(steps_, nu_, config_.filters_window,
-                             config_.filters_order);
-      break;
-    }
-    default: {
-      throw std::runtime_error("Unrecognized filter type.");
-    }
-  }
-}
+void Solver::init_filter() {}
 
 void Solver::init_threading() {
   if (config_.threads > 1) {
@@ -130,12 +90,6 @@ void Solver::init_threading() {
   }
 }
 
-void Solver::init_tree_manager_dynamics() {
-  for (size_t i = 0; i < config_.rollouts; i++) {
-    tree_dynamics_v_.push_back(dynamics_->create());
-  }
-}
-
 void Solver::update_policy() {
   if (!observation_set_) {
     log_warning_throttle(1.0,
@@ -143,50 +97,23 @@ void Solver::update_policy() {
   } else if (!reference_set_) {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
+    auto start = std::chrono::steady_clock::now();  
+    update_delay();
     copy_observation();
 
     for (size_t i = 0; i < config_.substeps; i++) {
       prepare_rollouts();
-      update_reference();
-
-      if (config_.use_tree_search) {
-        timer_.reset();
-        update_experts();
-        timer_.add_interval("update_experts");
-        sample_trajectories_via_tree();
-        timer_.add_interval("sample_trajectories_via_tree");
-        overwrite_rollouts();
-        timer_.add_interval("overwrite_rollouts");
-        timer_.print_intervals(100);
-      } else {
-        sample_trajectories();
-      }
-
+      update_reference();      
+      sample_trajectories();
       optimize();
       filter_input();
 
-      // TODO move this away. This goes year since there might be filtering
-      // happening before optimal rollout
-      dynamics_->reset(x0_internal_);
-      for (size_t t = 0; t < steps_; t++) {
-        opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
-      }
-      stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
+      stage_cost_ =
+          cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
     }
     swap_policies();
-
-    if (renderer_) renderer_->render(rollouts_);
-    if (config_.logging) {
-      // data_.rollouts = rollouts_;
-      data_.step_count = step_count_;
-      data_.stage_cost = stage_cost_;
-      data_.rollouts_cost = rollouts_cost_;
-      data_.weights = weights_;
-      data_.optimization_time = 0.0;
-      data_.reset_time = t0_internal_;
-      data_.optimal_rollout = opt_roll_;
-      step_count_++;
-    }
+    auto end = std::chrono::steady_clock::now();
+    rate_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e9;
   }
 }
 
@@ -220,6 +147,11 @@ void Solver::set_observation(const observation_t& x, const double t) {
   observation_set_ = true;
 }
 
+void Solver::update_delay() {
+  delay_steps_ = std::ceil((reset_time_ - t0_internal_) / config_.step_size);
+  policy_->update_delay(delay_steps_);
+}
+
 void Solver::copy_observation() {
   std::shared_lock<std::shared_mutex> lock(state_mutex_);
   x0_internal_ = x0_;
@@ -236,48 +168,18 @@ void Solver::initialize_rollouts() {
   std::fill(opt_roll_cache_.xx.begin(), opt_roll_cache_.xx.end(), x0_internal_);
   std::fill(opt_roll_cache_.uu.begin(), opt_roll_cache_.uu.end(),
             dynamics_->get_zero_input(x0_internal_));
-  for (size_t i = 0; i < steps_; i++) {
+  for (int i = 0; i < steps_; i++) {
     opt_roll_cache_.tt[i] = t0_internal_ + config_.step_size * i;
   }
 }
 
 void Solver::prepare_rollouts() {
   // cleanup
-  rollouts_valid_index_.clear();
   rollouts_cost_.clear();
-  weights_.clear();
-
-  // find trim index
-  size_t offset;
-  {
-    std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
-                                  opt_roll_cache_.tt.end(), t0_internal_);
-    if (lower == opt_roll_cache_.tt.end()) {
-      std::stringstream warning;
-      warning << "Resetting to time " << t0_internal_
-              << ", greater than the last available time: "
-              << opt_roll_cache_.tt.back();
-      log_warning(warning.str());
-    }
-    offset = std::distance(opt_roll_cache_.tt.begin(), lower);
-  }
-
-  // sort rollouts for easier caching
-  std::sort(rollouts_.begin(), rollouts_.end());
-
-  // shift and trim so they restart from current time
   for (auto& roll : rollouts_) {
-    shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
     roll.clear_cost();
-    roll.clear_observation();
     roll.valid = true;
   }
-
-  // shift and trim the previously optimized trajectory
-  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
-             offset);
-  shift_back(momentum_, momentum_.back(), offset);
 }
 
 void Solver::set_reference_trajectory(mppi::reference_trajectory_t& ref) {
@@ -300,9 +202,6 @@ void Solver::update_reference() {
     for (auto& cost : cost_v_) cost->set_reference_trajectory(rr_tt_ref_);
   }
 
-  if (config_.use_tree_search) {
-    tree_manager_.set_reference_trajectory(rr_tt_ref_);
-  }
 }
 
 void Solver::sample_noise(input_t& noise) { sampler_->get_sample(noise); }
@@ -312,33 +211,18 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
                                        const size_t end_idx) {
   observation_t x;
   for (size_t k = start_idx; k < end_idx; k++) {
-    dynamics->reset(x0_internal_);
+    dynamics->reset(x0_internal_, t0_internal_);
     x = x0_internal_;
-    for (size_t t = 0; t < steps_; t++) {
-      rollouts_[k].tt[t] = t0_internal_ + t * config_.step_size;
-
-      // cached rollout (recompute noise)
-      if (k < cached_rollouts_) {
-        rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
-      }
-      // noise free trajectory
-      else if (k == cached_rollouts_) {
-        rollouts_[k].nn[t].setZero();
-        rollouts_[k].uu[t] = opt_roll_.uu[t];
-      }
-      // perturbed trajectory
-      else {
-        sample_noise(rollouts_[k].nn[t]);
-        rollouts_[k].uu[t] = opt_roll_.uu[t] + rollouts_[k].nn[t];
-      }
-
-      // impose input constraints
-      bound_input(rollouts_[k].uu[t]);
+    double ts;
+    for (int t = 0; t < steps_; t++) {
+      ts = t0_internal_ + t * config_.step_size;
+      rollouts_[k].tt[t] = ts;
+      rollouts_[k].uu[t] = policy_->sample(ts, k);
 
       // compute input-state stage cost
-      double cost_temp = 0;
+      double cost_temp;
       cost_temp = std::pow(config_.discount_factor, t) *
-                  cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
+                  cost->get_stage_cost(x, rollouts_[k].uu[t], ts);
 
       if (std::isnan(cost_temp)) {
         std::stringstream ss;
@@ -360,20 +244,18 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       // store data
       rollouts_[k].xx[t] = x;
       rollouts_[k].cc(t) = cost_temp;
-      rollouts_[k].total_cost +=
-          cost_temp -  // TODO(giuseppe) this should actually be a plus
-          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-              rollouts_[k].nn[t] +
-          config_.lambda * opt_roll_.uu[t].transpose() * sampler_->sigma_inv() *
-              opt_roll_.uu[t];
+      rollouts_[k].total_cost += cost_temp;
 
-      // integrate dynamics
+      // integrate dynamics    auto start = std::chrono::steady_clock::now();
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
     }
   }
 }
 
 void Solver::sample_trajectories() {
+  policy_->shift(t0_internal_);
+  policy_->update_samples(weights_, cached_rollouts_);
+
   if (config_.threads == 1) {
     sample_trajectories_batch(dynamics_, cost_, 0, config_.rollouts);
   } else {
@@ -391,82 +273,75 @@ void Solver::sample_trajectories() {
   }
 }
 
-void Solver::sample_trajectories_via_tree() {
-  tree_manager_.build_new_tree(x0_internal_, t0_internal_, opt_roll_);
-}
-
-void Solver::overwrite_rollouts() {
-  rollouts_ = tree_manager_.get_rollouts();
-  rollouts_cost_ = tree_manager_.get_rollouts_cost();
-}
-
 void Solver::compute_weights() {
   // keep all non diverged rollouts
+  double min_cost = std::numeric_limits<double>::max();
+  double max_cost = -min_cost;
+
   for (size_t k = 0; k < config_.rollouts; k++) {
     if (rollouts_[k].valid) {
-      rollouts_cost_.push_back(rollouts_[k].total_cost);
-      rollouts_valid_index_.push_back(k);
+      const double& cost = rollouts_[k].total_cost;
+      min_cost = (cost < min_cost) ? cost : min_cost;
+      max_cost = (cost > max_cost) ? cost : max_cost;
     }
   }
 
-  min_cost_ = *std::min_element(rollouts_cost_.begin(), rollouts_cost_.end());
-  max_cost_ = *std::max_element(rollouts_cost_.begin(), rollouts_cost_.end());
+  min_cost_ = min_cost;   //*std::min_element(rollouts_cost_.begin(), rollouts_cost_.end());
+  max_cost_ = max_cost;   //*std::max_element(rollouts_cost_.begin(), rollouts_cost_.end());
 
-  for (const auto& rollout_cost : rollouts_cost_)
-    weights_.push_back(std::exp(-config_.h * (rollout_cost - min_cost_) /
-                                (max_cost_ - min_cost_)));
+  double sum = 0.0;
+  for (size_t k = 0; k < config_.rollouts; k++) {
+    double modified_cost = config_.h * (rollouts_[k].total_cost - min_cost_) /
+                           (max_cost_ - min_cost_);
 
-  double sum = std::accumulate(weights_.begin(), weights_.end(), 0.0);
+    weights_[k] = rollouts_[k].valid ? std::exp(-modified_cost) : 0.0;
+    sum += weights_[k];
+  }
   std::transform(weights_.begin(), weights_.end(), weights_.begin(),
                  [&sum](double v) -> double { return v / sum; });
 }
 
 void Solver::optimize() {
+  // get new rollouts weights
   compute_weights();
 
-  // rollouts averaging
-  for (size_t t = 0; t < steps_; t++) {
-    momentum_[t] = config_.beta * momentum_[t];
-    for (size_t i = 0; i < rollouts_valid_index_.size(); i++) {
-      momentum_[t] += weights_[i] * rollouts_[rollouts_valid_index_[i]].nn[t];
-    }
-  }
+  // update policy according to new weights
+  policy_->update(weights_, config_.alpha);
 
-  for (size_t t = 0; t < steps_; t++) {
+  // retrieve the nominal policy for each time step
+  for (int t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
-    opt_roll_.uu[t] += config_.alpha * momentum_[t];
+    opt_roll_.uu[t] = policy_->nominal(t0_internal_ + t * config_.step_size);
   }
 
-  // TODO(giuseppe) exploration covariance mean weighted noise covariance. Ok?
-  if (config_.adaptive_sampling) {
-    input_t delta = input_t::Zero(nu_);
-
-    // TODO(giuseppe) remove the hardcoded baseline variance
-    Eigen::MatrixXd new_covariance =
-        Eigen::MatrixXd::Identity(nu_, nu_) * 0.001;
-    for (size_t j = 0; j < rollouts_valid_index_.size(); j++) {
-      for (size_t i = 0; i < steps_; i++) {
-        delta = rollouts_[rollouts_valid_index_[j]].uu[i] - opt_roll_.uu[i];
-        new_covariance += weights_[j] * (delta * delta.transpose()) / steps_;
-      }
-    }
-    // I could filter the covariance update using a first order
-    // new_covariance = alpha * new_covariance + (1-alpha) old_covariance
-    sampler_->set_covariance(new_covariance);
-  }
 }
 
 void Solver::filter_input() {
-  if (config_.filter_type) {
-    filter_.reset(t0_internal_);
+  // only if filter is available reset to the initial opt time
+  if (filter_) {
+    filter_->reset(x0_internal_, t0_internal_);
+  }
 
-    for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
-      filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
-    }
+  // reset the dynamics such that we rollout the dynamics again
+  // with the input we filter step after step (sequentially)
+  dynamics_->reset(x0_internal_, t0_internal_);
+  opt_roll_.xx[0] = x0_internal_;
 
-    for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
-      filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
+  // sequential filtering otherwise just nominal rollout
+  for (int t = 0; t < steps_ - 1; t++) {
+    if (filter_) {
+      filter_->apply(opt_roll_.xx[t], opt_roll_.uu[t], opt_roll_.tt[t]);
+      nominal_.row(t) = opt_roll_.uu[t].transpose();
     }
+    opt_roll_.xx[t + 1] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
+  }
+
+  // filter the last input in the sequence (if filter is available)
+  if (filter_) {
+    filter_->apply(opt_roll_.xx.back(), opt_roll_.uu.back(),
+                   opt_roll_.tt.back());
+    nominal_.bottomRows(1) = opt_roll_.uu.back().transpose();
+    policy_->set_nominal(nominal_);
   }
 }
 
@@ -495,11 +370,11 @@ void Solver::get_input(const observation_t& x, input_t& u, const double t) {
     }
 
     idx = std::distance(opt_roll_cache_.tt.begin(), lower);
-    // first
+    // first index (time)
     if (idx == 0) {
       u = opt_roll_cache_.uu.front();
     }
-    // last
+    // last index (time larget then last step)
     else if (idx > opt_roll_cache_.steps_) {
       u = opt_roll_cache_.uu.back();
     }
@@ -543,6 +418,7 @@ void Solver::get_input_state(const observation_t& x, observation_t& x_nom,
     }
 
     size_t idx = std::distance(opt_roll_cache_.tt.begin(), lower);
+
     // first
     if (idx == 0) {
       x_nom = opt_roll_cache_.xx.front();
@@ -579,17 +455,23 @@ bool Solver::get_optimal_rollout(observation_array_t& xx, input_array_t& uu) {
   return true;
 }
 
-void Solver::update_experts() { expert_.update_expert(1, opt_roll_.uu); };
+void Solver::get_optimal_rollout(Rollout& r) {
+  std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
+  
+  // fill with portion of vector starting from current reset time
+  r.tt = time_array_t(opt_roll_cache_.tt.begin(),
+                      opt_roll_cache_.tt.end());
+
+  r.xx = observation_array_t(opt_roll_cache_.xx.begin(),
+                             opt_roll_cache_.xx.end());
+  
+  r.uu = input_array_t(opt_roll_cache_.uu.begin(),
+                       opt_roll_cache_.uu.end());
+}
 
 void Solver::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);
   opt_roll_cache_ = opt_roll_;
-}
-
-input_array_t Solver::offline_control(const observation_t& x, const int subit,
-                                      const double t) {
-  set_observation(x, t);
-  for (size_t i = 0; i < subit; i++) update_policy();
 }
 
 template <typename T>
@@ -608,7 +490,7 @@ void Solver::print_cost_histogram() const {
   constexpr int nbins = 10;
   double delta = (max_cost_ - min_cost_) / nbins;
 
-  std::cout << "Rollouts cost histogram" << std::endl;
+  std::cout << "Rollouts cost histogram " << std::endl;
   std::cout << "Max: " << max_cost_ << ", Min: " << min_cost_
             << ", delta: " << delta << std::endl;
   std::map<int, int> hist{};
@@ -620,11 +502,6 @@ void Solver::print_cost_histogram() const {
               << '\n';
   }
   std::cout << std::endl << std::endl;
-}
-
-void Solver::bound_input(input_t& u) {
-  if (config_.bound_input)
-    u = u.cwiseMax(config_.u_min).cwiseMin(config_.u_max);
 }
 
 }  // namespace mppi

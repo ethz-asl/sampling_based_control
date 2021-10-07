@@ -8,6 +8,7 @@ option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." OFF)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
         sensor_msgs
@@ -16,10 +17,12 @@ set(PACKAGE_DEPENDENCIES
         mppi
         mppi_ros
         mppi_pinocchio
+        mppi_panda_mobile
         roslib
         roscpp
         manipulation_msgs
         tf2_ros
+        signal_logger
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -31,12 +34,15 @@ catkin_package(
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
-        src/gains.cpp
+        src/params/gains.cpp
+        src/params/dynamics_params.cpp
+        src/params/cost_params.cpp
         src/dynamics.cpp
         src/cost.cpp
         src/controller_interface.cpp
+        src/reference_scheduler.cpp
         src/dynamics_ros.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp)
 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
 target_link_libraries(manipulation_control ${PROJECT_NAME} ${catkin_LIBRARIES} )
@@ -45,6 +51,10 @@ add_dependencies(manipulation_control ${PROJECT_NAME})
 add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_raisim ${PROJECT_NAME})
+
+add_executable(reference_parsing_test src/tests/reference_parsing.cpp)
+target_link_libraries(reference_parsing_test ${PROJECT_NAME} ${catkin_LIBRARIES} )
+add_dependencies(reference_parsing_test ${PROJECT_NAME})
 
 if (BUILD_WITH_OGRE)
   find_package(raisimOgre CONFIG REQUIRED)
@@ -59,8 +69,4 @@ endif()
 
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        )
-
-catkin_install_python(PROGRAMS scripts/unpause_physics.py scripts/demo.py scripts/evaluation.py
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )

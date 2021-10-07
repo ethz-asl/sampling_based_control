@@ -14,16 +14,9 @@
 
 namespace mppi {
 
-enum InputFilterType : char {
-  NONE = 0,
-  SAVITZKY_GOLEY = 1,
-};
-
-enum ExpertTypes {
-  NORM = 0,
-  IMP = 1,
-};
-
+/**
+  Structure with all the configuration parameters for the MPPI solver
+**/
 struct Config {
   size_t rollouts = 1;
   double lambda = 1.0;
@@ -38,7 +31,6 @@ struct Config {
   bool adaptive_sampling = false;
   Eigen::VectorXd input_variance;
 
-  bool filtering = false;
   double cost_ratio = 0.2;
   double discount_factor = 1.0;
 
@@ -49,10 +41,7 @@ struct Config {
   Eigen::VectorXd u_min;
   Eigen::VectorXd u_max;
 
-  InputFilterType filter_type = InputFilterType::NONE;
-  uint filter_window = 10;
-  uint filter_order = 3;
-
+  bool filtering = false;
   std::vector<int> filters_type;
   std::vector<int> filters_window;
   std::vector<uint> filters_order;
@@ -60,11 +49,10 @@ struct Config {
   size_t threads = 1;
   bool logging = false;
 
-  bool use_tree_search = false;
-  double pruning_threshold = 0.5;
-
-  std::vector<ExpertTypes> expert_types = {ExpertTypes::NORM, ExpertTypes::IMP};
-  Eigen::VectorXd expert_weights;
+  int spline_degree = 3;
+  double spline_dt = 0.15;
+  double spline_verbose = false;
+  double spline_step_size = 0.1;
 
   bool display_update_freq = false;
 

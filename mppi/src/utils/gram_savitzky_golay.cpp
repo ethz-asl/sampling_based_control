@@ -2,7 +2,7 @@
  * Copyright 2017-2020 CNRS-UM LIRMM, CNRS-AIST JRL
  */
 
-#include <mppi/utils/gram_savitzky_golay.h>
+#include "mppi/utils/gram_savitzky_golay.h"
 #include <iostream>
 
 namespace gram_sg {

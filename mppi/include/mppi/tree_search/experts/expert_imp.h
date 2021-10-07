@@ -39,7 +39,7 @@ class ImpExp : public ExpertBase {
   }
 
   void update_expert(std::vector<Eigen::VectorXd> mean) override {
-    for (int step = 0; step < mean.size(); ++step) {
+    for (long unsigned int step = 0; step < mean.size(); ++step) {
       mean_[step] = mean[step];
     }
   }

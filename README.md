@@ -1,47 +1,42 @@
 ## sampling_based_control
 
 
-### Install instructions
-Clone this repo in the `src` directory of your catkin workspace. Install all dependencies first and then build the desired packages. We manage rosdependecies using [`rosdep`](http://wiki.ros.org/rosdep). 
+### Installation
+1. Clone this repo in the `src` directory of your catkin workspace. 
 
-### System dependencies
-- `yamlcpp`: `$ sudo apt-get install libyaml-cpp-dev`
+	```
+	~/catkin_ws/src$ git clone --recursive https://github.com/ethz-asl/sampling_based_control.git
+	```
 
-### ROS dependencies
-- `<catkin_workspace>$ rosdep install --from-paths src/sampling_based_control --ignore-src -y`  
-- [`rqt_multiplot`](https://github.com/anybotics/rqt_multiplot_plugin) (Optional)
-    
+2. Install some system dependenices
+	```
+	sudo apt-get install libyaml-cpp-dev libglfw3-dev`
+	```
+
+3. Install ROS dependencies. We manage them with [`rosdep`](http://wiki.ros.org/rosdep). In the root of you catkin workspace do:
+	```
+	~/catkin_ws$ rosdep init
+	~/catkin_ws$ rosdep install --from-paths src/sampling_based_control --ignore-src -y
+	```
+
+4. Finally, the manipulation example requires the installation of the `raisim` simulator. Visit its [README](mppi_examples/mppi_manipulation/README.md) and follow the described procedure. 
+
+
 ### Build
 
-`catkin config --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo`
-
-__Kinematic planning__
-
-This package uses a kinematic model to track the end effector of a mobile manipulator. The base can be made either _holonomic_ or _non-holonomic_.
-
-Build the package with `catkin build mppi_panda_mobile`
-
-__Manipulation control__
-
-The `mppi_manipulation` package requires the `raisim` physical simulator. This can be installed following the instructions reported [here](https://raisim.com/sections/Installation.html). As raisim examples and python pindings are not needed you can disable them setting `DRAISIM_EXAMPLE=OFF` and  `-DRAISIM_PY=OFF`. Note that an academic licence can be obtained contacting the developers. Make sure to add the following lines to your `~/.bashrc` in order to find `raisim` when building with catkin:
-
+For improved performance, make sure to change the build type and then build all packages.
 ```
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<where-you-installed-raisim>/lib
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:<where-you-installed-raisim>
+~/catkin_ws$ config --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
+~/catkin_ws$ build
 ```
 
-Build the package with `catkin build mppi_manipulation`
 
-### Run the manipulation demo
+### Introdcution
 
-Terminal #1
+The `mppi_examples` folder contains a set of examples that show how to use the control suite. In general each example needs to implement the following functions and classes:
+- _a stage cost_: a function that maps the current state and input to a scalar cost value. You can find a simple implementation of the cost class for a first order mass [here](mppi_examples/mppi_first_order_mass/include/mppi_first_order_mass/cost.h). Cost classes must inherit from the [cost base class](mppi/include/mppi/core/cost.h)
+- _system dynamics_: given the currently stored state and applied input predict the next state. You can find a simple implementation of the cost class for a first order mass [here](mppi_examples/mppi_first_order_mass/src/dynamics.cpp). Dynamics classes must inherit from the [cost base class](mppi/include/mppi/core/dynamics.h)
+- _controller interface_: finally cost and dynamics can be used in a stochastic controller which uses a gaussian policy to control the system. The [`mppi_ros`](mppi_ros/README.md) provides some utilities classes to simplify the task. Generally, a controller interface istanciate a cost, dynamics (previously defined), a policy (only Gaussian currently supported) and build a [solver](mppi/include/mppi/core/solver.h) class. You can find an example [here](mppi_examples/mppi_first_order_mass/src/controller_interface.cpp#L23-L71). 
 
-`roslaunch mppi_manipulation control.launch fixed_base:=false`
 
-Terminal #2
-
-`rosrun mppi_manipulation demo.py`
-
-__Royalpanda controller__
-
-The implementation of the _Royalpanda_ controller used for testing whole-body motion and manipulation control can be found [here](https://github.com/grizzi/mppi_royalpanda). A video of the real robot experiments can be watched [here](https://www.youtube.com/watch?v=4mTHYehNMCc&feature=youtu.be).
+In each example, the system dynamics is used also outside the controller as "a simulator" of the system which is controlled. This is a good check, as the model (dynamics in the controller) exactly matches the controlled system (dynamics receiving the input from the controller). See [this](mppi_examples/mppi_first_order_mass/src/nodes/mass_control.cpp#L21-L24) for an example.

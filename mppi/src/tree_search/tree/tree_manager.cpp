@@ -28,13 +28,13 @@ TreeManager::TreeManager(const dynamics_ptr& dynamics, cost_ptr cost,
   this->cost_v_.resize(config_.rollouts);
   leaves_state_.resize(config_.rollouts);
 
-  for (int i = 0; i < config_.rollouts; ++i) {
+  for (size_t i = 0; i < config_.rollouts; ++i) {
     this->tree_dynamics_v_shared_[i] = dynamics_->create();
     this->cost_v_[i] = cost_->create();
   }
 
   experts_v_.resize(config_.rollouts);
-  for (int i = 0; i < config_.rollouts; ++i) {
+  for (size_t i = 0; i < config_.rollouts; ++i) {
     experts_v_[i] = expert_->clone();
   }
 
@@ -92,7 +92,7 @@ void TreeManager::init_tree() {
       node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_),
              x0_internal_, 0));
 
-  for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
+  for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     leaf_handles_[leaf_pos] = sampling_tree_.append_child(
         root, node_t(nullptr, 0, 0, dynamics_->get_zero_input(x0_internal_),
                      x0_internal_, 0));
@@ -106,11 +106,11 @@ void TreeManager::init_tree() {
 void TreeManager::grow_tree() {
   // reset to initial state first
   for (size_t i = 0; i < config_.rollouts; i++) {
-    tree_dynamics_v_shared_[i]->reset(x0_internal_);
+    tree_dynamics_v_shared_[i]->reset(x0_internal_, t0_internal_);
     leaves_state_[i] = x0_internal_;
   }
 
-  for (int horizon_step = 1; horizon_step <= tree_target_depth_;
+  for (size_t horizon_step = 1; horizon_step <= tree_target_depth_;
        ++horizon_step) {
     add_depth_level(horizon_step);
     eval_depth_level();
@@ -120,7 +120,7 @@ void TreeManager::grow_tree() {
 void TreeManager::add_depth_level(size_t horizon_step) {
   t_ = t0_internal_ + (horizon_step * config_.step_size);
 
-  for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
+  for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     futures_[leaf_pos] =
         pool_->enqueue(bind(&TreeManager::add_node, this, std::placeholders::_1,
                             std::placeholders::_2, std::placeholders::_3,
@@ -171,7 +171,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
         0, extendable_leaf_pos_.size() - 1)];
     extending_leaf = leaf_handles_[extending_leaf_pos];
 
-    node_dynamics->reset(leaves_state_[extending_leaf_pos]);
+    node_dynamics->reset(leaves_state_[extending_leaf_pos], 0);
   }
 
   // TODO(giuseppe) all the time this stuff gets created
@@ -188,7 +188,7 @@ bool TreeManager::add_node(size_t horizon_step, size_t leaf_pos,
 
   tree_dynamics_v_shared_[leaf_pos] = node_dynamics;
 
-  double cost = cost_v_[leaf_pos]->get_stage_cost(x, t_) *
+  double cost = cost_v_[leaf_pos]->get_stage_cost(x, u, t_) *
                 std::pow(config_.discount_factor, horizon_step);
   extensions_[leaf_pos] = std::make_pair(
       extending_leaf, node_t(extending_leaf, t_, cost, u, x, expert_type));
@@ -200,16 +200,17 @@ void TreeManager::eval_depth_level() {
   extendable_leaf_pos_.clear();
   double depth_min_cost = std::numeric_limits<double>::max();
 
-  for (int rollout = 0; rollout < config_.rollouts; ++rollout) {
+  for (size_t rollout = 0; rollout < config_.rollouts; ++rollout) {
     if (leaf_handles_[rollout]->c_cum_ < depth_min_cost) {
       depth_min_cost = leaf_handles_[rollout]->c_cum_;
     }
   }
 
-  for (int leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
+  const double pruning_threshold = 1.0;  // TODO HARD CODED
+  for (size_t leaf_pos = 0; leaf_pos < tree_width_; ++leaf_pos) {
     auto& active_leaf = leaf_handles_[leaf_pos];
     if (active_leaf->c_cum_ <=
-        depth_min_cost + (config_.pruning_threshold * depth_min_cost)) {
+        depth_min_cost + (pruning_threshold * depth_min_cost)) {
       extendable_leaf_pos_.push_back(leaf_pos);
     }
   }
@@ -296,14 +297,15 @@ void TreeManager::gen_rollout_expert_mapping(size_t mapping_type_input) {
   size_t mapping_type = mapping_type_input;
 
   double weight_sum = 0;
-  for (auto i = 0; i < config_.expert_weights.size(); ++i) {
-    weight_sum += config_.expert_weights[i];
+  static const int num_experts = 2;  // same weight to the 2 experts
+  for (auto i = 0; i < num_experts; ++i) {
+    weight_sum += 1;
   }
 
   double weight_cumul = 0;
   std::vector<double> normalized_expert_weight_cumul = {};
-  for (auto i = 0; i < config_.expert_weights.size(); ++i) {
-    weight_cumul += config_.expert_weights[i] / weight_sum;
+  for (auto i = 0; i < num_experts; ++i) {
+    weight_cumul += 1.0 / weight_sum;
     normalized_expert_weight_cumul.push_back(weight_cumul);
   }
 
@@ -321,16 +323,15 @@ void TreeManager::gen_rollout_expert_mapping(size_t mapping_type_input) {
     switch (mapping_type) {
       // deterministic case (mapping is based on rollout number)
       case 0:
-        for (int i = 0; i < config_.expert_weights.size(); ++i) {
+        for (int i = 0; i < num_experts; ++i) {
+          expert_type = i;
           if (i == 0) {
             if (pos_rollout < normalized_expert_weight_cumul[i]) {
-              expert_type = config_.expert_types[i];
               break;
             }
           } else {
-            if (normalized_expert_weight_cumul[i - 1] <= pos_rollout &
-                pos_rollout < normalized_expert_weight_cumul[i]) {
-              expert_type = config_.expert_types[i];
+            if ((normalized_expert_weight_cumul[i - 1] <= pos_rollout) &
+                (pos_rollout < normalized_expert_weight_cumul[i])) {
               break;
             }
           }

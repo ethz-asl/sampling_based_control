@@ -28,21 +28,18 @@ int main(int argc, char** argv) {
                         "/home/giuseppe/git/raisimlib/rsc/activation.raisim");
   raisim::World::setActivationKey(activation_file);
 
-  // Fixed base option
-  bool fixed_base;
-  if (!nh.param<bool>("fixed_base", fixed_base, false)) {
-    ROS_ERROR_STREAM("Failed to find param fixed_base");
-    return -1;
-  }
-
   // Instantiate the simulation world
   auto robot_description_raisim =
       nh.param<std::string>("/robot_description_raisim", "");
   auto object_description_raisim =
       nh.param<std::string>("/object_description_raisim", "");
-  ManipulatorDynamicsRos simulation(nh, robot_description_raisim,
-                                    object_description_raisim, TIMESTEP,
-                                    fixed_base);
+
+  DynamicsParams dynamics_params;
+  if (!dynamics_params.init_from_ros(nh)) {
+    ROS_ERROR("Failed to parse dynamics params");
+    return 0;
+  }
+  ManipulatorDynamicsRos simulation(nh, dynamics_params);
 
   // Reset the state to a default configuration
   Eigen::VectorXd x, x_snapshot;
@@ -81,7 +78,7 @@ int main(int argc, char** argv) {
 
     if (i == 1000) {
       std::cout << "Resetting simulation from snapshot" << std::endl;
-      simulation.reset(x_snapshot);
+      simulation.reset(x_snapshot, i * TIMESTEP);
       u = u_snapshot;
     }
 

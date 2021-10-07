@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   x(0) = 0.0;
   x(1) = 0.0;
   x(2) = 0.1;
-  simulation.reset(x);
+  simulation.reset(x, 0.0);
 
   mppi::input_t u;
   u = simulation.get_zero_input(x);

@@ -17,7 +17,7 @@
 namespace mppi_ros {
 
 void to_msg(const mppi::config_t& config, Config& config_ros);
-void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros);
+void to_msg(const mppi::Rollout& rollout, Rollout& rollout_ros, const bool input_only=false, const size_t max_length=1000);
 void to_msg(const mppi::data_t& data, Data& data_ros);
 
 }  // namespace mppi_ros

@@ -70,14 +70,8 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  bool fixed_base;
-  if (!nh.getParam("fixed_base", fixed_base)) {
-    ROS_ERROR("Could not parse fixed_base. Is the parameter set?");
-    return 0;
-  }
-
   manipulation::PandaRaisimDynamics dynamics(
-      robot_description_raisim, object_description_raisim, 0.01, fixed_base);
+      robot_description_raisim, object_description_raisim, 0.01);
 
   /// just a shortcut
   auto vis = raisim::OgreVis::get();
@@ -110,7 +104,7 @@ int main(int argc, char** argv) {
 
   auto cb = [&](const manipulation_msgs::StateConstPtr& msg) {
     manipulation::conversions::msgToEigen(*msg, current_state);
-    dynamics.reset(current_state);
+    dynamics.reset(current_state, 0);
   };
 
   ros::Subscriber current_state_subscriber =

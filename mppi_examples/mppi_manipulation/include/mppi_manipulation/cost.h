@@ -14,74 +14,53 @@
 #include <ros/ros.h>
 
 #include <ros/package.h>
+#include "mppi_manipulation/params/cost_params.h"
 
 namespace manipulation {
 
-struct PandaCostParam {
-  double Qt;  // translation cost
-  double Qt2;
-  double Qr;  // rotation cost
-  double Qr2;
-  double Qo;   // obstacle cost
-  double Qos;  // obstacle cost slope
-  double Qc;   // contact cost
-  double ro;   // obstacle radius
-  double max_reach;
-  double Q_reach;
-  double Q_reachs;
-  double Q_obj;
-  double Q_tol;
-  mppi_pinocchio::Pose grasp_offset;
-  double Q_joint_limit;
-  double Q_joint_limit_slope;
-  std::vector<double> upper_joint_limits;
-  std::vector<double> lower_joint_limits;
-
-  bool parse_from_ros(const ros::NodeHandle& nh);
-};
-
 class PandaCost : public mppi::Cost {
  public:
-  PandaCost() : PandaCost("", "", PandaCostParam()){};
-  PandaCost(const std::string& robot_description,
-            const std::string& object_description, const PandaCostParam& param,
-            bool fixed_base = true);
+  PandaCost() : PandaCost(CostParams()){};
+  PandaCost(const CostParams& param);
   ~PandaCost() = default;
 
+  // debug only
+  inline const mppi_pinocchio::RobotModel& robot() const {
+    return robot_model_;
+  }
+  inline const mppi_pinocchio::RobotModel& object() const {
+    return object_model_;
+  }
+
  private:
-  bool fixed_base_;
-  std::string robot_description_;
-  std::string object_description_;
-  PandaCostParam param_;
+  CostParams params_;
 
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
 
-  std::string handle_frame_ = "handle_link";
-  std::string tracked_frame_ = "panda_grasp";
-  std::string arm_base_frame_ = "panda_link0";
   int frame_id_;
   int arm_base_frame_id_;
   Eigen::Matrix<double, 6, 1> error_;
+  Eigen::Vector3d distance_vector_;
+  Eigen::Vector3d collision_vector_;
 
  public:
   mppi::cost_ptr create() override {
-    return std::make_shared<PandaCost>(robot_description_, object_description_,
-                                       param_, fixed_base_);
+    return std::make_shared<PandaCost>(params_);
   }
   mppi::cost_ptr clone() const override {
     return std::make_shared<PandaCost>(*this);
   }
 
-  void set_linear_weight(const double k) { param_.Qt = k; }
-  void set_angular_weight(const double k) { param_.Qr = k; }
-  void set_obstacle_radius(const double r) { param_.ro = r; }
+  void set_linear_weight(const double k) { params_.Qt = k; }
+  
+  void set_angular_weight(const double k) { params_.Qr = k; }
+  
+  void set_obstacle_radius(const double r) { params_.ro = r; }
 
   mppi::cost_t compute_cost(const mppi::observation_t& x,
+                            const mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
 };
 }  // namespace manipulation
-
-std::ostream& operator<<(std::ostream& os,
-                         const manipulation::PandaCostParam& param);

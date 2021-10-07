@@ -39,6 +39,12 @@ RobotModel::RobotModel(const RobotModel& rhs) {
   data_ = new pinocchio::Data(*rhs.data_);
 }
 
+void RobotModel::print_info() const {
+  std::stringstream ss;
+  ss << "Robot model has " << model_->nq << " dofs." << std::endl;
+  std::cout << ss.str();
+}
+
 bool RobotModel::init_from_xml(const std::string& robot_description) {
   try {
     model_ = new Model();
@@ -68,6 +74,13 @@ void RobotModel::get_error(const std::string& from_frame,
   error = log6(data_->oMf[model_->getFrameId(to_frame)].actInv(
                    data_->oMf[model_->getFrameId(from_frame)]))
               .toVector();
+}
+
+void RobotModel::get_offset(const std::string& from_frame,
+                            const std::string& to_frame,
+                            Eigen::Vector3d& offset) {
+  offset = data_->oMf[model_->getFrameId(to_frame)].translation() -
+           data_->oMf[model_->getFrameId(from_frame)].translation();
 }
 
 void RobotModel::get_error(const std::string& frame,

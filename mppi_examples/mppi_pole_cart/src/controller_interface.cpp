@@ -7,6 +7,7 @@
  */
 
 #include "mppi_pole_cart/controller_interface.h"
+#include <mppi/policies/gaussian_policy.h>
 #include <ros/package.h>
 
 using namespace pole_cart;
@@ -41,10 +42,16 @@ bool PoleCartControllerInterface::set_controller(mppi::solver_ptr &controller) {
     return false;
   }
 
+  //--------------------------------
+  // policy
+  //--------------------------------
+  auto policy = std::make_shared<mppi::GaussianPolicy>(
+      int(PoleCartDim::INPUT_DIMENSION), config_);
+
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
 
   // -------------------------------
   // initialize reference

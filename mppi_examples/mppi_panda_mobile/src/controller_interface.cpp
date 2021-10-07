@@ -10,6 +10,8 @@
 #include "mppi_panda_mobile/cost.h"
 #include "mppi_panda_mobile/dynamics.h"
 
+#include <mppi/policies/gaussian_policy.h>
+#include <mppi/policies/spline_policy.h>
 #include <mppi_pinocchio/ros_conversions.h>
 #include <mppi_ros/ros_params.h>
 #include <ros/package.h>
@@ -69,6 +71,7 @@ bool PandaMobileControllerInterface::set_controller(
   double angular_weight;
   bool holonomic;
   bool joint_limits;
+  bool gaussian_policy;
 
   bool ok = true;
   ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
@@ -77,8 +80,19 @@ bool PandaMobileControllerInterface::set_controller(
   ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
   ok &= mppi_ros::getBool(nh_, "holonomic", holonomic);
   ok &= mppi_ros::getBool(nh_, "joint_limits", joint_limits);
+  ok &= mppi_ros::getBool(nh_, "gaussian_policy", gaussian_policy);
   if (!ok) {
     ROS_ERROR("Failed to parse parameters and set controller.");
+    return false;
+  }
+
+  // -------------------------------
+  // config
+  // -------------------------------
+  std::string config_file =
+      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
+    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
   }
 
@@ -101,19 +115,21 @@ bool PandaMobileControllerInterface::set_controller(
                                                 obstacle_radius_, joint_limits);
 
   // -------------------------------
-  // config
+  // policy
   // -------------------------------
-  std::string config_file =
-      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)) {
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return false;
+  std::shared_ptr<mppi::Policy> policy;
+  if (gaussian_policy) {
+    policy = std::make_shared<mppi::GaussianPolicy>(
+        int(PandaMobileDim::INPUT_DIMENSION), config_);
+  } else {
+    policy = std::make_shared<mppi::SplinePolicy>(
+        int(PandaMobileDim::INPUT_DIMENSION), config_);
   }
 
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
 
   // -------------------------------
   // initialize reference
@@ -169,13 +185,8 @@ bool PandaMobileControllerInterface::update_reference() {
 
 mppi_pinocchio::Pose PandaMobileControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-  robot_model_.update_state(x.head<7>());
-  mppi_pinocchio::Pose base_pose;
-  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation =
-      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose("panda_hand");
-  return base_pose * arm_pose;
+  robot_model_.update_state(x);
+  return robot_model_.get_pose("panda_hand");
 }
 
 geometry_msgs::PoseStamped

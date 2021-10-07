@@ -40,6 +40,7 @@ PandaCost::PandaCost(const std::string& robot_description, double linear_weight,
 }
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
+                                     const mppi::input_t& u,
                                      const mppi::reference_t& ref,
                                      const double t) {
   double cost = 0;
@@ -51,6 +52,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   robot_model_.get_error("panda_hand", ref_q, ref_t, error);
   cost += error.head<3>().transpose() * Q_linear_ * error.head<3>();
   cost += error.tail<3>().transpose() * Q_angular_ * error.tail<3>();
+  // cost += u.transpose() * u;
 
   double obstacle_dist =
       (robot_model_.get_pose("panda_hand").translation - ref.tail<3>()).norm();

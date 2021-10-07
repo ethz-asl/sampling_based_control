@@ -163,6 +163,15 @@ void ControlGui::draw() {
   ImGui::Text("Step:");
   ImGui::SameLine();
 
+  step_simulation_ = ImGui::Button("Step Simulation");
+  ImGui::SameLine();
+
+  step_controller_ = ImGui::Button("Step Controller");
+  ImGui::SameLine();
+
+  step_all_ = ImGui::Button("Step All");
+  ImGui::SameLine();
+
   // Arrow buttons with Repeater
   static int counter = 0;
   float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
@@ -193,9 +202,32 @@ void ControlGui::draw() {
     //-------------------------------------------------------------------------//
     //                       Inputs info
     //-------------------------------------------------------------------------//
-    if (ImGui::BeginTabItem("Inputs")) {
+    if (ImGui::BeginTabItem("Input")) {
+      if (!u_.empty()) {
+        static float history = 10.0f;
+        ImGui::SliderFloat("History", &history, 1, 30, "%.1f s");
+        float t = u_[0].back().x;
+        ImPlot::SetNextPlotLimitsX(t - history, t, ImGuiCond_Always);
+        ImPlot::SetNextPlotLimitsY(-1.0, 1.0, ImGuiCond_Once);
+        if (ImPlot::BeginPlot("##ID", "t", "u")) {
+          for (int i = 0; i < u_.size(); i++) {
+            char label[1];
+            label[0] = i + '0';
+            ImPlot::PlotLine(label, &u_[i].data[0].x, &u_[i].data[0].y,
+                             u_[i].data.size(), u_[i].offset,
+                             2 * sizeof(float));
+          }
+          ImPlot::EndPlot();
+        }
+      }
+      ImGui::EndTabItem();
+    }
+
+    //-------------------------------------------------------------------------//
+    //                       Rollouts info
+    //-------------------------------------------------------------------------//
+    if (ImGui::BeginTabItem("Rollouts")) {
       static bool show_all = false;
-      static bool show_averaged = false;
       static bool show_filtered = false;
       static int nr_rollouts = (int)rollouts_.size();
       static int rollout_idx = 0;
@@ -207,7 +239,6 @@ void ControlGui::draw() {
       ImGui::SameLine();
       ImGui::Checkbox("show all", &show_all);
       ImGui::SameLine();
-      ImGui::Checkbox("show averaged", &show_averaged);
       ImGui::SameLine();
       ImGui::Checkbox("show filtered", &show_filtered);
       ImGui::EndTabItem();
@@ -258,17 +289,10 @@ void ControlGui::draw() {
                                 (int)data.rollout->tt.size());
             }
 
-            if (show_averaged) {
-              std::vector<double> u;
-              std::vector<double> t = rollouts_[0].tt;
-              for (int j = 0; j < u_avg_.size(); j++) u.push_back(u_avg_[j][i]);
-              ImPlot::PlotLine("u_averaged", t.data(), u.data(), (int)t.size());
-            }
-
             if (show_filtered) {
               std::vector<double> u;
               std::vector<double> t = rollouts_[0].tt;
-              for (int j = 0; j < u_.size(); j++) u.push_back(u_[j][i]);
+              for (int j = 0; j < uu_.size(); j++) u.push_back(uu_[j][i]);
               ImPlot::PlotLine("u_filtered", t.data(), u.data(), (int)t.size());
             }
             ImPlot::EndPlot();
@@ -327,6 +351,26 @@ void ControlGui::draw() {
         }
       }
 
+      if (ImGui::CollapsingHeader("Rollouts costs")) {
+        if (weights_.size() == 0) {
+          ImGui::Text("Weights are not set. Cannot display weights.");
+        } else {
+          std::vector<double> ridx;
+          for (int i = 0; i < (int)weights_.size(); i++) ridx.push_back(i);
+
+          static std::vector<double> total_costs(rollouts_.size());
+          for (int i = 0; i < rollouts_.size(); i++)
+            total_costs[i] = rollouts_[i].total_cost;
+          ImPlot::SetNextPlotLimitsX(0, (int)weights_.size(), ImGuiCond_Once);
+          if (ImPlot::BeginPlot("rollouts costs", "total cost", "rollout",
+                                ImVec2(-1, 0), ImPlotFlags_NoLegend,
+                                ImPlotAxisFlags_Lock)) {
+            ImPlot::PlotLine("total_costs", ridx.data(), total_costs.data(),
+                             (int)total_costs.size());
+            ImPlot::EndPlot();
+          }
+        }
+      }
       ImGui::EndTabItem();
     }
     ImGui::EndTabBar();
@@ -359,9 +403,20 @@ void ControlGui::reset_config(const mppi::config_t& config) {
   config_ = config;
 }
 
-void ControlGui::reset_averaged_policy(const input_array_t& u) { u_avg_ = u; }
+void ControlGui::reset_averaged_policy(const input_array_t& u) { uu_avg_ = u; }
 
-void ControlGui::reset_policy(const input_array_t& u) { u_ = u; }
+void ControlGui::reset_input(const mppi::input_t& u, const double t) {
+  static bool first_reset = true;
+  if (first_reset) {
+    u_.resize(u.size(), scrolling_buffer_t(1000));
+    first_reset = false;
+  }
+  for (int i = 0; i < u.size(); i++) {
+    u_[i].add_point(t, u[i]);
+  }
+}
+
+void ControlGui::reset_policy(const input_array_t& u) { uu_ = u; }
 
 void ControlGui::reset_rollouts(const std::vector<Rollout>& rollouts) {
   rollouts_ = rollouts;

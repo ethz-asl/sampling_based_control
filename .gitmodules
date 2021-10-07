@@ -4,3 +4,12 @@
 [submodule "mppi_tools/submodules/implot"]
 	path = mppi_tools/submodules/implot
 	url = https://github.com/epezent/implot.git
+[submodule "submodules/pybind11"]
+	path = submodules/pybind11
+	url = git@github.com:pybind/pybind11.git
+[submodule "submodules/h5pp"]
+	path = submodules/h5pp
+	url = git@github.com:DavidAce/h5pp.git
+[submodule "submodules/HighFive"]
+	path = submodules/HighFive
+	url = git@github.com:BlueBrain/HighFive.git

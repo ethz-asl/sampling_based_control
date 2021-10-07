@@ -17,6 +17,7 @@ class ModelTrackingController {
   ModelTrackingController() = default;
 
   void init(mppi::dynamics_ptr dynamics, mppi::cost_ptr cost,
+            mppi::policy_ptr policy,
             const mppi::observation_t& x0, const double& t0,
             const mppi::config_t& config);
   void get_state(mppi::observation_t& x) const;

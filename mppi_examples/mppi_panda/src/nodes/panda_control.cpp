@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   // set initial state
   auto x0 = nh.param<std::vector<double>>("initial_configuration", {});
   for (size_t i = 0; i < x0.size(); i++) x(i) = x0[i];
-  simulation->reset(x);
+  simulation->reset(x, 0.0);
 
   // init control input
   mppi::input_t u;
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   // init the controller
   bool ok = controller.init();
   if (!ok) {
-    throw std::runtime_error("Failed to initialzied controller!");
+    throw std::runtime_error("Failed to initialized controller!");
   }
 
   // set the very first observation

@@ -11,9 +11,9 @@
 
 #include <ros/package.h>
 #include "mppi_panda/controller_interface.h"
-#include "mppi_panda/renderer.h"
 #include "mppi_ros/ros_params.h"
 
+#include <mppi/policies/gaussian_policy.h>
 #include <mppi_pinocchio/ros_conversions.h>
 
 using namespace panda;
@@ -66,16 +66,24 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   std::string robot_description;
   double linear_weight;
   double angular_weight;
-  bool rendering;
 
   bool ok = true;
   ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
   ok &= mppi_ros::getNonNegative(nh_, "linear_weight", linear_weight);
   ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
-  ok &= mppi_ros::getBool(nh_, "rendering", rendering);
 
   if (!ok) {
     ROS_ERROR("Failed to parse parameters and set the controller.");
+    return false;
+  }
+
+  // -------------------------------
+  // config
+  // -------------------------------
+  std::string config_file =
+      ros::package::getPath("mppi_panda") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
+    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
   }
 
@@ -95,26 +103,16 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   auto cost = std::make_shared<PandaCost>(robot_description, linear_weight,
                                           angular_weight, obstacle_radius_);
 
-  // rendering
-  std::shared_ptr<mppi::Renderer> renderer = nullptr;
-  if (rendering)
-    renderer = std::make_shared<RendererPanda>(nh_, robot_description);
-
   // -------------------------------
-  // config
+  // policy
   // -------------------------------
-  std::string config_file =
-      ros::package::getPath("mppi_panda") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)) {
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return false;
-  }
+  auto policy = std::make_shared<mppi::GaussianPolicy>(
+      int(PandaDim::INPUT_DIMENSION), config_);
 
   // -------------------------------
   // controller
   // -------------------------------
-  controller = std::make_shared<mppi::Solver>(dynamics, cost, config_, nullptr,
-                                              renderer);
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
 
   // -------------------------------
   // initialize reference

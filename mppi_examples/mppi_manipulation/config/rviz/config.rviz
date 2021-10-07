@@ -6,7 +6,8 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /World1
-        - /World1/Obstacle1
+        - /World1/Object Model1/Links1
+        - /World1/Panda1
         - /Observer1/Vicon Odometry1/Shape1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 719
@@ -59,20 +60,16 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        axis_link:
-          Value: true
         axle_link:
           Value: false
         base_link:
           Value: false
-        box:
-          Value: true
         chassis_link:
           Value: false
-        door:
-          Value: false
-        door_hinge:
-          Value: false
+        door_frame:
+          Value: true
+        door_link:
+          Value: true
         franka_mount_link:
           Value: false
         front_cover_link:
@@ -81,20 +78,14 @@ Visualization Manager:
           Value: false
         handle_link:
           Value: true
-        handle_support_left:
-          Value: false
-        handle_support_right:
-          Value: false
         imu_link:
           Value: false
         left_side_cover_link:
           Value: false
-        measured_joint_link:
-          Value: false
-        measured_joint_link_test:
-          Value: true
         mid_mount:
           Value: false
+        obstacle:
+          Value: true
         omni_base_root_link:
           Value: true
         panda_grasp:
@@ -106,7 +97,7 @@ Visualization Manager:
         panda_link0:
           Value: false
         panda_link1:
-          Value: false
+          Value: true
         panda_link2:
           Value: false
         panda_link3:
@@ -118,7 +109,7 @@ Visualization Manager:
         panda_link6:
           Value: false
         panda_link7:
-          Value: false
+          Value: true
         panda_link8:
           Value: false
         panda_rightfinger:
@@ -135,8 +126,12 @@ Visualization Manager:
           Value: false
         right_side_cover_link:
           Value: false
-        shelf:
-          Value: false
+        sim_door_frame:
+          Value: true
+        sim_door_link:
+          Value: true
+        sim_handle_link:
+          Value: true
         top_link:
           Value: false
         world:
@@ -148,12 +143,16 @@ Visualization Manager:
       Marker Alpha: 1
       Marker Scale: 0.20000000298023224
       Name: TF
-      Show Arrows: true
+      Show Arrows: false
       Show Axes: true
       Show Names: true
       Tree:
         world:
-          box:
+          door_frame:
+            door_link:
+              handle_link:
+                {}
+          obstacle:
             {}
           omni_base_root_link:
             x_slider:
@@ -201,18 +200,10 @@ Visualization Manager:
                         {}
                       ridgeback_sensor_mount_link:
                         {}
-          shelf:
-            door_hinge:
-              axis_link:
-                measured_joint_link:
-                  door:
-                    handle_link:
-                      handle_support_left:
-                        {}
-                      handle_support_right:
-                        {}
-                      measured_joint_link_test:
-                        {}
+          sim_door_frame:
+            sim_door_link:
+              sim_handle_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -233,13 +224,13 @@ Visualization Manager:
       Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
-      Enabled: true
+      Enabled: false
       Name: Interactive EE Reference
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
       Update Topic: /reference_marker_server/update
-      Value: true
+      Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: true
@@ -254,7 +245,7 @@ Visualization Manager:
       Marker Topic: /obstacle_marker
       Name: Obstacle Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Group
@@ -269,43 +260,17 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            axis_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            door:
+            sim_door_frame:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            door_hinge:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            handle_link:
+            sim_door_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            handle_support_left:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            handle_support_right:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            measured_joint_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            measured_joint_link_test:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            shelf:
+            sim_handle_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -314,13 +279,48 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-          Name: Object
-          Robot Description: object_description
+          Name: Object Sim
+          Robot Description: object_description_raisim_simulation
           TF Prefix: ""
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Alpha: 0.20000000298023224
+        - Alpha: 1
+          Class: rviz/RobotModel
+          Collision Enabled: false
+          Enabled: true
+          Links:
+            All Links Enabled: true
+            Expand Joint Details: false
+            Expand Link Details: false
+            Expand Tree: false
+            Link Tree Style: Links in Alphabetic Order
+            door_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            door_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            handle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            world:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+          Name: Object Model
+          Robot Description: object_description_raisim
+          TF Prefix: ""
+          Update Interval: 0
+          Value: true
+          Visual Enabled: true
+        - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -509,7 +509,7 @@ Visualization Manager:
           Marker Topic: /contact_forces
           Name: Contact Forces
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Alpha: 0.20000000298023224
@@ -522,7 +522,7 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            box:
+            obstacle:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -678,6 +678,21 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Controller
+    - Alpha: 1
+      Arrow Width: 0.5
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.10000000149011612
+      Force Color: 204; 51; 51
+      Hide Small Values: true
+      History Length: 1
+      Name: WrenchStamped
+      Queue Size: 10
+      Topic: /external_force
+      Torque Arrow Scale: 0
+      Torque Color: 204; 204; 51
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 211; 215; 207
@@ -706,7 +721,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.305503845214844
+      Distance: 5.142553329467773
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -714,17 +729,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.946671187877655
-        Y: -0.07541895657777786
-        Z: 0.5484432578086853
+        X: 0.42221570014953613
+        Y: -1.3225024938583374
+        Z: 0.43037983775138855
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5147977471351624
+      Pitch: 0.499798059463501
       Target Frame: <Fixed Frame>
-      Yaw: 1.998708724975586
+      Yaw: 1.6605315208435059
     Saved: ~
 Window Geometry:
   Displays:
@@ -732,7 +747,7 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001b30000035afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000035a000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007380000003efc0100000002fb0000000800540069006d0065010000000000000738000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000057f0000035a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000002840000035afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000035a000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007380000003efc0100000002fb0000000800540069006d0065010000000000000738000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000004ae0000035a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

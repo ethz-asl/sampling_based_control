@@ -34,6 +34,7 @@ class PoleCartCost : public mppi::Cost {
   // adding an increasing cost can push the agent to enter the violated limits
   // again
   mppi::cost_t compute_cost(const mppi::observation_t& x,
+                            const mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override {
     double cost = 0.0;

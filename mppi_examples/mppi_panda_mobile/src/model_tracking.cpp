@@ -8,6 +8,8 @@
 #include "mppi_panda_mobile/cost.h"
 #include "mppi_panda_mobile/dynamics.h"
 
+#include <mppi/policies/gaussian_policy.h>
+#include <mppi/policies/spline_policy.h>
 #include <mppi_pinocchio/ros_conversions.h>
 #include <mppi_ros/ros_params.h>
 #include <ros/package.h>
@@ -35,15 +37,12 @@ bool PandaMobileModelTracking::init_ros() {
 
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  joint_state_.name = {"panda_joint1", "panda_joint2", "panda_joint3",
+  joint_state_.name = {"x_base_joint", "y_base_joint", "w_base_joint",
+                       "panda_joint1", "panda_joint2", "panda_joint3",
                        "panda_joint4", "panda_joint5", "panda_joint6",
                        "panda_joint7"};
-  joint_state_.position.resize(7);
+  joint_state_.position.resize(10);
   joint_state_.header.frame_id = "base";
-
-  // base tf
-  world_base_tf_.header.frame_id = "world";
-  world_base_tf_.child_frame_id = "base";
 
   if (!mppi_ros::getNonNegative(nh_, "obstacle_radius", obstacle_radius_))
     return false;
@@ -73,6 +72,7 @@ bool PandaMobileModelTracking::setup() {
   double angular_weight;
   bool holonomic;
   bool joint_limits;
+  bool gaussian_policy;
 
   bool ok = true;
   ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
@@ -81,8 +81,19 @@ bool PandaMobileModelTracking::setup() {
   ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
   ok &= mppi_ros::getBool(nh_, "holonomic", holonomic);
   ok &= mppi_ros::getBool(nh_, "joint_limits", joint_limits);
+  ok &= mppi_ros::getBool(nh_, "gaussian_policy", gaussian_policy);
   if (!ok) {
     ROS_ERROR("Failed to parse parameters and set controller.");
+    return false;
+  }
+
+  // -------------------------------
+  // config
+  // -------------------------------
+  std::string config_file =
+      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
+  if (!config_.init_from_file(config_file)) {
+    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
     return false;
   }
 
@@ -105,13 +116,15 @@ bool PandaMobileModelTracking::setup() {
                                                 obstacle_radius_, joint_limits);
 
   // -------------------------------
-  // config
+  // policy
   // -------------------------------
-  std::string config_file =
-      ros::package::getPath("mppi_panda_mobile") + "/config/params.yaml";
-  if (!config_.init_from_file(config_file)) {
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-    return false;
+  std::shared_ptr<mppi::Policy> policy;
+  if (gaussian_policy) {
+    policy = std::make_shared<mppi::GaussianPolicy>(
+        int(PandaMobileDim::INPUT_DIMENSION), config_);
+  } else {
+    policy = std::make_shared<mppi::SplinePolicy>(
+        int(PandaMobileDim::INPUT_DIMENSION), config_);
   }
 
   // -------------------------------
@@ -125,7 +138,7 @@ bool PandaMobileModelTracking::setup() {
   // -------------------------------
   // controller TODO(giuseppe) change this to the proper way
   // -------------------------------
-  init(dynamics, cost, x0, 0.0, config_);
+  init(dynamics, cost, policy, x0, 0.0, config_);
 
   // -------------------------------
   // initialize reference
@@ -171,13 +184,8 @@ void PandaMobileModelTracking::obstacle_callback(
 
 mppi_pinocchio::Pose PandaMobileModelTracking::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-  robot_model_.update_state(x.head<7>());
-  mppi_pinocchio::Pose base_pose;
-  base_pose.translation = Eigen::Vector3d(x(7), x(8), 0.0);
-  base_pose.rotation =
-      Eigen::Quaterniond(Eigen::AngleAxisd(x(9), Eigen::Vector3d::UnitZ()));
-  mppi_pinocchio::Pose arm_pose = robot_model_.get_pose("panda_hand");
-  return base_pose * arm_pose;
+  robot_model_.update_state(x);
+  return robot_model_.get_pose("panda_hand");
 }
 
 geometry_msgs::PoseStamped PandaMobileModelTracking::get_pose_end_effector_ros(
@@ -211,18 +219,7 @@ void PandaMobileModelTracking::publish_ros() {
   optimal_trajectory_publisher_.publish(optimal_path_);
 
   // publish joint state
-  for (size_t i = 0; i < 7; i++) joint_state_.position[i] = x_(i);
+  for (size_t i = 0; i < 10; i++) joint_state_.position[i] = x_(i );
   joint_state_.header.stamp = ros::Time::now();
   state_publisher_.publish(joint_state_);
-
-  // publish base transform
-  world_base_tf_.header.stamp = ros::Time::now();
-  world_base_tf_.transform.translation.x = x_(7);
-  world_base_tf_.transform.translation.y = x_(8);
-  Eigen::Quaterniond q(Eigen::AngleAxisd(x_(9), Eigen::Vector3d::UnitZ()));
-  world_base_tf_.transform.rotation.x = q.x();
-  world_base_tf_.transform.rotation.y = q.y();
-  world_base_tf_.transform.rotation.z = q.z();
-  world_base_tf_.transform.rotation.w = q.w();
-  tf_broadcaster_.sendTransform(world_base_tf_);
 }

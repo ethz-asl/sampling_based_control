@@ -11,6 +11,7 @@
     <depend>manipulation_msgs</depend>
     <depend>mppi</depend>
     <depend>mppi_panda</depend>
+    <depend>mppi_panda_mobile</depend>
     <depend>mppi_ros</depend>
     <depend>mppi_pinocchio</depend>
     <depend>roscpp</depend>
@@ -18,6 +19,8 @@
     <depend>sensor_msgs</depend>
     <depend>std_msgs</depend>
     <depend>tf2_ros</depend>
+    <depend>plotjuggler</depend>
+    <depend>signal_logger</depend>
 </package>
 
 

@@ -15,6 +15,11 @@ add_message_files(
         FILES State.msg Input.msg InputState.msg
 )
 
+add_service_files(
+        DIRECTORY srv
+        FILES StateRequest.srv
+)
+
 generate_messages(
         DEPENDENCIES
         geometry_msgs

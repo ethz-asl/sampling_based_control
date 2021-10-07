@@ -505,6 +505,18 @@
                             <color rgba="1 1 1 1"/>
                         </material>
                     </visual>
+                    <!-- <xacro:if value="${collision_finger}">
+                        <collision>
+                            <origin rpy="0 0 0" xyz="0 0 0"/>
+                            <geometry>
+                                <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.obj"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>
+                    </xacro:if>
+ -->
                     <xacro:if value="${collision_finger}">
                         <collision>
                             <origin rpy="0.0 0 0.0" xyz="0 0.018 0.01"/>
@@ -551,6 +563,17 @@
                             <color rgba="1 1 1 1"/>
                         </material>
                     </visual>
+                    <!-- <xacro:if value="${collision_finger}">
+                        <collision>
+                            <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+                            <geometry>
+                                <mesh filename="${resources_prefix}${resources_directory}/resources/panda/meshes/collision/finger.obj"/>
+                            </geometry>
+                            <material name="">
+                                <contact name="steel"/>
+                            </material>
+                        </collision>
+                    </xacro:if> -->
                     <xacro:if value="${collision_finger}">
                         <collision>
                             <origin rpy="0.0 0 0.0" xyz="0 -0.018 0.01"/>

@@ -30,6 +30,7 @@ bool ControllerRos::init_default_params() {
     ROS_ERROR("Failed to parse default parameters.");
     return false;
   }
+  ROS_INFO("Default params initialized.");
   return true;
 }
 
@@ -41,6 +42,7 @@ void ControllerRos::init_default_ros() {
   max_rollout_cost_publisher_ =
       nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
   data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
+  ROS_INFO("Default ROS initialized.");
 }
 
 bool ControllerRos::init() {
@@ -118,6 +120,11 @@ bool ControllerRos::update_policy() {
   return true;
 }
 
+bool ControllerRos::update_reference_thread(
+    const mppi::threading::WorkerEvent &event) {
+  return update_reference();
+}
+
 bool ControllerRos::update_policy_thread(
     const mppi::threading::WorkerEvent &event) {
   if (!observation_set_) return true;
@@ -128,13 +135,6 @@ bool ControllerRos::update_policy_thread(
     data_publisher_.publish(data_ros_);
   }
   return true;
-}
-
-bool ControllerRos::update_reference() { return true; }
-
-bool ControllerRos::update_reference_thread(
-    const mppi::threading::WorkerEvent &event) {
-  return update_reference();
 }
 
 bool ControllerRos::publish_ros_default() {

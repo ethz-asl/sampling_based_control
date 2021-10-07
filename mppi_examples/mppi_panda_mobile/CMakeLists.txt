@@ -15,12 +15,13 @@ set(PACKAGE_DEPENDENCIES
         roslib
         tf2
         tf2_ros
+        safety_filter
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 catkin_package(
-        LIBRARIES ${PROJECT_NAME}
+        LIBRARIES ${PROJECT_NAME} panda_mobile_safety_filter
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
         DEPENDS )

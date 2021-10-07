@@ -11,6 +11,7 @@
 
 namespace mppi {
 
+/// Structur to collect the rollout information
 struct Rollout {
   Rollout();
   explicit Rollout(size_t steps, size_t input_dim, size_t state_dim);
