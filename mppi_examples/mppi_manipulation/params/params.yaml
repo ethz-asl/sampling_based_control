@@ -1,0 +1,111 @@
+dynamics:
+  dt: 0.015
+  object_handle_link: handle_link
+  object_handle_joint: handle_joint
+  articulation_joint: articulation_joint
+  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
+                   0.0,                                                                    # object joint position
+                   0.0,                                                                    # object joint velocity
+                   0,                                                                      # contact flag
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+  gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [ 0.0, 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0, 0.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]
+
+sim_dynamics:
+  dt: 0.015
+  object_handle_link: sim_handle_link
+  object_handle_joint: sim_handle_joint
+  articulation_joint: articulation_joint
+  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
+                   0.0,                                                                    # object joint position
+                   0.0,                                                                    # object joint velocity
+                   0,                                                                      # contact flag
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+  gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [ 0.0, 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0, 0.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      ki: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]
+
+cost:
+  regularization: 0.0
+  linear_weight: 100.0
+  linear_weight_opening: 10.0
+
+  angular_weight: 10.0
+  angular_weight_opening: 1.0
+
+  min_dist: 0.0
+  max_reach: 1.0
+  reach_weight: 100
+  reach_weight_slope: 10
+
+  obstacle_weight: 0
+  obstacle_weight_slope: 0
+  obstacle_radius: 0.8
+
+  contact_weight: 10.0
+
+  object_weight: 1000
+  object_tolerance: 0.01
+
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
+
+  upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+  lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+
+  joint_limit_cost: 1000 #1000
+  joint_limit_slope: 1000000 #100
+
+  max_power: 0.0
+  power_weight: 0.0
+
+  handle_frame: handle_link
+  tracked_frame: panda_grasp
+  arm_base_frame: panda_link0
+
+  collision_link_0: panda_link1
+  collision_link_1: panda_link7
+  collision_threshold: 0.35
+  collision_weight: 1000
+
+# For valve
+# grasp_translation_offset: [0.0, 0.01, 0.07]
+# grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x
+# For microwave
+# grasp_translation_offset: [0.0, 0.0, 0.0]
+# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+# For drawer
+# grasp_translation_offset: [0.0, 0.0, 0.0]
+# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+# For door
+# grasp_translation_offset: [0.0, 0.0, 0.0]
+# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y

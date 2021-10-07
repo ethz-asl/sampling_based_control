@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda_mobile">
+    <xacro:include filename="$(find mppi_panda)/resources/panda/panda.urdf.xacro"/>
+    <xacro:include filename="$(find mppi_manipulation)/data/planar_base.urdf.xacro"/>
+
+
+
+    <xacro:include filename="$(find mppi_manipulation)/data/ridgeback.urdf.xacro"/>
+    <xacro:ridgeback/>
+    <xacro:include filename="$(find mppi_manipulation)/data/ridgeback_gazebo.urdf.xacro"/>
+
+    <!--Mount panda on ridgeback-->
+    <joint name="arm_mount_joint" type="fixed">
+        <parent link="mid_mount"/>
+        <child link="franka_mount_link"/>
+        <origin xyz="0.30 0.0 0.445" rpy="0 0 0"/>
+    </joint>
+    <link name="franka_mount_link"/>
+    <xacro:panda_robot parent_link="franka_mount_link" robot_description="/robot_description_for_gazebo"/>
+
+    <!--    Add utility grasp frame-->
+    <xacro:if value="${add_finger}">
+        <link name="panda_grasp"/>
+        <joint name="panda_grasp_joint" type="fixed">
+            <parent link="panda_hand"/>
+            <child link="panda_grasp"/>
+            <axis xyz="0 1 0"/>
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        </joint>
+    </xacro:if>
+</robot>

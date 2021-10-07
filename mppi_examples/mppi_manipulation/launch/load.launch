@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="debug" default="false"/>
+    <arg name="object" default="door"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
+    <arg name="object_height" default="1.0"/>
+    <arg name="load_simulation_object" default="true"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
+      resources_directory:='package://mppi_panda'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true
+      custom_fingers:=true
+      fixed_base:=false"/>
+
+    <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
+    <param name="robot_description_fixed_base" command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true
+      custom_fingers:=true
+      fixed_base:=true"/>
+
+    <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
+      ridgeback_resources_prefix:='$(find mppi_manipulation)/data/meshes/ridgeback/meshes'
+      collision_links:=false
+      collision_hand:=true
+      collision_finger:=true
+      collision_format:='obj'
+      add_finger:=true
+      custom_fingers:=true
+      no_position_limits:=false
+      friction:=0.0
+      damping:=10.0
+      fixed_base:=false"/>
+
+    <param name="object_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           resource_prefix:='file://'
+           height:=$(arg object_height)"/>
+
+    <param name="object_description_raisim"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           origin_x:=0.943
+           height:=$(arg object_height)"/>
+
+    <group if="$(arg load_simulation_object)">
+    <!-- This object description is used in simulation and can differ from the model used in the controller -->
+    <param name="object_description_raisim_simulation"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object).urdf.xacro
+           origin_x:=0.943
+           height:=$(arg object_height)
+           articulation_mismatch_offset:=0.0
+           prefix:='sim_'"/>
+
+    </group>
+    
+    <param name="obstacle_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/box.urdf.xacro
+           obstacle_x:=10.3 obstacle_y:=-0.25 obstacle_z:=0.17"/>
+
+    <group if="$(arg debug)">
+        <node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="robot_description"/>
+            <remap from="joint_states" to="/robot/joint_states"/>
+        </node>
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="robot_description"/>
+            <remap from="joint_states" to="/robot/joint_states"/>
+        </node>
+
+        <node name="object_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+            <remap from="robot_description" to="object_description_raisim"/>
+            <remap from="joint_states" to="/model/object/joint_states"/>
+        </node>
+        <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <remap from="robot_description" to="object_description_raisim"/>
+            <remap from="joint_states" to="/model/object/joint_states"/>
+        </node>
+
+        <group if="$(arg load_simulation_object)">
+             <node name="sim_object_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+                <remap from="robot_description" to="object_description_raisim_simulation"/>
+                <remap from="joint_states" to="/sim/object/joint_states"/>
+            </node>
+
+            <node name="sim_object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+                <remap from="robot_description" to="object_description_raisim_simulation"/>
+                <remap from="joint_states" to="/sim/object/joint_states"/>
+            </node>
+
+        </group>
+       
+        <node name="rviz" pkg="rviz" type="rviz" output="screen"
+              args="-d $(find mppi_manipulation)/config/rviz/debug_urdf.rviz"/>
+
+    </group>
+</launch>

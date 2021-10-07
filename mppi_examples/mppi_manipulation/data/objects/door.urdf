@@ -1,0 +1,116 @@
+<?xml version="1.0" ?>
+<robot name="door">
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="door_frame"/>
+        <origin xyz="0.65 0.3 0.01" rpy="0 0 3.14"/>
+    </joint>
+
+    <link name="door_frame">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.05 0.6 0.5"/>
+            </geometry>
+            <material name="frame_material">
+                <color rgba="0.5 0.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.05 0.6 0.5"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!--link name="door_frame_step">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.081 0.6 0.10"/>
+            </geometry>
+            <material name="frame_material">
+                <color rgba="0.5 0.0 0.0 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.081 0.6 0.10"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="step_joint" type="fixed">
+        <parent link="door_frame"/>
+        <child link="door_frame_step"/>
+        <origin xyz="0.0155 0 0.31" rpy="0 0 0"/>
+        <dynamics damping="1.0" friction="2.0"/>
+        <axis xyz="0 1 0"/>
+    </joint-->
+
+    <link name="door_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.048966669" ixy="0" ixz="0" iyy="0.046466667" iyz="0" izz="0.0041666669"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.02 0.6 0.5"/>
+            </geometry>
+            <material name="door_material">
+                <color rgba="0.8 0.8 0.3 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0.25"/>
+            <geometry>
+                <box size="0.02 0.6 0.5"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="door_joint" type="revolute">
+        <parent link="door_frame"/>
+        <child link="door_link"/>
+        <dynamics damping="1.0" friction="4.0"/>
+        <origin xyz="0.046 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" lower="0" upper="1.57" velocity="10.0"/>
+    </joint>
+
+    <link name="handle_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.10"/>
+            </geometry>
+            <material name="handle_matreial">
+                <color rgba="0.8 0.8 0.3 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.010"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="handle_joint" type="fixed">
+        <parent link="door_link"/>
+        <child link="handle_link"/>
+        <origin xyz="0.055 0 0.47" rpy="1.5708 0 0"/>
+        <dynamics damping="1.0" friction="2.0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+</robot>

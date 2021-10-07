@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+    <xacro:include filename="$(find mppi_panda)/resources/panda/panda.urdf.xacro"/>
+    <xacro:arg name="fixed_base" default="true"/>
+    <xacro:property name="fixed_base" default="$(arg fixed_base)"/>
+
+    <!-- Utility macro to add a control interface (used by Gazebo Sim Plugin) -->
+    <xacro:macro name="add_transmission" params="joint_name">
+        <transmission name="transmision_${joint_name}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${joint_name}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${joint_name}_motor">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+
+    <!-- Fixed base version -->
+    <xacro:if value="${fixed_base}">
+        <link name="world"/>
+        <xacro:panda_robot parent_link="world"/>
+    </xacro:if>
+
+    <!-- Add a omnidirectional base to the robot -->
+    <xacro:unless value="${fixed_base}">
+        <link name="world"/>
+        <link name="odom"/>
+        <joint name="odom_to_world" type="fixed">
+            <parent link="world"/>
+            <child link="odom"/>
+        </joint>
+
+        <link name="x_slider">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="10.0"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+        <link name="y_slider">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="10.0"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+        <link name="pivot">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="10.0"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <joint name="x_base_joint" type="prismatic">
+            <parent link="odom"/>
+            <child link="x_slider"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="1 0 0"/>
+            <limit effort="1000.0" lower="-100" upper="100" velocity="1.0"/>
+            <dynamics damping="10.0" friction="10"/>
+        </joint>
+        <xacro:add_transmission joint_name="x_base_joint"/>
+
+        <joint name="y_base_joint" type="prismatic">
+            <parent link="x_slider"/>
+            <child link="y_slider"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="0 1 0"/>
+            <limit effort="1000.0" lower="-100" upper="100" velocity="1.0"/>
+            <dynamics damping="10.0" friction="10"/>
+        </joint>
+        <xacro:add_transmission joint_name="y_base_joint"/>
+
+        <joint name="pivot_joint" type="revolute">
+            <parent link="y_slider"/>
+            <child link="pivot"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <axis xyz="0 0 1"/>
+            <limit effort="1000.0" velocity="1.0" upper="10.0" lower="-10.0"/>
+            <dynamics damping="10.0" friction="10"/>
+        </joint>
+        <xacro:add_transmission joint_name="pivot_joint"/>
+
+        <xacro:panda_robot parent_link="pivot"/>
+    </xacro:unless>
+
+    <!-- Add utility frame for grasp -->
+    <xacro:if value="${add_finger}">
+        <link name="panda_grasp"/>
+        <joint name="panda_grasp_joint" type="fixed">
+            <parent link="panda_hand"/>
+            <child link="panda_grasp"/>
+            <axis xyz="0 1 0"/>
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        </joint>
+    </xacro:if>
+
+</robot>

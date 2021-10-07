@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<robot name="ridgeback" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:property name="PI" value="3.1415926535897931"/>
+
+    <xacro:property name="wheel_radius" value="0.0759"/>
+    <xacro:property name="wheel_width" value="0.0790"/>
+
+    <xacro:property name="rocker_offset" value="0.319"/>
+    <xacro:property name="rocker_width" value="0.472"/>
+
+    <xacro:property name="dummy_inertia" value="1e-09"/>
+
+    <xacro:macro name="wheel" params="prefix side *joint_pose">
+        <link name="${prefix}_${side}_wheel_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+                <geometry>
+                    <mesh filename="package://ridgeback_description/meshes/wheel.stl"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+                <geometry>
+                    <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <mass value="2.3"/>
+                <inertia
+                        ixx="3.3212e-3" ixy="0" ixz="0"
+                        iyy="6.6424e-3" iyz="0"
+                        izz="3.3212e-3"/>
+            </inertial>
+        </link>
+
+        <joint name="${prefix}_${side}_wheel" type="continuous">
+            <parent link="${prefix}_rocker_link"/>
+            <child link="${prefix}_${side}_wheel_link"/>
+            <xacro:insert_block name="joint_pose"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <transmission name="${prefix}_wheel_trans">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${prefix}_${side}_wheel">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${prefix}_${side}_actuator">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+
+<!--        <gazebo reference="${prefix}_${side}_wheel_link">-->
+<!--            <mu1 value="50.0"/>-->
+<!--            <mu2 value="100.0"/>-->
+<!--            <kp>1000000.0</kp>-->
+<!--            <kd>100.0</kd>-->
+<!--            <minDepth>0.001</minDepth>-->
+<!--            <maxVel>1.0</maxVel>-->
+<!--        </gazebo>-->
+    </xacro:macro>
+
+
+    <xacro:macro name="rocker" params="prefix joint_type location *joint_limits">
+        <link name="${prefix}_rocker_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
+                <geometry>
+                    <mesh filename="package://ridgeback_description/meshes/rocker.stl"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <inertial>
+                <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
+                <mass value="10.267"/>
+                <inertia
+                        ixx="0.0288" ixy="2.20484e-6" ixz="-1.3145e-5"
+                        iyy="0.4324" iyz="1.8944e-3"
+                        izz="0.4130"/>
+            </inertial>
+        </link>
+
+        <joint name="${prefix}_rocker" type="${joint_type}">
+            <parent link="axle_link"/>
+            <child link="${prefix}_rocker_link"/>
+            <origin xyz="${location*rocker_offset} 0 0" rpy="0 0 0"/>
+            <axis xyz="1 0 0"/>
+            <xacro:insert_block name="joint_limits"/>
+        </joint>
+
+        <xacro:wheel prefix="${prefix}" side="left">
+            <origin xyz="0 ${rocker_width/2 + wheel_width/2} 0" rpy="0 0 0"/>
+        </xacro:wheel>
+        <xacro:wheel prefix="${prefix}" side="right">
+            <origin xyz="0 ${-(rocker_width/2 + wheel_width/2)} 0" rpy="0 0 0"/>
+        </xacro:wheel>
+    </xacro:macro>
+
+    <xacro:rocker prefix="front" joint_type="revolute" location="1">
+        <limit lower="-0.08726" upper="0.08726" effort="0" velocity="0"/>
+    </xacro:rocker>
+
+    <xacro:rocker prefix="rear" joint_type="fixed" location="-1">
+        <limit effort="0" velocity="0"/>
+    </xacro:rocker>
+
+    <!--        Just an hack to get the reference pose from gazebo: using a movable joint does not cause collapse of the model-->
+    <link name="reference_link_gazebo">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+        </inertial>
+    </link>
+    <joint name="reference_link_gazebo_joint" type="revolute">
+        <origin xyz="-0.343 0 0.77" rpy="0 0 0"/>
+        <parent link="mid_mount"/>
+        <child link="reference_link_gazebo"/>
+        <limit upper="0.0" lower="0.0" effort="0.0" velocity="0.0"/>
+    </joint>
+
+    <!-- Bring in simulation data for Gazebo. -->
+    <xacro:include filename="$(find mppi_manipulation)/data/ridgeback_plugins.xacro"/>
+</robot>

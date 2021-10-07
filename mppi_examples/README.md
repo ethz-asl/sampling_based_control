@@ -1,11 +1,15 @@
 ### Install useful dependencies
 
+```
+rosdep init
+rosdep install --from-paths src --ignore-src -r -y
+```
 
 Important: 
 - signal_logger
 - plotjuggler
 - must be with RELEASE build
-- raisim
+- raisim -> point to the right version of raisim
 - examples
 
 
