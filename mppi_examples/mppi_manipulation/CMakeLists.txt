@@ -15,7 +15,6 @@ set(PACKAGE_DEPENDENCIES
         std_msgs
         roscpp
         mppi
-        safety_filter
         mppi_ros
         mppi_pinocchio
         mppi_panda_mobile
