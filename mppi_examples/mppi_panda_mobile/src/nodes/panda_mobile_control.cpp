@@ -8,7 +8,6 @@
 
 #include "mppi_panda_mobile/controller_interface.h"
 #include "mppi_panda_mobile/dynamics.h"
-#include "mppi_panda_mobile/safety_filter/safety_filter.hpp"
 
 #include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
@@ -27,20 +26,6 @@ int main(int argc, char** argv) {
   std::string robot_description =
       nh.param<std::string>("/robot_description", "");
   auto simulation = PandaMobileDynamics(robot_description);
-
-  bool apply_safety_filter;
-  nh.param<bool>("apply_safety_filter", apply_safety_filter, false);
-
-  PandaMobileSafetyFilterSettings filter_settings;
-  if (!filter_settings.init_from_ros(nh) && apply_safety_filter) {
-    ROS_ERROR("Failed to initialize the safety filter!");
-    return 0;
-  }
-
-  PandaMobileSafetyFilter filter(robot_description, filter_settings);
-  Eigen::VectorXd u_opt;
-  u_opt.setZero(PandaMobileDim::INPUT_DIMENSION);
-
   auto controller = PandaMobileControllerInterface(nh);
 
   Eigen::VectorXd x = Eigen::VectorXd::Zero(PandaMobileDim::STATE_DIMENSION);
@@ -102,15 +87,8 @@ int main(int argc, char** argv) {
     joint_state.header.stamp = ros::Time::now();
     state_publisher.publish(joint_state);
 
-    if (apply_safety_filter) {
-      filter.filter_->update_observation(x, u_opt, sim_dt);
-      filter.apply(x, u, u_opt);
-    } else {
-      u_opt = u;
-    }
-
     if (!static_optimization) {
-      x = simulation.step(u_opt, sim_dt);
+      x = simulation.step(u, sim_dt);
       sim_time += sim_dt;
     }
 

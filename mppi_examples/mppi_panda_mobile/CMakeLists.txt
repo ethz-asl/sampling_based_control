@@ -34,16 +34,13 @@ add_library(${PROJECT_NAME}
         src/model_tracking.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-add_library(panda_mobile_safety_filter src/safety_filter/safety_filer.cpp)
-target_link_libraries(panda_mobile_safety_filter ${PROJECT_NAME} ${catkin_LIBRARIES})
-
 add_executable(panda_mobile_control src/nodes/panda_mobile_control.cpp)
-target_link_libraries(panda_mobile_control ${PROJECT_NAME} ${catkin_LIBRARIES} panda_mobile_safety_filter)
-add_dependencies(panda_mobile_control ${PROJECT_NAME} panda_mobile_safety_filter)
+target_link_libraries(panda_mobile_control ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_mobile_control ${PROJECT_NAME})
 
 add_executable(panda_mobile_model_tracking src/nodes/model_tracking_node.cpp)
-target_link_libraries(panda_mobile_model_tracking ${PROJECT_NAME} ${catkin_LIBRARIES} panda_mobile_safety_filter)
-add_dependencies(panda_mobile_model_tracking ${PROJECT_NAME} panda_mobile_safety_filter)
+target_link_libraries(panda_mobile_model_tracking ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(panda_mobile_model_tracking ${PROJECT_NAME})
 
 install(DIRECTORY launch resources
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
