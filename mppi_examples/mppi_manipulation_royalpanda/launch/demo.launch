@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<!-- Launch force torque sensor -->
+	<include file="$(find moma_sensor_tools)/launch/ft_sensor_standalone.launch">
+		<arg name="calibration_file_name" value="calibration_royalpanda"/>
+	</include>
+
+	<!-- Launch state observer -->
+	<include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch">
+	</include>
+
+	<!-- Launch robot state controller -->
+	<include file="$(find mppi_manipulation_royalpanda)/launch/robot.launch">
+		<arg name="debug" 				value="false"/>
+		<arg name="use_base_odometry" 	value="false"/>
+		<arg name="simulation" 			value="false"/>
+	</include>
+
+</launch>

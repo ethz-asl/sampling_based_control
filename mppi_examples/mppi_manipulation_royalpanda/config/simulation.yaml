@@ -6,7 +6,7 @@ handle_odom_topic: /shelf_door/vrpn_client/estimated_odometry
 arm_state_topic: /franka_state_controller/joint_states
 object_state_topic: /simulation/object_state
 finger_state_topic: /franka_gripper/joint_states
-wrench_topic: /external_force
+wrench_topic: /ft_compensated
 
 # Object fix
 object_fix: false
