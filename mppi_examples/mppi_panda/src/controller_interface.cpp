@@ -11,7 +11,6 @@
 
 #include <ros/package.h>
 #include "mppi_panda/controller_interface.h"
-#include "mppi_panda/renderer.h"
 #include "mppi_ros/ros_params.h"
 
 #include <mppi/policies/gaussian_policy.h>
@@ -67,13 +66,11 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   std::string robot_description;
   double linear_weight;
   double angular_weight;
-  bool rendering;
 
   bool ok = true;
   ok &= mppi_ros::getString(nh_, "/robot_description", robot_description);
   ok &= mppi_ros::getNonNegative(nh_, "linear_weight", linear_weight);
   ok &= mppi_ros::getNonNegative(nh_, "angular_weight", angular_weight);
-  ok &= mppi_ros::getBool(nh_, "rendering", rendering);
 
   if (!ok) {
     ROS_ERROR("Failed to parse parameters and set the controller.");
