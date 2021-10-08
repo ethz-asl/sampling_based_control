@@ -4,11 +4,13 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /TF1
         - /TF1/Frames1
-        - /World1
         - /World1/Object Model1/Links1
         - /World1/Panda1
+        - /Observer1
         - /Observer1/Vicon Odometry1/Shape1
+        - /Controller1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 719
   - Class: rviz/Selection
@@ -60,80 +62,124 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        axle_link:
-          Value: false
-        base_link:
-          Value: false
-        chassis_link:
-          Value: false
-        door_frame:
+        axis_link:
           Value: true
-        door_link:
+        axle_link:
+          Value: true
+        base_link:
+          Value: true
+        chassis_link:
+          Value: true
+        door:
+          Value: true
+        door_hinge:
           Value: true
         franka_mount_link:
-          Value: false
+          Value: true
         front_cover_link:
-          Value: false
+          Value: true
         front_lights_link:
-          Value: false
+          Value: true
+        ft_sensor0_mech1:
+          Value: true
+        ft_sensor0_mech2:
+          Value: true
+        ft_sensor0_mech3:
+          Value: true
+        ft_sensor0_mounting:
+          Value: true
+        ft_sensor0_wrench:
+          Value: true
+        hand_flange:
+          Value: true
         handle_link:
           Value: true
+        handle_support_left:
+          Value: true
+        handle_support_right:
+          Value: true
         imu_link:
-          Value: false
+          Value: true
         left_side_cover_link:
-          Value: false
+          Value: true
+        measured_joint_link:
+          Value: true
         mid_mount:
-          Value: false
+          Value: true
         obstacle:
           Value: true
         omni_base_root_link:
           Value: true
+        panda_EE:
+          Value: true
+        panda_K:
+          Value: true
+        panda_NE:
+          Value: true
+        panda_base:
+          Value: true
         panda_grasp:
-          Value: false
+          Value: true
         panda_hand:
-          Value: false
+          Value: true
         panda_leftfinger:
-          Value: false
+          Value: true
         panda_link0:
-          Value: false
+          Value: true
         panda_link1:
           Value: true
         panda_link2:
-          Value: false
+          Value: true
         panda_link3:
-          Value: false
+          Value: true
         panda_link4:
-          Value: false
+          Value: true
         panda_link5:
-          Value: false
+          Value: true
         panda_link6:
-          Value: false
+          Value: true
         panda_link7:
           Value: true
         panda_link8:
-          Value: false
+          Value: true
         panda_rightfinger:
-          Value: false
+          Value: true
         pivot:
           Value: true
         rear_cover_link:
-          Value: false
+          Value: true
         rear_lights_link:
-          Value: false
+          Value: true
         reference_link:
-          Value: false
+          Value: true
         ridgeback_sensor_mount_link:
-          Value: false
+          Value: true
         right_side_cover_link:
+          Value: true
+        shelf:
+          Value: true
+        shelf_door:
+          Value: true
+        sim_axis_link:
           Value: false
-        sim_door_frame:
-          Value: true
-        sim_door_link:
-          Value: true
+        sim_door:
+          Value: false
+        sim_door_hinge:
+          Value: false
         sim_handle_link:
-          Value: true
-        top_link:
           Value: false
+        sim_handle_support_left:
+          Value: false
+        sim_handle_support_right:
+          Value: false
+        sim_measured_joint_link:
+          Value: false
+        sim_shelf:
+          Value: false
+        top_link:
+          Value: true
+        vicon:
+          Value: true
         world:
           Value: false
         x_slider:
@@ -148,10 +194,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          door_frame:
-            door_link:
-              handle_link:
-                {}
           obstacle:
             {}
           omni_base_root_link:
@@ -189,21 +231,55 @@ Visualization Manager:
                                     panda_link6:
                                       panda_link7:
                                         panda_link8:
-                                          panda_hand:
-                                            panda_grasp:
+                                          ft_sensor0_mounting:
+                                            ft_sensor0_mech1:
                                               {}
-                                            panda_leftfinger:
+                                            ft_sensor0_mech2:
                                               {}
-                                            panda_rightfinger:
+                                            ft_sensor0_mech3:
                                               {}
-                      reference_link:
-                        {}
+                                            ft_sensor0_wrench:
+                                              hand_flange:
+                                                panda_hand:
+                                                  panda_grasp:
+                                                    {}
+                                                  panda_leftfinger:
+                                                    {}
+                                                  panda_rightfinger:
+                                                    {}
+                                          panda_NE:
+                                            panda_EE:
+                                              panda_K:
+                                                {}
+                        reference_link:
+                          {}
                       ridgeback_sensor_mount_link:
                         {}
-          sim_door_frame:
-            sim_door_link:
-              sim_handle_link:
-                {}
+          shelf:
+            door_hinge:
+              axis_link:
+                measured_joint_link:
+                  door:
+                    handle_link:
+                      handle_support_left:
+                        {}
+                      handle_support_right:
+                        {}
+          sim_shelf:
+            sim_door_hinge:
+              sim_axis_link:
+                sim_measured_joint_link:
+                  sim_door:
+                    sim_handle_link:
+                      sim_handle_support_left:
+                        {}
+                      sim_handle_support_right:
+                        {}
+          vicon:
+            panda_base:
+              {}
+            shelf_door:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -245,7 +321,7 @@ Visualization Manager:
       Marker Topic: /obstacle_marker
       Name: Obstacle Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Group
@@ -253,37 +329,18 @@ Visualization Manager:
         - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: true
+          Enabled: false
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            sim_door_frame:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            sim_door_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            sim_handle_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            world:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
           Name: Object Sim
           Robot Description: object_description_raisim_simulation
           TF Prefix: ""
           Update Interval: 0
-          Value: true
+          Value: false
           Visual Enabled: true
         - Alpha: 1
           Class: rviz/RobotModel
@@ -295,17 +352,39 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            door_frame:
+            axis_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            door:
               Alpha: 1
               Show Axes: false
               Show Trail: false
               Value: true
-            door_link:
+            door_hinge:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-              Value: true
             handle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            handle_support_left:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            handle_support_right:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            measured_joint_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            shelf:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -359,6 +438,32 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            ft_sensor0_mech1:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            ft_sensor0_mech2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            ft_sensor0_mech3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            ft_sensor0_mounting:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            ft_sensor0_wrench:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            hand_flange:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             imu_link:
               Alpha: 1
               Show Axes: false
@@ -460,6 +565,7 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             right_side_cover_link:
               Alpha: 1
               Show Axes: false
@@ -509,33 +615,24 @@ Visualization Manager:
           Marker Topic: /contact_forces
           Name: Contact Forces
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 0.20000000298023224
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: true
+          Enabled: false
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            obstacle:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            world:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
           Name: Obstacle
           Robot Description: obstacle_description
           TF Prefix: ""
           Update Interval: 0
-          Value: true
+          Value: false
           Visual Enabled: true
       Enabled: true
       Name: World
@@ -574,7 +671,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Value: true
-          Enabled: true
+          Enabled: false
           Keep: 1
           Name: Vicon Odometry
           Position Tolerance: 0.10000000149011612
@@ -591,7 +688,7 @@ Visualization Manager:
             Value: Axes
           Topic: /shelf_door/vrpn_client/estimated_odometry
           Unreliable: false
-          Value: true
+          Value: false
       Enabled: true
       Name: Observer
     - Class: rviz/Group
@@ -721,7 +818,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.142553329467773
+      Distance: 2.6577255725860596
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -729,17 +826,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.42221570014953613
-        Y: -1.3225024938583374
-        Z: 0.43037983775138855
+        X: 1.5223561525344849
+        Y: -0.8629123568534851
+        Z: 0.8581956624984741
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.499798059463501
+      Pitch: 0.15979817509651184
       Target Frame: <Fixed Frame>
-      Yaw: 1.6605315208435059
+      Yaw: 2.76053524017334
     Saved: ~
 Window Geometry:
   Displays:
