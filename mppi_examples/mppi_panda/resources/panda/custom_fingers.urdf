@@ -74,7 +74,7 @@
         <visual>
             <origin rpy="0.0 0 0.0" xyz="0 -0.022 0.039"/>
             <geometry>
-                <box size="0.021 0.09 0.070"/>
+                <box size="0.021 0.009 0.070"/>
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
