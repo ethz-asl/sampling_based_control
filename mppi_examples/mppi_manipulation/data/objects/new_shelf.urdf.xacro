@@ -1,27 +1,24 @@
 <?xml version="1.0" ?>
 <robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:arg name="fixed" default="true"/>
-    <xacro:arg name="height" default="0.0"/>
     <xacro:arg name="prefix" default=""/>
-    <xacro:property name="prefix" default="$(arg prefix)"/>
-    
-    <xacro:property name="height" default="$(arg height)"/>
 
-    <xacro:property name="door_length" default="0.359"/>
+    <xacro:property name="prefix" default="$(arg prefix)"/>
+    <xacro:property name="door_length" default="0.363"/>
     <xacro:property name="door_height" default="0.748"/>
     <xacro:property name="door_width" default="0.018"/>
     <xacro:property name="corpus_door_gap" default="0.004"/>
     <xacro:property name="corpus_length" default="0.4"/>
     <xacro:property name="corpus_height" default="0.827"/>
-    <xacro:property name="corpus_width" default="0.018"/>
-    <xacro:property name="handle_height" default="0.057"/> <!-- 0.026 -->
+    <xacro:property name="corpus_width" default="0.016"/>
+    <xacro:property name="handle_height" default="0.056"/>
     <xacro:property name="handle_length" default="0.16"/>
-    <xacro:property name="handle_offset_y" default="0.338"/>
+    <xacro:property name="handle_offset_y" default="0.335"/> <!-- 0.338 -->
     <xacro:property name="handle_offset_z" default="-0.024"/>
 
-    <xacro:property name="shelf_x" default="-0.242"/>
-    <xacro:property name="shelf_y" default="-0.595"/>
-    <xacro:property name="shelf_z" default="0.834"/>
+    <xacro:property name="shelf_x" default="0.268466"/>
+    <xacro:property name="shelf_y" default="-0.407"/>
+    <xacro:property name="shelf_z" default="0.8299"/>
 
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
@@ -41,7 +38,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="${prefix}shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="0.0 0.0 1.645"/>
+            <origin xyz="-0.366084 -0.0270533   0.833161" rpy="3.1396  3.13991 -1.57152"/>
         </joint>
     </xacro:if>
 
@@ -91,7 +88,7 @@
     <joint name="${prefix}door_hinge_joint" type="fixed">
         <parent link="${prefix}shelf"/>
         <child link="${prefix}door_hinge"/>
-        <origin xyz="${door_width/2+0.012} -${door_length + corpus_width +corpus_door_gap} ${door_height/2}"/>
+        <origin xyz="${door_width/2} -${door_length + corpus_width +corpus_door_gap} ${door_height/2}"/>
     </joint>
 
     <link name="${prefix}axis_link">
@@ -205,24 +202,9 @@
     <joint name="${prefix}handle_joint" type="fixed">
         <parent link="${prefix}door"/>
         <child link="${prefix}handle_link"/>
-        <origin xyz="${handle_height + 0.012} ${handle_offset_y} ${handle_offset_z}"
+        <origin xyz="${handle_height} ${handle_offset_y} ${handle_offset_z}"
                 rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
     </joint>
-
-    <joint name="${prefix}handle_ref" type="fixed">
-        <parent link="${prefix}handle_link"/>
-        <child link="${prefix}handle_ref"/>
-        <origin xyz="${-handle_height/2-0.012} 0 0"
-                rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
-    </joint>
-
-    <link name="${prefix}handle_ref">
-        <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
-        </inertial>
-    </link>
 
     <joint name="${prefix}handle_support_left_joint" type="fixed">
         <parent link="${prefix}handle_link"/>
@@ -243,17 +225,4 @@
             <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
         </inertial>
     </link>
-
-    <link name="${prefix}measured_joint_link_test">
-        <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
-        </inertial>
-    </link>
-    <joint name="${prefix}measured_test_handle_joint" type="fixed">
-        <parent link="${prefix}handle_link"/>
-        <child link="${prefix}measured_joint_link_test"/>
-        <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
-    </joint>
 </robot>

@@ -71,7 +71,7 @@
             </material>
         </visual> -->
 
-        <visual>
+<!--         <visual>
             <origin rpy="0.0 0 0.0" xyz="0 -0.022 0.039"/>
             <geometry>
                 <box size="0.021 0.009 0.070"/>
@@ -80,7 +80,7 @@
                 <color rgba="1 1 1 1"/>
             </material>
         </visual>
-
+ -->
         <visual>
             <origin rpy="0.0 0 0.0" xyz="0 -0.014 0.0665"/>
             <geometry>
@@ -98,15 +98,15 @@
             </material>        
         </collision>
 
-        <collision>
+<!--         <collision>
             <origin rpy="0.0 0 0.0" xyz="0 -0.014 0.0665"/>
             <geometry>
                 <box size="0.021 0.025 0.015"/>
             </geometry>
             <material name="">
-              <contact name="steel"/>  <!-- for raisim -->
+              <contact name="steel"/>  
             </material>
-        </collision>
+        </collision> -->
     </link>
 </xacro:macro>
 </robot>

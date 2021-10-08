@@ -12,7 +12,7 @@
       collision_links:=false
       collision_hand:=true
       add_finger:=true
-      custom_fingers:=false
+      custom_fingers:=true
       add_wrench_sensor:=$(arg wrench_sensor)
       fixed_base:=false"/>
 
@@ -22,7 +22,7 @@
       collision_links:=false
       collision_hand:=true
       add_finger:=true
-      custom_fingers:=false
+      custom_fingers:=true
       add_wrench_sensor:=$(arg wrench_sensor)
       fixed_base:=true"/>
 
@@ -33,7 +33,7 @@
       collision_finger:=true
       collision_format:='obj'
       add_finger:=true
-      custom_fingers:=false
+      custom_fingers:=true
       no_position_limits:=false
       friction:=0.0
       damping:=10.0
