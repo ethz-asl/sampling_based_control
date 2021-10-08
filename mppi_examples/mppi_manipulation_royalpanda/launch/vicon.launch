@@ -7,4 +7,7 @@
     <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
         <arg name="object_name" value="shelf_door"/>
     </include>
+    <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+        <arg name="object_name" value="panda_hand"/>
+    </include>
 </launch>
