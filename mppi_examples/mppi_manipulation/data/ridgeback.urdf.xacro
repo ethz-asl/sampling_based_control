@@ -6,11 +6,11 @@
 
         <!-- Sensor mount -->
         <link name="ridgeback_sensor_mount_link">
-<!--             <visual>
+            <visual>
                 <geometry>
                     <mesh filename="package://mppi_manipulation/data/meshes/ridgeback_sensor_mount.dae"/>
                 </geometry>
-            </visual> -->
+            </visual>
         </link>
 
         <joint name="ridgeback_sensor_mount_joint" type="fixed">
@@ -21,8 +21,8 @@
 
         <link name="reference_link"/>
         <joint name="reference_link_joint" type="fixed">
-            <origin xyz="-0.343 0 0.77" rpy="0 0 0"/>
-            <parent link="mid_mount"/>
+            <origin xyz="-0.01 0.0 0.018" rpy="0 0 0"/>
+            <parent link="franka_mount_link"/>
             <child link="reference_link"/>
         </joint>
 

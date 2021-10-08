@@ -434,8 +434,8 @@ void StateObserver::object_pose_callback(
 
   double velocity_norm =
       std::sqrt(msg->twist.twist.linear.x * msg->twist.twist.linear.x +
-                msg->twist.twist.linear.y + msg->twist.twist.linear.y);
-  double theta_dot = velocity_norm / T_hinge_handle_.translation().x();
+                msg->twist.twist.linear.y * msg->twist.twist.linear.y);
+  double theta_dot = velocity_norm / T_hinge_handle_.translation().head<2>().norm();
 
   {
     std::unique_lock<std::mutex> lock(state_mutex_);  
