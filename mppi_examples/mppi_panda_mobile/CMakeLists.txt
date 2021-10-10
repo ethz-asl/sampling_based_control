@@ -15,7 +15,6 @@ set(PACKAGE_DEPENDENCIES
         roslib
         tf2
         tf2_ros
-        safety_filter
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
