@@ -67,7 +67,7 @@ manipulation_controller:
     #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
     # Safer joint limits (+10 deg safety margin ~0.17)
-    upper_joint_limits: [ 0.543, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
     lower_joint_limits: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     joint_limit_cost: 1000 #1000
@@ -156,7 +156,7 @@ manipulation_controller:
       active: true
       soft: true
       slack_multiplier: 10.0
-      q_max: [ 0.543, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+      q_max: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
       q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     cartesian_limits: 

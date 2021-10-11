@@ -347,6 +347,7 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
 
       // integrate dynamics    auto start = std::chrono::steady_clock::now();
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
+      
     }
   }
 }

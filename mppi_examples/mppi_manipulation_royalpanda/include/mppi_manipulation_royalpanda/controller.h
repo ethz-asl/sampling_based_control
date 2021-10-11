@@ -175,5 +175,8 @@ class ManipulationController
   int log_counter_ = 0;
   int log_every_steps_;
   double opt_time_;
+
+  // debug
+  double start_time_;
 };
 }  // namespace manipulation_royalpanda

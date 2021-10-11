@@ -241,6 +241,7 @@ void ManipulationController::state_callback(
                                                           observation_time_)) {
         ROS_WARN("Failed to set the controller reference to current state.");
       }
+      start_time_ = state_msg->header.stamp.toSec();
     }
   }
 

@@ -240,8 +240,8 @@ void PandaControllerInterface::ee_pose_desired_callback(
     const geometry_msgs::PoseStampedConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
   ee_desired_pose_ = *msg;
-  std::cout << "Setting current target position to:" << msg->pose.position.x << ", " << msg->pose.position.y << ", " << msg->pose.position.z << std::endl;
-  std::cout << "Setting current target orientation to:" << msg->pose.orientation.x << ", " << msg->pose.orientation.y << ", " << msg->pose.orientation.z << ", " << msg->pose.orientation.w << std::endl;
+  // std::cout << "Setting current target position to:" << msg->pose.position.x << ", " << msg->pose.position.y << ", " << msg->pose.position.z << std::endl;
+  // std::cout << "Setting current target orientation to:" << msg->pose.orientation.x << ", " << msg->pose.orientation.y << ", " << msg->pose.orientation.z << ", " << msg->pose.orientation.w << std::endl;
    
   ref_.rr[0].head<7>()(0) = msg->pose.position.x;
   ref_.rr[0].head<7>()(1) = msg->pose.position.y;
