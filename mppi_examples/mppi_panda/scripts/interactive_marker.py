@@ -10,7 +10,7 @@ from geometry_msgs.msg import PoseStamped, Pose
 from interactive_markers.interactive_marker_server import *
 from interactive_markers.menu_handler import *
 from visualization_msgs.msg import *
-
+from std_msgs.srv import Empty
 
 class SingleMarkerBroadcaster:
     def __init__(self):
@@ -25,10 +25,10 @@ class SingleMarkerBroadcaster:
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.frame_id = rospy.get_param('~frame_id', 'odom')
-        target_frame = rospy.get_param("~target_frame", "")
+        self.target_frame = rospy.get_param("~target_frame", "")
         if not target_frame:
             self.init_pose()
-        elif not self.init_pose_from_ros(target_frame):
+        elif not self.init_pose_from_ros(self.target_frame):
             rospy.logerr(
                 "Failed to initialize interactive_marker from tf tree")
 
@@ -37,6 +37,7 @@ class SingleMarkerBroadcaster:
         self.pose_pub = rospy.Publisher(target_pose_topic,
                                         PoseStamped,
                                         queue_size=1)
+        self.reset_service = rospy.Service('/interactive_marker/reset_pose', Empty, self.reset_pose_callback)
 
     def init_pose(self):
         self.initial_pose = PoseStamped()
@@ -44,6 +45,9 @@ class SingleMarkerBroadcaster:
         self.initial_pose.pose.position.y = 0.0
         self.initial_pose.pose.position.z = 0.5
         self.initialized = True
+
+    def reset_pose_callback(_):
+        return init_pose_from_ros(frame_id=self.target_frame)
 
     def init_pose_from_ros(self, frame_id):
         max_attempts = 10
