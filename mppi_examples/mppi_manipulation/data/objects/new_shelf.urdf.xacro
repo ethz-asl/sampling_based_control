@@ -38,7 +38,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="${prefix}shelf"/>
-            <origin xyz="-1.02326 0.270515  0.83613" rpy="3.14127   3.141 -1.5944"/>
+            <origin xyz="1.95786 0.0978068  0.823227" rpy="0.00415786 0.00520789   -3.09487"/>
         </joint>
     </xacro:if>
 
