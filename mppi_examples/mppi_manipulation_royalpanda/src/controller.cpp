@@ -34,7 +34,6 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   ROS_INFO("Solver initialized correctly.");
 
   started_ = false;
-  state_ok_ = true;
   ROS_INFO("Controller successfully initialized!");
   return true;
 }
@@ -165,6 +164,7 @@ bool ManipulationController::init_interfaces(
     return false;
   }
 
+  has_base_handles_ = true;
   for (size_t i = 0; i < 3; ++i) {
     try {
       base_joint_handles_.push_back(
@@ -178,7 +178,6 @@ bool ManipulationController::init_interfaces(
       break;
     }
   }
-  has_base_handles_ = true;
 
   auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
   if (model_interface == nullptr) {
@@ -233,6 +232,7 @@ void ManipulationController::state_callback(
     
 
     if (!state_received_) {
+      ROS_INFO("First call to state callback");
       position_desired_[0] = state_msg->base_pose.x;
       position_desired_[1] = state_msg->base_pose.y;
       position_desired_[2] = state_msg->base_pose.z;
@@ -253,7 +253,11 @@ void ManipulationController::starting(const ros::Time& time) {
     bag_.open(bag_path_, rosbag::bagmode::Write);
   }
 
-  if (started_) return;
+  state_received_ = false;
+  if (started_) {
+    ROS_INFO("Controller already started!");
+    return;
+  }
 
   // with sequential execution the optimization needs to be explicitly called
   // in the update function of the controller (not real-time safe)
@@ -327,7 +331,7 @@ void ManipulationController::starting(const ros::Time& time) {
   signal_logger::logger->startLogger(true);
 
   started_ = true;
-  ROS_INFO("Controller started!");
+  ROS_INFO("\n\n\n\nController started!\n\n\n");
 }
 
 void ManipulationController::enforce_constraints(const ros::Duration& period) {
@@ -442,12 +446,6 @@ void ManipulationController::update(const ros::Time& time,
     return;
   }
 
-  if (!state_ok_) {
-    ROS_WARN_STREAM_THROTTLE(
-        2.0, "[ManipulationController::update] State is not ok.");
-    return;
-  }
-
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     man_interface_->set_observation(x_, time.toSec());
@@ -471,7 +469,7 @@ void ManipulationController::update(const ros::Time& time,
 
   manipulation::conversions::eigenToMsg(x_nom_, time.toSec(), x_nom_ros_);
   robot_state_ = state_handle_->getRobotState();
-
+  
   if (record_bag_){
     optimal_rollout_.clear();
     man_interface_->get_controller()->get_optimal_rollout(optimal_rollout_);
@@ -516,6 +514,7 @@ void ManipulationController::update(const ros::Time& time,
 }
 
 void ManipulationController::stopping(const ros::Time& time) {
+  ROS_INFO("Stopping controller.");
   if(record_bag_) {
     ROS_INFO("Closing bag...");
     bag_.close();
