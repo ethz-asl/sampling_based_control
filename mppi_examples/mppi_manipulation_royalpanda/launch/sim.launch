@@ -29,9 +29,10 @@
         <arg name="debug" value="false"/>
         <arg name="object" value="$(arg object)"/>
         <arg name="load_simulation_object" value="true"/>
+        <arg name="wrench_sensor" value="true"/>
     </include>
 
-    <param name="/config_file" value="$(find mppi_manipulation)/params/controller.yaml"/>
+    <param name="/config_file" value="$(find mppi_manipulation_royalpanda)/config/solver.yaml"/>
 
     <node name="simulation_node" type="simulation_node" pkg="mppi_manipulation_royalpanda" output="screen"
           launch-prefix="$(arg launch_prefix)">

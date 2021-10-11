@@ -2,11 +2,11 @@ manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
   references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
   
-  # Common
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
   ros_publish_rate: 10.0
+  static_optimization: false
 
   fixed_base: true
   arm_id: panda
@@ -23,12 +23,6 @@ manipulation_controller:
 
   log_every_steps: 15
 
-  policy_update_rate: 0.0  # execute as fast as possible
-  reference_update_rate: 10.0
-  publish_ros: true
-  ros_publish_rate: 10.0
-  static_optimization: false
-  
   record_bag: false
   bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
   
