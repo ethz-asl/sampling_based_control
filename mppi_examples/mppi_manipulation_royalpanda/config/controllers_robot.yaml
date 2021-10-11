@@ -28,7 +28,7 @@ manipulation_controller:
   bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
   
   # Cost parameters used by the controller
-  rollouts: $(arg rollouts)
+  rollouts: 20
   cost:
     regularization: 0.0
     linear_weight: 100.0
