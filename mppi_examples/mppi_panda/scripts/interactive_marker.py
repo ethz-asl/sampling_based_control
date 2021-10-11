@@ -10,7 +10,8 @@ from geometry_msgs.msg import PoseStamped, Pose
 from interactive_markers.interactive_marker_server import *
 from interactive_markers.menu_handler import *
 from visualization_msgs.msg import *
-from std_srvs.srv import Empty
+from std_srvs.srv import Empty, EmptyResponse
+
 
 class SingleMarkerBroadcaster:
     def __init__(self):
@@ -26,7 +27,7 @@ class SingleMarkerBroadcaster:
 
         self.frame_id = rospy.get_param('~frame_id', 'odom')
         self.target_frame = rospy.get_param("~target_frame", "")
-        if not target_frame:
+        if not self.target_frame:
             self.init_pose()
         elif not self.init_pose_from_ros(self.target_frame):
             rospy.logerr(
@@ -37,7 +38,8 @@ class SingleMarkerBroadcaster:
         self.pose_pub = rospy.Publisher(target_pose_topic,
                                         PoseStamped,
                                         queue_size=1)
-        self.reset_service = rospy.Service('/interactive_marker/reset_pose', Empty, self.reset_pose_callback)
+        self.reset_service = rospy.Service('/interactive_marker/reset_pose',
+                                           Empty, self.reset_pose_callback)
 
     def init_pose(self):
         self.initial_pose = PoseStamped()
@@ -46,8 +48,11 @@ class SingleMarkerBroadcaster:
         self.initial_pose.pose.position.z = 0.5
         self.initialized = True
 
-    def reset_pose_callback(_):
-        return init_pose_from_ros(frame_id=self.target_frame)
+    def reset_pose_callback(self, _):
+        self.init_pose_from_ros(frame_id=self.target_frame)
+        self.server.setPose("Pose Target", self.initial_pose.pose)
+        self.server.applyChanges()
+        return EmptyResponse()
 
     def init_pose_from_ros(self, frame_id):
         max_attempts = 10
