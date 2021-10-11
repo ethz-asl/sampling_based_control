@@ -20,12 +20,6 @@
             output="screen"/>
   </group>
 
-  <!-- Controller configuration -->
-  <arg name="filter_in" default="false"/>
-  <arg name="filter_out" default="false"/>
-  <param name="/config_file" value="$(find mppi_manipulation_royalpanda)/config/solver.yaml"/>
-  <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers_robot.yaml" subst_value="true"/>
-
 	<!-- Controller Manager Gui to start the controller -->
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" 
 		output="screen"/>

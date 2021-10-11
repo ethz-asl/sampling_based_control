@@ -1,8 +1,12 @@
 manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
   references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
-  default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
-  object_tolerance: 0.09 # ~5 deg
+  
+  # Common
+  policy_update_rate: 0.0  # execute as fast as possible
+  reference_update_rate: 10.0
+  publish_ros: true
+  ros_publish_rate: 10.0
 
   fixed_base: false
   arm_id: panda
@@ -13,6 +17,7 @@ manipulation_controller:
   nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
 
+  gaussian_policy: true
   sequential: false
   max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
