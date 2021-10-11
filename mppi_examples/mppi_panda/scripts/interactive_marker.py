@@ -10,7 +10,7 @@ from geometry_msgs.msg import PoseStamped, Pose
 from interactive_markers.interactive_marker_server import *
 from interactive_markers.menu_handler import *
 from visualization_msgs.msg import *
-from std_msgs.srv import Empty
+from std_srvs.srv import Empty
 
 class SingleMarkerBroadcaster:
     def __init__(self):
