@@ -2,19 +2,21 @@
 <launch>
     <arg name="robot_ip" default="$(env FRANKA_IP)"/>
     <arg name="object" default="shelf"/>
-    <arg name="debug" default="false"/>
-
+    
+    <!-- Load all the robot and world descriptions -->
     <include file="$(find mppi_manipulation)/launch/load.launch">
         <arg name="debug" value="false"/>
         <arg name="object" value="$(arg object)"/>
         <arg name="load_simulation_object" value="true"/>
         <arg name="wrench_sensor" value="true"/>
     </include>
-<!-- 
-    <include file="$(find franka_gripper)/launch/franka_gripper.launch">
-        <arg name="robot_ip" value="$(arg robot_ip)" />
-    </include>
- -->
+
+    <!-- Controller configuration -->
+    <arg name="filter_in" default="false"/>
+    <arg name="filter_out" default="false"/>
+    <param name="/config_file" value="$(find mppi_manipulation_royalpanda)/config/solver.yaml"/>
+    <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers_robot.yaml" subst_value="true"/>
+
     <!-- Gripper state controller -->
     <arg name="joint_names" default="[panda_finger_joint1, panda_finger_joint2]" />
     <node name="franka_gripper" pkg="franka_gripper" type="franka_gripper_node" output="screen">
@@ -24,6 +26,7 @@
       <rosparam param="joint_names" subst_value="true">$(arg joint_names)</rosparam>
     </node>
 
+    <!-- Franka control node and state controller -->
     <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
         <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_control_node.yaml" />
         <param name="robot_ip" value="$(arg robot_ip)" />
@@ -31,21 +34,4 @@
 
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_state_controller.yaml" />
     <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>
-
-    <group if="$(arg debug)">
-        <node name="joint_state_aggregator" type="joint_state_aggregator" pkg="mppi_manipulation_royalpanda" output="screen">
-            <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
-            <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
-            <param name="output_topic" value="/panda/joint_states"/>
-            <param name="exact_sync" value="false"/>
-        </node>
-
-        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-            <param name="publish_frequency" value="100"/>
-            <param name="use_tf_static" value="true"/>
-            <param name="tf_prefix" value=""/>
-            <remap from="robot_description" to="robot_description"/>
-            <remap from="joint_states" to="/observer/joint_states"/>
-        </node>
-    </group>
 </launch>
