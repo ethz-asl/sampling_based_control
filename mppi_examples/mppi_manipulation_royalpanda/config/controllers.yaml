@@ -8,6 +8,7 @@ manipulation_controller:
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
   object_tolerance: 0.09 # ~5 deg
 
+  fixed_base: false
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
   base_joint_names: [world_x, world_y, theta]

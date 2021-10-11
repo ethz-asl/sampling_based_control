@@ -105,6 +105,7 @@ class ManipulationController
   std::vector<std::string> base_joint_names_;
   std::vector<hardware_interface::JointHandle> base_joint_handles_;
 
+  bool fixed_base_;
   manipulation::PIDGains gains_;
 
   static constexpr double delta_tau_max_{1.0};

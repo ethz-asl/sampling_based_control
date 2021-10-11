@@ -77,6 +77,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   }
   for (int i = 0; i < 10; i++) max_position_error_[i] = max_position_error[i];
 
+  if (!node_handle.getParam("fixed_base", fixed_base_)) {
+    ROS_ERROR("fixed_base not found");
+    return false;
+  }
+
   if (!gains_.init_from_ros(node_handle, "controller_")) {
     ROS_ERROR("Failed to parse gains.");
     return false;
@@ -381,6 +386,8 @@ void ManipulationController::update_position_reference(
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
+  if (fixed_base_) return;
+
   // compute feedforward as function of the error in global position
   // and then convert to base frame
   Eigen::Vector3d u_ff = R_world_base.transpose() * (position_desired_.head<3>() - position_measured_.head<3>());
