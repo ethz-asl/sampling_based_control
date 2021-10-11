@@ -12,16 +12,23 @@
 	    <arg name="enable_obstacle" default="false"/>
 	</include>
 
+	<!-- Plot data with plotjuggler -->
+  <group if="$(arg plot)">
+      <arg name="plotjuggler_layout" default="$(find mppi_manipulation_royalpanda)/config/pj/layout.xml"/>
+      <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
+            args="--layout $(arg plotjuggler_layout)"
+            output="screen"/>
+  </group>
+
+  <!-- Controller configuration -->
+  <arg name="filter_in" default="false"/>
+  <arg name="filter_out" default="false"/>
+  <param name="/config_file" value="$(find mppi_manipulation_royalpanda)/params/solver.yaml"/>
+  <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers_robot.yaml" subst_value="true"/>
+
 	<!-- Controller Manager Gui to start the controller -->
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" 
 		output="screen"/>
 
-	<!-- Plot data with plotjuggler -->
-    <group if="$(arg plot)">
-        <arg name="plotjuggler_layout" default="$(find mppi_manipulation_royalpanda)/config/pj/layout.xml"/>
-        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
-              args="--layout $(arg plotjuggler_layout)"
-              output="screen"/>
-    </group>
 
 </launch>
