@@ -5,6 +5,7 @@
 #pragma once
 #include <mppi_pinocchio/model.h>
 #include <ros/ros.h>
+#include <mppi_manipulation/dimensions.h>
 
 namespace manipulation {
 
@@ -12,7 +13,7 @@ struct CostParams {
   std::string robot_description;
   std::string object_description;
 
-  double Qreg;  // robot velocity regularization
+  Eigen::Matrix<double, INPUT_DIMENSION, 1> Qreg;  // robot velocity regularization
   double Qt;    // translation cost
   double Qt2;
   double Qr;  // rotation cost

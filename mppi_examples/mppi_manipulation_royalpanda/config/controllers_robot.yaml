@@ -10,7 +10,8 @@ manipulation_controller:
   ros_publish_rate: 10.0
   static_optimization: false
 
-  logging: false
+  logging: true
+  log_file_path: $(find mppi_manipulation_royalpanda)/logs/$(arg experiment_name)
   fixed_base: false
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
@@ -32,7 +33,7 @@ manipulation_controller:
   # Cost parameters used by the controller
   rollouts: 20
   cost:
-    regularization: 0.0
+    regularization: [0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     linear_weight: 100.0
     linear_weight_opening: 100.0
 

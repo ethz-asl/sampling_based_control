@@ -19,10 +19,15 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
-  if (!nh.getParam("cost/regularization", Qreg) || Qreg < 0) {
+  std::vector<double> qreg;
+  if (!nh.param<std::vector<double>>("cost/regularization", qreg, {}) || qreg.size() != INPUT_DIMENSION) {
     ROS_ERROR("Failed to parse cost/regularization or invalid!");
     return false;
   }
+  for (int i=0; i<INPUT_DIMENSION; i++){
+    Qreg[i] = qreg[i];
+  }
+
   if (!nh.getParam("cost/obstacle_weight", Qo) || Qo < 0) {
     ROS_ERROR("Failed to parse cost/obstacle_weight or invalid!");
     return false;
@@ -191,7 +196,7 @@ std::ostream& operator<<(std::ostream& os,
   os << "========================================" << std::endl;
   os << "        Panda Cost Parameters           " << std::endl;
   os << "========================================" << std::endl;
-  os << " regularization weight: "   << param.Qreg << std::endl;
+  os << " regularization weight: "   << param.Qreg.transpose() << std::endl;
   os << " obstacle_weight: "         << param.Qo << std::endl;
   os << " obstacle_radius: "         << param.ro << std::endl;
   os << " obstacle_weight_slope: "   << param.Qos << std::endl;

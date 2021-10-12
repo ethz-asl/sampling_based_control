@@ -18,31 +18,6 @@
 
 namespace manipulation {
 
-struct PandaCostParam {
-  double Qreg;  // robot velocity regularization
-  double Qt;    // translation cost
-  double Qt2;
-  double Qr;  // rotation cost
-  double Qr2;
-  double Qo;   // obstacle cost
-  double Qos;  // obstacle cost slope
-  double Qc;   // contact cost
-  double ro;   // obstacle radius
-  double max_reach;
-  double min_dist;  // min distance from base for collision avoidance
-  double Q_reach;
-  double Q_reachs;
-  double Q_obj;
-  double Q_tol;
-  mppi_pinocchio::Pose grasp_offset;
-  double Q_joint_limit;
-  double Q_joint_limit_slope;
-  std::vector<double> upper_joint_limits;
-  std::vector<double> lower_joint_limits;
-
-  bool parse_from_ros(const ros::NodeHandle& nh);
-};
-
 class PandaCost : public mppi::Cost {
  public:
   PandaCost() : PandaCost(CostParams()){};
@@ -87,6 +62,3 @@ class PandaCost : public mppi::Cost {
                             const double t) override;
 };
 }  // namespace manipulation
-
-std::ostream& operator<<(std::ostream& os,
-                         const manipulation::PandaCostParam& param);

@@ -30,8 +30,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   
 
   // regularization cost
-  cost += params_.Qreg *
-          x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
+  cost += x.segment<INPUT_DIMENSION>(BASE_ARM_GRIPPER_DIM).cwiseProduct(params_.Qreg).norm();
   
   // end effector reaching cost
   if (mode == 0) {

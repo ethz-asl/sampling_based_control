@@ -250,11 +250,8 @@ void PandaControllerInterface::ee_pose_desired_callback(
   ref_.rr[0].head<7>()(4) = msg->pose.orientation.y;
   ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
   ref_.rr[0].head<7>()(6) = msg->pose.orientation.w;
-  std::cout << "Settin new reference: " << ref_.rr[0].transpose() << std::endl;
   get_controller()->set_reference_trajectory(ref_);
-  std::cout << "Done, updating local cost" << std::endl;
   local_cost_->set_reference_trajectory(ref_);
-  std::cout << "Done as well";
   reference_set_ = true;
 }
 

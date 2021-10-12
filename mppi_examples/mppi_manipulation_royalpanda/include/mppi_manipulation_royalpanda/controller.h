@@ -175,6 +175,7 @@ class ManipulationController
 
   // logging
   bool logging_;
+  std::string log_file_path_;
   int log_counter_ = 0;
   int log_every_steps_;
   double opt_time_;

@@ -95,6 +95,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam("log_file_path", log_file_path_)) {
+    ROS_ERROR("log_file_path not found");
+    return false;
+  }
+
   if (!node_handle.getParam("logging", logging_)) {
     ROS_ERROR("logging not found");
     return false;
@@ -322,6 +327,11 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // logging
   if (logging_) {
+    ROS_INFO("Initializing logging!");
+    signal_logger::setSignalLoggerStd();
+    signal_logger::SignalLoggerOptions silo_options;
+    signal_logger::logger->initLogger(silo_options);
+
     signal_logger::logger->stopLogger();
     signal_logger::add(opt_time_, "opt_time");
     signal_logger::add(x_, "state");
@@ -464,7 +474,6 @@ void ManipulationController::update(const ros::Time& time,
     return;
   }
 
-  ROS_INFO("Into update.");
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     man_interface_->set_observation(x_, observation_time_);
@@ -525,10 +534,15 @@ void ManipulationController::update(const ros::Time& time,
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, observation_time_);
   }
 
-  if (log_counter_ == log_every_steps_ && logging_) {
-    signal_logger::logger->collectLoggerData();
+  if (log_counter_ == log_every_steps_) {
+    std::cout << "log every " << log_every_steps_ << ", curr step: " << log_counter_ << std::endl;
     log_counter_ = 0;
+    if (logging_){
+      std::cout << "collecting data" << std::endl;
+      signal_logger::logger->collectLoggerData();
+    }
   }
+
   log_counter_++;
 }
 
@@ -537,6 +551,15 @@ void ManipulationController::stopping(const ros::Time& time) {
   if(record_bag_) {
     ROS_INFO("Closing bag...");
     bag_.close();
+  }
+
+  if (logging_){
+    ROS_INFO_STREAM("Saving log data to: " << log_file_path_);
+    signal_logger::logger->stopLogger();
+    signal_logger::logger->saveLoggerData({signal_logger::LogFileType::BINARY},
+                                          log_file_path_);
+    signal_logger::logger->cleanup();
+    ROS_INFO("Done!");
   }
 }
 
