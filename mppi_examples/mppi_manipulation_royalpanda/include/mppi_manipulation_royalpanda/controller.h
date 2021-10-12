@@ -45,14 +45,14 @@ namespace manipulation_royalpanda {
 class ManipulationController
     : public controller_interface::MultiInterfaceController<
           hardware_interface::VelocityJointInterface,
-          hardware_interface::EffortJointInterface,
+          // hardware_interface::EffortJointInterface,
           franka_hw::FrankaModelInterface, franka_hw::FrankaStateInterface> {
  public:
   // explicit controller to allow for a missing hardware interface
   using BASE = controller_interface::MultiInterfaceController<
       hardware_interface::VelocityJointInterface,
-      hardware_interface::EffortJointInterface, franka_hw::FrankaModelInterface,
-      franka_hw::FrankaStateInterface>;
+      // hardware_interface::EffortJointInterface,
+      franka_hw::FrankaModelInterface, franka_hw::FrankaStateInterface>;
 
   template <class T>
   using RTPublisher = realtime_tools::RealtimePublisher<T>;
@@ -127,6 +127,7 @@ class ManipulationController
   std::mutex observation_mutex_;
   double observation_time_;
   Eigen::VectorXd x_;
+  Eigen::VectorXd xfirst_;  // debug
   Eigen::VectorXd u_;
   Eigen::VectorXd u_opt_;
   Eigen::VectorXd x_nom_;
@@ -172,6 +173,7 @@ class ManipulationController
   bool record_bag_;
 
   // logging
+  bool logging_;
   int log_counter_ = 0;
   int log_every_steps_;
   double opt_time_;

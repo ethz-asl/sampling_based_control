@@ -34,6 +34,20 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   ROS_INFO("Solver initialized correctly.");
 
   started_ = false;
+
+  // we do not actively control the gripper
+  x_.setZero(PandaDim::STATE_DIMENSION);
+  xfirst_.setZero(PandaDim::STATE_DIMENSION);
+  x_nom_.setZero(PandaDim::STATE_DIMENSION);
+  u_.setZero(PandaDim::INPUT_DIMENSION);
+  u_opt_.setZero(10);
+  u_filter_.setZero(10);
+  velocity_measured_.setZero(10);
+  velocity_filtered_.setZero(10);
+  position_desired_.setZero(10);
+  position_measured_.setZero(10);
+  position_initial_.setZero(10);
+
   ROS_INFO("Controller successfully initialized!");
   return true;
 }
@@ -78,6 +92,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
 
   if (!node_handle.getParam("fixed_base", fixed_base_)) {
     ROS_ERROR("fixed_base not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("logging", logging_)) {
+    ROS_ERROR("logging not found");
     return false;
   }
 
@@ -140,22 +159,23 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
 
 bool ManipulationController::init_interfaces(
     hardware_interface::RobotHW* robot_hw) {
-  auto* effort_joint_interface =
-      robot_hw->get<hardware_interface::EffortJointInterface>();
-  if (effort_joint_interface == nullptr) {
-    ROS_ERROR("Failed to get effort joint interface.");
-    return false;
-  }
+  // TO RESTORE
+  // auto* effort_joint_interface =
+  //     robot_hw->get<hardware_interface::EffortJointInterface>();
+  // if (effort_joint_interface == nullptr) {
+  //   ROS_ERROR("Failed to get effort joint interface.");
+  //   return false;
+  // }
 
-  for (size_t i = 0; i < 7; ++i) {
-    try {
-      joint_handles_.push_back(
-          effort_joint_interface->getHandle(joint_names_[i]));
-    } catch (const hardware_interface::HardwareInterfaceException& ex) {
-      ROS_ERROR("Failed to get joint handles: ", ex.what());
-      return false;
-    }
-  }
+  // for (size_t i = 0; i < 7; ++i) {
+  //   try {
+  //     joint_handles_.push_back(
+  //         effort_joint_interface->getHandle(joint_names_[i]));
+  //   } catch (const hardware_interface::HardwareInterfaceException& ex) {
+  //     ROS_ERROR("Failed to get joint handles: ", ex.what());
+  //     return false;
+  //   }
+  // }
 
   auto* velocity_joint_interface =
       robot_hw->get<hardware_interface::VelocityJointInterface>();
@@ -241,6 +261,9 @@ void ManipulationController::state_callback(
                                                           observation_time_)) {
         ROS_WARN("Failed to set the controller reference to current state.");
       }
+      xfirst_ = x_;
+      ROS_INFO_STREAM("Resetting the state always at the first state: "
+                      << xfirst_.transpose());
       start_time_ = state_msg->header.stamp.toSec();
     }
   }
@@ -270,22 +293,12 @@ void ManipulationController::starting(const ros::Time& time) {
     }
   }
 
-  // we do not actively control the gripper
-  x_.setZero(PandaDim::STATE_DIMENSION);
-  x_nom_.setZero(PandaDim::STATE_DIMENSION);
-  u_.setZero(PandaDim::INPUT_DIMENSION);
-  u_opt_.setZero(10);
-  u_filter_.setZero(10);
-  velocity_measured_.setZero(10);
-  velocity_filtered_.setZero(10);
-  position_desired_.setZero(10);
-  position_measured_.setZero(10);
-  position_initial_.setZero(10);
-  for (size_t i = 0; i < 7; i++) {
-    position_desired_[i + 3] = joint_handles_[i].getPosition();
-    position_initial_[i + 3] = joint_handles_[i].getPosition();
-  }
-  position_measured_ = position_desired_;
+  // TO RESTORE
+  // for (size_t i = 0; i < 7; i++) {
+  //   position_desired_[i + 3] = joint_handles_[i].getPosition();
+  //   position_initial_[i + 3] = joint_handles_[i].getPosition();
+  // }
+  // position_measured_ = position_desired_;
 
   // reset the energy tank initial state
   double initial_tank_state =
@@ -298,6 +311,7 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // this is the filter that is used to sanitize the rollouts
   if (apply_filter_to_rollouts_) {
+    ROS_INFO("Applying safety filter to rollouts");
     mppi::filter_ptr safety_filter_ctrl =
         std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
     man_interface_->get_controller()->set_filter(safety_filter_ctrl);
@@ -307,29 +321,31 @@ void ManipulationController::starting(const ros::Time& time) {
   stage_cost_ = 0.0;
 
   // logging
-  signal_logger::logger->stopLogger();
-  signal_logger::add(opt_time_, "opt_time");
-  signal_logger::add(x_, "state");
-  signal_logger::add(x_nom_, "nominal_state");
-  signal_logger::add(u_, "velocity_mppi");
-  signal_logger::add(u_opt_, "velocity_command");
-  signal_logger::add(arm_torque_command_, "torque_command");
-  signal_logger::add(velocity_measured_, "velocity_measured");
-  signal_logger::add(velocity_filtered_, "velocity_filtered");
-  signal_logger::add(position_measured_, "position_measured");
-  signal_logger::add(position_desired_, "position_desired");
-  signal_logger::add(stage_cost_, "stage_cost");
-  signal_logger::add(power_channels_, "power_channels");
-  signal_logger::add(power_from_error_, "power_from_error");
-  signal_logger::add(power_from_interaction_, "power_from_interaction");
-  signal_logger::add(total_power_exchange_, "total_power_exchange");
-  signal_logger::add(external_torque_, "external_torque");
-  signal_logger::add(energy_tank_.get_state(), "tank_state");
-  for (const auto& constraint : safety_filter_->constraints_) {
-    signal_logger::add(constraint.second->violation_,
-                       constraint.first + "_violation");
+  if (logging_) {
+    signal_logger::logger->stopLogger();
+    signal_logger::add(opt_time_, "opt_time");
+    signal_logger::add(x_, "state");
+    signal_logger::add(x_nom_, "nominal_state");
+    signal_logger::add(u_, "velocity_mppi");
+    signal_logger::add(u_opt_, "velocity_command");
+    signal_logger::add(arm_torque_command_, "torque_command");
+    signal_logger::add(velocity_measured_, "velocity_measured");
+    signal_logger::add(velocity_filtered_, "velocity_filtered");
+    signal_logger::add(position_measured_, "position_measured");
+    signal_logger::add(position_desired_, "position_desired");
+    signal_logger::add(stage_cost_, "stage_cost");
+    signal_logger::add(power_channels_, "power_channels");
+    signal_logger::add(power_from_error_, "power_from_error");
+    signal_logger::add(power_from_interaction_, "power_from_interaction");
+    signal_logger::add(total_power_exchange_, "total_power_exchange");
+    signal_logger::add(external_torque_, "external_torque");
+    signal_logger::add(energy_tank_.get_state(), "tank_state");
+    for (const auto& constraint : safety_filter_->constraints_) {
+      signal_logger::add(constraint.second->violation_,
+                         constraint.first + "_violation");
+    }
+    signal_logger::logger->startLogger(true);
   }
-  signal_logger::logger->startLogger(true);
 
   started_ = true;
   ROS_INFO("\n\n\n\nController started!\n\n\n");
@@ -449,9 +465,14 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    man_interface_->set_observation(x_, time.toSec());
-    man_interface_->update_reference(x_, time.toSec());
-    getRotationMatrix(R_world_base, x_(2));
+    man_interface_->set_observation(
+        xfirst_,
+        time.toSec());  // man_interface_->set_observation(x_, time.toSec());
+    man_interface_->update_reference(
+        xfirst_,
+        time.toSec());  // man_interface_->update_reference(x_, time.toSec());
+    getRotationMatrix(R_world_base,
+                      xfirst_(2));  // getRotationMatrix(R_world_base, x_(2));
   }
 
   ROS_DEBUG_STREAM("Ctl state:"
@@ -461,11 +482,15 @@ void ManipulationController::update(const ros::Time& time,
 
   if (sequential_) {
     man_interface_->update_policy();
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
+    man_interface_->get_input_state(xfirst_, x_nom_, u_,
+                                    time.toSec());  // man_interface_->get_input_state(x_,
+                                                    // x_nom_, u_, time.toSec());
     man_interface_->publish_ros_default();
     man_interface_->publish_ros();
   } else {
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
+    man_interface_->get_input_state(
+        xfirst_, x_nom_, u_, time.toSec());  // man_interface_->get_input_state(x_,
+                                             // x_nom_, u_, time.toSec());
   }
 
   manipulation::conversions::eigenToMsg(x_nom_, time.toSec(), x_nom_ros_);
@@ -480,22 +505,23 @@ void ManipulationController::update(const ros::Time& time,
     bag_.write("current_input", time, u_curr_ros_);
   }
 
-  static const double alpha = 0.1;
-  position_measured_.head<3>() = x_.head<3>();
-  velocity_measured_.head<3>() = x_.segment<3>(12);
-  velocity_filtered_.head<3>() = (1 - alpha) * velocity_filtered_.head<3>() +
-                                 alpha * velocity_measured_.head<3>();
-  for (int i = 0; i < 7; i++) {
-    position_measured_[i + 3] = robot_state_.q[i];
-    velocity_measured_[i + 3] = robot_state_.dq[i];
-    velocity_filtered_[i + 3] =
-        (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
-  }
+  // TO RESTORE
+  // static const double alpha = 0.1;
+  // position_measured_.head<3>() = x_.head<3>();
+  // velocity_measured_.head<3>() = x_.segment<3>(12);
+  // velocity_filtered_.head<3>() = (1 - alpha) * velocity_filtered_.head<3>() +
+  //                                alpha * velocity_measured_.head<3>();
+  // for (int i = 0; i < 7; i++) {
+  //   position_measured_[i + 3] = robot_state_.q[i];
+  //   velocity_measured_[i + 3] = robot_state_.dq[i];
+  //   velocity_filtered_[i + 3] =
+  //       (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
+  // }
 
-  enforce_constraints(period);
-  update_position_reference(period);
-  send_command_arm(period);
-  send_command_base(period);
+  // enforce_constraints(period);
+  // update_position_reference(period);
+  // send_command_arm(period);
+  // send_command_base(period);
 
   if (nominal_state_publisher_.trylock()) {
     nominal_state_publisher_.msg_ = x_nom_ros_;
@@ -507,7 +533,7 @@ void ManipulationController::update(const ros::Time& time,
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
   }
 
-  if (log_counter_ == log_every_steps_){
+  if (log_counter_ == log_every_steps_ && logging_) {
     signal_logger::logger->collectLoggerData();
     log_counter_ = 0;
   }

@@ -314,14 +314,13 @@ void StateObserver::message_filter_cb_sim(
 void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
   tf::poseMsgToEigen(msg->pose.pose, T_world_reference_);
   T_world_base_ = T_world_reference_ * T_reference_base_;
+  // 2d projection of forward motion axis
+  Eigen::Vector3d ix = T_world_base_.rotation().col(0);
 
   {
     std::unique_lock<std::mutex> lock(state_mutex_);  
     base_pose_.x() = T_world_base_.translation().x();
     base_pose_.y() = T_world_base_.translation().y();
-
-    // 2d projection of forward motion axis
-    Eigen::Vector3d ix = T_world_base_.rotation().col(0);
     base_pose_.z() = std::atan2(ix.y(), ix.x());
   }
 
@@ -483,13 +482,15 @@ void StateObserver::wrench_callback(
   tf::transformMsgToEigen(transform.transform, T_world_sensor);
 
   // update kdl joints with the latest measurements
-  kdl_joints_(0) = base_pose_.x();
-  kdl_joints_(1) = base_pose_.y();
-  kdl_joints_(2) = base_pose_.z();
-  for (int i = 0; i < 7; i++) {
-    kdl_joints_(3 + i) = q_(i);
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);
+    kdl_joints_(0) = base_pose_.x();
+    kdl_joints_(1) = base_pose_.y();
+    kdl_joints_(2) = base_pose_.z();
+    for (int i = 0; i < 7; i++) {
+      kdl_joints_(3 + i) = q_(i);
+    }
   }
-
   jacobian_solver_->JntToJac(kdl_joints_, J_world_ee_);
 
   // filter wrench measurements
