@@ -159,23 +159,23 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
 
 bool ManipulationController::init_interfaces(
     hardware_interface::RobotHW* robot_hw) {
-  // TO RESTORE
-  // auto* effort_joint_interface =
-  //     robot_hw->get<hardware_interface::EffortJointInterface>();
-  // if (effort_joint_interface == nullptr) {
-  //   ROS_ERROR("Failed to get effort joint interface.");
-  //   return false;
-  // }
+  
+  auto* effort_joint_interface =
+      robot_hw->get<hardware_interface::EffortJointInterface>();
+  if (effort_joint_interface == nullptr) {
+    ROS_ERROR("Failed to get effort joint interface.");
+    return false;
+  }
 
-  // for (size_t i = 0; i < 7; ++i) {
-  //   try {
-  //     joint_handles_.push_back(
-  //         effort_joint_interface->getHandle(joint_names_[i]));
-  //   } catch (const hardware_interface::HardwareInterfaceException& ex) {
-  //     ROS_ERROR("Failed to get joint handles: ", ex.what());
-  //     return false;
-  //   }
-  // }
+  for (size_t i = 0; i < 7; ++i) {
+    try {
+      joint_handles_.push_back(
+          effort_joint_interface->getHandle(joint_names_[i]));
+    } catch (const hardware_interface::HardwareInterfaceException& ex) {
+      ROS_ERROR("Failed to get joint handles: ", ex.what());
+      return false;
+    }
+  }
 
   auto* velocity_joint_interface =
       robot_hw->get<hardware_interface::VelocityJointInterface>();
@@ -247,26 +247,31 @@ void ManipulationController::state_callback(
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    manipulation::conversions::msgToEigen(*state_msg, x_, observation_time_);
-    x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
+    manipulation::conversions::msgToEigen(*state_msg, x_, measurement_time_);
     
 
     if (!state_received_) {
       ROS_INFO("First call to state callback");
+      start_time_ = measurement_time_;
       position_desired_[0] = state_msg->base_pose.x;
       position_desired_[1] = state_msg->base_pose.y;
       position_desired_[2] = state_msg->base_pose.z;
       position_initial_.head<3>() = position_desired_.head<3>();
-      if (!man_interface_->init_reference_to_current_pose(x_,
-                                                          observation_time_)) {
+      if (!man_interface_->init_reference_to_current_pose(x_, 0.0)) {
         ROS_WARN("Failed to set the controller reference to current state.");
       }
-      xfirst_ = x_;
-      ROS_INFO_STREAM("Resetting the state always at the first state: "
-                      << xfirst_.transpose());
-      start_time_ = state_msg->header.stamp.toSec();
+
+      // reset the energy tank initial state
+      double initial_tank_state =
+      std::sqrt(2.0 * safety_filter_params_.initial_tank_energy);
+      energy_tank_.reset(initial_tank_state, 0.0);
     }
+
+    // set the tank state
+    observation_time_ = measurement_time_ - start_time_;
+    x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
   }
+
 
   x_ros_ = *state_msg;
   state_received_ = true;
@@ -276,6 +281,7 @@ void ManipulationController::starting(const ros::Time& time) {
   if (record_bag_) {
     bag_.open(bag_path_, rosbag::bagmode::Write);
   }
+
 
   state_received_ = false;
   if (started_) {
@@ -293,17 +299,11 @@ void ManipulationController::starting(const ros::Time& time) {
     }
   }
 
-  // TO RESTORE
-  // for (size_t i = 0; i < 7; i++) {
-  //   position_desired_[i + 3] = joint_handles_[i].getPosition();
-  //   position_initial_[i + 3] = joint_handles_[i].getPosition();
-  // }
-  // position_measured_ = position_desired_;
-
-  // reset the energy tank initial state
-  double initial_tank_state =
-      std::sqrt(2.0 * safety_filter_params_.initial_tank_energy);
-  energy_tank_.reset(initial_tank_state, time.toSec());
+  for (size_t i = 0; i < 7; i++) {
+    position_desired_[i + 3] = joint_handles_[i].getPosition();
+    position_initial_[i + 3] = joint_handles_[i].getPosition();
+  }
+  position_measured_ = position_desired_;
 
   // reset the safety filter
   safety_filter_ =
@@ -347,8 +347,9 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::logger->startLogger(true);
   }
 
+  ROS_INFO_STREAM("Manipulation Controller address: " << man_interface_.get());
   started_ = true;
-  ROS_INFO("\n\n\n\nController started!\n\n\n");
+  ROS_INFO("Controller started!");
 }
 
 void ManipulationController::enforce_constraints(const ros::Duration& period) {
@@ -367,7 +368,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    safety_filter_->update(x_, u_, ros::Time::now().toSec());
+    safety_filter_->update(x_, u_, ros::Time::now().toSec() - start_time_);
 
     // this is required for computing some metrics
     // we provide only the joints position (no gripper) since the implementation
@@ -426,9 +427,9 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
                                   x_nom_ros_.base_twist.linear.y,
                                   x_nom_ros_.base_twist.angular.z);
 
-    base_twist_publisher_.msg_.linear.x = u_opt_[0] + gains_.base_gains.Ki[0] * u_ff[0];
-    base_twist_publisher_.msg_.linear.y = u_opt_[1] + gains_.base_gains.Ki[1] * u_ff[1];
-    base_twist_publisher_.msg_.angular.z = u_opt_[2] + gains_.base_gains.Ki[2] * u_ff[2];
+    base_twist_publisher_.msg_.linear.x = /* u_opt_[0]  + */ gains_.base_gains.Ki[0] * u_ff[0];
+    base_twist_publisher_.msg_.linear.y = /*u_opt_[1] + */ gains_.base_gains.Ki[1] * u_ff[1];
+    base_twist_publisher_.msg_.angular.z = /*u_opt_[2] + */ gains_.base_gains.Ki[2] * u_ff[2];
     base_twist_publisher_.unlockAndPublish();
   }
 }
@@ -463,16 +464,12 @@ void ManipulationController::update(const ros::Time& time,
     return;
   }
 
+  ROS_INFO("Into update.");
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    man_interface_->set_observation(
-        xfirst_,
-        time.toSec());  // man_interface_->set_observation(x_, time.toSec());
-    man_interface_->update_reference(
-        xfirst_,
-        time.toSec());  // man_interface_->update_reference(x_, time.toSec());
-    getRotationMatrix(R_world_base,
-                      xfirst_(2));  // getRotationMatrix(R_world_base, x_(2));
+    man_interface_->set_observation(x_, observation_time_);
+    man_interface_->update_reference(x_, observation_time_);
+    getRotationMatrix(R_world_base, x_(2));
   }
 
   ROS_DEBUG_STREAM("Ctl state:"
@@ -482,18 +479,14 @@ void ManipulationController::update(const ros::Time& time,
 
   if (sequential_) {
     man_interface_->update_policy();
-    man_interface_->get_input_state(xfirst_, x_nom_, u_,
-                                    time.toSec());  // man_interface_->get_input_state(x_,
-                                                    // x_nom_, u_, time.toSec());
+    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() - start_time_);
     man_interface_->publish_ros_default();
     man_interface_->publish_ros();
   } else {
-    man_interface_->get_input_state(
-        xfirst_, x_nom_, u_, time.toSec());  // man_interface_->get_input_state(x_,
-                                             // x_nom_, u_, time.toSec());
+    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() - start_time_);
   }
 
-  manipulation::conversions::eigenToMsg(x_nom_, time.toSec(), x_nom_ros_);
+  manipulation::conversions::eigenToMsg(x_nom_, time.toSec() - start_time_, x_nom_ros_);
   robot_state_ = state_handle_->getRobotState();
   
   if (record_bag_){
@@ -505,23 +498,22 @@ void ManipulationController::update(const ros::Time& time,
     bag_.write("current_input", time, u_curr_ros_);
   }
 
-  // TO RESTORE
-  // static const double alpha = 0.1;
-  // position_measured_.head<3>() = x_.head<3>();
-  // velocity_measured_.head<3>() = x_.segment<3>(12);
-  // velocity_filtered_.head<3>() = (1 - alpha) * velocity_filtered_.head<3>() +
-  //                                alpha * velocity_measured_.head<3>();
-  // for (int i = 0; i < 7; i++) {
-  //   position_measured_[i + 3] = robot_state_.q[i];
-  //   velocity_measured_[i + 3] = robot_state_.dq[i];
-  //   velocity_filtered_[i + 3] =
-  //       (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
-  // }
+  static const double alpha = 0.1;
+  position_measured_.head<3>() = x_.head<3>();
+  velocity_measured_.head<3>() = x_.segment<3>(12);
+  velocity_filtered_.head<3>() = (1 - alpha) * velocity_filtered_.head<3>() +
+                                 alpha * velocity_measured_.head<3>();
+  for (int i = 0; i < 7; i++) {
+    position_measured_[i + 3] = robot_state_.q[i];
+    velocity_measured_[i + 3] = robot_state_.dq[i];
+    velocity_filtered_[i + 3] =
+        (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
+  }
 
-  // enforce_constraints(period);
-  // update_position_reference(period);
-  // send_command_arm(period);
-  // send_command_base(period);
+  enforce_constraints(period);
+  update_position_reference(period);
+  send_command_arm(period);
+  send_command_base(period);
 
   if (nominal_state_publisher_.trylock()) {
     nominal_state_publisher_.msg_ = x_nom_ros_;
@@ -530,7 +522,7 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
+    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, observation_time_);
   }
 
   if (log_counter_ == log_every_steps_ && logging_) {
@@ -546,12 +538,6 @@ void ManipulationController::stopping(const ros::Time& time) {
     ROS_INFO("Closing bag...");
     bag_.close();
   }
-  //  signal_logger::logger->disableElement("/log/torque_command");
-  //  signal_logger::logger->disableElement("/log/stage_cost");
-  //  for (const auto& constraint : safety_filter_->constraints_) {
-  //    signal_logger::logger->disableElement("/log/" + constraint.first +
-  //                                          "_violation");
-  //  }
 }
 
 void ManipulationController::saturateTorqueRate(

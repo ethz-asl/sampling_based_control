@@ -1,7 +1,9 @@
 manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
   references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
-  
+  default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
+  object_tolerance: 0.09 # ~5 deg
+
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
@@ -9,7 +11,7 @@ manipulation_controller:
   static_optimization: false
 
   logging: false
-  fixed_base: true
+  fixed_base: false
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
   base_joint_names: [world_x, world_y, theta]
@@ -91,7 +93,7 @@ manipulation_controller:
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
-      ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
+      ki: [ 100.0, 100.0, 100.0, 100.0, 50.0, 50.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]

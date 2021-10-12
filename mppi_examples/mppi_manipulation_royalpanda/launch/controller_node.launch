@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!-- Controller configuration -->
+    <arg name="debug" default="false"/>
+    <arg name="launch-prefix" default="valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out.txt" if="$(arg debug)"/>
+    <arg name="launch-prefix" default="" unless="$(arg debug)"/>
+    
+    <arg name="filter_in" default="false"/>
+    <arg name="filter_out" default="false"/>
+    <param name="/config_file" value="$(find mppi_manipulation_royalpanda)/config/solver.yaml"/>
+    <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers_robot.yaml" subst_value="true"/>
+
+    <node name="controller_node" pkg="mppi_manipulation_royalpanda" type="controller_node" output="screen"
+      launch-prefix="$(arg launch-prefix)"/>
+          
+
+</launch>

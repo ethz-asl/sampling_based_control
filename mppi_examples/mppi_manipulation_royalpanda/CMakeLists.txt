@@ -68,6 +68,11 @@ add_executable(joint_state_aggregator src/nodes/joint_state_aggregator.cpp)
 target_include_directories(joint_state_aggregator PUBLIC include ${catkin_INCLUDE_DIRS})
 target_link_libraries(joint_state_aggregator ${catkin_LIBRARIES})
 
+### Debug
+add_executable(controller_node src/nodes/controller_node.cpp src/controller_standalone.cpp)
+target_include_directories(controller_node PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(controller_node ${catkin_LIBRARIES})
+
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
