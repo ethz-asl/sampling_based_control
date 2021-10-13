@@ -474,10 +474,12 @@ void ManipulationController::update(const ros::Time& time,
     return;
   }
 
+  static double current_time;
+  current_time = time.toSec() - start_time_;
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    man_interface_->set_observation(x_, observation_time_);
-    man_interface_->update_reference(x_, observation_time_);
+    man_interface_->set_observation(x_, current_time);
+    man_interface_->update_reference(x_, current_time);
     getRotationMatrix(R_world_base, x_(2));
   }
 
@@ -488,14 +490,14 @@ void ManipulationController::update(const ros::Time& time,
 
   if (sequential_) {
     man_interface_->update_policy();
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() - start_time_);
+    man_interface_->get_input_state(x_, x_nom_, u_, current_time);
     man_interface_->publish_ros_default();
     man_interface_->publish_ros();
   } else {
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec() - start_time_);
+    man_interface_->get_input_state(x_, x_nom_, u_, current_time);
   }
 
-  manipulation::conversions::eigenToMsg(x_nom_, time.toSec() - start_time_, x_nom_ros_);
+  manipulation::conversions::eigenToMsg(x_nom_, current_time, x_nom_ros_);
   robot_state_ = state_handle_->getRobotState();
   
   if (record_bag_){
@@ -531,14 +533,12 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, observation_time_);
+    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, current_time);
   }
 
   if (log_counter_ == log_every_steps_) {
-    std::cout << "log every " << log_every_steps_ << ", curr step: " << log_counter_ << std::endl;
     log_counter_ = 0;
     if (logging_){
-      std::cout << "collecting data" << std::endl;
       signal_logger::logger->collectLoggerData();
     }
   }

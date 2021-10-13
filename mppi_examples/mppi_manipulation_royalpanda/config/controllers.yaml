@@ -39,7 +39,7 @@ manipulation_controller:
   # Cost parameters used by the controller
   rollouts: $(arg rollouts)
   cost:
-    regularization: 0.0
+    regularization: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     linear_weight: 100.0
     linear_weight_opening: 100.0
 

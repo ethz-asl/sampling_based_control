@@ -4,7 +4,7 @@
     <arg name="launch_prefix" value="" unless="$(arg debug)"/>
     <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
     <arg name="record_bag" default="false"/>
-    <arg name="rollouts" default="40"/>
+    <arg name="rollouts" default="20"/>
     <arg name="log_folder" default="$(find mppi_manipulation_royalpanda)/logs/"/>
     <arg name="rviz" default="true"/>
 
