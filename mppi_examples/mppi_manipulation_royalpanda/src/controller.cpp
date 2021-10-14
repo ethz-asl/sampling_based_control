@@ -274,7 +274,6 @@ void ManipulationController::state_callback(
 
     // set the tank state
     observation_time_ = measurement_time_ - start_time_;
-    std::cout << "observation time: " << observation_time_ << std::endl;
     x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
 
     man_interface_->set_observation(x_, observation_time_);
@@ -480,7 +479,6 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   static double current_time;
-  std::cout << "current time: " << current_time << std::endl;
   current_time = time.toSec() - start_time_;
 
   ROS_DEBUG_STREAM("Ctl state:"
