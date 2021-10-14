@@ -17,7 +17,7 @@
         <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
         <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
         <param name="output_topic" value="/panda/joint_states"/>
-        <param name="exact_sync" value="true"/>
+        <param name="exact_sync" value="false"/>
     </node>
 
     <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state
@@ -60,7 +60,7 @@
         <param name="simulation" value="$(arg simulation)"/>
         <param name="base_alpha" value="0.7"/>
         <param name="base_pose_topic" value="$(arg base_odometry_topic)"/>
-        <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
+        <param name="topic" value="/ridgeback_velocity_controller/odom"/>
         <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
         <param name="object_state_topic" value="/simulation/object_state"/> <!-- only in sim -->

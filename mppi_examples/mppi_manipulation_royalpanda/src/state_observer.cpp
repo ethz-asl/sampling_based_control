@@ -360,8 +360,6 @@ void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
   {
     std::unique_lock<std::mutex> lock(state_mutex_);  
     base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
-    time_ =
-        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
   }
 
   base_twist_ros_.header.stamp = msg->header.stamp;
@@ -386,8 +384,6 @@ void StateObserver::arm_state_callback(
       q_(i) = msg->position[i];
       dq_(i) = msg->velocity[i];
     }
-    time_ =
-        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
   }
 
   previous_publishing_time_ = time_;
@@ -400,8 +396,6 @@ void StateObserver::object_state_callback(
     object_state_.header.stamp = msg->header.stamp;
     object_state_.position[0] = msg->position[0];
     object_state_.velocity[0] = msg->velocity[0];
-    time_ =
-        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
   }
   object_state_publisher_.publish(object_state_);
 }
@@ -453,8 +447,6 @@ void StateObserver::object_pose_callback(
     object_state_.header.stamp = msg->header.stamp;
     object_state_.position[0] = theta_new;
     object_state_.velocity[0] = theta_dot;
-    time_ =
-        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
   }
   object_state_publisher_.publish(object_state_);
 }
@@ -552,15 +544,13 @@ void StateObserver::wrench_callback(
     }
     // detect contact from wrench using small threshold
     contact_state_ = wrench_meas_.norm() > wrench_contact_threshold_;
-    time_ =
-        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
   }
 }
 
 void StateObserver::publish_state(){
   std::unique_lock<std::mutex> lock(state_mutex_);
   manipulation::conversions::toMsg(
-      time_, base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
+      ros::Time::now().toSec(), base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
       ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
       contact_state_, tank_state_, state_ros_);
 

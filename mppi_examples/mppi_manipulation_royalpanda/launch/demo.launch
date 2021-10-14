@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+	<!-- Experiment settings -->
+	<arg name="filter_in" default="false"/>
+	<arg name="filter_out" default="false"/>
+	<arg name="experiment_name" default="mppi_manipulation"/>
+	
 	<!-- Launch force torque sensor -->
 	<include file="$(find moma_sensor_tools)/launch/ft_sensor_standalone.launch">
 		<arg name="calibration_file_name" value="calibration_royalpanda"/>
@@ -11,7 +16,10 @@
 
 	<!-- Launch robot state controller -->
 	<include file="$(find mppi_manipulation_royalpanda)/launch/robot.launch">
-		<arg name="object" 				value="new_shelf"/>
+		<arg name="object"  value="new_shelf"/>
+		<arg name="filter_in" value="$(arg filter_in)"/>
+		<arg name="filter_out" value="$(arg filter_out)"/>
+		<arg name="experiment_name" value="$(arg experiment_name)"/>
 	</include>
 
 </launch>

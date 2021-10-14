@@ -84,6 +84,9 @@ class ManipulationController
   // Directy send velocity commands to the base (via topic on hardware)
   void send_command_base(const ros::Duration& period);
 
+  // Publish to ros non control stuff (use Realtime publisher to avoid slowdown)
+  void publish_ros();
+
   // Saturation
   void saturateTorqueRate(const std::array<double, 7>& tau_d_calculated,
                           const std::array<double, 7>& tau_J_d,
@@ -93,6 +96,7 @@ class ManipulationController
 
  private:
   bool started_;
+  bool started_twice_;
   bool sequential_;
   bool state_ok_;
   bool state_received_;
@@ -107,6 +111,7 @@ class ManipulationController
 
   bool fixed_base_;
   manipulation::PIDGains gains_;
+  std::vector<double> base_cmd_threshold_;
 
   static constexpr double delta_tau_max_{1.0};
   franka_hw::TriggerRate base_trigger_{50.0};
@@ -121,6 +126,11 @@ class ManipulationController
   RTPublisher<geometry_msgs::Twist> base_twist_publisher_;
   RTPublisher<geometry_msgs::Twist> world_twist_publisher_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
+  RTPublisher<std_msgs::Float64> tank_state_publisher_;
+  RTPublisher<std_msgs::Float64MultiArray> input_publisher_;
+  RTPublisher<std_msgs::Float64MultiArray> input_opt_publisher_;
+  RTPublisher<std_msgs::Float64MultiArray> power_publisher_;
+
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
