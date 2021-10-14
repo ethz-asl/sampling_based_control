@@ -276,6 +276,10 @@ void ManipulationController::state_callback(
     observation_time_ = measurement_time_ - start_time_;
     std::cout << "observation time: " << observation_time_ << std::endl;
     x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
+
+    man_interface_->set_observation(x_, observation_time_);
+    man_interface_->update_reference(x_, observation_time_);
+    getRotationMatrix(R_world_base, x_(2));
   }
 
 
@@ -478,12 +482,6 @@ void ManipulationController::update(const ros::Time& time,
   static double current_time;
   std::cout << "current time: " << current_time << std::endl;
   current_time = time.toSec() - start_time_;
-  {
-    std::unique_lock<std::mutex> lock(observation_mutex_);
-    man_interface_->set_observation(x_, current_time);
-    man_interface_->update_reference(x_, current_time);
-    getRotationMatrix(R_world_base, x_(2));
-  }
 
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl

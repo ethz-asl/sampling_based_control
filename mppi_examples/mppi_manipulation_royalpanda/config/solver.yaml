@@ -30,7 +30,7 @@ solver:
   spline_step_size: 0.1
 
   adaptive_sampling: false
-  input_variance: [0.05, 0.05, 0.05, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 
   discount_factor: 1.0
   verbose: false
