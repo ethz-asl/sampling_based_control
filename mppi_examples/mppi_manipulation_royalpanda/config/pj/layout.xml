@@ -1,312 +1,495 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root version="2.3.8">
- <tabbed_widget parent="main_window" name="Main Window">
-  <Tab containers="1" tab_name="External wrench">
+ <tabbed_widget name="Main Window" parent="main_window">
+  <Tab tab_name="External wrench" containers="1">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.500564;0.499436">
-     <DockSplitter orientation="|" count="3" sizes="0.33356;0.33288;0.33356">
+    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
+     <DockSplitter orientation="|" count="3" sizes="0.336957;0.336957;0.326087">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-347.361184" bottom="-0.130656" left="-377.359586" top="0.003187"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-28.779987" top="0.025236" right="-27.825479" bottom="-0.043576"/>
         <limitY/>
-        <curve name="/ft_compensated/wrench/force/x" color="#1f77b4"/>
-        <curve name="/observer/wrench_filtered_sensor/wrench/force/x" color="#17cfb4"/>
+        <curve color="#1f77b4" name="/ft_compensated/wrench/force/x"/>
+        <curve color="#17cfb4" name="/observer/wrench_filtered_sensor/wrench/force/x"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-347.361184" bottom="-0.127422" left="-377.359586" top="0.003108"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-28.779987" top="0.015837" right="-27.825479" bottom="-0.056124"/>
         <limitY/>
-        <curve name="/ft_compensated/wrench/force/y" color="#d62728"/>
-        <curve name="/observer/wrench_filtered_sensor/wrench/force/y" color="#bcbd22"/>
+        <curve color="#d62728" name="/ft_compensated/wrench/force/y"/>
+        <curve color="#bcbd22" name="/observer/wrench_filtered_sensor/wrench/force/y"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-347.361184" bottom="-0.016255" left="-377.359586" top="0.055166"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-28.779987" top="0.000933" right="-27.825479" bottom="-0.038267"/>
         <limitY/>
-        <curve name="/ft_compensated/wrench/force/z" color="#1ac938"/>
-        <curve name="/observer/wrench_filtered_sensor/wrench/force/z" color="#f200ff"/>
+        <curve color="#1ac938" name="/ft_compensated/wrench/force/z"/>
+        <curve color="#f200ff" name="/observer/wrench_filtered_sensor/wrench/force/z"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="3" sizes="0.33356;0.33288;0.33356">
+     <DockSplitter orientation="|" count="3" sizes="0.336957;0.336957;0.326087">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-347.361184" bottom="-0.000076" left="-377.359586" top="0.003102"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-28.779987" top="0.000393" right="-27.825479" bottom="-0.001356"/>
         <limitY/>
-        <curve name="/ft_compensated/wrench/torque/x" color="#1f77b4"/>
-        <curve name="/observer/wrench_filtered_sensor/wrench/torque/x" color="#17cfb4"/>
+        <curve color="#1f77b4" name="/ft_compensated/wrench/torque/x"/>
+        <curve color="#17cfb4" name="/observer/wrench_filtered_sensor/wrench/torque/x"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-347.361184" bottom="-0.000208" left="-377.359586" top="0.008521"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-28.779987" top="0.000569" right="-27.825479" bottom="-0.000903"/>
         <limitY/>
-        <curve name="/ft_compensated/wrench/torque/y" color="#d62728"/>
-        <curve name="/observer/wrench_filtered_sensor/wrench/torque/y" color="#bcbd22"/>
+        <curve color="#d62728" name="/ft_compensated/wrench/torque/y"/>
+        <curve color="#bcbd22" name="/observer/wrench_filtered_sensor/wrench/torque/y"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-347.361184" bottom="-0.000902" left="-377.359586" top="0.000387"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-28.779987" top="0.000031" right="-27.825479" bottom="-0.001265"/>
         <limitY/>
-        <curve name="/ft_compensated/wrench/torque/z" color="#1ac938"/>
-        <curve name="/observer/wrench_filtered_sensor/wrench/torque/z" color="#f200ff"/>
+        <curve color="#1ac938" name="/ft_compensated/wrench/torque/z"/>
+        <curve color="#f200ff" name="/observer/wrench_filtered_sensor/wrench/torque/z"/>
        </plot>
       </DockArea>
      </DockSplitter>
     </DockSplitter>
    </Container>
   </Tab>
-  <Tab containers="1" tab_name="Joint Torques">
+  <Tab tab_name="Joint Torques" containers="1">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.500564;0.499436">
-     <DockSplitter orientation="|" count="5" sizes="0.2;0.2;0.2;0.2;0.2">
+    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/base_effort/x" color="#f14cc1"/>
+        <curve color="#f14cc1" name="/observer/state/base_effort/x"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/base_effort/y" color="#9467bd"/>
+        <curve color="#9467bd" name="/observer/state/base_effort/y"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/base_effort/z" color="#17becf"/>
+        <curve color="#17becf" name="/observer/state/base_effort/z"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.0" color="#bcbd22"/>
+        <curve color="#bcbd22" name="/observer/state/arm_state/effort.0"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.1" color="#1f77b4"/>
+        <curve color="#1f77b4" name="/observer/state/arm_state/effort.1"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="5" sizes="0.2;0.2;0.2;0.2;0.2">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.2" color="#d62728"/>
+        <curve color="#d62728" name="/observer/state/arm_state/effort.2"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.3" color="#1ac938"/>
+        <curve color="#1ac938" name="/observer/state/arm_state/effort.3"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.4" color="#ff7f0e"/>
+        <curve color="#ff7f0e" name="/observer/state/arm_state/effort.4"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.5" color="#f14cc1"/>
+        <curve color="#f14cc1" name="/observer/state/arm_state/effort.5"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-237.574998" bottom="-0.100000" left="-267.570034" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.100000" right="-30.274204" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/effort.6" color="#9467bd"/>
+        <curve color="#9467bd" name="/observer/state/arm_state/effort.6"/>
        </plot>
       </DockArea>
      </DockSplitter>
     </DockSplitter>
    </Container>
   </Tab>
-  <Tab containers="1" tab_name="Joint Positions">
+  <Tab tab_name="Joint Positions" containers="1">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.500564;0.499436">
-     <DockSplitter orientation="|" count="5" sizes="0.2;0.2;0.2;0.2;0.2">
+    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="0.354403" left="-108.939983" top="0.354531"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.439776" right="-30.274204" bottom="0.439697"/>
         <limitY/>
-        <curve name="/observer/state/base_pose/x" color="#17becf"/>
+        <curve color="#17becf" name="/observer/state/base_pose/x"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="1.221774" left="-108.939983" top="1.221914"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="0.580144" right="-30.274204" bottom="0.580058"/>
         <limitY/>
-        <curve name="/observer/state/base_pose/y" color="#bcbd22"/>
+        <curve color="#bcbd22" name="/observer/state/base_pose/y"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="-2.456333" left="-108.939983" top="-2.456116"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.204209" top="-0.576923" right="-30.274204" bottom="-0.577113"/>
         <limitY/>
-        <curve name="/observer/state/base_pose/z" color="#1f77b4"/>
+        <curve color="#1f77b4" name="/observer/state/base_pose/z"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="0.026784" left="-108.939983" top="0.026795"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="-0.374321" right="-30.272968" bottom="-0.374332"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.0" color="#d62728"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint1/position" color="#1f77b4"/>
+        <curve color="#d62728" name="/observer/state/arm_state/position.0"/>
+        <curve color="#1f77b4" name="/franka_state_controller/joint_states/panda_joint1/position"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="-0.598940" left="-108.939983" top="-0.598926"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.393306" right="-30.272968" bottom="0.393295"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.1" color="#1ac938"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint2/position" color="#d62728"/>
+        <curve color="#1ac938" name="/observer/state/arm_state/position.1"/>
+        <curve color="#d62728" name="/franka_state_controller/joint_states/panda_joint2/position"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="5" sizes="0.2;0.2;0.2;0.2;0.2">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="-0.072743" left="-108.939983" top="-0.072731"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.793879" right="-30.272968" bottom="0.793870"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.2" color="#ff7f0e"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint3/position" color="#1ac938"/>
+        <curve color="#ff7f0e" name="/observer/state/arm_state/position.2"/>
+        <curve color="#1ac938" name="/franka_state_controller/joint_states/panda_joint3/position"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="-2.408787" left="-108.939983" top="-2.408774"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="-1.976450" right="-30.272968" bottom="-1.976459"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.3" color="#f14cc1"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint4/position" color="#ff7f0e"/>
+        <curve color="#f14cc1" name="/observer/state/arm_state/position.3"/>
+        <curve color="#ff7f0e" name="/franka_state_controller/joint_states/panda_joint4/position"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="0.139455" left="-108.939983" top="0.139463"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="-0.387952" right="-30.272968" bottom="-0.387960"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.4" color="#9467bd"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint5/position" color="#f14cc1"/>
+        <curve color="#9467bd" name="/observer/state/arm_state/position.4"/>
+        <curve color="#f14cc1" name="/franka_state_controller/joint_states/panda_joint5/position"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="2.169833" left="-108.939983" top="2.169841"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="2.318545" right="-30.272968" bottom="2.318537"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.5" color="#17becf"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint6/position" color="#9467bd"/>
+        <curve color="#17becf" name="/observer/state/arm_state/position.5"/>
+        <curve color="#9467bd" name="/franka_state_controller/joint_states/panda_joint6/position"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="-78.940029" bottom="0.583839" left="-108.939983" top="0.583855"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="1.009953" right="-30.272968" bottom="1.009942"/>
         <limitY/>
-        <curve name="/observer/state/arm_state/position.6" color="#bcbd22"/>
-        <curve name="/franka_state_controller/joint_states/panda_joint7/position" color="#17becf"/>
+        <curve color="#bcbd22" name="/observer/state/arm_state/position.6"/>
+        <curve color="#17becf" name="/franka_state_controller/joint_states/panda_joint7/position"/>
        </plot>
       </DockArea>
      </DockSplitter>
     </DockSplitter>
    </Container>
   </Tab>
-  <Tab containers="1" tab_name="Joint Velocities">
+  <Tab tab_name="Joint Velocities" containers="1">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.500564;0.499436">
-     <DockSplitter orientation="|" count="5" sizes="0.19985;0.19985;0.200599;0.19985;0.19985">
+    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.366103" bottom="-0.100000" left="21.406111" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.050422" top="0.100000" right="-30.250416" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/ridgeback_velocity_controller/odom/twist/twist/linear/x" color="#d62728"/>
+        <curve color="#d62728" name="/ridgeback_velocity_controller/odom/twist/twist/linear/x"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.366103" bottom="-0.100000" left="21.406111" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.050422" top="0.100000" right="-30.250416" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/ridgeback_velocity_controller/odom/twist/twist/linear/y" color="#1ac938"/>
+        <curve color="#1ac938" name="/ridgeback_velocity_controller/odom/twist/twist/linear/y"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.366103" bottom="-0.100000" left="21.406111" top="0.100000"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.050422" top="0.100000" right="-30.250416" bottom="-0.100000"/>
         <limitY/>
-        <curve name="/ridgeback_velocity_controller/odom/twist/twist/angular/z" color="#1f77b4"/>
+        <curve color="#1f77b4" name="/ridgeback_velocity_controller/odom/twist/twist/angular/z"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.003755" left="21.411095" top="0.002502"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.001918" right="-30.272968" bottom="-0.002349"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint1/velocity" color="#bcbd22"/>
+        <curve color="#bcbd22" name="/franka_state_controller/joint_states/panda_joint1/velocity"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.005309" left="21.411095" top="0.003441"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.001899" right="-30.272968" bottom="-0.001553"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint2/velocity" color="#1f77b4"/>
+        <curve color="#1f77b4" name="/franka_state_controller/joint_states/panda_joint2/velocity"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="5" sizes="0.19985;0.19985;0.200599;0.19985;0.19985">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.002359" left="21.411095" top="0.002206"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.001407" right="-30.272968" bottom="-0.001718"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint3/velocity" color="#d62728"/>
+        <curve color="#d62728" name="/franka_state_controller/joint_states/panda_joint3/velocity"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.007979" left="21.411095" top="0.008194"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.002008" right="-30.272968" bottom="-0.001724"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint4/velocity" color="#1ac938"/>
+        <curve color="#1ac938" name="/franka_state_controller/joint_states/panda_joint4/velocity"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.000897" left="21.411095" top="0.000848"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.000718" right="-30.272968" bottom="-0.000823"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint5/velocity" color="#ff7f0e"/>
+        <curve color="#ff7f0e" name="/franka_state_controller/joint_states/panda_joint5/velocity"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.010212" left="21.411095" top="0.010382"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.000737" right="-30.272968" bottom="-0.001038"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint6/velocity" color="#f14cc1"/>
+        <curve color="#f14cc1" name="/franka_state_controller/joint_states/panda_joint6/velocity"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range right="51.404666" bottom="-0.002417" left="21.411095" top="0.002339"/>
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.286906" top="0.001726" right="-30.272968" bottom="-0.003783"/>
         <limitY/>
-        <curve name="/franka_state_controller/joint_states/panda_joint7/velocity" color="#9467bd"/>
+        <curve color="#9467bd" name="/franka_state_controller/joint_states/panda_joint7/velocity"/>
        </plot>
       </DockArea>
      </DockSplitter>
     </DockSplitter>
    </Container>
   </Tab>
-  <currentTabIndex index="3"/>
+  <Tab tab_name="Velocity Command" containers="1">
+   <Container>
+    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/manipulation_controller/velocity_mppi/data.0"/>
+        <curve color="#1ac938" name="/manipulation_controller/velocity_mppi_filter/data.0"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#d62728" name="/manipulation_controller/velocity_mppi/data.1"/>
+        <curve color="#ff7f0e" name="/manipulation_controller/velocity_mppi_filter/data.1"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/manipulation_controller/velocity_mppi/data.2"/>
+        <curve color="#f14cc1" name="/manipulation_controller/velocity_mppi_filter/data.2"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/manipulation_controller/velocity_mppi/data.3"/>
+        <curve color="#9467bd" name="/manipulation_controller/velocity_mppi_filter/data.3"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/manipulation_controller/velocity_mppi/data.4"/>
+        <curve color="#17becf" name="/manipulation_controller/velocity_mppi_filter/data.4"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/manipulation_controller/velocity_mppi/data.5"/>
+        <curve color="#bcbd22" name="/manipulation_controller/velocity_mppi_filter/data.5"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#17becf" name="/manipulation_controller/velocity_mppi/data.6"/>
+        <curve color="#1f77b4" name="/manipulation_controller/velocity_mppi_filter/data.6"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/manipulation_controller/velocity_mppi/data.7"/>
+        <curve color="#d62728" name="/manipulation_controller/velocity_mppi_filter/data.7"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/manipulation_controller/velocity_mppi/data.8"/>
+        <curve color="#1ac938" name="/manipulation_controller/velocity_mppi_filter/data.8"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="-31.217372" top="0.000000" right="-30.267235" bottom="-0.000000"/>
+        <limitY/>
+        <curve color="#d62728" name="/manipulation_controller/velocity_mppi/data.9"/>
+        <curve color="#ff7f0e" name="/manipulation_controller/velocity_mppi_filter/data.9"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Tank State" containers="1">
+   <Container>
+    <DockSplitter orientation="-" count="1" sizes="1">
+     <DockArea name="...">
+      <plot style="Lines" mode="TimeSeries">
+       <range left="-31.217257" top="4.572136" right="-20.175504" bottom="4.372136"/>
+       <limitY/>
+       <curve color="#f14cc1" name="/manipulation_controller/tank_state/data"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Power" containers="1">
+   <Container>
+    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
+     <DockSplitter orientation="|" count="5" sizes="0.200245;0.199633;0.200245;0.199633;0.200245">
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/manipulation_controller/power/data.0"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#d62728" name="/manipulation_controller/power/data.1"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/manipulation_controller/power/data.2"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/manipulation_controller/power/data.3"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/manipulation_controller/power/data.4"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter orientation="|" count="5" sizes="0.200245;0.199633;0.200245;0.199633;0.200245">
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/manipulation_controller/power/data.5"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#17becf" name="/manipulation_controller/power/data.6"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/manipulation_controller/power/data.7"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/manipulation_controller/power/data.8"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries">
+        <range left="4.710162" top="0.100000" right="34.707544" bottom="-0.100000"/>
+        <limitY/>
+        <curve color="#d62728" name="/manipulation_controller/power/data.9"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="6"/>
  </tabbed_widget>
  <use_relative_time_offset enabled="1"/>
  <!-- - - - - - - - - - - - - - - -->
