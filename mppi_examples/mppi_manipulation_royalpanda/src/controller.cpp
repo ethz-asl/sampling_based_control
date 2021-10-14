@@ -153,6 +153,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if(!node_handle.param<std::vector<double>>("base_cmd_threshold", base_cmd_threshold_, {}) || base_cmd_threshold_.size() !=3){
+    ROS_ERROR("Failed to parse base_cmd_threshold or invalid");
+    return false;
+  }
+
   if (!safety_filter_params_.init_from_ros(node_handle)) {
     ROS_ERROR("Failed to parse safety filter parameters.");
     return false;
@@ -239,6 +244,13 @@ bool ManipulationController::init_interfaces(
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   base_twist_publisher_.init(nh, base_twist_topic_, 1);
   nominal_state_publisher_.init(nh, nominal_state_topic_, 1);
+  tank_state_publisher_.init(nh, "tank_state", 1);
+  input_publisher_.init(nh, "velocity_mppi", 1);
+  input_publisher_.msg_.data.resize(10, 0.0);
+  input_opt_publisher_.init(nh, "velocity_mppi_filter", 1);
+  input_opt_publisher_.msg_.data.resize(10, 0.0);
+  power_publisher_.init(nh, "power", 1);
+  power_publisher_.msg_.data.resize(10, 0.0);
 
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
@@ -421,6 +433,29 @@ void ManipulationController::update_position_reference(
                                .cwiseMin(max_position_error_);
 }
 
+void ManipulationController::publish_ros(){
+  if (tank_state_publisher_.trylock()){
+    tank_state_publisher_.msg_.data = energy_tank_.get_state();
+    tank_state_publisher_.unlockAndPublish();
+  }
+
+  if (input_publisher_.trylock()){
+    for (int i=0; i<10; i++) input_publisher_.msg_.data[i] = u_[i];
+      input_publisher_.unlockAndPublish();
+  }
+
+  if (input_opt_publisher_.trylock()){
+    for (int i=0; i<10; i++) input_opt_publisher_.msg_.data[i] = u_filter_[i];
+      input_opt_publisher_.unlockAndPublish();
+  }
+ 
+  if (power_publisher_.trylock()){
+    for (int i=0; i<10; i++) power_publisher_.msg_.data[i] = power_channels_[i];
+      power_publisher_.unlockAndPublish();
+  }
+   
+}
+
 void ManipulationController::send_command_base(const ros::Duration& period) {
   if (fixed_base_) return;
 
@@ -445,9 +480,9 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
     double cmd_y = u_opt_[1]  + gains_.base_gains.Ki[1] * u_ff[1];
     double cmd_z = u_opt_[2]  + gains_.base_gains.Ki[2] * u_ff[2];
 
-    base_twist_publisher_.msg_.linear.x = (std::abs(cmd_x) > 0.01) ? cmd_x - 0.01: 0.0;
-    base_twist_publisher_.msg_.linear.y = (std::abs(cmd_y) > 0.01) ? cmd_y - 0.01: 0.0;
-    base_twist_publisher_.msg_.angular.z = (std::abs(cmd_z) > 0.01) ? cmd_z - 0.01: 0.0;
+    base_twist_publisher_.msg_.linear.x = (std::abs(cmd_x) > base_cmd_threshold_[0]) ? cmd_x - base_cmd_threshold_[0]: 0.0;
+    base_twist_publisher_.msg_.linear.y = (std::abs(cmd_y) > base_cmd_threshold_[1]) ? cmd_y - base_cmd_threshold_[1]: 0.0;
+    base_twist_publisher_.msg_.angular.z = (std::abs(cmd_z) > base_cmd_threshold_[2]) ? cmd_z - base_cmd_threshold_[2]: 0.0;
     
     base_twist_publisher_.unlockAndPublish();
   }
@@ -528,12 +563,8 @@ void ManipulationController::update(const ros::Time& time,
   update_position_reference(period);
   send_command_arm(period);
   send_command_base(period);
-
-  if (nominal_state_publisher_.trylock()) {
-    nominal_state_publisher_.msg_ = x_nom_ros_;
-    nominal_state_publisher_.unlockAndPublish();
-  }
-
+  publish_ros();
+  
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, current_time);

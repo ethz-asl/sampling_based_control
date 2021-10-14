@@ -26,6 +26,7 @@ manipulation_controller:
   state_topic: /observer/state
   nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+  base_cmd_threshold: [0.0, 0.0, 0.0]
 
   sequential: false
   max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]

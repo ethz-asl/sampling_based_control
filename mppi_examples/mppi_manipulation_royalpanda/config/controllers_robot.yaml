@@ -20,6 +20,7 @@ manipulation_controller:
   state_topic: /observer/state
   nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+  base_cmd_threshold: [0.01, 0.01, 0.01]
 
   gaussian_policy: true
   sequential: false
@@ -174,7 +175,7 @@ manipulation_controller:
     passivity_constraint:
       active: true
       soft: true
-      slack_multiplier: 100.0
+      slack_multiplier: 1000.0
       initial_tank_energy: 10.0
       min_tank_energy: 2.0
 
