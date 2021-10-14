@@ -34,7 +34,9 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   ROS_INFO("Solver initialized correctly.");
 
   started_ = false;
-
+  started_twice_ = false;
+  state_received_ = false;
+  
   // we do not actively control the gripper
   x_.setZero(PandaDim::STATE_DIMENSION);
   xfirst_.setZero(PandaDim::STATE_DIMENSION);
@@ -254,7 +256,6 @@ void ManipulationController::state_callback(
     std::unique_lock<std::mutex> lock(observation_mutex_);
     manipulation::conversions::msgToEigen(*state_msg, x_, measurement_time_);
     
-
     if (!state_received_) {
       ROS_INFO("First call to state callback");
       start_time_ = measurement_time_;
@@ -291,10 +292,9 @@ void ManipulationController::starting(const ros::Time& time) {
     bag_.open(bag_path_, rosbag::bagmode::Write);
   }
 
-
-  state_received_ = false;
   if (started_) {
     ROS_INFO("Controller already started!");
+    started_twice_ = true;
     return;
   }
 
@@ -441,9 +441,14 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
                                   x_nom_ros_.base_twist.linear.y,
                                   x_nom_ros_.base_twist.angular.z);
 
-    base_twist_publisher_.msg_.linear.x = /* u_opt_[0]  + */ gains_.base_gains.Ki[0] * u_ff[0];
-    base_twist_publisher_.msg_.linear.y = /*u_opt_[1] + */ gains_.base_gains.Ki[1] * u_ff[1];
-    base_twist_publisher_.msg_.angular.z = /*u_opt_[2] + */ gains_.base_gains.Ki[2] * u_ff[2];
+    double cmd_x = u_opt_[0]  + gains_.base_gains.Ki[0] * u_ff[0];
+    double cmd_y = u_opt_[1]  + gains_.base_gains.Ki[1] * u_ff[1];
+    double cmd_z = u_opt_[2]  + gains_.base_gains.Ki[2] * u_ff[2];
+
+    base_twist_publisher_.msg_.linear.x = (std::abs(cmd_x) > 0.01) ? cmd_x - 0.01: 0.0;
+    base_twist_publisher_.msg_.linear.y = (std::abs(cmd_y) > 0.01) ? cmd_y - 0.01: 0.0;
+    base_twist_publisher_.msg_.angular.z = (std::abs(cmd_z) > 0.01) ? cmd_z - 0.01: 0.0;
+    
     base_twist_publisher_.unlockAndPublish();
   }
 }
@@ -479,8 +484,8 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   static double current_time;
-  current_time = time.toSec() - start_time_;
-
+  current_time = ros::Time::now().toSec() - start_time_;
+  
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
                    << std::setprecision(2)
@@ -551,7 +556,7 @@ void ManipulationController::stopping(const ros::Time& time) {
     bag_.close();
   }
 
-  if (logging_){
+  if (logging_ && started_twice_){
     ROS_INFO_STREAM("Saving log data to: " << log_file_path_);
     signal_logger::logger->stopLogger();
     signal_logger::logger->saveLoggerData({signal_logger::LogFileType::BINARY},

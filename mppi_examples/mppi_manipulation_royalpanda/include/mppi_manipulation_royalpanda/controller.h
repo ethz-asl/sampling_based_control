@@ -93,6 +93,7 @@ class ManipulationController
 
  private:
   bool started_;
+  bool started_twice_;
   bool sequential_;
   bool state_ok_;
   bool state_received_;

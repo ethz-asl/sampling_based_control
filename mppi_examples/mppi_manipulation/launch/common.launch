@@ -6,7 +6,7 @@
     <arg name="rviz" default="true"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e" if="$(arg rviz)"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen" if="$(arg rviz)"/> <!-- launch-prefix="xterm -e" /-->
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot)">
