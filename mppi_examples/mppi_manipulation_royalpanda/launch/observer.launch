@@ -17,7 +17,7 @@
         <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
         <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
         <param name="output_topic" value="/panda/joint_states"/>
-        <param name="exact_sync" value="false"/>
+        <param name="exact_sync" value="true"/>
     </node>
 
     <!--    Join together measurements of the base joint positions (x, y, yaw extracted by observer) and arm state

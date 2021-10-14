@@ -217,6 +217,7 @@ public:
   ros::Subscriber base_twist_sub2_;
   ros::Subscriber object_sub2_;
   ros::Subscriber wrench_sub2_;
+  ros::Subscriber object_state_sub2_;
 
   // tf2_ros
   tf2_ros::Buffer tf_buffer_;

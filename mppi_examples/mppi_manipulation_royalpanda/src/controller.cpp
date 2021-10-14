@@ -274,6 +274,7 @@ void ManipulationController::state_callback(
 
     // set the tank state
     observation_time_ = measurement_time_ - start_time_;
+    std::cout << "observation time: " << observation_time_ << std::endl;
     x_(STATE_DIMENSION - TORQUE_DIMENSION - 1) = energy_tank_.get_state();
   }
 
@@ -475,6 +476,7 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   static double current_time;
+  std::cout << "current time: " << current_time << std::endl;
   current_time = time.toSec() - start_time_;
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);

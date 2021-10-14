@@ -77,6 +77,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   base_twist_sub2_ = nh_.subscribe(base_pose_topic, 1, &StateObserver::base_twist_callback, this);
   object_sub2_ = nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
   wrench_sub2_ = nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
+  object_state_sub2_ = nh_.subscribe(
+      object_state_topic, 1, &StateObserver::object_state_callback, this);
 
   // ros publishing
   state_publisher_ =
@@ -211,7 +213,7 @@ bool StateObserver::initialize() {
   wrench_filt_.setZero(6);
   wrench_filt_sensor_.setZero(6);
 
-    // message filter with sync policy (timestamps must be the same -> only
+  // message filter with sync policy (timestamps must be the same -> only
   // possible in simulation) or approximate timestamp matching policy
   // (see http://wiki.ros.org/message_filters/ApproximateTime)
 
@@ -232,32 +234,32 @@ bool StateObserver::initialize() {
   //   } else {
   //     approx_message_filter_ =
   //         std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
-  //             ApproximatePolicy(100), arm_sub_, base_pose_sub_, base_twist_sub_,
-  //             object_sub_, wrench_sub_);
+  //             ApproximatePolicy(100), arm_sub_, base_pose_sub_,
+  //             base_twist_sub_, object_sub_, wrench_sub_);
   //     approx_message_filter_->registerCallback(boost::bind(
   //         &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
   //     ROS_INFO("Syncing messages (real robot) with ApproximatePolicy");
   //   }
-  // } else 
-  if (simulation_) {
-    if (exact_sync_) {
-      exact_message_filter_sim_ =
-          std::make_unique<message_filters::Synchronizer<ExactPolicySim>>(
-              ExactPolicySim(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-              obj_state_sub_, wrench_sub_);
-      exact_message_filter_sim_->registerCallback(boost::bind(
-          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
-      ROS_INFO("Syncing messages (simulation) with ExactPolicy");
-    } else {
-      approx_message_filter_sim_ =
-          std::make_unique<message_filters::Synchronizer<ApproximatePolicySim>>(
-              ApproximatePolicySim(10), arm_sub_, base_pose_sub_,
-              base_twist_sub_, obj_state_sub_, wrench_sub_);
-      approx_message_filter_sim_->registerCallback(boost::bind(
-          &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
-      ROS_INFO("Syncing message (simulation) with ApproximatePolicy");
-    }
-  }
+  // } else
+  // if (simulation_) {
+  //   if (exact_sync_) {
+  //     exact_message_filter_sim_ =
+  //         std::make_unique<message_filters::Synchronizer<ExactPolicySim>>(
+  //             ExactPolicySim(10), arm_sub_, base_pose_sub_, base_twist_sub_,
+  //             obj_state_sub_, wrench_sub_);
+  //     exact_message_filter_sim_->registerCallback(boost::bind(
+  //         &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
+  //     ROS_INFO("Syncing messages (simulation) with ExactPolicy");
+  //   } else {
+  //     approx_message_filter_sim_ =
+  //         std::make_unique<message_filters::Synchronizer<ApproximatePolicySim>>(
+  //             ApproximatePolicySim(10), arm_sub_, base_pose_sub_,
+  //             base_twist_sub_, obj_state_sub_, wrench_sub_);
+  //     approx_message_filter_sim_->registerCallback(boost::bind(
+  //         &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
+  //     ROS_INFO("Syncing message (simulation) with ApproximatePolicy");
+  //   }
+  // }
 
   ROS_INFO("Robot observer correctly initialized.");
   return true;
@@ -388,10 +390,13 @@ void StateObserver::arm_state_callback(
 
 void StateObserver::object_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
-  object_state_.header.stamp = msg->header.stamp;
-  object_state_.position[0] = msg->position[0];
-  object_state_.velocity[0] = msg->velocity[0];
-  object_state_publisher_.publish(object_state_);
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);
+    object_state_.header.stamp = msg->header.stamp;
+    object_state_.position[0] = msg->position[0];
+    object_state_.velocity[0] = msg->velocity[0];
+    object_state_publisher_.publish(object_state_);
+  }
 }
 
 void StateObserver::object_pose_callback(
