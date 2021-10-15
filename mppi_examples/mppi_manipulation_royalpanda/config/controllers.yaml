@@ -29,7 +29,7 @@ manipulation_controller:
   base_cmd_threshold: [0.0, 0.0, 0.0]
 
   sequential: false
-  max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  max_position_error: [1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0]
 
   log_every_steps: 15
 

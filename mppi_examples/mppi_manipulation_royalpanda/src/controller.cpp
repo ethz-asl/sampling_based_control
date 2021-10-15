@@ -251,6 +251,8 @@ void ManipulationController::init_ros(ros::NodeHandle& nh) {
   input_opt_publisher_.msg_.data.resize(10, 0.0);
   power_publisher_.init(nh, "power", 1);
   power_publisher_.msg_.data.resize(10, 0.0);
+  position_desired_publisher_.init(nh, "pos_desired", 1);
+  position_desired_publisher_.msg_.data.resize(10, 0.0);
 
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
@@ -394,6 +396,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
+    // this time update is wrong but should not make a difference
     safety_filter_->update(x_, u_, ros::Time::now().toSec() - start_time_);
 
     // this is required for computing some metrics
@@ -453,7 +456,12 @@ void ManipulationController::publish_ros(){
     for (int i=0; i<10; i++) power_publisher_.msg_.data[i] = power_channels_[i];
       power_publisher_.unlockAndPublish();
   }
-   
+
+  if (position_desired_publisher_.trylock()) {
+    for (int i = 0; i < 10; i++)
+      position_desired_publisher_.msg_.data[i] = position_desired_[i];
+    position_desired_publisher_.unlockAndPublish();
+  }
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
@@ -519,8 +527,7 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   static double current_time;
-  current_time = ros::Time::now().toSec() - start_time_;
-  
+  current_time = time.toSec() - start_time_;
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
                    << std::setprecision(2)

@@ -130,7 +130,7 @@ class ManipulationController
   RTPublisher<std_msgs::Float64MultiArray> input_publisher_;
   RTPublisher<std_msgs::Float64MultiArray> input_opt_publisher_;
   RTPublisher<std_msgs::Float64MultiArray> power_publisher_;
-
+  RTPublisher<std_msgs::Float64MultiArray> position_desired_publisher_;
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 

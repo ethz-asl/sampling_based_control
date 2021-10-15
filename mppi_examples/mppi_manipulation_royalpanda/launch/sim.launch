@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+   <param name="/use_sim_time" value="false"/>
+ 
     <arg name="debug" default="false"/>
     <arg name="launch_prefix" value="" unless="$(arg debug)"/>
     <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
@@ -37,7 +39,7 @@
     <node name="simulation_node" type="simulation_node" pkg="mppi_manipulation_royalpanda" output="screen"
           launch-prefix="$(arg launch_prefix)">
         <param name="experiment_name" value="$(arg experiment_name)"/>
-        <param name="max_sim_time" value="40.0"/>
+        <param name="max_sim_time" value="4000.0"/>
         <param name="slow_down" value="100"/>
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
@@ -46,10 +48,18 @@
     </node>
 
     <include file="$(find mppi_manipulation)/launch/common.launch">
-        <arg name="plot" value="$(arg plot)"/>
+        <arg name="plot" value="false"/>
         <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
         <arg name="rviz" value="$(arg rviz)"/>    
     </include>
+
+    <!-- Plot data with plotjuggler -->
+    <group if="$(arg plot)">
+        <arg name="plotjuggler_layout" default="$(find mppi_manipulation_royalpanda)/config/pj/layout.xml"/>
+        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
+                args="--layout $(arg plotjuggler_layout)"
+                output="screen"/>
+    </group>
 
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers.yaml" subst_value="true"/>
     <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
