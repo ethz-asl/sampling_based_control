@@ -273,7 +273,7 @@ void PandaRaisimDynamics::get_external_wrench(Eigen::VectorXd& wrench) {
     }
   }
   if (ee_force_applied_) {
-    wrench.head<3>() += panda->getExternalForce()[0].e();
+    wrench.head<3>() += rot.e().transpose() * panda->getExternalForce()[0].e();
   }
 }
 
