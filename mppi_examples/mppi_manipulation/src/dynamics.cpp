@@ -30,8 +30,8 @@ void PandaRaisimDynamics::initialize_world(
     const std::string& object_description) {
   dt_ = params_.dt;
   sim_.setTimeStep(params_.dt);
-  sim_.setERP(0., 0.);
-
+  //sim_.setERP(1., 0.);
+  
   gravity_.e() << 0.0, 0.0, -9.81;
   sim_.setGravity(gravity_);
 

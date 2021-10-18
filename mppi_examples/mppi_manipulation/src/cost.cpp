@@ -32,12 +32,13 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // regularization cost
   cost += params_.Qreg *
           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
-  
+
   // end effector reaching cost
   if (mode == 0) {
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
+
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
@@ -47,10 +48,14 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // handle reaching cost
-  else if (mode == 1) {
-    error_ = mppi_pinocchio::diff(
+  if (mode != 0){
+    mppi_pinocchio::diff2(
         robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
+        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset,
+        error_);
+  }
+
+  if (mode == 1) {
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
@@ -63,15 +68,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // object displacement cost
-  else if (mode == 2) {
-    error_ = mppi_pinocchio::diff(
-        robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt2;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr2;
-
+  if (mode == 2) {
+    double lin_error_norm = error_.head<3>().norm();
+    double ang_error_norm = error_.tail<3>().norm();
+    cost += (lin_error_norm < params_.lin_tol_manipulation_) ? 0.0 : std::pow(lin_error_norm - params_.lin_tol_manipulation_, 2.0) * params_.Qt2;  
+    cost += (ang_error_norm < params_.ang_tol_manipulation_) ? 0.0 : std::pow(ang_error_norm - params_.ang_tol_manipulation_, 2.0) * params_.Qr2;  
     double object_error =
         x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);

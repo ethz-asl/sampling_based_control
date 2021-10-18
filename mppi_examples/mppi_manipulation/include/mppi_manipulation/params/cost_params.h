@@ -17,6 +17,8 @@ struct CostParams {
   double Qt2;
   double Qr;  // rotation cost
   double Qr2;
+  double lin_tol_manipulation_;
+  double ang_tol_manipulation_;
   double Qo;   // obstacle cost
   double Qos;  // obstacle cost slope
   double Qc;   // contact cost

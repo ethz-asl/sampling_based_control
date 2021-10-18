@@ -34,7 +34,13 @@ void PassivityConstraint::update_observation(const Eigen::VectorXd& x, const Eig
   dt_ = t - t_;
   const double tank_state = x(STATE_DIMENSION - TORQUE_DIMENSION - 1);
 
-  constraint_matrix_ = dt_ * x.tail<TORQUE_DIMENSION>().head<10>().transpose();
+  // naive approach
+  //constraint_matrix_ = dt_ * x.tail<TORQUE_DIMENSION>().head<10>().transpose();
+  //lower_bound_[0] = min_energy_ - 0.5 * (tank_state * tank_state);
+ 
+  // using the barrier function approach
+  constraint_matrix_ = x.tail<TORQUE_DIMENSION>().head<10>().transpose();
   lower_bound_[0] = min_energy_ - 0.5 * (tank_state * tank_state);
+  
   t_ = t;
 };

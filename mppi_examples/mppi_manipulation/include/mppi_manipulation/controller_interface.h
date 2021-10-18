@@ -33,6 +33,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
+  Eigen::Matrix<double, 6, 1> get_tracking_error();
 
   geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_end_effector_ros(

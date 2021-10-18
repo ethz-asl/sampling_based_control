@@ -236,6 +236,10 @@ double PandaControllerInterface::get_stage_cost(const mppi::observation_t& x,
   return local_cost_->get_stage_cost(x, u, t);
 }
 
+Eigen::Matrix<double, 6, 1> PandaControllerInterface::get_tracking_error() {
+  return local_cost_->get_tracking_error();
+}
+
 void PandaControllerInterface::ee_pose_desired_callback(
     const geometry_msgs::PoseStampedConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
