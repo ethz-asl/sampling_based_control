@@ -160,6 +160,10 @@ bool RoyalPandaSim::init_dynamics() {
     return false;
   }
   dynamics_ = std::make_unique<ManipulatorDynamicsRos>(nh_, params);
+
+  // Increase the iteration of the contact solver for more stable behavior
+  dynamics_->get_world()->setContactSolverParam(1.0, 1.0, 1.0, 200, 1e-8);
+
   return true;
 }
 
