@@ -19,6 +19,14 @@ Eigen::Matrix<double, 6, 1> diff(const Pose& p1, const Pose& p2) {
       .toVector();
 }
 
+void diff2(const Pose& p1, const Pose& p2, Eigen::Matrix<double, 6, 1>& diff) {
+  static Eigen::AngleAxisd angle_diff;
+
+  diff.head<3>() = p2.translation - p1.translation;
+  angle_diff = Eigen::AngleAxisd(p2.rotation * p1.rotation.conjugate());
+  diff.tail<3>() = angle_diff.angle() * angle_diff.axis();
+}
+
 Pose operator*(const Pose& p1, const Pose& p2) {
   Pose res;
   SE3 temp(
@@ -69,6 +77,7 @@ void RobotModel::update_state(const Eigen::VectorXd& q, Eigen::VectorXd& qd) {
   forwardKinematics(*model_, *data_, q, qd);
   updateFramePlacements(*model_, *data_);
 }
+
 void RobotModel::get_error(const std::string& from_frame,
                            const std::string& to_frame, Vector6d& error) const {
   error = log6(data_->oMf[model_->getFrameId(to_frame)].actInv(
