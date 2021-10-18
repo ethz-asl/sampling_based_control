@@ -133,13 +133,18 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
-  if (!nh.getParam("cost/linear_tolerance_manipulation", lin_tol_manipulation_) || lin_tol_manipulation_ < 0) {
+  if (!nh.getParam("cost/linear_tolerance_manipulation",
+                   lin_tol_manipulation_) ||
+      lin_tol_manipulation_ < 0) {
     ROS_ERROR("Failed to parse cost/linear_tolerance_manipulation or invalid!");
     return false;
   }
 
-  if (!nh.getParam("cost/angular_tolerance_manipulation", ang_tol_manipulation_) || ang_tol_manipulation_ < 0) {
-    ROS_ERROR("Failed to parse cost/angular_tolerance_manipulation or invalid!");
+  if (!nh.getParam("cost/angular_tolerance_manipulation",
+                   ang_tol_manipulation_) ||
+      ang_tol_manipulation_ < 0) {
+    ROS_ERROR(
+        "Failed to parse cost/angular_tolerance_manipulation or invalid!");
     return false;
   }
 

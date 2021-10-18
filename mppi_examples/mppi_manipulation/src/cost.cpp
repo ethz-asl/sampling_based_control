@@ -48,7 +48,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // handle reaching cost
-  if (mode != 0){
+  if (mode != 0) {
     mppi_pinocchio::diff2(
         robot_model_.get_pose(params_.tracked_frame),
         object_model_.get_pose(params_.handle_frame) * params_.grasp_offset,
@@ -71,16 +71,23 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   if (mode == 2) {
     double lin_error_norm = error_.head<3>().norm();
     double ang_error_norm = error_.tail<3>().norm();
-    cost += (lin_error_norm < params_.lin_tol_manipulation_) ? 0.0 : std::pow(lin_error_norm - params_.lin_tol_manipulation_, 2.0) * params_.Qt2;  
-    cost += (ang_error_norm < params_.ang_tol_manipulation_) ? 0.0 : std::pow(ang_error_norm - params_.ang_tol_manipulation_, 2.0) * params_.Qr2;  
+    cost +=
+        (lin_error_norm < params_.lin_tol_manipulation_)
+            ? 0.0
+            : std::pow(lin_error_norm - params_.lin_tol_manipulation_, 2.0) *
+                  params_.Qt2;
+    cost +=
+        (ang_error_norm < params_.ang_tol_manipulation_)
+            ? 0.0
+            : std::pow(ang_error_norm - params_.ang_tol_manipulation_, 2.0) *
+                  params_.Qr2;
     double object_error =
         x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
 
     cost += object_error * object_error * params_.Q_obj;
   }
-  
-          
+
   // object avoidance cost
   // TODO(giuseppe) add as parameters
   //double dist = (x.head<2>() - object_model_.get_pose("shelf").translation.head<2>()).norm();

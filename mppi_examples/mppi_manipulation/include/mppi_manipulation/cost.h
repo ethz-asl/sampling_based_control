@@ -32,7 +32,9 @@ class PandaCost : public mppi::Cost {
     return object_model_;
   }
 
-  inline Eigen::Matrix<double, 6, 1> get_tracking_error() const { return error_; }
+  inline Eigen::Matrix<double, 6, 1> get_tracking_error() const {
+    return error_;
+  }
 
  private:
   CostParams params_;
