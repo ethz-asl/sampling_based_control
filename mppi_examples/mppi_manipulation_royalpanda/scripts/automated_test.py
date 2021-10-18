@@ -21,55 +21,54 @@ roslaunch.configure_logging(uuid)
 
 cli_args = ['mppi_manipulation_royalpanda', 'sim.launch']
 
-objects_op = ["door", "shelf", "microwave", "drawer"]
+objects_op = ["new_shelf"]  #["door", "shelf", "microwave", "drawer"]
 filter_in_op = [False, True]
 filter_out_op = [False, True]
-number_experiments = 10
+number_experiments = 20
 
 max_experiment_time = 140
 
-for fin in filter_in_op:
-    for fout in filter_out_op:
-        for object_type in objects_op:
-            for ex_id in range(number_experiments):
+for fin, fout in zip(filter_in_op, filter_out_op):
+    for object_type in objects_op:
+        for ex_id in range(number_experiments):
 
-                roslaunch_file = roslaunch.rlutil.resolve_launch_arguments(
-                    cli_args)[0]
+            roslaunch_file = roslaunch.rlutil.resolve_launch_arguments(
+                cli_args)[0]
 
-                # Conver boolean to string launch arguments
-                fin_arg = "true" if fin else "false"
-                fout_arg = "true" if fout else "false"
+            # Conver boolean to string launch arguments
+            fin_arg = "true" if fin else "false"
+            fout_arg = "true" if fout else "false"
 
-                roslaunch_args = [
-                    f"experiment_name:={extend_name(ex_id, object_type, fin, fout)}",
-                    f'object:={object_type}', f'rollouts:=50',
-                    f'filter_in:={fin_arg}', f'filter_out:={fout_arg}',
-                    f'log_folder:=/media/giuseppe/My Passport/Work/logs_mppi/',
-                    'rviz:=false'
-                ]
+            roslaunch_args = [
+                f"experiment_name:={extend_name(ex_id, object_type, fin, fout)}",
+                f'object:={object_type}', f'rollouts:=40',
+                f'filter_in:={fin_arg}', f'filter_out:={fout_arg}',
+                f'log_folder:=/media/giuseppe/My Passport/Work/logs_mppi/',
+                'rviz:=false'
+            ]
 
-                launch_files = [(roslaunch_file, roslaunch_args)]
+            launch_files = [(roslaunch_file, roslaunch_args)]
 
-                parent = roslaunch.parent.ROSLaunchParent(uuid, launch_files)
-                parent.start()
-                experiment_time = time.time()
+            parent = roslaunch.parent.ROSLaunchParent(uuid, launch_files)
+            parent.start()
+            experiment_time = time.time()
 
-                # make sure the simulation node is running
-                time.sleep(10.0)
+            # make sure the simulation node is running
+            time.sleep(10.0)
 
-                # while the node is running
-                while True:
-                    nodes = rosnode.get_node_names()
-                    if "/simulation_node" not in nodes:
-                        print(f"Failed to find simulation_node in {nodes}")
-                        break
+            # while the node is running
+            while True:
+                nodes = rosnode.get_node_names()
+                if "/simulation_node" not in nodes:
+                    print(f"Failed to find simulation_node in {nodes}")
+                    break
 
-                    if (time.time() - experiment_time) > max_experiment_time:
-                        print(
-                            f"Experiment longer than maximum duration: {time.time() - experiment_time} s."
-                        )
-                        break
+                if (time.time() - experiment_time) > max_experiment_time:
+                    print(
+                        f"Experiment longer than maximum duration: {time.time() - experiment_time} s."
+                    )
+                    break
 
-                    time.sleep(1.0)
+                time.sleep(1.0)
 
-                parent.shutdown()
+            parent.shutdown()

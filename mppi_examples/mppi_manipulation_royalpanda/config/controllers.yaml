@@ -35,10 +35,13 @@ manipulation_controller:
   cost:
     regularization: 0.0
     linear_weight: 100.0
-    linear_weight_opening: 10.0
-
     angular_weight: 10.0
-    angular_weight_opening: 10.0
+
+    linear_weight_opening: 100.0
+    angular_weight_opening: 100.0
+
+    linear_tolerance_manipulation: 0.01
+    angular_tolerance_manipulation: 0.6
 
     min_dist: 0.15
     max_reach: 0.65

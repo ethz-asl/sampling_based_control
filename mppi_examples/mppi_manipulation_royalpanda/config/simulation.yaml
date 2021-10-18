@@ -9,7 +9,7 @@ finger_state_topic: /franka_gripper/joint_states
 wrench_topic: /external_force
 
 # Object fix
-object_fix: false
+object_fix: true
 object_fix_position: 0.525  # ~60deg = 1.05
 object_fix_time: 5.0
 

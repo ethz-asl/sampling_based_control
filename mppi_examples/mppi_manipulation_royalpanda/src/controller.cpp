@@ -500,6 +500,12 @@ void ManipulationController::update(const ros::Time& time,
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
   }
+  Eigen::Matrix<double, 6, 1> tracking_error =
+      man_interface_->get_tracking_error();
+  // std::cout << "lin err: " << tracking_error.head<3>().transpose() *
+  // tracking_error.head<3>() << std::endl; std::cout << "ang err: " <<
+  // tracking_error.tail<3>().transpose() * tracking_error.tail<3>() <<
+  // std::endl;
 
   if (log_counter_ == log_every_steps_){
     signal_logger::logger->collectLoggerData();
