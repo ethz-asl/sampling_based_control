@@ -24,7 +24,7 @@ cli_args = ['mppi_manipulation_royalpanda', 'sim.launch']
 objects_op = ["new_shelf"]  #["door", "shelf", "microwave", "drawer"]
 filter_in_op = [False, True]
 filter_out_op = [False, True]
-number_experiments = 20
+number_experiments = 5
 
 max_experiment_time = 140
 

@@ -201,3 +201,42 @@ def save_figure(b, figure):
     save_name = fd.asksaveasfilename()
     if save_name:
         figure.savefig(save_name)
+
+
+def add_subplot_axes(ax, rect, axisbg='w'):
+    """ Create a axis insize another axis """
+    fig = plt.gcf()
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    inax_position = ax.transAxes.transform(rect[0:2])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    x = infig_position[0]
+    y = infig_position[1]
+    width *= rect[2]
+    height *= rect[3]  # <= Typo was here
+    #subax = fig.add_axes([x,y,width,height],facecolor=facecolor)  # matplotlib 2.0+
+    subax = fig.add_axes([x, y, width, height], facecolor=axisbg)
+    x_labelsize = subax.get_xticklabels()[0].get_size()
+    y_labelsize = subax.get_yticklabels()[0].get_size()
+    x_labelsize *= rect[2]**0.5
+    y_labelsize *= rect[3]**0.5
+    subax.xaxis.set_tick_params(labelsize=x_labelsize)
+    subax.yaxis.set_tick_params(labelsize=y_labelsize)
+    return subax
+
+
+def replace_legend_labels(ax, old_labels, new_labels, fontsize=10):
+    """ Replace old labels (if in the axis) with the new ones"""
+    if (len(old_labels) != len(new_labels)):
+        raise NameError("old labels and new labels have different size.")
+
+    # get legend and loop through the labels
+    l = ax.legend(fontsize=fontsize)
+    for text_idx, text in enumerate(l.get_texts()):
+        text = text.get_text()
+        new_text = text
+        if text in old_labels:
+            new_text = new_labels[old_labels.index(text)]
+        l.get_texts()[text_idx].set_text(new_text)
