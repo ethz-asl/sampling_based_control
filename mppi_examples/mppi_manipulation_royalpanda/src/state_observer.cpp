@@ -73,7 +73,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   // else{
   arm_sub2_ = nh_.subscribe(arm_state_topic, 1, &StateObserver::arm_state_callback, this);
   base_pose_sub2_ = nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback, this);
-  base_twist_sub2_ = nh_.subscribe(base_pose_topic, 1, &StateObserver::base_twist_callback, this);
+  base_twist_sub2_ = nh_.subscribe(base_twist_topic, 1,
+                                   &StateObserver::base_twist_callback, this);
   object_sub2_ = nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
   wrench_sub2_ = nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
   object_state_sub2_ = nh_.subscribe(
