@@ -3,6 +3,7 @@ joint_publisher:
   publish_rate: 50
 
 manipulation_controller:
+  simulation: true
   type: manipulation_royalpanda/ManipulationController
   references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
@@ -81,7 +82,7 @@ manipulation_controller:
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
 
-    max_power: 0.1
+    max_power: 0.0
     power_weight: 10.0
   
     handle_frame: handle_link

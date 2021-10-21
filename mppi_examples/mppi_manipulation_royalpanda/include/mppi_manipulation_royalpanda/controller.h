@@ -95,6 +95,7 @@ class ManipulationController
   static void getRotationMatrix(Eigen::Matrix3d& R, double theta);
 
  private:
+  bool simulation_;
   bool started_;
   bool started_twice_;
   bool sequential_;

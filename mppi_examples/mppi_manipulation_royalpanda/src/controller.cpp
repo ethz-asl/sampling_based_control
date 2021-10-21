@@ -92,6 +92,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   }
   for (int i = 0; i < 10; i++) max_position_error_[i] = max_position_error[i];
 
+  if (!node_handle.getParam("simulation", simulation_)) {
+    ROS_ERROR("simulation not found");
+    return false;
+  }
+
   if (!node_handle.getParam("fixed_base", fixed_base_)) {
     ROS_ERROR("fixed_base not found");
     return false;
@@ -499,10 +504,20 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
 void ManipulationController::send_command_arm(const ros::Duration& period) {
   // clang-format off
   std::array<double, 7> tau_d_calculated{};
-  for (int i = 0; i < 7; ++i) {
+  if (simulation_){
+    for (int i = 0; i < 7; ++i) {
     tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[3+i] - robot_state_.q[i])
         - gains_.arm_gains.Kd[i] * velocity_filtered_[3+i];
+    }  
   }
+  else{
+    std::array<double, 7> coriolis = model_handle_->getCoriolis();
+    for (int i = 0; i < 7; ++i) {
+      tau_d_calculated[i] = coriolis[i] + gains_.arm_gains.Ki[i] * (position_desired_[3+i] - robot_state_.q[i])
+        + gains_.arm_gains.Kd[i] * (u_opt_[3+i] - velocity_filtered_[3+i]);
+    }
+  }
+  
 
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
   saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
@@ -554,7 +569,7 @@ void ManipulationController::update(const ros::Time& time,
     bag_.write("current_input", time, u_curr_ros_);
   }
 
-  static const double alpha = 0.1;
+  static const double alpha = 0.99;
   position_measured_.head<3>() = x_.head<3>();
   velocity_measured_.head<3>() = x_.segment<3>(12);
   velocity_filtered_.head<3>() = (1 - alpha) * velocity_filtered_.head<3>() +

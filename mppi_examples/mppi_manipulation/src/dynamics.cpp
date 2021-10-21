@@ -35,7 +35,7 @@ void PandaRaisimDynamics::initialize_world(
   gravity_.e() << 0.0, 0.0, -9.81;
   sim_.setGravity(gravity_);
 
-  sim_.setMaterialPairProp("steel", "steel", 0.1, 0.0, 0.0);
+  sim_.setMaterialPairProp("steel", "steel", 0.0001, 0.0, 0.0);
   robot_description_ = robot_description;
   panda = sim_.addArticulatedSystem(robot_description_, "/");
 
