@@ -103,8 +103,6 @@ Visualization Manager:
           Value: true
         measured_joint_link:
           Value: true
-        measured_joint_link_test:
-          Value: true
         mid_mount:
           Value: true
         obstacle:
@@ -165,8 +163,6 @@ Visualization Manager:
           Value: false
         sim_measured_joint_link:
           Value: false
-        sim_measured_joint_link_test:
-          Value: true
         sim_shelf:
           Value: false
         top_link:
@@ -252,8 +248,6 @@ Visualization Manager:
                         {}
                       handle_support_right:
                         {}
-                      measured_joint_link_test:
-                        {}
           sim_shelf:
             sim_door_hinge:
               sim_axis_link:
@@ -263,8 +257,6 @@ Visualization Manager:
                       sim_handle_support_left:
                         {}
                       sim_handle_support_right:
-                        {}
-                      sim_measured_joint_link_test:
                         {}
       Update Interval: 0
       Value: true
@@ -286,13 +278,13 @@ Visualization Manager:
       Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
-      Enabled: true
+      Enabled: false
       Name: Interactive EE Reference
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
       Update Topic: /reference_marker_server/update
-      Value: true
+      Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: true
@@ -367,10 +359,6 @@ Visualization Manager:
               Show Trail: false
               Value: true
             measured_joint_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            measured_joint_link_test:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -484,6 +472,7 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+              Value: true
             panda_link0:
               Alpha: 1
               Show Axes: false
@@ -532,7 +521,6 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-              Value: true
             pivot:
               Alpha: 1
               Show Axes: false
@@ -605,7 +593,7 @@ Visualization Manager:
           Marker Topic: /contact_forces
           Name: Contact Forces
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Alpha: 0.20000000298023224
@@ -808,7 +796,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.778729438781738
+      Distance: 4.756670951843262
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -816,17 +804,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 1.0708346366882324
-        Y: -0.9609293341636658
-        Z: -0.6140671372413635
+        X: 1.479674220085144
+        Y: -0.869697093963623
+        Z: -0.14639553427696228
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5947979092597961
+      Pitch: 0.5897977352142334
       Target Frame: <Fixed Frame>
-      Yaw: 1.8955334424972534
+      Yaw: 2.405534267425537
     Saved: ~
 Window Geometry:
   Displays:

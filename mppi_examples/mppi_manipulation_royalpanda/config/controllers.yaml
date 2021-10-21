@@ -4,7 +4,7 @@ joint_publisher:
 
 manipulation_controller:
   type: manipulation_royalpanda/ManipulationController
-  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/tracking.yaml
+  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
   object_tolerance: 0.09 # ~5 deg
 
@@ -29,7 +29,7 @@ manipulation_controller:
   base_cmd_threshold: [0.0, 0.0, 0.0]
 
   sequential: false
-  max_position_error: [1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0]
+  max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   log_every_steps: 15
 
@@ -42,13 +42,13 @@ manipulation_controller:
   cost:
     regularization: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     linear_weight: 100.0
+    angular_weight: 100.0
+
     linear_weight_opening: 100.0
+    angular_weight_opening: 100.0
 
-    angular_weight: 10.0
-    angular_weight_opening: 1.0
-
-    linear_tolerance_manipulation: 0.05
-    angular_tolerance_manipulation: 0.1
+    linear_tolerance_manipulation: 0.0
+    angular_tolerance_manipulation: 0.5
 
     min_dist: 0.15
     max_reach: 0.65
@@ -81,7 +81,7 @@ manipulation_controller:
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
 
-    max_power: 0.0
+    max_power: 0.1
     power_weight: 10.0
   
     handle_frame: handle_link
