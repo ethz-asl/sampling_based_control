@@ -47,6 +47,9 @@ manipulation_controller:
     angular_weight: 10.0
     angular_weight_opening: 1.0
 
+    linear_tolerance_manipulation: 0.05
+    angular_tolerance_manipulation: 0.1
+
     min_dist: 0.15
     max_reach: 0.65
     reach_weight: 100

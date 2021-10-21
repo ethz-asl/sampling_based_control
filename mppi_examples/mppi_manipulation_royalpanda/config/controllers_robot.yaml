@@ -20,7 +20,7 @@ manipulation_controller:
   state_topic: /observer/state
   nominal_state_topic: /x_nom
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
-  base_cmd_threshold: [0.01, 0.01, 0.01]
+  base_cmd_threshold: [0.001, 0.001, 0.001]
 
   gaussian_policy: true
   sequential: false
@@ -41,6 +41,9 @@ manipulation_controller:
     angular_weight: 10.0
     angular_weight_opening: 1.0
 
+    linear_tolerance_manipulation: 0.05
+    angular_tolerance_manipulation: 0.1
+
     min_dist: 0.15
     max_reach: 0.65
     reach_weight: 100
@@ -52,7 +55,7 @@ manipulation_controller:
 
     contact_weight: 100.0
 
-    object_weight: 100
+    object_weight: 1000
     object_tolerance: 0.01
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -95,7 +98,7 @@ manipulation_controller:
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
-      ki: [ 100.0, 100.0, 100.0, 100.0, 50.0, 50.0, 10.0 ]
+      ki: [ 20.0, 20.0, 20.0, 20.0, 5.0, 5.0, 2.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]

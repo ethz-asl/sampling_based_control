@@ -138,6 +138,16 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
+  if (!nh.getParam("cost/linear_tolerance_manipulation", lin_tol_manipulation) || lin_tol_manipulation < 0) {
+    ROS_ERROR("Failed to parse cost/linear_tolerance_manipulation or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/angular_tolerance_manipulation", ang_tol_manipulation) || ang_tol_manipulation < 0) {
+    ROS_ERROR("Failed to parse cost/angular_tolerance_manipulation or invalid!");
+    return false;
+  }
+
   if (!nh.getParam("cost/power_weight", Q_power) || Q_power < 0) {
     ROS_ERROR("Failed to parse cost/power_weight or invalid!");
     return false;
@@ -204,6 +214,8 @@ std::ostream& operator<<(std::ostream& os,
   os << " linear_weight_opening: "   << param.Qt2 << std::endl;
   os << " angular_weight: "          << param.Qr << std::endl;
   os << " angular_weight_opening: "  << param.Qr2 << std::endl;
+  os << " linear tolerance manipulation: " << param.lin_tol_manipulation << std::endl;
+  os << " angular tolerance manipulation: " << param.ang_tol_manipulation << std::endl;
   os << " contact_weight: "          << param.Qc << std::endl;
   os << " reach weight: "            << param.Q_reach << std::endl;
   os << " reach weight slope: "      << param.Q_reachs << std::endl;

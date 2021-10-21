@@ -19,6 +19,15 @@ Eigen::Matrix<double, 6, 1> diff(const Pose& p1, const Pose& p2) {
       .toVector();
 }
 
+void diff2(const Pose& p1, const Pose& p2, Eigen::Matrix<double, 6, 1>& diff) {
+  static Eigen::AngleAxisd angle_diff;
+
+  diff.head<3>() = p2.translation - p1.translation;
+  angle_diff = Eigen::AngleAxisd(p2.rotation * p1.rotation.conjugate());
+  diff.tail<3>() = angle_diff.angle() * angle_diff.axis();
+}
+
+
 Pose operator*(const Pose& p1, const Pose& p2) {
   Pose res;
   SE3 temp(
