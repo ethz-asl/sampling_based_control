@@ -4,6 +4,7 @@ joint_publisher:
 
 manipulation_controller:
   simulation: true
+  debug: true
   type: manipulation_royalpanda/ManipulationController
   references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]

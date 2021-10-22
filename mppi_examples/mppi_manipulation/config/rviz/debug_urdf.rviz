@@ -8,6 +8,8 @@ Panels:
         - /Status1
         - /Robot1
         - /Object Sim1/Links1
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -89,28 +91,6 @@ Visualization Manager:
           Show Trail: false
           Value: true
         front_lights_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        ft_sensor0_mech1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        ft_sensor0_mech2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        ft_sensor0_mech3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        ft_sensor0_mounting:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        ft_sensor0_wrench:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -198,7 +178,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         pivot:
           Alpha: 1
           Show Axes: false
@@ -221,6 +200,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         right_side_cover_link:
           Alpha: 1
           Show Axes: false
@@ -300,6 +280,145 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        axle_link:
+          Value: false
+        base_link:
+          Value: false
+        chassis_link:
+          Value: false
+        door_frame:
+          Value: false
+        door_link:
+          Value: false
+        franka_mount_link:
+          Value: false
+        front_cover_link:
+          Value: false
+        front_lights_link:
+          Value: false
+        hand_flange:
+          Value: false
+        handle_link:
+          Value: false
+        imu_link:
+          Value: false
+        left_side_cover_link:
+          Value: false
+        mid_mount:
+          Value: false
+        omni_base_root_link:
+          Value: false
+        panda_grasp:
+          Value: true
+        panda_hand:
+          Value: false
+        panda_leftfinger:
+          Value: false
+        panda_link0:
+          Value: false
+        panda_link1:
+          Value: false
+        panda_link2:
+          Value: false
+        panda_link3:
+          Value: false
+        panda_link4:
+          Value: false
+        panda_link5:
+          Value: false
+        panda_link6:
+          Value: false
+        panda_link7:
+          Value: false
+        panda_link8:
+          Value: false
+        panda_rightfinger:
+          Value: false
+        pivot:
+          Value: false
+        rear_cover_link:
+          Value: false
+        rear_lights_link:
+          Value: false
+        reference_link:
+          Value: false
+        ridgeback_sensor_mount_link:
+          Value: false
+        right_side_cover_link:
+          Value: false
+        top_link:
+          Value: false
+        world:
+          Value: false
+        x_slider:
+          Value: false
+        y_slider:
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          door_frame:
+            door_link:
+              handle_link:
+                {}
+          omni_base_root_link:
+            x_slider:
+              y_slider:
+                pivot:
+                  base_link:
+                    chassis_link:
+                      axle_link:
+                        {}
+                      front_cover_link:
+                        {}
+                      front_lights_link:
+                        {}
+                      imu_link:
+                        {}
+                      left_side_cover_link:
+                        {}
+                      rear_cover_link:
+                        {}
+                      rear_lights_link:
+                        {}
+                      right_side_cover_link:
+                        {}
+                      top_link:
+                        {}
+                    mid_mount:
+                      franka_mount_link:
+                        panda_link0:
+                          panda_link1:
+                            panda_link2:
+                              panda_link3:
+                                panda_link4:
+                                  panda_link5:
+                                    panda_link6:
+                                      panda_link7:
+                                        panda_link8:
+                                          hand_flange:
+                                            panda_hand:
+                                              panda_leftfinger:
+                                                panda_grasp:
+                                                  {}
+                                              panda_rightfinger:
+                                                {}
+                        reference_link:
+                          {}
+                      ridgeback_sensor_mount_link:
+                        {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -344,9 +463,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.012735147960484028
+      Pitch: -0.007735149934887886
       Target Frame: <Fixed Frame>
-      Yaw: 1.3651145696640015
+      Yaw: 1.2851146459579468
     Saved: ~
 Window Geometry:
   Displays:

@@ -95,6 +95,7 @@ class ManipulationController
   static void getRotationMatrix(Eigen::Matrix3d& R, double theta);
 
  private:
+  bool debug_ = false;
   bool simulation_;
   bool started_;
   bool started_twice_;
@@ -132,12 +133,12 @@ class ManipulationController
   RTPublisher<std_msgs::Float64MultiArray> input_opt_publisher_;
   RTPublisher<std_msgs::Float64MultiArray> power_publisher_;
   RTPublisher<std_msgs::Float64MultiArray> position_desired_publisher_;
+  RTPublisher<std_msgs::Float64> current_time_publisher_;
+  RTPublisher<std_msgs::Float64> observation_time_publisher_;
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
   std::mutex observation_mutex_;
-  double measurement_time_;
-  double observation_time_;
   Eigen::VectorXd x_;
   Eigen::VectorXd xfirst_;  // debug
   Eigen::VectorXd u_;
@@ -191,7 +192,10 @@ class ManipulationController
   int log_every_steps_;
   double opt_time_;
 
-  // debug
+  // time
   double start_time_;
+  double current_time_;
+  double observation_time_;
+  double measurement_time_;  // the ROS based time measurement
 };
 }  // namespace manipulation_royalpanda

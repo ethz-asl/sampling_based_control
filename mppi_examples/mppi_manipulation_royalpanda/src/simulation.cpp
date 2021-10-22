@@ -33,6 +33,7 @@ bool RoyalPandaSim::init_sim() {
   signal_logger::add(simulation_step_, "simulation_step");
   signal_logger::logger->startLogger(true);
 
+  e_stop_ = false;
   return true;
 }
 
@@ -222,6 +223,9 @@ void RoyalPandaSim::init_publishers() {
       base_twist_cmd_topic_, 1, &RoyalPandaSim::base_twist_cmd_callback, this);
   external_force_subscriber_ = nh_.subscribe(
       "/apply_external_force", 1, &RoyalPandaSim::apply_external_force_callback, this);
+  e_stop_service_ =
+      nh_.advertiseService("/e_stop", &RoyalPandaSim::e_stop_cb, this);
+
   wrench_.setZero(6);
 }
 
@@ -375,6 +379,8 @@ void RoyalPandaSim::apply_external_force_callback(const geometry_msgs::WrenchCon
 void RoyalPandaSim::publish_ros() { dynamics_->publish_ros(); }
 
 void RoyalPandaSim::advance_sim(ros::Time time, ros::Duration period) {
+  if (e_stop_) return;
+
   // fix object if specified
   if (object_fix_ && !object_released_){
     if (object_fixed_ && (time.toSec() - object_fix_start_) > object_fix_time_){
@@ -405,6 +411,17 @@ void RoyalPandaSim::advance_sim(ros::Time time, ros::Duration period) {
   dynamics_->advance();
   auto end = std::chrono::steady_clock::now();
   simulation_step_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9; 
+}
+
+bool RoyalPandaSim::e_stop_cb(std_srvs::EmptyRequest &req,
+                              std_srvs::EmptyResponse &res) {
+  e_stop_ = !e_stop_;
+  if (e_stop_) {
+    ROS_INFO("ESTOP pressed.");
+  } else {
+    ROS_INFO("ESTOP released.");
+  }
+  return true;
 }
 
 double RoyalPandaSim::get_time_step() { return dynamics_->get_dt(); }

@@ -102,6 +102,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam("debug", debug_)) {
+    ROS_ERROR("debug not found");
+    return false;
+  }
+
   if (!node_handle.getParam("log_file_path", log_file_path_)) {
     ROS_ERROR("log_file_path not found");
     return false;
@@ -258,6 +263,11 @@ void ManipulationController::init_ros(ros::NodeHandle& nh) {
   power_publisher_.msg_.data.resize(10, 0.0);
   position_desired_publisher_.init(nh, "pos_desired", 1);
   position_desired_publisher_.msg_.data.resize(10, 0.0);
+
+  if (debug_) {
+    current_time_publisher_.init(nh, "current_time", 1);
+    observation_time_publisher_.init(nh, "observation_time", 1);
+  }
 
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
@@ -467,6 +477,18 @@ void ManipulationController::publish_ros(){
       position_desired_publisher_.msg_.data[i] = position_desired_[i];
     position_desired_publisher_.unlockAndPublish();
   }
+
+  if (debug_) {
+    if (current_time_publisher_.trylock()) {
+      current_time_publisher_.msg_.data = current_time_;
+      current_time_publisher_.unlockAndPublish();
+    }
+
+    if (observation_time_publisher_.trylock()) {
+      observation_time_publisher_.msg_.data = observation_time_;
+      observation_time_publisher_.unlockAndPublish();
+    }
+  }
 }
 
 void ManipulationController::send_command_base(const ros::Duration& period) {
@@ -541,8 +563,7 @@ void ManipulationController::update(const ros::Time& time,
     return;
   }
 
-  static double current_time;
-  current_time = time.toSec() - start_time_;
+  current_time_ = time.toSec() - start_time_;
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
                    << std::setprecision(2)
@@ -550,14 +571,14 @@ void ManipulationController::update(const ros::Time& time,
 
   if (sequential_) {
     man_interface_->update_policy();
-    man_interface_->get_input_state(x_, x_nom_, u_, current_time);
+    man_interface_->get_input_state(x_, x_nom_, u_, current_time_);
     man_interface_->publish_ros_default();
     man_interface_->publish_ros();
   } else {
-    man_interface_->get_input_state(x_, x_nom_, u_, current_time);
+    man_interface_->get_input_state(x_, x_nom_, u_, current_time_);
   }
 
-  manipulation::conversions::eigenToMsg(x_nom_, current_time, x_nom_ros_);
+  manipulation::conversions::eigenToMsg(x_nom_, current_time_, x_nom_ros_);
   robot_state_ = state_handle_->getRobotState();
   
   if (record_bag_){
@@ -589,7 +610,7 @@ void ManipulationController::update(const ros::Time& time,
   
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, current_time);
+    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, current_time_);
   }
 
   if (log_counter_ == log_every_steps_) {

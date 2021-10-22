@@ -18,6 +18,7 @@
 #include <mppi_manipulation/dynamics_ros.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
+#include <std_srvs/Empty.h>
 #include <Eigen/Core>
 #include <cmath>
 
@@ -56,6 +57,7 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   void base_twist_cmd_callback(const geometry_msgs::TwistConstPtr& msg);
   void apply_external_force_callback(const geometry_msgs::WrenchConstPtr& msg);
+  bool e_stop_cb(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res);
 
  private:
   std::unique_ptr<manipulation::ManipulatorDynamicsRos> dynamics_;
@@ -145,6 +147,10 @@ class RoyalPandaSim : public hardware_interface::RobotHW{
 
   // sim time measurements
   double simulation_step_;
+
+  // e stop
+  bool e_stop_;
+  ros::ServiceServer e_stop_service_;
 };
 
 }  // namespace manipulation_royalpanda

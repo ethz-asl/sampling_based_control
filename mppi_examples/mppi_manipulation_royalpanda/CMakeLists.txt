@@ -49,10 +49,10 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ### Simulation
-if($BUILD_ROYALPANDA_SIM)
+#if($BUILD_ROYALPANDA_SIM)
   add_executable(simulation_node src/simulation.cpp src/nodes/simulation_node.cpp)
   target_link_libraries(simulation_node ${catkin_LIBRARIES})
-endif()
+#endif()
 ### Ros controller
 add_library(manipulation_controller src/controller.cpp)
 target_include_directories(manipulation_controller PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
