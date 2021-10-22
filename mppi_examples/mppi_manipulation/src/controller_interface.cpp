@@ -267,6 +267,22 @@ void PandaControllerInterface::mode_callback(
 
 void PandaControllerInterface::update_reference(const mppi::observation_t& x,
                                                 const double t) {
+  static bool switched_to_default = false;
+  if (switched_to_default){
+    return;
+  }
+
+  if (x(2 * BASE_ARM_GRIPPER_DIM) > (M_PI/2.0 - 10.0 * M_PI/180.0)){
+    ref_.rr[0].head<7>() << default_pose_;
+    ref_.rr[0].tail<1>()(0) = 0;
+    ref_.tt[0] = t;
+    std::unique_lock<std::mutex> lock(reference_mutex_);
+    get_controller()->set_reference_trajectory(ref_);
+    ROS_INFO_STREAM("Switched to default pose!");
+    switched_to_default = true;
+    return;
+  }
+
   if (reference_scheduler_.has_reference(t)) {
     reference_scheduler_.set_reference(t, ref_);
 

@@ -46,37 +46,40 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // handle reaching cost
-  if (mode != 0) {
-    mppi_pinocchio::diff2(
-        robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset,
-        error_);
-  }
-
-  // handle reaching cost
+  
   if (mode == 1) {
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+    // error_ = mppi_pinocchio::diff(
+    //   robot_model_.get_pose(params_.tracked_frame),
+    //   object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
 
-    // contact cost
+    // cost +=
+    //     (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
+    // cost +=
+    //     (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+
+    // // contact cost
     if (x(2*BASE_ARM_GRIPPER_DIM + 2*OBJECT_DIMENSION) > 0) {
       cost += params_.Qc;
     }
   }
 
   // object displacement cost
-  if (mode == 2) {
+  if (mode != 0) {
+    mppi_pinocchio::diff2(
+      robot_model_.get_pose(params_.tracked_frame),
+      object_model_.get_pose(params_.handle_frame) * params_.grasp_offset,
+      error_);
+
     double lin_error_norm = error_.head<3>().norm();
     double ang_error_norm = error_.tail<3>().norm();
     cost += (lin_error_norm < params_.lin_tol_manipulation) ? 0.0 : std::pow(lin_error_norm - params_.lin_tol_manipulation, 2.0) * params_.Qt2;  
     cost += (ang_error_norm < params_.ang_tol_manipulation) ? 0.0 : std::pow(ang_error_norm - params_.ang_tol_manipulation, 2.0) * params_.Qr2;  
-
+  }
+  
+  if (mode == 2){  
     double object_error =
         x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
-
     cost += object_error * object_error * params_.Q_obj;
   }
   
