@@ -531,9 +531,9 @@ void StateObserver::wrench_callback(
   
   
   // clang-format off
-  J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), std::sin(base_pose_.z()), 0,
-                                            -std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0,
-                                            0, 0, 1;
+  J_world_ee_.data.topLeftCorner<3, 3>() << std::cos(base_pose_.z()), -std::sin(base_pose_.z()), 0.0,
+                                            std::sin(base_pose_.z()), std::cos(base_pose_.z()), 0.0,
+                                            0.0, 0.0, 1.0;
   // clang-format on
   ext_tau_ = J_world_ee_.data.transpose() * wrench_filt_;
 
