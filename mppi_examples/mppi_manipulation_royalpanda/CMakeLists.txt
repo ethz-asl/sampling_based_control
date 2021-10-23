@@ -77,5 +77,7 @@ install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-catkin_install_python(PROGRAMS scripts/fake_object_odometry_publisher.py
+catkin_install_python(PROGRAMS 
+scripts/replay_experiment.py
+scripts/fake_object_odometry_publisher.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -1,21 +1,161 @@
 import os
-import numpy as np
+import re
 import functools
+import pandas as pd
+import numpy as np
 import signal_logger
 
-import ipywidgets as widgets
-
+import matplotlib
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from tkinter import Tk
 from tkinter import filedialog as fd
 
-plt.rcParams['axes.grid'] = True
+import ipywidgets as widgets
+from IPython.display import display
 
+#############################
+# Global plotting settings
+#############################
+
+plt.rcParams['axes.grid'] = True
 
 ###############################
 # Utilities
 ###############################
+
+
+class ExperimentType:
+    NO_FILTER = "no_filter"
+    FILTER_OUT = "filter_out"
+    FILTER_IN = "filter_in"
+    FILTER_IN_OUT = "filter_in_out"
+
+    @classmethod
+    def get_labels(cls):
+        return ["NO_FILTER", "FILTER_OUT", "FILTER_IN", "FILTER_IN_OUT"]
+
+
+def experiment_type_from_name(name):
+    if "filter_in_out" in name:
+        return ExperimentType.FILTER_IN_OUT
+    elif "filter_in" in name:
+        return ExperimentType.FILTER_IN
+    elif "filter_out" in name:
+        return ExperimentType.FILTER_OUT
+    else:
+        return ExperimentType.NO_FILTER
+
+
+def get_rollouts_from_name(name):
+    return re.sub("[^0-9]", "", name)
+
+
+def get_object_from_name(name):
+    object_types = ['shelf', 'door', 'microwave', 'drawer', 'valve']
+    for object_type in object_types:
+        if object_type in name:
+            return object_type
+    return 'none'
+
+
+def get_data(root_dir, required_fields, log_prefix=""):
+    LOG_FILES = get_files(root_dir, log_prefix)
+    LOG_FILES_PRINT = '\n'.join(LOG_FILES)
+    print(f"""
+    Root dir: 
+    {root_dir}
+    Prefix: 
+    {log_prefix}
+    Log files: 
+    {LOG_FILES_PRINT}
+    """)
+
+    data = {}
+    for experiment_idx, file in enumerate(LOG_FILES):
+        print(f"{experiment_idx} processed out of {len(LOG_FILES)}")
+        experiment_name = file.split('/')[-1].replace('.silo', '')
+        silo = signal_logger.Silo(file)
+
+        silo_dict = to_dictionary(silo, required_fields)
+
+        for key, value in silo_dict.items():
+            if experiment_idx == 0:
+                data[key] = [value]
+            else:
+                data[key].append(value)
+    return data
+
+
+def process_data(data):
+    data['experiment_name'] = []
+    data['joint_limits_violation_se'] = []
+    data['cartesian_limits_violation_se'] = []
+    data['average_wrench_norm'] = []
+    data['experiment_type'] = []
+    data['power_cost'] = []
+    data['object_type'] = []
+    data['x'] = []
+    data['average_stage_cost'] = []
+    data['wrench_norm'] = []
+    data['rollouts'] = []
+    data['dissipated_power'] = []
+
+    first_field = data.keys()[0]
+    num_experiments = len(data[first_field])
+    for experiment_idx in range(num_experiments):
+
+        time = data['sim_time']
+
+        joint_violation_se = matrix_to_se(time, 0.0, time[-1],
+                                          data['joint_limits_violation'])
+        carts_violation_se = matrix_to_se(time, 0.0, time[-1],
+                                          data['cartesian_limits_violation'])
+        average_wrench = average_col_norm(time,
+                                          0.0,
+                                          time[-1],
+                                          data['external_wrench_filtered'],
+                                          threshold=0.0)
+
+        wrench_norm = col_norm(time, 0.0, final_time,
+                               data['external_wrench_filtered'])
+        average_stage_cost = np.mean(data['stage_cost'])
+
+        data['experiment_name'].append(experiment_name)
+        data['joint_limits_violation_se'].append(joint_violation_se)
+        data['cartesian_limits_violation_se'].append(carts_violation_se)
+        data['average_wrench_norm'].append(average_wrench)
+        data['experiment_type'].append(
+            experiment_type_from_name(experiment_name))
+        data['power_cost'].append("power" in experiment_name)
+        data['object_type'].append(get_object_from_name(experiment_name))
+        data['x'].append('data')
+        data['average_stage_cost'].append(average_stage_cost)
+        data['wrench_norm'].append(wrench_norm)
+        data['rollouts'].append(get_rollouts_from_name(experiment_name))
+        data['dissipated_power'].append(
+            np.sum(data['power_from_interaction'][-1]))
+
+
+###################
+#  Plotting
+###################
+def set_facetgrid_style(g, legend=False, title=True):
+    for i, (col_val, ax) in enumerate(g.axes_dict.items()):
+        ax.set_title(col_val if title else "", fontsize=60)
+        ax.yaxis.label.set_size(50)
+        ax.tick_params(axis='y', which='major', labelsize=40)
+        ax.tick_params(axis='x',
+                       which='both',
+                       bottom=False,
+                       top=False,
+                       labelbottom=False)
+        if i == len(g.axes_dict.items()) - 1 and legend:
+            ax.legend(fontsize=48)
+        g.fig.set_size_inches(42.5, 12.5)
+
+
 def get_files(path, prefix=""):
     f = []
     for (dirpath, dirnames, filenames) in os.walk(path):

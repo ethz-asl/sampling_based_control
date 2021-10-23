@@ -1,0 +1,471 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root version="2.3.8">
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab containers="1" tab_name="Stage cost">
+   <Container>
+    <DockSplitter sizes="1" count="1" orientation="-">
+     <DockArea name="...">
+      <plot mode="TimeSeries" style="Lines">
+       <range bottom="0.015664" top="0.038552" left="0.070000" right="3.020000"/>
+       <limitY/>
+       <curve color="#1f77b4" name="/stage_cost/data.0"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Tank State">
+   <Container>
+    <DockSplitter sizes="1" count="1" orientation="-">
+     <DockArea name="...">
+      <plot mode="TimeSeries" style="Lines">
+       <range bottom="8.844272" top="9.044272" left="0.080000" right="3.020000"/>
+       <limitY/>
+       <curve color="#d62728" name="/tank_state/data.0"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Position desired vs Measured">
+   <Container>
+    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+     <DockSplitter sizes="0.200907;0.198963;0.200259;0.198963;0.200907" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="0.497343" top="0.595581" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#17becf" name="/position_measured/data.0"/>
+        <curve color="#1f77b4" name="/position_desired/data.0"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="0.808138" top="1.218685" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/position_desired/data.1"/>
+        <curve color="#9467bd" name="/position_measured/data.1"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-1.832142" top="-1.696235" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/position_desired/data.2"/>
+        <curve color="#17becf" name="/position_measured/data.2"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.064500" top="0.396035" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/position_desired/data.3"/>
+        <curve color="#bcbd22" name="/position_measured/data.3"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-1.426961" top="-0.264293" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#17becf" name="/position_desired/data.4"/>
+        <curve color="#1f77b4" name="/position_measured/data.4"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter sizes="0.200907;0.198963;0.200259;0.198963;0.200907" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.355547" top="0.053612" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/position_desired/data.5"/>
+        <curve color="#d62728" name="/position_measured/data.5"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-2.704775" top="-2.390271" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/position_desired/data.6"/>
+        <curve color="#1ac938" name="/position_measured/data.6"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="0.063317" top="0.310300" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#d62728" name="/position_desired/data.7"/>
+        <curve color="#ff7f0e" name="/position_measured/data.7"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="1.742618" top="3.690076" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/position_desired/data.8"/>
+        <curve color="#f14cc1" name="/position_measured/data.8"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="0.451557" top="0.646843" left="0.070000" right="8.060000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/position_desired/data.9"/>
+        <curve color="#9467bd" name="/position_measured/data.9"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Velocity cmd vs Filtered">
+   <Container>
+    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.001208" top="0.002891" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#17becf" name="/velocity_mppi/data.0"/>
+        <curve color="#1f77b4" name="/velocity_command/data.0"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.003437" top="0.002486" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/velocity_mppi/data.1"/>
+        <curve color="#d62728" name="/velocity_command/data.1"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.010749" top="0.004654" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/velocity_mppi/data.2"/>
+        <curve color="#1ac938" name="/velocity_command/data.2"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.021168" top="0.006913" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#d62728" name="/velocity_mppi/data.3"/>
+        <curve color="#ff7f0e" name="/velocity_command/data.3"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.020997" top="0.008624" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/velocity_mppi/data.4"/>
+        <curve color="#f14cc1" name="/velocity_command/data.4"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.024283" top="0.009555" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/velocity_mppi/data.5"/>
+        <curve color="#9467bd" name="/velocity_command/data.5"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.007516" top="0.021496" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/velocity_mppi/data.6"/>
+        <curve color="#17becf" name="/velocity_command/data.6"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.010024" top="0.021474" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/velocity_mppi/data.7"/>
+        <curve color="#bcbd22" name="/velocity_command/data.7"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.008757" top="0.022403" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#17becf" name="/velocity_mppi/data.8"/>
+        <curve color="#1f77b4" name="/velocity_command/data.8"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.010501" top="0.028231" left="0.080000" right="3.020000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/velocity_mppi/data.9"/>
+        <curve color="#d62728" name="/velocity_command/data.9"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Power loss">
+   <Container>
+    <DockSplitter sizes="1" count="1" orientation="-">
+     <DockArea name="...">
+      <plot mode="TimeSeries" style="Lines">
+       <range bottom="-0.100000" top="0.100000" left="0.080000" right="3.020000"/>
+       <limitY/>
+       <curve color="#1ac938" name="/power_from_interaction/data.0"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Joint Torques">
+   <Container>
+    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/joint_states/x_base_joint/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/joint_states/y_base_joint/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/joint_states/pivot_joint/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#17becf" name="/joint_states/panda_joint1/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/joint_states/panda_joint2/effort"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/joint_states/panda_joint3/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#d62728" name="/joint_states/panda_joint4/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/joint_states/panda_joint5/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/joint_states/panda_joint6/effort"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.100000" top="0.100000" left="0.000000" right="3.020000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/joint_states/panda_joint7/effort"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Wrench">
+   <Container>
+    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+     <DockSplitter sizes="0.336957;0.336957;0.326087" count="3" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="0.000000" top="1.000000" left="0.000000" right="1.000000"/>
+        <limitY/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.010911" top="0.000266" left="0.690000" right="3.020000"/>
+        <limitY/>
+        <curve color="#d62728" name="/wrench/force/y"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.062006" top="0.001512" left="0.690000" right="3.020000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/wrench/force/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter sizes="0.336957;0.336957;0.326087" count="3" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.019189" top="0.000468" left="0.690000" right="3.020000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/wrench/torque/x"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.022912" top="0.000559" left="0.690000" right="3.020000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/wrench/torque/y"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.001443" top="0.059153" left="0.690000" right="3.020000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/wrench/torque/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Power channels">
+   <Container>
+    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
+     <DockSplitter sizes="0.200259;0.199611;0.200259;0.199611;0.200259" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-3.250512" top="8.676797" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/power_channels/data.0"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.550524" top="2.153733" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#d62728" name="/power_channels/data.1"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-2.531310" top="1.211997" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#1ac938" name="/power_channels/data.2"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-4.115576" top="0.312617" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/power_channels/data.3"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-4.750987" top="0.277822" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/power_channels/data.4"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter sizes="0.200259;0.199611;0.200259;0.199611;0.200259" count="5" orientation="|">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-4.711762" top="0.528624" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#9467bd" name="/power_channels/data.5"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-3.839251" top="0.388829" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#17becf" name="/power_channels/data.6"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.516464" top="0.126791" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#bcbd22" name="/power_channels/data.7"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.689461" top="0.320134" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/power_channels/data.8"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range bottom="-0.249194" top="0.065433" left="25.120000" right="65.120000"/>
+        <limitY/>
+        <curve color="#d62728" name="/power_channels/data.9"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="7"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <default time_axis=""/>
+  </plugin>
+  <plugin ID="DataLoad ROS bags">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="ROS Topic Subscriber">
+   <use_header_stamp value="true"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin status="idle" ID="CSV Exporter"/>
+  <plugin status="idle" ID="ROS /rosout Visualization"/>
+  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>
+
