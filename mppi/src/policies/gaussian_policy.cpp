@@ -114,7 +114,11 @@ void GaussianPolicy::update_samples(const std::vector<double>& weights,
     std::vector<size_t> sorted_idxs = sort_indexes(weights);
     for (int i = keep; i < ns_ - 3; i++) {
       dist_->setRandomRow(samples_[sorted_idxs[i]]);
-      samples_[sorted_idxs[i]] = samples_[sorted_idxs[i]];
+
+      // we need to recompute the noise as samples noise where initially
+      // computed with respect to the nominal before the update (nominal_temp)
+      samples_[sorted_idxs[i]] =
+          samples_[sorted_idxs[i]] + nominal_temp_ - nominal_;
     }
 
     // noise free sample
@@ -220,6 +224,10 @@ void GaussianPolicy::shift(const double t) {
 
     nominal_ = L_ * nominal_;
     nominal_.bottomLeftCorner(time_idx_shift, nu_).setZero();
+
+    // shift also the nominal corresponding at the previous optimization cycle
+    nominal_temp_ = L_ * nominal_temp_;
+    nominal_temp_.bottomLeftCorner(time_idx_shift, nu_).setZero();
 
     // extend the non-visited part with the last known value of momentum and
     // momentum2
