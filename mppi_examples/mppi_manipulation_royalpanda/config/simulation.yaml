@@ -20,7 +20,7 @@ wrench_median_filter:
   params: {number_of_observations: 5}
 
 # Params
-pause_time: 0.0
+pause_time: 10.0
 enforce_determinism: true
 arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
 finger_joint_names: [ panda_finger_joint1, panda_finger_joint2 ]
@@ -36,7 +36,7 @@ sim_dynamics:
   #-3.0, -3.0, 0.0, 0.0, 0.49, 1.77, -2.94, 0.0, 1.2, -0.56,
   has_filter: false
   apply_filter: false
-  initial_state: [ 0.8, 1.2, -1.57, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+  initial_state: [ -1.0, 0.0, 0.0, 0.0, 1.52, 0.0, -0.1, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    0.0,                                                                    # object joint position
                    0.0,                                                                    # object joint velocity

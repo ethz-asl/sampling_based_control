@@ -10,6 +10,30 @@
     <!--    Root world link-->
     <link name="world"/>
 
+
+    <!-- Obstacle link -->
+    <link name="obstacle_link">
+        <inertial>
+                <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+                <mass value="0.01"/>
+                <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+            </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+               <sphere radius="0.5"/>
+            </geometry>
+            <material name="Cyan">
+               <color rgba="0 1.0 1.0 0.3"/>
+            </material>
+        </visual>
+    </link>
+    <joint name="obstacle_joint" type="fixed">
+      <parent link="omni_base_root_link"/>
+      <child link="obstacle_link"/>
+      <origin xyz="0.0 0.0 1.0" rpy="0 0 0"/>
+    </joint>
+
     <!--    Omnidirectional base-->
     <xacro:unless value="$(arg fixed_base)">
         <joint name="world_joint" type="fixed">

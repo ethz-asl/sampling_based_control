@@ -2,7 +2,6 @@
 // Created by giuseppe on 20.07.21.
 //
 
-#include "mppi_manipulation/constraints/base_collision_limit.h"
 #include "mppi_manipulation/constraints/safety_filter.h"
 #include "mppi_manipulation/constraints/passivity.h"
 #include "safety_filter/constraints/cartesian_limit.hpp"
@@ -72,17 +71,17 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
 
   if (params_.cartesian_limits) {
     // TODO(giuseppe) parse from params
-    CartesianLimitSettings end_effector_self_collision;
-    end_effector_self_collision.direction = CartesianLimitSettings::COLLISION;
-    end_effector_self_collision.frame_a = "panda_link1";
-    end_effector_self_collision.frame_b = "panda_link7";
-    end_effector_self_collision.distance = params_.min_dist;
+    // CartesianLimitSettings end_effector_self_collision;
+    // end_effector_self_collision.direction =
+    // CartesianLimitSettings::COLLISION; end_effector_self_collision.frame_a =
+    // "panda_link1"; end_effector_self_collision.frame_b = "panda_link7";
+    // end_effector_self_collision.distance = params_.min_dist;
 
-    CartesianLimitSettings end_effector_self_collision_2;
-    end_effector_self_collision_2.direction = CartesianLimitSettings::COLLISION;
-    end_effector_self_collision_2.frame_a = "panda_link0";
-    end_effector_self_collision_2.frame_b = "panda_link7";
-    end_effector_self_collision.distance = params_.min_dist;
+    // CartesianLimitSettings end_effector_self_collision_2;
+    // end_effector_self_collision_2.direction =
+    // CartesianLimitSettings::COLLISION; end_effector_self_collision_2.frame_a
+    // = "panda_link0"; end_effector_self_collision_2.frame_b = "panda_link7";
+    // end_effector_self_collision.distance = params_.min_dist;
 
     CartesianLimitSettings end_effector_reach;
     end_effector_reach.direction = CartesianLimitSettings::REACH;
@@ -91,31 +90,31 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
     end_effector_reach.frame_b = "panda_hand";
     end_effector_reach.distance = params_.max_reach;
 
+    CartesianLimitSettings obstacle_avoidance_sett;
+    if (params_.obstacle_avoidance) {
+      obstacle_avoidance_sett.direction = CartesianLimitSettings::COLLISION;
+      obstacle_avoidance_sett.frame_a = "panda_hand";
+      obstacle_avoidance_sett.frame_b = params_.obstacle_frame_id;
+      obstacle_avoidance_sett.distance = params_.min_obstacle_distance;
+    }
+
     CartesianLimitConstraintSettings cart_const_settings;
     cart_const_settings.urdf_string = params_.urdf;
     cart_const_settings.verbosity = params_.verbose;
-    cart_const_settings.limits.push_back(end_effector_self_collision);
-    cart_const_settings.limits.push_back(end_effector_self_collision_2);
+    // cart_const_settings.limits.push_back(end_effector_self_collision);
+    // cart_const_settings.limits.push_back(end_effector_self_collision_2);
     cart_const_settings.limits.push_back(end_effector_reach);
+
+    if (params_.obstacle_avoidance) {
+      cart_const_settings.limits.push_back(obstacle_avoidance_sett);
+    }
+
     std::shared_ptr<ConstraintBase> cart_const =
         std::make_shared<CartesianLimitConstraints>(10, cart_const_settings);
     cm.add_constraint("cartesian_limits", cart_const,
                       params_.cartesian_limits_soft,
                       params_.cartesian_limits_slack_multiplier);
     constraints_["cartesian_limits"] = cart_const;
-  }
-
-  if (params_.object_avoidance) {
-    BaseCollsionSettings base_const_settings;
-    base_const_settings.object_frame_id = params_.object_frame_id;
-    base_const_settings.object_urdf = params_.object_urdf;
-    base_const_settings.min_distance = params_.min_object_distance;
-    std::shared_ptr<ConstraintBase> base_const =
-        std::make_shared<BaseCollisionLimit>(10, base_const_settings);
-    cm.add_constraint("object_avoidance", base_const,
-                      params_.object_avoidance_soft,
-                      params_.object_avoidance_slack_multiplier);
-    constraints_["object_avoidance"] = base_const;
   }
 
   if (params_.passivity_constraint) {

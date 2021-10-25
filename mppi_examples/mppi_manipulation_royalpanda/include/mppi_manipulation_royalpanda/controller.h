@@ -135,7 +135,9 @@ class ManipulationController
   RTPublisher<std_msgs::Float64MultiArray> position_desired_publisher_;
   RTPublisher<std_msgs::Float64> current_time_publisher_;
   RTPublisher<std_msgs::Float64> observation_time_publisher_;
-
+  std::map<std::string,
+           std::unique_ptr<RTPublisher<std_msgs::Float64MultiArray>>>
+      violation_publishers_;
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
   std::mutex observation_mutex_;

@@ -6,7 +6,7 @@ manipulation_controller:
   simulation: true
   debug: true
   type: manipulation_royalpanda/ManipulationController
-  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
+  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/tracking.yaml
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
   object_tolerance: 0.09 # ~5 deg
 
@@ -54,12 +54,12 @@ manipulation_controller:
 
     min_dist: 0.15
     max_reach: 0.65
-    reach_weight: 100
-    reach_weight_slope: 10
+    reach_weight: 0 #1000
+    reach_weight_slope: 0 #10
 
-    obstacle_weight: 0
+    obstacle_weight: 1000
     obstacle_weight_slope: 0
-    obstacle_radius: 0.8
+    obstacle_radius: 0.5
 
     contact_weight: 100.0
 
@@ -77,8 +77,8 @@ manipulation_controller:
     #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
     # Safer joint limits (+10 deg safety margin ~0.17)
-    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-    lower_joint_limits: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
+    upper_joint_limits: [ 3.0, 0.05, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    lower_joint_limits: [ -3.0, -0.05, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
@@ -166,15 +166,21 @@ manipulation_controller:
       active: true
       soft: true
       slack_multiplier: 10.0
-      q_max: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-      q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
+      q_max: [ 3.0, 0.05, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+      q_min: [ -3.0, -0.05, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     cartesian_limits: 
       active: true
       soft: true
-      slack_multiplier: 10000.0
+      slack_multiplier: 1000.0
       max_reach: 0.65
       min_distance: 0.35
+
+    # This is actually using the settings from the cartesian limits
+    obstacle_avoidance:
+      active: true
+      min_distance: 0.5   # Remember to change to the actual radius seen in the urdf
+      obstacle_frame_id: obstacle_link
 
     object_avoidance:
       active: false

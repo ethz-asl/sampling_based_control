@@ -10,7 +10,7 @@
     <arg name="log_folder" default="$(find mppi_manipulation_royalpanda)/logs/"/>
     <arg name="rviz" default="true"/>
 
-    <arg name="object" default="shelf"/>
+    <arg name="object" default="new_shelf"/>
     <arg name="plot" default="false"/>
     <arg name="enable_obstacle" default="false"/>
 
@@ -62,7 +62,7 @@
     </group>
 
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers.yaml" subst_value="true"/>
-    <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
+
 
     <include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch">
       <arg name="simulation" value="true"/>

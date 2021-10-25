@@ -126,6 +126,13 @@ safety_filter:
     max_reach: 0.65
     min_distance: 0.15
 
+  # This is actually using the settings from the cartesian limits
+  obstacle_avoidance:
+    active: true
+    soft: true
+    slack_multiplier: 0.0
+    min_distance: 0.5   # TODO change to the actual radius seen in the urdf
+
   object_avoidance:
       active: false
       soft: false

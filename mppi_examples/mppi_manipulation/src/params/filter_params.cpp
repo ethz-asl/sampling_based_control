@@ -18,6 +18,9 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     return false;
   }
 
+  /////////////////////
+  // Joint limits
+  /////////////////////
   if (!nh.param("safety_filter/joint_limits/active", joint_limits, false)) {
     ROS_WARN("Failed to parse safety_filter/joint_limits");
     return false;
@@ -62,6 +65,9 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     }
   }
 
+  /////////////////////
+  // Input limits
+  /////////////////////
   if (!nh.param("safety_filter/input_limits/active", input_limits, false)) {
     ROS_WARN("Failed to parse safety_filter/input_limits/active");
     return false;
@@ -94,6 +100,9 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     }
   }
 
+  /////////////////////
+  // First derivative limits
+  /////////////////////
   if (!nh.param("safety_filter/first_derivative_limits/active",
                 first_derivative_limits, false)) {
     ROS_WARN("Failed to parse safety_filter/first_derivative_limits/active");
@@ -127,6 +136,9 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     }
   }
 
+  /////////////////////
+  // Object avoidance
+  /////////////////////
   if (!nh.param("safety_filter/object_avoidance/active", object_avoidance,
                 false)) {
     ROS_WARN("Failed to parse safety_filter/object_avoidance/active");
@@ -147,13 +159,13 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
       return false;
     }
 
-    if (!nh.param<std::string>("/object_description_raisim", object_urdf, {})) {
-      ROS_WARN("Failed to parse /object_description_raisim");
+    if (!nh.param<std::string>("/robot_description_safety_filter", urdf, {})) {
+      ROS_WARN("Failed to parse /robot_description_safety_filter");
       return false;
     }
 
     if (!nh.param<double>("safety_filter/object_avoidance/min_distance",
-                          min_object_distance, 0.0)) {
+                          min_obstacle_distance, 0.0)) {
       ROS_WARN("safety_filter/object_avoidance/min_distance");
       return false;
     }
@@ -165,6 +177,46 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     }
   }
 
+  /////////////////////
+  // Obstacle avoidance
+  /////////////////////
+  if (!nh.param("safety_filter/obstacle_avoidance/active", obstacle_avoidance,
+                false)) {
+    ROS_WARN("Failed to parse safety_filter/obstacle_avoidance/active");
+    return false;
+  }
+
+  if (obstacle_avoidance) {
+    if (!nh.param<bool>("safety_filter/cartesian_limits/soft",
+                        cartesian_limits_soft, false)) {
+      ROS_WARN("Failed to parse safety_filter/cartesian_limits/soft");
+      return false;
+    }
+
+    if (!nh.param<double>("safety_filter/cartesian_limits/slack_multiplier",
+                          cartesian_limits_slack_multiplier, 0.0)) {
+      ROS_WARN(
+          "Failed to parse safety_filter/cartesian_limits/slack_multiplier");
+      return false;
+    }
+
+    if (!nh.param<double>("safety_filter/obstacle_avoidance/min_distance",
+                          min_obstacle_distance, 0.0)) {
+      ROS_WARN("safety_filter/object_avoidance/min_distance");
+      return false;
+    }
+
+    if (!nh.param<std::string>(
+            "safety_filter/obstacle_avoidance/obstacle_frame_id",
+            obstacle_frame_id, {})) {
+      ROS_WARN("safety_filter/object_avoidance/obstacle_frame_id");
+      return false;
+    }
+  }
+
+  /////////////////////
+  // Second derivative limits
+  /////////////////////
   if (!nh.param("safety_filter/second_derivative_limits/active",
                 second_derivative_limits, false)) {
     ROS_WARN("Failed to parse safety_filter/second_derivative_limits/active");
@@ -200,6 +252,9 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     }
   }
 
+  /////////////////////
+  // Cartesian limits
+  /////////////////////
   if (!nh.param("safety_filter/cartesian_limits/active", cartesian_limits,
                 false)) {
     ROS_WARN("Failed to parse safety_filter/cartesian_limits/active");
@@ -239,6 +294,9 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
     return false;
   }
 
+  /////////////////////
+  // Passivity constraints
+  /////////////////////
   if (passivity_constraint) {
     if (!nh.param<bool>("safety_filter/passivity_constraint/soft",
                         passivity_constraint_soft, false)) {
@@ -279,50 +337,57 @@ std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
   os << "PandaMobileSafetyFilterSettings: " << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "Input limits" << std::endl;
-  os << "active: " << settings.input_limits << std::endl;
-  os << "u_min: " << settings.u_min.transpose() << std::endl;
-  os << "u_max: " << settings.u_max.transpose() << std::endl;
+  os << "active: "        << settings.input_limits << std::endl;
+  os << "u_min: "         << settings.u_min.transpose() << std::endl;
+  os << "u_max: "         << settings.u_max.transpose() << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "First derivative limits" << std::endl;
-  os << "active: " << settings.first_derivative_limits << std::endl;
-  os << "ud_min: " << settings.ud_min.transpose() << std::endl;
-  os << "ud_max: " << settings.ud_max.transpose() << std::endl;
+  os << "active: "        << settings.first_derivative_limits << std::endl;
+  os << "ud_min: "        << settings.ud_min.transpose() << std::endl;
+  os << "ud_max: "        << settings.ud_max.transpose() << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "Second derivative limits: " << std::endl;
-  os << "active: " << settings.second_derivative_limits << std::endl;
-  os << "udd_min: " << settings.udd_min.transpose() << std::endl;
-  os << "udd_max: " << settings.udd_max.transpose() << std::endl;
+  os << "active: "        << settings.second_derivative_limits << std::endl;
+  os << "udd_min: "       << settings.udd_min.transpose() << std::endl;
+  os << "udd_max: "       << settings.udd_max.transpose() << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "Joint limits: " << std::endl;
-  os << "active: " << settings.joint_limits << std::endl;
-  os << "soft: " << settings.joint_limits_soft << std::endl;
+  os << "active: "        << settings.joint_limits << std::endl;
+  os << "soft: "          << settings.joint_limits_soft << std::endl;
   os << "slack_multiplier: " << settings.joint_limits_slack_multiplier << std::endl;
-  os << "q_min: " << settings.q_min.transpose() << std::endl;
-  os << "q_max: " << settings.q_max.transpose() << std::endl;
+  os << "q_min: "         << settings.q_min.transpose() << std::endl;
+  os << "q_max: "         << settings.q_max.transpose() << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "Cartesian limits: " << std::endl;
-  os << "active: " << settings.cartesian_limits << std::endl;
-  os << "soft: " << settings.cartesian_limits_soft << std::endl;
+  os << "active: "        << settings.cartesian_limits << std::endl;
+  os << "soft: "          << settings.cartesian_limits_soft << std::endl;
   os << "slack_multiplier: " << settings.cartesian_limits_slack_multiplier << std::endl;
-  os << "max_reach: " << settings.max_reach << std::endl;
-  os << "min_distance: " << settings.min_dist << std::endl;
+  os << "max_reach: "     << settings.max_reach << std::endl;
+  os << "min_distance: "  << settings.min_dist << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "Object avoidance: " << std::endl;
-  os << "active: " << settings.object_avoidance << std::endl;
-  os << "soft: " << settings.object_avoidance_soft << std::endl;
+  os << "active: "        << settings.object_avoidance << std::endl;
+  os << "soft: "          << settings.object_avoidance_soft << std::endl;
   os << "slack_multiplier: " << settings.object_avoidance_slack_multiplier << std::endl;
-  os << "max_distance: " << settings.min_object_distance << std::endl;
+  os << "max_distance: "  << settings.min_object_distance << std::endl;
   os << "object_frame_id: " << settings.object_frame_id << std::endl; 
   os << "-----------------------------------------------" << std::endl;
+  os << "Obstacle avoidance: " << std::endl;
+  os << "active: "        << settings.obstacle_avoidance << std::endl;
+  os << "soft: "          << settings.obstacle_avoidance_soft << std::endl;
+  os << "slack_multiplier: " << settings.obstacle_avoidance_slack_multiplier << std::endl;
+  os << "obstacle radius: " << settings.min_obstacle_distance << std::endl;
+  os << "obstacle frame: " << settings.obstacle_frame_id << std::endl;
+  os << "-----------------------------------------------" << std::endl;
   os << "Passivity constraint: " << std::endl;
-  os << "active: " << settings.passivity_constraint << std::endl;
-  os << "soft: " << settings.passivity_constraint_soft << std::endl;
+  os << "active: "        << settings.passivity_constraint << std::endl;
+  os << "soft: "          << settings.passivity_constraint_soft << std::endl;
   os << "slack_multiplier: " << settings.passivity_constraint_slack_multiplier << std::endl;
   os << "min_tank_energy: " << settings.min_tank_energy << std::endl;
   os << "initial_tank_energy: " << settings.initial_tank_energy << std::endl;
   os << "-----------------------------------------------" << std::endl;
   os << "Other" << std::endl;
-  os << "verbose: " << settings.verbose << std::endl;
+  os << "verbose: "       << settings.verbose << std::endl;
   os << "-----------------------------------------------" << std::endl;
 
   // clang-format on

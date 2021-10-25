@@ -24,13 +24,26 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
                                   ros::NodeHandle& controller_nh) {
   if (!init_parameters(controller_nh)) return false;
   if (!init_interfaces(robot_hw)) return false;
-  init_ros(controller_nh);
 
   man_interface_ = std::make_unique<PandaControllerInterface>(controller_nh);
   if (!man_interface_->init()) {
     ROS_ERROR("Failed to initialized manipulation interface");
     return false;
   }
+
+  // reset the safety filter
+  safety_filter_ =
+      std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
+
+  // this is the filter that is used to sanitize the rollouts
+  if (apply_filter_to_rollouts_) {
+    ROS_INFO("Applying safety filter to rollouts");
+    safety_filter_params_.passivity_constraint = false;
+    mppi::filter_ptr safety_filter_ctrl =
+        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
+    man_interface_->get_controller()->set_filter(safety_filter_ctrl);
+  }
+
   ROS_INFO("Solver initialized correctly.");
 
   started_ = false;
@@ -50,6 +63,7 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   position_measured_.setZero(10);
   position_initial_.setZero(10);
 
+  init_ros(controller_nh);
   ROS_INFO("Controller successfully initialized!");
   return true;
 }
@@ -264,6 +278,14 @@ void ManipulationController::init_ros(ros::NodeHandle& nh) {
   position_desired_publisher_.init(nh, "pos_desired", 1);
   position_desired_publisher_.msg_.data.resize(10, 0.0);
 
+  for (const auto& constraint : safety_filter_->constraints_) {
+    violation_publishers_[constraint.first + "_violation"] =
+        std::make_unique<RTPublisher<std_msgs::Float64MultiArray>>(
+            nh, constraint.first + "_violation", 1);
+    violation_publishers_[constraint.first + "_violation"]->msg_.data.resize(
+        constraint.second->violation_.size(), 10);
+  }
+
   if (debug_) {
     current_time_publisher_.init(nh, "current_time", 1);
     observation_time_publisher_.init(nh, "observation_time", 1);
@@ -342,19 +364,6 @@ void ManipulationController::starting(const ros::Time& time) {
     position_initial_[i + 3] = joint_handles_[i].getPosition();
   }
   position_measured_ = position_desired_;
-
-  // reset the safety filter
-  safety_filter_ =
-      std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
-
-  // this is the filter that is used to sanitize the rollouts
-  if (apply_filter_to_rollouts_) {
-    ROS_INFO("Applying safety filter to rollouts");
-    safety_filter_params_.passivity_constraint = false;
-    mppi::filter_ptr safety_filter_ctrl =
-        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
-    man_interface_->get_controller()->set_filter(safety_filter_ctrl);
-  }
 
   // metrics
   stage_cost_ = 0.0;
@@ -477,6 +486,16 @@ void ManipulationController::publish_ros(){
     for (int i = 0; i < 10; i++)
       position_desired_publisher_.msg_.data[i] = position_desired_[i];
     position_desired_publisher_.unlockAndPublish();
+  }
+
+  for (const auto& constraint : safety_filter_->constraints_) {
+    if (violation_publishers_[constraint.first + "_violation"]->trylock()) {
+      for (int i = 0; i < constraint.second->violation_.size(); i++)
+        violation_publishers_[constraint.first + "_violation"]->msg_.data[i] =
+            constraint.second->violation_[i];
+      violation_publishers_[constraint.first + "_violation"]
+          ->unlockAndPublish();
+    }
   }
 
   if (debug_) {

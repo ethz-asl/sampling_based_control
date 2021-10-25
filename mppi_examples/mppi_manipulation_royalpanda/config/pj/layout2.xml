@@ -1,45 +1,45 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root version="2.3.8">
- <tabbed_widget parent="main_window" name="Main Window">
+ <tabbed_widget name="Main Window" parent="main_window">
   <Tab containers="1" tab_name="External wrench">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.336957;0.336957;0.326087" count="3" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="3" orientation="|" sizes="0.337217;0.33657;0.326214">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.336957;0.336957;0.326087" count="3" orientation="|">
+     <DockSplitter count="3" orientation="|" sizes="0.337864;0.337864;0.324272">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -49,67 +49,67 @@
   </Tab>
   <Tab containers="1" tab_name="Joint Torques">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202852;0.18989">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202203;0.190538">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -119,67 +119,67 @@
   </Tab>
   <Tab containers="1" tab_name="Joint Positions">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202852;0.18989">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202203;0.190538">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -189,67 +189,67 @@
   </Tab>
   <Tab containers="1" tab_name="Joint Velocities">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202852;0.18989">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202203;0.190538">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -259,67 +259,67 @@
   </Tab>
   <Tab containers="1" tab_name="Velocity Command">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202852;0.18989">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202203;0.190538">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -329,10 +329,10 @@
   </Tab>
   <Tab containers="1" tab_name="Tank State">
    <Container>
-    <DockSplitter sizes="1" count="1" orientation="-">
+    <DockSplitter count="1" orientation="-" sizes="1">
      <DockArea name="...">
       <plot mode="TimeSeries" style="Lines">
-       <range bottom="-0.100000" left="0.000000" top="0.100000" right="0.000000"/>
+       <range left="0.000000" right="0.000000" top="0.100000" bottom="-0.100000"/>
        <limitY/>
        <curve color="#f14cc1" name="/manipulation_controller/tank_state/data"/>
       </plot>
@@ -342,67 +342,67 @@
   </Tab>
   <Tab containers="1" tab_name="Power">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202852;0.18989">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+     <DockSplitter count="5" orientation="|" sizes="0.202203;0.202852;0.202203;0.202203;0.190538">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -412,67 +412,67 @@
   </Tab>
   <Tab containers="1" tab_name="Position Command">
    <Container>
-    <DockSplitter sizes="0.5;0.5" count="2" orientation="-">
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="5" orientation="|" sizes="0.199611;0.199611;0.201555;0.199611;0.199611">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter sizes="0.202381;0.202381;0.202381;0.202381;0.190476" count="5" orientation="|">
+     <DockSplitter count="5" orientation="|" sizes="0.199611;0.199611;0.201555;0.199611;0.199611">
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot mode="TimeSeries" style="Lines">
-        <range bottom="0.000000" left="0.000000" top="1.000000" right="1.000000"/>
+        <range left="0.000000" right="1.000000" top="1.000000" bottom="0.000000"/>
         <limitY/>
        </plot>
       </DockArea>
@@ -482,10 +482,10 @@
   </Tab>
   <Tab containers="1" tab_name="Time">
    <Container>
-    <DockSplitter sizes="1" count="1" orientation="-">
+    <DockSplitter count="1" orientation="-" sizes="1">
      <DockArea name="...">
       <plot mode="TimeSeries" style="Lines">
-       <range bottom="-0.100000" left="0.000000" top="0.100000" right="0.000000"/>
+       <range left="0.000000" right="0.000000" top="0.100000" bottom="-0.100000"/>
        <limitY/>
        <curve color="#1f77b4" name="/manipulation_controller/current_time/data"/>
        <curve color="#d62728" name="/manipulation_controller/observation_time/data"/>
@@ -494,12 +494,12 @@
     </DockSplitter>
    </Container>
   </Tab>
-  <Tab containers="1" tab_name="Cartesian violation">
+  <Tab containers="1" tab_name="Cartesian limits violation">
    <Container>
-    <DockSplitter sizes="1" count="1" orientation="-">
+    <DockSplitter count="1" orientation="-" sizes="1">
      <DockArea name="...">
       <plot mode="TimeSeries" style="Lines">
-       <range bottom="-0.100000" left="0.000000" top="0.100000" right="33.715000"/>
+       <range left="0.000000" right="40.000000" top="0.100000" bottom="-0.100000"/>
        <limitY/>
        <curve color="#1f77b4" name="/manipulation_controller/cartesian_limits_violation/data.0"/>
        <curve color="#d62728" name="/manipulation_controller/cartesian_limits_violation/data.1"/>
@@ -535,13 +535,12 @@
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
   <plugin ID="ZMQ Subscriber"/>
-  <plugin ID="CSV Exporter" status="idle"/>
-  <plugin ID="ROS /rosout Visualization" status="idle"/>
-  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
+  <plugin status="idle" ID="CSV Exporter"/>
+  <plugin status="idle" ID="ROS /rosout Visualization"/>
+  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
  <previouslyLoaded_Datafiles/>
- <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
  <!-- - - - - - - - - - - - - - - -->
  <customMathEquations/>
  <snippets/>
