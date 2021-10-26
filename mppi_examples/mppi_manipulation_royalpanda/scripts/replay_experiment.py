@@ -8,6 +8,7 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Wrench, Point
 from rosgraph_msgs.msg import Clock
 from visualization_msgs.msg import Marker
+from copy import deepcopy
 
 # So to find the additional path to utilities
 import sys
@@ -19,6 +20,12 @@ from utilities import get_data
 
 # For jacobian computation
 import pinocchio as pin
+
+# For plotting
+import matplotlib.pyplot as plt
+
+# For filtering estimated wrench
+from scipy.signal import medfilt
 
 
 def create_arrow(x, y, z, frame):
@@ -77,15 +84,15 @@ REQUIRED_FIELDS = [
     "log/state"
 ]
 
+data_for_plot = {
+    "wrench_norm": [],
+    "object_position": [],
+    "dissipated_power": [],
+}
+
+log_prefixes = ["no_filter_1", "filter_in_out_11", "filter_in_out_5"]
+log_tags = ["no filter", "filter_in_out", "filter_out"]
 rospy.init_node("experiment_replay")
-data = get_data("/home/giuseppe/logs_tests_22_10_21",
-                required_fields=REQUIRED_FIELDS,
-                log_prefix="door_opening_filter_last")
-topics = [topic for topic in data.keys()]
-publishers = [
-    rospy.Publisher(topic, Float64MultiArray, queue_size=1) for topic in topics
-]
-msgs = [Float64MultiArray()] * len(publishers)
 
 joint_state = JointState()
 joint_state.name = [
@@ -128,9 +135,6 @@ def pause_cb(req):
 
 pause_service = rospy.Service("/pause", Empty, pause_cb)
 
-i = 0
-steps = len(data[topics[0]][0])
-
 
 def reset_cb(msg):
     """ TF does not like jumps back in time """
@@ -147,59 +151,156 @@ def reset_cb(msg):
 
 reset_subscriber = rospy.Subscriber("/reset", Float64, reset_cb, queue_size=1)
 
+publish_ros = False
+experiment_data = {prefix: deepcopy(data_for_plot) for prefix in log_prefixes}
+for prefix in log_prefixes:
+    data = get_data("/home/giuseppe/logs_tests_26_10_21",
+                    required_fields=REQUIRED_FIELDS,
+                    log_prefix=prefix)
+    topics = [topic for topic in data.keys()]
+    publishers = [
+        rospy.Publisher(topic, Float64MultiArray, queue_size=1)
+        for topic in topics
+    ]
+    msgs = [Float64MultiArray()] * len(publishers)
 
-def main():
-    global i
-    try:
-        runtime = 0.0
-        print(f"The experiments last for {steps} steps.")
-        while i < steps:
-            for topic, pub, msg in zip(topics, publishers, msgs):
-                val = data[topic][0][i]
-                if isinstance(val, (float, int, np.float64)):
-                    val = [val]
-                msg.data = val
-                pub.publish(msg)
+    i = 0
+    steps = len(data[topics[0]][0])
+    runtime = 0.0
+    wrench = np.zeros((6, 1))
+    print(f"The experiments last for {steps} steps.")
+    while i < steps:
+        for topic, pub, msg in zip(topics, publishers, msgs):
+            val = data[topic][0][i]
+            if isinstance(val, (float, int, np.float64)):
+                val = [val]
 
             if topic == "state":
                 for j in range(12):
                     q[j] = val[j]
                     tau[j] = val[-12 + j]
                     wrench = robot.wrench_from_torque("panda_grasp", q, tau)
-                    wrench_ros.force.x = wrench[0]
-                    wrench_ros.force.y = wrench[1]
-                    wrench_ros.force.z = wrench[2]
-                    wrench_ros.torque.x = wrench[3]
-                    wrench_ros.torque.y = wrench[4]
-                    wrench_ros.torque.z = wrench[5]
-                    wrench_publisher.publish(wrench_ros)
 
-                    joint_state.header.stamp = rospy.get_rostime()
-                    joint_state.position[j] = val[j]
-                    joint_state.velocity[j] = val[12 + j]
-                    joint_state.effort[j] = val[-12 + j]
-                    joint_state_publisher.publish(joint_state)
+                experiment_data[prefix]["object_position"].append(val[24])
+                experiment_data[prefix]["wrench_norm"].append(
+                    np.linalg.norm(wrench))
+
+            if topic == "power_from_interaction":
+                experiment_data[prefix]["dissipated_power"].append(np.sum(val))
+
+            if publish_ros:
+                msg.data = val
+                pub.publish(msg)
+
+                wrench_ros.force.x = wrench[0]
+                wrench_ros.force.y = wrench[1]
+                wrench_ros.force.z = wrench[2]
+                wrench_ros.torque.x = wrench[3]
+                wrench_ros.torque.y = wrench[4]
+                wrench_ros.torque.z = wrench[5]
+                wrench_publisher.publish(wrench_ros)
+
+                joint_state.header.stamp = rospy.get_rostime()
+                for j in range(12):
+                    joint_state.position[j] = q[j]
+                    joint_state.effort[j] = tau[j]
+                joint_state_publisher.publish(joint_state)
 
                 articulation_state.header.stamp = rospy.get_rostime()
                 articulation_state.position[0] = val[24]
                 articulation_state.velocity[0] = val[25]
                 articulation_state_publisher.publish(articulation_state)
 
-            ros_time = rospy.Time.from_sec(runtime)
-            clock_publisher.publish(ros_time)
+        ros_time = rospy.Time.from_sec(runtime)
+        clock_publisher.publish(ros_time)
 
-            marker = create_arrow(tau[0] / 10., tau[1] / 10., 0.0, "base_link")
-            base_force_publisher.publish(marker)
+        marker = create_arrow(tau[0] / 10., tau[1] / 10., 0.0, "base_link")
+        base_force_publisher.publish(marker)
 
-            while pause:
-                time.sleep(0.1)
+        while pause:
+            time.sleep(0.1)
 
-            runtime = i * 0.01
-            time.sleep(0.01)
-            i += 1
-    except rospy.ROSInterruptException:
-        return 0
+        runtime = i * 0.015
+        #time.sleep(0.01)
+        i += 1
 
 
-if __name__ == "__main__":
-    main()
+# Plot data inferring time from length of data
+def set_style(ax, title, xlabel, ylabel):
+    ax.set_title(title, fontsize=40)
+    ax.set_ylabel(ylabel, fontsize=40)
+    ax.set_xlabel(xlabel, fontsize=40)
+    ax.tick_params(axis='both', which='both', labelsize=40)
+    ax.legend(fontsize=35, loc='upper right')
+    ax.grid(True)
+
+
+def add_subplot_axes(ax, rect, facecolor='w'):
+    fig = ax.figure
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    inax_position = ax.transAxes.transform(rect[0:2])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    x = infig_position[0]
+    y = infig_position[1]
+    width *= rect[2]
+    height *= rect[3]  # <= Typo was here
+    subax = fig.add_axes([x, y, width, height],
+                         facecolor=facecolor)  # matplotlib 2.0+
+    x_labelsize = subax.get_xticklabels()[0].get_size()
+    y_labelsize = subax.get_yticklabels()[0].get_size()
+    x_labelsize *= rect[2]**0.5
+    y_labelsize *= rect[3]**0.5
+    subax.xaxis.set_tick_params(labelsize=x_labelsize)
+    subax.yaxis.set_tick_params(labelsize=y_labelsize)
+    return subax
+
+
+# Axis for object position
+fig, ax1 = plt.subplots()
+
+# Axis for tank energy
+min_energy = 2
+fig, ax2 = plt.subplots()
+ax_sub = add_subplot_axes(ax2, [0.05, 0.1, 0.6, 0.6])
+ax_sub.axhline(y=min_energy, ls="--", lw=6, c='r', label="min energy")
+
+# Axis for wrench norm
+fig, ax3 = plt.subplots()
+
+for prefix, log_tag in zip(log_prefixes, log_tags):
+    t = np.arange(0, len(experiment_data[prefix]["dissipated_power"])) * 0.015
+
+    # filter wrench
+    wrench_filt = medfilt(experiment_data[prefix]["wrench_norm"], 7)
+
+    ax1.plot(t,
+             experiment_data[prefix]["object_position"],
+             lw=6,
+             label=log_tag)
+    set_style(ax1, "Object Position", "t[s]", "deg")
+
+    initial_energy = 10
+    tank_energy = initial_energy + np.cumsum(
+        experiment_data[prefix]["dissipated_power"]) * 0.015
+    ax2.plot(t, tank_energy, lw=6, label=log_tag)
+
+    ax_sub.set_xlim(25, 60)
+    ax_sub.set_ylim(-1, 11)
+    ax_sub.plot(t, tank_energy, lw=6)
+    ax_sub.legend(fontsize=40)
+    ax_sub.tick_params(axis='both', which='both', labelsize=35)
+
+    set_style(ax2, "Tank energy", "t [s]", "E [J]")
+    #ax2.axvspan(30, 41, alpha=0.2, color='red')
+
+    ax3.plot(t, wrench_filt, lw=6, label=log_tag)
+    set_style(ax3, "Wrench norm", "t [s]", "W [N]")
+
+    print(
+        f"Average interaction wrench for {log_tag}: {np.mean(wrench_filt[wrench_filt>2])} N"
+    )
+
+plt.show()

@@ -10,6 +10,7 @@ Panels:
         - /Observer1
         - /Observer1/Vicon Odometry1/Shape1
         - /Controller1
+        - /WrenchStamped1/Status1
         - /Marker1
       Splitter Ratio: 0.49884527921676636
     Tree Height: 719
@@ -63,97 +64,129 @@ Visualization Manager:
       Frames:
         All Enabled: false
         axis_link:
-          Value: true
+          Value: false
         axle_link:
-          Value: true
+          Value: false
         base_link:
-          Value: true
+          Value: false
         chassis_link:
-          Value: true
+          Value: false
         door:
-          Value: true
+          Value: false
         door_hinge:
-          Value: true
+          Value: false
         franka_mount_link:
-          Value: true
+          Value: false
         front_cover_link:
-          Value: true
+          Value: false
         front_lights_link:
-          Value: true
+          Value: false
         ft_sensor0_mech1:
-          Value: true
+          Value: false
         ft_sensor0_mech2:
-          Value: true
+          Value: false
         ft_sensor0_mech3:
-          Value: true
+          Value: false
         ft_sensor0_mounting:
-          Value: true
+          Value: false
         ft_sensor0_wrench:
           Value: true
         hand_flange:
-          Value: true
+          Value: false
         handle_link:
-          Value: true
+          Value: false
         handle_support_left:
-          Value: true
+          Value: false
         handle_support_right:
-          Value: true
+          Value: false
         imu_link:
-          Value: true
+          Value: false
         left_side_cover_link:
-          Value: true
+          Value: false
         measured_joint_link:
-          Value: true
+          Value: false
         mid_mount:
-          Value: true
+          Value: false
+        obstacle:
+          Value: false
         omni_base_root_link:
-          Value: true
+          Value: false
+        panda_EE:
+          Value: false
+        panda_K:
+          Value: false
+        panda_NE:
+          Value: false
+        panda_base:
+          Value: false
         panda_grasp:
-          Value: true
+          Value: false
         panda_hand:
-          Value: true
+          Value: false
         panda_leftfinger:
-          Value: true
+          Value: false
         panda_link0:
-          Value: true
+          Value: false
         panda_link1:
-          Value: true
+          Value: false
         panda_link2:
-          Value: true
+          Value: false
         panda_link3:
-          Value: true
+          Value: false
         panda_link4:
-          Value: true
+          Value: false
         panda_link5:
-          Value: true
+          Value: false
         panda_link6:
-          Value: true
+          Value: false
         panda_link7:
-          Value: true
+          Value: false
         panda_link8:
-          Value: true
+          Value: false
+        panda_rightfinger:
+          Value: false
         pivot:
-          Value: true
+          Value: false
         rear_cover_link:
-          Value: true
+          Value: false
         rear_lights_link:
-          Value: true
+          Value: false
         reference_link:
-          Value: true
+          Value: false
         ridgeback_sensor_mount_link:
-          Value: true
+          Value: false
         right_side_cover_link:
-          Value: true
+          Value: false
         shelf:
-          Value: true
+          Value: false
+        shelf_door:
+          Value: false
+        sim_axis_link:
+          Value: false
+        sim_door:
+          Value: false
+        sim_door_hinge:
+          Value: false
+        sim_handle_link:
+          Value: false
+        sim_handle_support_left:
+          Value: false
+        sim_handle_support_right:
+          Value: false
+        sim_measured_joint_link:
+          Value: false
+        sim_shelf:
+          Value: false
         top_link:
-          Value: true
+          Value: false
+        vicon:
+          Value: false
         world:
           Value: false
         x_slider:
-          Value: true
+          Value: false
         y_slider:
-          Value: true
+          Value: false
       Marker Alpha: 1
       Marker Scale: 0.20000000298023224
       Name: TF
@@ -162,6 +195,8 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          obstacle:
+            {}
           omni_base_root_link:
             x_slider:
               y_slider:
@@ -210,6 +245,12 @@ Visualization Manager:
                                                   panda_leftfinger:
                                                     panda_grasp:
                                                       {}
+                                                  panda_rightfinger:
+                                                    {}
+                                          panda_NE:
+                                            panda_EE:
+                                              panda_K:
+                                                {}
                         reference_link:
                           {}
                       ridgeback_sensor_mount_link:
@@ -224,6 +265,21 @@ Visualization Manager:
                         {}
                       handle_support_right:
                         {}
+          sim_shelf:
+            sim_door_hinge:
+              sim_axis_link:
+                sim_measured_joint_link:
+                  sim_door:
+                    sim_handle_link:
+                      sim_handle_support_left:
+                        {}
+                      sim_handle_support_right:
+                        {}
+          vicon:
+            panda_base:
+              {}
+            shelf_door:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -722,24 +778,24 @@ Visualization Manager:
     - Alpha: 1
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
-      Enabled: true
+      Enabled: false
       Force Arrow Scale: 0.10000000149011612
       Force Color: 204; 51; 51
       Hide Small Values: true
       History Length: 1
       Name: WrenchStamped
       Queue Size: 10
-      Topic: /observer/wrench_filtered_sensor
+      Topic: /bus0/ft_sensor0/ft_sensor_readings/wrench
       Torque Arrow Scale: 0
       Torque Color: 204; 204; 51
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /base_force
       Name: Marker
       Namespaces:
-        my_namespace: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -770,7 +826,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.6827802658081055
+      Distance: 5.036495208740234
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -778,17 +834,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 1.479674220085144
-        Y: -0.869697093963623
-        Z: -0.14639553427696228
+        X: 2.098484754562378
+        Y: -0.6286486387252808
+        Z: 0.5095045566558838
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6397976875305176
+      Pitch: 0.36479777097702026
       Target Frame: <Fixed Frame>
-      Yaw: 1.8905317783355713
+      Yaw: 2.44553279876709
     Saved: ~
 Window Geometry:
   Displays:
