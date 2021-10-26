@@ -19,13 +19,5 @@
             <child link="ridgeback_sensor_mount_link"/>
         </joint>
 
-        <link name="reference_link"/>
-        <joint name="reference_link_joint" type="fixed">
-            <origin xyz="-0.01 0.0 0.018" rpy="0 0 0"/>
-            <parent link="franka_mount_link"/>
-            <child link="reference_link"/>
-        </joint>
-
-
     </xacro:macro>
 </robot>

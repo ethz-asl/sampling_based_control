@@ -267,21 +267,33 @@ void PandaControllerInterface::mode_callback(
 
 void PandaControllerInterface::update_reference(const mppi::observation_t& x,
                                                 const double t) {
-  static bool switched_to_default = false;
-  if (switched_to_default){
-    return;
-  }
+  static bool switched_to_handle_tracking = false;
 
   if (x(2 * BASE_ARM_GRIPPER_DIM) > (M_PI/2.0 - 10.0 * M_PI/180.0)){
-    ref_.rr[0].head<7>() << default_pose_;
-    ref_.rr[0].tail<1>()(0) = 0;
+    //ref_.rr[0].head<7>() << default_pose_;
+    //ref_.rr[0].tail<1>()(0) = 0;
+    
+    ref_.rr[0].tail<1>()(0) = 1;
     ref_.tt[0] = t;
     std::unique_lock<std::mutex> lock(reference_mutex_);
     get_controller()->set_reference_trajectory(ref_);
-    ROS_INFO_STREAM("Switched to default pose!");
-    switched_to_default = true;
+    ROS_INFO_STREAM("Switched to handle_tracking!");
+    switched_to_handle_tracking = true;
     return;
   }
+  
+  if (switched_to_handle_tracking){
+    mppi_pinocchio::Pose handle_pose = get_pose_handle(x);
+    mppi_pinocchio::Pose ee_pose = get_pose_end_effector(x);
+    if ((handle_pose.translation - ee_pose.translation).norm() < 0.03){
+        ref_.rr[0].tail<1>()(0) = 2;
+        ref_.tt[0] = t;
+        std::unique_lock<std::mutex> lock(reference_mutex_);
+        get_controller()->set_reference_trajectory(ref_);
+        ROS_INFO_STREAM("Switched to door opening!");
+    }
+  }
+
 
   if (reference_scheduler_.has_reference(t)) {
     reference_scheduler_.set_reference(t, ref_);
