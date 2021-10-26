@@ -228,8 +228,8 @@ for prefix in log_prefixes:
 # Plot data inferring time from length of data
 def set_style(ax, title, xlabel, ylabel):
     ax.set_title(title, fontsize=40)
-    ax.set_ylabel(ylabel, fontsize=40)
-    ax.set_xlabel(xlabel, fontsize=40)
+    ax.set_ylabel(ylabel, fontsize=30)
+    ax.set_xlabel(xlabel, fontsize=30)
     ax.tick_params(axis='both', which='both', labelsize=40)
     ax.legend(fontsize=35, loc='upper right')
     ax.grid(True)
@@ -264,7 +264,7 @@ fig, ax1 = plt.subplots()
 # Axis for tank energy
 min_energy = 2
 fig, ax2 = plt.subplots()
-ax_sub = add_subplot_axes(ax2, [0.05, 0.1, 0.6, 0.6])
+ax_sub = add_subplot_axes(ax2, [0.1, 0.1, 0.6, 0.6])
 ax_sub.axhline(y=min_energy, ls="--", lw=6, c='r', label="min energy")
 
 # Axis for wrench norm
@@ -291,13 +291,13 @@ for prefix, log_tag in zip(log_prefixes, log_tags):
     ax_sub.set_ylim(-1, 11)
     ax_sub.plot(t, tank_energy, lw=6)
     ax_sub.legend(fontsize=40)
-    ax_sub.tick_params(axis='both', which='both', labelsize=35)
+    ax_sub.tick_params(axis='both', which='both', labelsize=30)
 
-    set_style(ax2, "Tank energy", "t [s]", "E [J]")
+    set_style(ax2, "", "time [s]", "energy [J]")
     #ax2.axvspan(30, 41, alpha=0.2, color='red')
 
     ax3.plot(t, wrench_filt, lw=6, label=log_tag)
-    set_style(ax3, "Wrench norm", "t [s]", "W [N]")
+    set_style(ax3, "", "time [s]", "wrench norm [N]")
 
     print(
         f"Average interaction wrench for {log_tag}: {np.mean(wrench_filt[wrench_filt>2])} N"
