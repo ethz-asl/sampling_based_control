@@ -350,7 +350,7 @@ void ManipulationController::starting(const ros::Time& time) {
   // this is the filter that is used to sanitize the rollouts
   if (apply_filter_to_rollouts_) {
     ROS_INFO("Applying safety filter to rollouts");
-    safety_filter_params_.passivity_constraint = false;
+    safety_filter_params_.passivity_constraint = true;
     mppi::filter_ptr safety_filter_ctrl =
         std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
     man_interface_->get_controller()->set_filter(safety_filter_ctrl);

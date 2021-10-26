@@ -11,7 +11,7 @@
     <xacro:property name="chassis_length" value="0.960" />
     <xacro:property name="chassis_width" value="0.793" />
     <xacro:property name="chassis_height" value="0.216" />
-    <xacro:property name="deck_height" value="0.292" />
+    <xacro:property name="deck_height" value="0.293" />
     <xacro:property name="axle_offset" value="0.0500" />
 
     <xacro:property name="dummy_inertia" value="1e-09"/>

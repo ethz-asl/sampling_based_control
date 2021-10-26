@@ -35,7 +35,7 @@
         <parent link="mid_mount"/>
         <child link="franka_mount_link"/>
         <!--        <origin xyz="$(optenv RIDGEBACK_FRANKA_XYZ 0.21 0.0 0.2)" rpy="$(optenv RIDGEBACK_FRANKA_RPY 0 0 0)"/>-->
-        <origin xyz="0.282 0.005 0.442" rpy="0 0 0"/>
+        <origin xyz="0.282 0.005 0.447" rpy="0 0 0"/>
 
     </joint>
     <link name="franka_mount_link"/>
@@ -51,5 +51,14 @@
             <origin xyz="0 -0.02 0.035" rpy="0 0 0"/> <!-- 0 0 0.45 offset panda_hand xyz="0 0 0.095" rpy="0 0 0"-->
         </joint>
     </xacro:if>
+
+    <!-- The position of the frame published by Vicon -->
+    <link name="reference_link"/>
+    <joint name="reference_link_joint" type="fixed">
+        <origin xyz="-0.015 0.0 0.01" rpy="0 0 0"/>
+        <parent link="franka_mount_link"/>
+        <child link="reference_link"/>
+    </joint>
+
 
 </robot>
