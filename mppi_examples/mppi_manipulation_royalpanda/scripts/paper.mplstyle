@@ -1,0 +1,22 @@
+# Check this out https://github.com/matplotlib/matplotlib/blob/v3.1.2/matplotlibrc.template
+
+axes.grid : true
+axes.titlesize : 24
+axes.labelsize : 20
+
+lines.linewidth : 6
+lines.markersize : 10
+
+xtick.labelsize : 30
+#xtick.major.size : 30
+#xtick.minor.size : 20
+
+ytick.labelsize : 30
+#ytick.major.size : 30
+#ytick.minor.size : 20
+
+
+boxplot.boxprops.linewidth : 3.0
+boxplot.boxprops.color : black
+
+legend.fontsize : 40

@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import functools
 import pandas as pd
 import numpy as np
@@ -18,12 +19,15 @@ from IPython.display import display
 #############################
 # Global plotting settings
 #############################
-
-plt.rcParams['axes.grid'] = True
+stylesheet = os.path.join(os.path.dirname(__file__), "paper.mplstyle")
 
 ###############################
 # Utilities
 ###############################
+
+
+def reload_plt_style():
+    plt.style.use(stylesheet)
 
 
 class ExperimentType:
@@ -31,6 +35,7 @@ class ExperimentType:
     FILTER_OUT = "filter_out"
     FILTER_IN = "filter_in"
     FILTER_IN_OUT = "filter_in_out"
+    PASSIVITY_ZBF = "zbf"
 
     @classmethod
     def get_labels(cls):
@@ -44,6 +49,8 @@ def experiment_type_from_name(name):
         return ExperimentType.FILTER_IN
     elif "filter_out" in name:
         return ExperimentType.FILTER_OUT
+    elif "zbf" in name:
+        return ExperimentType.PASSIVITY_ZBF
     else:
         return ExperimentType.NO_FILTER
 
@@ -53,7 +60,9 @@ def get_rollouts_from_name(name):
 
 
 def get_object_from_name(name):
-    object_types = ['shelf', 'door', 'microwave', 'drawer', 'valve']
+    object_types = [
+        'shelf', 'door', 'microwave', 'drawer', 'valve', 'new_shelf'
+    ]
     for object_type in object_types:
         if object_type in name:
             return object_type
@@ -72,7 +81,7 @@ def get_data(root_dir, required_fields, log_prefix=""):
     {LOG_FILES_PRINT}
     """)
 
-    data = {}
+    data = {'experiment_name': []}
     for experiment_idx, file in enumerate(LOG_FILES):
         print(f"{experiment_idx} processed out of {len(LOG_FILES)}")
         experiment_name = file.split('/')[-1].replace('.silo', '')
@@ -80,6 +89,7 @@ def get_data(root_dir, required_fields, log_prefix=""):
 
         silo_dict = to_dictionary(silo, required_fields)
 
+        data['experiment_name'].append(experiment_name)
         for key, value in silo_dict.items():
             if experiment_idx == 0:
                 data[key] = [value]
@@ -88,8 +98,10 @@ def get_data(root_dir, required_fields, log_prefix=""):
     return data
 
 
-def process_data(data):
-    data['experiment_name'] = []
+def process_data(data, final_time):
+    """
+    final_time: up to which time the metric should be computed for each experiment
+    """
     data['joint_limits_violation_se'] = []
     data['cartesian_limits_violation_se'] = []
     data['average_wrench_norm'] = []
@@ -102,27 +114,33 @@ def process_data(data):
     data['rollouts'] = []
     data['dissipated_power'] = []
 
-    first_field = data.keys()[0]
+    first_field = list(data.keys())[0]
     num_experiments = len(data[first_field])
+    print(f"Processing {num_experiments} experiments.")
     for experiment_idx in range(num_experiments):
+        experiment_name = data['experiment_name'][experiment_idx]
+        print(f"Processing {experiment_name}")
 
-        time = data['sim_time']
+        time = data['sim_time'][experiment_idx]
+        print(f"t start = {time[0]}s, t end = {time[-1]}s")
 
-        joint_violation_se = matrix_to_se(time, 0.0, time[-1],
-                                          data['joint_limits_violation'])
-        carts_violation_se = matrix_to_se(time, 0.0, time[-1],
-                                          data['cartesian_limits_violation'])
-        average_wrench = average_col_norm(time,
-                                          0.0,
-                                          time[-1],
-                                          data['external_wrench_filtered'],
-                                          threshold=0.0)
+        joint_violation_se = matrix_to_se(
+            time, 0.0, final_time,
+            data['joint_limits_violation'][experiment_idx])
+        carts_violation_se = matrix_to_se(
+            time, 0.0, final_time,
+            data['cartesian_limits_violation'][experiment_idx])
+        average_wrench = average_col_norm(
+            time,
+            0.0,
+            final_time,
+            data['external_wrench_filtered'][experiment_idx],
+            threshold=0.0)
+        wrench_norm = col_norm(
+            time, 0.0, final_time,
+            data['external_wrench_filtered'][experiment_idx])
+        average_stage_cost = np.mean(data['stage_cost'][experiment_idx])
 
-        wrench_norm = col_norm(time, 0.0, final_time,
-                               data['external_wrench_filtered'])
-        average_stage_cost = np.mean(data['stage_cost'])
-
-        data['experiment_name'].append(experiment_name)
         data['joint_limits_violation_se'].append(joint_violation_se)
         data['cartesian_limits_violation_se'].append(carts_violation_se)
         data['average_wrench_norm'].append(average_wrench)
@@ -135,7 +153,8 @@ def process_data(data):
         data['wrench_norm'].append(wrench_norm)
         data['rollouts'].append(get_rollouts_from_name(experiment_name))
         data['dissipated_power'].append(
-            np.sum(data['power_from_interaction'][-1]))
+            np.sum(data['power_from_interaction'][experiment_idx]))
+    return data
 
 
 ###################
@@ -151,6 +170,7 @@ def set_facetgrid_style(g, legend=False, title=True):
                        bottom=False,
                        top=False,
                        labelbottom=False)
+        ax.grid(True)
         if i == len(g.axes_dict.items()) - 1 and legend:
             ax.legend(fontsize=48)
         g.fig.set_size_inches(42.5, 12.5)
@@ -207,6 +227,29 @@ def eval_field(logger: signal_logger.Silo, prefix: str):
     for col in range(cols):
         matrix[:, col] = logger.get_signal(prefix + f"_{col}").values
     return matrix
+
+
+def add_subplot_axes(ax, rect, facecolor='w'):
+    fig = ax.figure
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    inax_position = ax.transAxes.transform(rect[0:2])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    x = infig_position[0]
+    y = infig_position[1]
+    width *= rect[2]
+    height *= rect[3]  # <= Typo was here
+    subax = fig.add_axes([x, y, width, height],
+                         facecolor=facecolor)  # matplotlib 2.0+
+    x_labelsize = subax.get_xticklabels()[0].get_size()
+    y_labelsize = subax.get_yticklabels()[0].get_size()
+    x_labelsize *= rect[2]**0.5
+    y_labelsize *= rect[3]**0.5
+    subax.xaxis.set_tick_params(labelsize=x_labelsize)
+    subax.yaxis.set_tick_params(labelsize=y_labelsize)
+    return subax
 
 
 def to_dictionary(logger: signal_logger.Silo, fields):
@@ -341,3 +384,21 @@ def save_figure(b, figure):
     save_name = fd.asksaveasfilename()
     if save_name:
         figure.savefig(save_name)
+
+
+def replace_legend_labels(ax, old_labels, new_labels, fontsize=10):
+    """ 
+    Replace old labels (if in the axis) with the new ones
+    """
+
+    if (len(old_labels) != len(new_labels)):
+        raise NameError("old labels and new labels have different size.")
+
+    # get legend and loop through the labels
+    l = ax.legend(fontsize=fontsize)
+    for text_idx, text in enumerate(l.get_texts()):
+        text = text.get_text()
+        new_text = text
+        if text in old_labels:
+            new_text = new_labels[old_labels.index(text)]
+        l.get_texts()[text_idx].set_text(new_text)

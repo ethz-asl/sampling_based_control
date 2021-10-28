@@ -365,6 +365,19 @@ void ManipulationController::starting(const ros::Time& time) {
   }
   position_measured_ = position_desired_;
 
+  // reset the safety filter
+  safety_filter_ =
+      std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
+
+  // this is the filter that is used to sanitize the rollouts
+  if (apply_filter_to_rollouts_) {
+    ROS_INFO("Applying safety filter to rollouts");
+    mppi::filter_ptr safety_filter_ctrl =
+        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
+    man_interface_->get_controller()->set_filter(safety_filter_ctrl);
+  }
+
+>>>>>>> robot_experiments
   // metrics
   stage_cost_ = 0.0;
 

@@ -8,6 +8,7 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Wrench, Point
 from rosgraph_msgs.msg import Clock
 from visualization_msgs.msg import Marker
+from copy import deepcopy
 
 # So to find the additional path to utilities
 import sys
@@ -19,6 +20,12 @@ from utilities import get_data
 
 # For jacobian computation
 import pinocchio as pin
+
+# For plotting
+import matplotlib.pyplot as plt
+
+# For filtering estimated wrench
+from scipy.signal import medfilt
 
 
 def create_arrow(x, y, z, frame):
@@ -78,14 +85,6 @@ REQUIRED_FIELDS = [
 ]
 
 rospy.init_node("experiment_replay")
-data = get_data("/home/giuseppe/logs_tests_22_10_21",
-                required_fields=REQUIRED_FIELDS,
-                log_prefix="door_opening_filter_last")
-topics = [topic for topic in data.keys()]
-publishers = [
-    rospy.Publisher(topic, Float64MultiArray, queue_size=1) for topic in topics
-]
-msgs = [Float64MultiArray()] * len(publishers)
 
 joint_state = JointState()
 joint_state.name = [
@@ -117,6 +116,7 @@ rospy.set_param("/use_sim_time", True)
 ros_time = Clock()
 clock_publisher = rospy.Publisher("/clock", Clock, queue_size=1)
 
+# utitility to pause the simulation while it is running
 pause = False
 
 
@@ -128,78 +128,70 @@ def pause_cb(req):
 
 pause_service = rospy.Service("/pause", Empty, pause_cb)
 
+data = get_data("/home/giuseppe/logs_tests_26_10_21",
+                required_fields=REQUIRED_FIELDS,
+                log_prefix="no_filter_1")
+topics = [topic for topic in data.keys()]
+publishers = [
+    rospy.Publisher(topic, Float64MultiArray, queue_size=1) for topic in topics
+]
+msgs = [Float64MultiArray()] * len(publishers)
+
 i = 0
 steps = len(data[topics[0]][0])
+runtime = 0.0
+print(f"The experiments last for {steps} steps.")
+while i < steps:
+    for topic, pub, msg in zip(topics, publishers, msgs):
+        val = data[topic][0][i]
+        if isinstance(val, (float, int, np.float64)):
+            val = [val]
 
+        if topic == "state":
+            for j in range(12):
+                q[j] = val[j]
+                tau[j] = val[-12 + j]
+            wrench = robot.wrench_from_torque("panda_grasp", q, tau)
 
-def reset_cb(msg):
-    """ TF does not like jumps back in time """
-    global i
-    i_temp = int(msg.data / 0.01)
-    if i_temp < 0:
-        i = 0
-    elif i_temp > steps:
-        i = steps
-    else:
-        i = i_temp
-    rospy.loginfo(f"Resetting to time {msg.data}")
+            experiment_data[prefix]["object_position"].append(val[24])
+            experiment_data[prefix]["wrench_norm"].append(
+                np.linalg.norm(wrench))
 
+        if topic == "power_from_interaction":
+            experiment_data[prefix]["dissipated_power"].append(np.sum(val))
 
-reset_subscriber = rospy.Subscriber("/reset", Float64, reset_cb, queue_size=1)
+        if publish_ros:
+            msg.data = val
+            pub.publish(msg)
 
+            wrench_ros.force.x = wrench[0]
+            wrench_ros.force.y = wrench[1]
+            wrench_ros.force.z = wrench[2]
+            wrench_ros.torque.x = wrench[3]
+            wrench_ros.torque.y = wrench[4]
+            wrench_ros.torque.z = wrench[5]
+            wrench_publisher.publish(wrench_ros)
 
-def main():
-    global i
-    try:
-        runtime = 0.0
-        print(f"The experiments last for {steps} steps.")
-        while i < steps:
-            for topic, pub, msg in zip(topics, publishers, msgs):
-                val = data[topic][0][i]
-                if isinstance(val, (float, int, np.float64)):
-                    val = [val]
-                msg.data = val
-                pub.publish(msg)
+            joint_state.header.stamp = rospy.get_rostime()
+            for j in range(12):
+                joint_state.position[j] = q[j]
+                joint_state.effort[j] = tau[j]
+            joint_state_publisher.publish(joint_state)
 
-            if topic == "state":
-                for j in range(12):
-                    q[j] = val[j]
-                    tau[j] = val[-12 + j]
-                    wrench = robot.wrench_from_torque("panda_grasp", q, tau)
-                    wrench_ros.force.x = wrench[0]
-                    wrench_ros.force.y = wrench[1]
-                    wrench_ros.force.z = wrench[2]
-                    wrench_ros.torque.x = wrench[3]
-                    wrench_ros.torque.y = wrench[4]
-                    wrench_ros.torque.z = wrench[5]
-                    wrench_publisher.publish(wrench_ros)
+            articulation_state.header.stamp = rospy.get_rostime()
+            articulation_state.position[0] = val[24]
+            articulation_state.velocity[0] = val[25]
+            articulation_state_publisher.publish(articulation_state)
 
-                    joint_state.header.stamp = rospy.get_rostime()
-                    joint_state.position[j] = val[j]
-                    joint_state.velocity[j] = val[12 + j]
-                    joint_state.effort[j] = val[-12 + j]
-                    joint_state_publisher.publish(joint_state)
+    ros_time = rospy.Time.from_sec(runtime)
+    clock_publisher.publish(ros_time)
 
-                articulation_state.header.stamp = rospy.get_rostime()
-                articulation_state.position[0] = val[24]
-                articulation_state.velocity[0] = val[25]
-                articulation_state_publisher.publish(articulation_state)
+    marker = create_arrow(tau[0] / 10., tau[1] / 10., 0.0, "base_link")
+    base_force_publisher.publish(marker)
 
-            ros_time = rospy.Time.from_sec(runtime)
-            clock_publisher.publish(ros_time)
+    while pause:
+        time.sleep(0.1)
 
-            marker = create_arrow(tau[0] / 10., tau[1] / 10., 0.0, "base_link")
-            base_force_publisher.publish(marker)
-
-            while pause:
-                time.sleep(0.1)
-
-            runtime = i * 0.01
-            time.sleep(0.01)
-            i += 1
-    except rospy.ROSInterruptException:
-        return 0
-
-
-if __name__ == "__main__":
-    main()
+    runtime = i * 0.015
+    time.sleep(0.015)
+    i += 1
