@@ -21,11 +21,11 @@ roslaunch.configure_logging(uuid)
 
 cli_args = ['mppi_manipulation_royalpanda', 'sim.launch']
 
-objects_op = ["door", "shelf", "microwave", "drawer"]
-filter_in_op = [False, True]
-filter_out_op = [False, True]
-number_experiments = 10
+objects_op = ["new_shelf"]  #["door", "shelf", "microwave", "drawer"]
+filter_in_op = [False, True, False, True]
+filter_out_op = [False, False, True, True]
 
+number_experiments = 1
 max_experiment_time = 140
 
 for fin in filter_in_op:
@@ -43,7 +43,8 @@ for fin in filter_in_op:
                 roslaunch_args = [
                     f"experiment_name:={extend_name(ex_id, object_type, fin, fout)}",
                     f'object:={object_type}', f'rollouts:=50',
-                    f'filter_in:={fin_arg}', f'filter_out:={fout_arg}',
+                    f'filter_in:=false', f'filter_out:=false',
+                    f'test_filter_in:={fin}', f'test_filter_out:={fout}',
                     f'log_folder:=/media/giuseppe/My Passport/Work/logs_mppi/',
                     'rviz:=false'
                 ]

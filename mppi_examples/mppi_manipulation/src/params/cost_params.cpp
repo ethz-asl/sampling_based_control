@@ -175,16 +175,26 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
-  if (!nh.getParam("cost/collision_link_0", collision_link_0) ||
-      collision_link_0.empty()) {
-    ROS_ERROR("Failed to parse cost/collision_link_0 or invalid!");
+  /// Collision parameters
+  std::vector<std::string> collision_link_pair_0;
+  if (!nh.param<std::vector<std::string>>("cost/collision_link_pair_0", collision_link_pair_0, {})){
+    ROS_ERROR("Failed to get collision_link_pair_0!");
     return false;
   }
 
-  if (!nh.getParam("cost/collision_link_1", collision_link_1) ||
-      collision_link_1.empty()) {
-    ROS_ERROR("Failed to parse cost/collision_link_1 or invalid!");
+  std::vector<std::string> collision_link_pair_1;
+  if (!nh.param<std::vector<std::string>>("cost/collision_link_pair_1", collision_link_pair_1, {})){
+    ROS_ERROR("Failed to get collision_link_pair_1!");
     return false;
+  }
+
+  if (collision_link_pair_1.size() != collision_link_pair_0.size()){
+    ROS_ERROR("The collision links pair lists have different size!");
+    return false;
+  }
+
+  for (int i=0; i<collision_link_pair_0.size(); i++){
+    collision_link_pairs.emplace_back(collision_link_pair_0[i], collision_link_pair_1[i]);
   }
 
   if (!nh.getParam("cost/collision_threshold", collision_threshold)) {
@@ -194,6 +204,11 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
 
   if (!nh.getParam("cost/collision_weight", Q_collision)) {
     ROS_ERROR("Failed to parse cost/collision_weight or invalid!");
+    return false;
+  }
+
+  if (!nh.param<std::vector<std::string>>("cost/collision_links", collision_links, {})){
+    ROS_ERROR("Failed to get collision_links!");
     return false;
   }
 
@@ -232,6 +247,12 @@ std::ostream& operator<<(std::ostream& os,
   os << " lower joint limits: ";
   for (size_t i=0; i<7; i++) os << param.lower_joint_limits[i] << " ";
   os << std::endl;
+  os << " collision links: " << std::endl;
+  for (size_t i=0; i<param.collision_links.size(); i++) os << "- " << param.collision_links[i] << std::endl;
+  os << " collision link pairs: " << std::endl;
+  for (auto pair : param.collision_link_pairs) {
+    os << "- (" << pair.first << ", " << pair.second << ")" << std::endl;
+  }
   os << "========================================" << std::endl;
   // clang-format on
 

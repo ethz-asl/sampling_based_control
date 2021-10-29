@@ -35,13 +35,12 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   safety_filter_ =
       std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
 
+  safety_filter_ctrl_ =
+        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
+    
   // this is the filter that is used to sanitize the rollouts
   if (apply_filter_to_rollouts_) {
-    ROS_INFO("Applying safety filter to rollouts");
-    safety_filter_params_.passivity_constraint = false;
-    mppi::filter_ptr safety_filter_ctrl =
-        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
-    man_interface_->get_controller()->set_filter(safety_filter_ctrl);
+    man_interface_->get_controller()->set_filter(safety_filter_ctrl_);
   }
 
   ROS_INFO("Solver initialized correctly.");
@@ -174,6 +173,24 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   if (!node_handle.getParam("apply_filter_to_rollouts",
                             apply_filter_to_rollouts_)) {
     ROS_ERROR("apply_filter_to_rollouts not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("test_filter_out",
+                            test_filter_out_)) {
+    ROS_ERROR("test_filter_out not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("test_filter_in",
+                            test_filter_in_)) {
+    ROS_ERROR("test_filter_in not found");
+    return false;
+  }
+
+  if (!node_handle.getParam("react_to_obstacle",
+                            react_to_obstacle_)) {
+    ROS_ERROR("react_to_obstacle not found");
     return false;
   }
 
@@ -330,6 +347,21 @@ void ManipulationController::state_callback(
 
     man_interface_->set_observation(x_, observation_time_);
     man_interface_->update_reference(x_, observation_time_);
+    
+    // Hack to know when to activate the filter to test working of the filter
+    // when a sudded obstacle appear on the way
+    if (man_interface_->has_obstacle() && react_to_obstacle_){
+      if (!apply_filter_to_rollouts_ && test_filter_in_){
+         man_interface_->get_controller()->set_filter(safety_filter_ctrl_);
+         ROS_INFO("[Controller::update] Setting the filter inside mppi");
+      }
+      if (!apply_filter_ && test_filter_out_){
+        apply_filter_ = true;
+        ROS_INFO("[Controller::update] Setting the filter outside mppi");
+      } 
+      react_to_obstacle_ = false;
+    }
+    
     getRotationMatrix(R_world_base, x_(2));
   }
 
@@ -365,19 +397,7 @@ void ManipulationController::starting(const ros::Time& time) {
   }
   position_measured_ = position_desired_;
 
-  // reset the safety filter
-  safety_filter_ =
-      std::make_unique<PandaMobileSafetyFilter>(safety_filter_params_);
 
-  // this is the filter that is used to sanitize the rollouts
-  if (apply_filter_to_rollouts_) {
-    ROS_INFO("Applying safety filter to rollouts");
-    mppi::filter_ptr safety_filter_ctrl =
-        std::make_shared<PandaMobileSafetyFilter>(safety_filter_params_);
-    man_interface_->get_controller()->set_filter(safety_filter_ctrl);
-  }
-
->>>>>>> robot_experiments
   // metrics
   stage_cost_ = 0.0;
 
@@ -463,6 +483,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   }
 }
 
+
 void ManipulationController::update_position_reference(
     const ros::Duration& period) {
   position_desired_.tail<7>() += u_opt_.tail<7>() * period.toSec();
@@ -540,10 +561,6 @@ void ManipulationController::send_command_base(const ros::Duration& period) {
   }
 
   if (base_trigger_() && base_twist_publisher_.trylock()) {
-    Eigen::Vector3d twist_nominal(x_nom_ros_.base_twist.linear.x,
-                                  x_nom_ros_.base_twist.linear.y,
-                                  x_nom_ros_.base_twist.angular.z);
-
     double cmd_x = u_opt_[0]  + gains_.base_gains.Ki[0] * u_ff[0];
     double cmd_y = u_opt_[1]  + gains_.base_gains.Ki[1] * u_ff[1];
     double cmd_z = u_opt_[2]  + gains_.base_gains.Ki[2] * u_ff[2];
@@ -596,6 +613,9 @@ void ManipulationController::update(const ros::Time& time,
     return;
   }
 
+  // could happen at the first call
+  if (start_time_ > time.toSec()) return;
+
   current_time_ = time.toSec() - start_time_;
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
@@ -611,7 +631,6 @@ void ManipulationController::update(const ros::Time& time,
     man_interface_->get_input_state(x_, x_nom_, u_, current_time_);
   }
 
-  manipulation::conversions::eigenToMsg(x_nom_, current_time_, x_nom_ros_);
   robot_state_ = state_handle_->getRobotState();
   
   if (record_bag_){

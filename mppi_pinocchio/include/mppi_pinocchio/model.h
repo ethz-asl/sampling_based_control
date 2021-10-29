@@ -60,6 +60,7 @@ class RobotModel {
    */
   void get_error(const std::string& from_frame, const std::string& to_frame,
                  Vector6d& error) const;
+  
   /**
    *
    * @param frame
@@ -79,6 +80,10 @@ class RobotModel {
   void get_offset(const std::string& from_frame, const std::string& to_frame,
                   Eigen::Vector3d& offset);
 
+  int get_frame_idx(const std::string& frame_id);
+  
+  Eigen::Vector3d get_frame_translation(const int frame_idx);
+  Eigen::Vector3d get_frame_translation(const std::string& frame_id);
   /**
    *
    * @param frame

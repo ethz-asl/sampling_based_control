@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
-   <param name="/use_sim_time" value="false"/>
+   <param name="/use_sim_time" value="true"/>
  
     <arg name="debug" default="false"/>
     <arg name="launch_prefix" value="" unless="$(arg debug)"/>
     <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
     <arg name="record_bag" default="false"/>
-    <arg name="rollouts" default="20"/>
+    <arg name="rollouts" default="40"/>
     <arg name="log_folder" default="$(find mppi_manipulation_royalpanda)/logs/"/>
     <arg name="rviz" default="true"/>
 
@@ -26,6 +26,9 @@
     
     <arg name="filter_in" default="false"/>
     <arg name="filter_out" default="false"/>
+    <arg name="test_filter_in" default="false"/>
+    <arg name="test_filter_out" default="false"/>
+
 
     <include file="$(find mppi_manipulation)/launch/load.launch">
         <arg name="debug" value="false"/>
@@ -39,7 +42,7 @@
     <node name="simulation_node" type="simulation_node" pkg="mppi_manipulation_royalpanda" output="screen"
           launch-prefix="$(arg launch_prefix)">
         <param name="experiment_name" value="$(arg experiment_name)"/>
-        <param name="max_sim_time" value="4000.0"/>
+        <param name="max_sim_time" value="10.0"/>
         <param name="slow_down" value="100"/>
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>

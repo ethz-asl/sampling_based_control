@@ -41,11 +41,24 @@ RobotModel::~RobotModel() {
   delete model_;
   delete data_;
 };
-
+ 
 // deep copy
 RobotModel::RobotModel(const RobotModel& rhs) {
   model_ = new pinocchio::Model(*rhs.model_);
   data_ = new pinocchio::Data(*rhs.data_);
+}
+
+
+int RobotModel::get_frame_idx(const std::string& frame_id){
+  return model_->getFrameId(frame_id);
+}
+  
+Eigen::Vector3d RobotModel::get_frame_translation(const int frame_idx){
+  return data_->oMf[frame_idx].translation();
+}
+
+Eigen::Vector3d RobotModel::get_frame_translation(const std::string& frame_id){
+  return data_->oMf[get_frame_idx(frame_id)].translation();
 }
 
 void RobotModel::print_info() const {

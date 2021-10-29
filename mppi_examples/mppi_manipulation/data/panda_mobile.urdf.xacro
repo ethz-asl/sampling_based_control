@@ -21,19 +21,53 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-               <sphere radius="0.5"/>
+               <sphere radius="0.4"/>
             </geometry>
             <material name="Cyan">
-               <color rgba="0 1.0 1.0 0.3"/>
+               <color rgba="0 1.0 1.0 0.1"/>
             </material>
         </visual>
     </link>
     <joint name="obstacle_joint" type="fixed">
       <parent link="omni_base_root_link"/>
       <child link="obstacle_link"/>
-      <origin xyz="0.0 0.0 1.0" rpy="0 0 0"/>
+      <origin xyz="0.0 0.0 1.2" rpy="0 0 0"/>
     </joint>
 
+    <!-- Base limits link -->
+    <link name="base_limit_left">
+        <visual>
+            <origin xyz="0 ${0.4 + 0.5/2 + 0.35} 0" rpy="0 0 0" /> <!-- width_robot/2 + wight_box_marker/2 + clearance -->
+            <geometry>
+               <box size="20 0.5 0.2"/>
+            </geometry>
+            <material name="Red">
+               <color rgba="1.0 0.0 0.0 0.5"/>
+            </material>
+        </visual>
+    </link>
+    <joint name="base_limit_left_joint" type="fixed">
+      <parent link="omni_base_root_link"/>
+      <child link="base_limit_left"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="base_limit_right">
+        <visual>
+            <origin xyz="0 -${0.4 + 0.5/2 + 0.35} 0" rpy="0 0 0" /> <!-- width_robot/2 + wight_box_marker/2 + clearance -->
+            <geometry>
+               <box size="20 0.5 0.2"/>
+            </geometry>
+            <material name="Red">
+               <color rgba="1.0 0.0 0.0 0.5"/>
+            </material>
+        </visual>
+    </link>
+    <joint name="base_limit_right_joint" type="fixed">
+      <parent link="omni_base_root_link"/>
+      <child link="base_limit_right"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    </joint>
     <!--    Omnidirectional base-->
     <xacro:unless value="$(arg fixed_base)">
         <joint name="world_joint" type="fixed">

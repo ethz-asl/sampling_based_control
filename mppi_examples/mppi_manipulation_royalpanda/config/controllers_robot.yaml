@@ -84,11 +84,21 @@ manipulation_controller:
     tracked_frame: panda_grasp
     arm_base_frame: panda_link0
 
-    collision_link_0: panda_link1
-    collision_link_1: panda_link7
-
+    # for self collision
+    collision_link_pair_0: [panda_link0, panda_link1]
+    collision_link_pair_1: [panda_link7, panda_link7]
     collision_threshold: 0.35
     collision_weight: 1000
+  
+    # for obstacle avoidance
+    collision_links : [panda_link1, 
+                       panda_link2, 
+                       panda_link3, 
+                       panda_link4, 
+                       panda_link5, 
+                       panda_link6, 
+                       panda_link7,
+                       panda_hand]
 
 
   controller_gains:

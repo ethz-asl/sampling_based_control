@@ -44,6 +44,8 @@ class PandaCost : public mppi::Cost {
   Eigen::Vector3d distance_vector_;
   Eigen::Vector3d collision_vector_;
 
+  std::vector<int> collision_links_idx_;
+
  public:
   mppi::cost_ptr create() override {
     return std::make_shared<PandaCost>(params_);

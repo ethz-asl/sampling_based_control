@@ -30,6 +30,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   bool init_ros() override;
   void publish_ros() override;
   void update_reference(const mppi::observation_t& x, const double t);
+  inline bool has_obstacle() { return obstacle_active_; };
 
   mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
@@ -89,6 +90,11 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   geometry_msgs::PoseStamped obstacle_pose_;
   geometry_msgs::PoseStamped ee_desired_pose_;
   visualization_msgs::Marker obstacle_marker_;
+
+  // obstacle stuff
+  bool obstacle_active_ = false;
+  double obstacle_radius_;
+  Eigen::Vector3d obstacle_position_; 
 };
 
 }  // namespace manipulation

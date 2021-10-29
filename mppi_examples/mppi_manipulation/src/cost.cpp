@@ -15,6 +15,9 @@ using namespace manipulation;
 PandaCost::PandaCost(const CostParams& params) : params_(params) {
   robot_model_.init_from_xml(params_.robot_description);
   object_model_.init_from_xml(params_.object_description);
+  for(const auto collision_pair : params_.collision_link_pairs){
+    collision_links_idx_.push_back(robot_model_.get_frame_idx(collision_pair.first));
+  }
 }
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
@@ -44,6 +47,17 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
     if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) cost += params_.Qc;
   }
+  else {
+    mppi_pinocchio::diff2(
+      robot_model_.get_pose(params_.tracked_frame),
+      object_model_.get_pose(params_.handle_frame) * params_.grasp_offset,
+      error_);
+
+    double lin_error_norm = error_.head<3>().norm();
+    double ang_error_norm = error_.tail<3>().norm();
+    cost += (lin_error_norm < params_.lin_tol_manipulation) ? 0.0 : std::pow(lin_error_norm - params_.lin_tol_manipulation, 2.0) * params_.Qt2;  
+    cost += (ang_error_norm < params_.ang_tol_manipulation) ? 0.0 : std::pow(ang_error_norm - params_.ang_tol_manipulation, 2.0) * params_.Qr2;  
+  }
 
   // handle reaching cost
   
@@ -63,19 +77,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     }
   }
 
-  // object displacement cost
-  if (mode != 0) {
-    mppi_pinocchio::diff2(
-      robot_model_.get_pose(params_.tracked_frame),
-      object_model_.get_pose(params_.handle_frame) * params_.grasp_offset,
-      error_);
-
-    double lin_error_norm = error_.head<3>().norm();
-    double ang_error_norm = error_.tail<3>().norm();
-    cost += (lin_error_norm < params_.lin_tol_manipulation) ? 0.0 : std::pow(lin_error_norm - params_.lin_tol_manipulation, 2.0) * params_.Qt2;  
-    cost += (ang_error_norm < params_.ang_tol_manipulation) ? 0.0 : std::pow(ang_error_norm - params_.ang_tol_manipulation, 2.0) * params_.Qr2;  
-  }
-  
+  // object displacement cost  
   if (mode == 2){  
     double object_error =
         x(2 * BASE_ARM_GRIPPER_DIM) -
@@ -83,32 +85,41 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += object_error * object_error * params_.Q_obj;
   }
   
-          
-  // object avoidance cost
-  // TODO(giuseppe) add as parameters
-  //double dist = (x.head<2>() - object_model_.get_pose("shelf").translation.head<2>()).norm();
-  //cost += 10 * std::max(0.0, (0.9 - dist));
-
-  
   // power cost
   cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
   
   // self collision cost
-  robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
-                          collision_vector_);
-  cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
-  
-  // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
-  robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
-  cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
-
-  // obstacle cost
-  robot_model_.get_offset("panda_hand", "obstacle_link", collision_vector_);
-  if (collision_vector_.norm() < params_.ro) {
-    cost += params_.Qo +
-            params_.Qos * std::pow(params_.ro - collision_vector_.norm(), 2);
+  for(const auto collision_pair : params_.collision_link_pairs){
+    robot_model_.get_offset(collision_pair.first, collision_pair.second,
+                            collision_vector_);
+    if (collision_vector_.norm() < params_.collision_threshold) {
+      cost += params_.Q_collision * std::pow(params_.collision_threshold - collision_vector_.norm(), 2);
+    }
   }
+  
+  // // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
+  // robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
+  // cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
 
+  // obstacle avoidance cost
+  for(const auto& collision_idx : collision_links_idx_){
+    collision_vector_ = robot_model_.get_frame_translation(collision_idx) - ref.segment<3>(7);
+    if (collision_vector_.norm() < params_.ro) {
+      cost += params_.Qo +
+            params_.Qos * std::pow(params_.ro - collision_vector_.norm(), 2);
+      break;
+    }  
+  }
+  
+  // for(const auto& collision_link : params_.collision_links){
+  //   robot_model_.get_offset(collision_link, "obstacle_link", collision_vector_);
+  //   if (collision_vector_.norm() < params_.ro) {
+  //     cost += params_.Qo +
+  //           params_.Qos * std::pow(params_.ro - collision_vector_.norm(), 2);
+  //     break;
+  //   }  
+  // }
+  
   // arm reach cost
   double reach;
   robot_model_.get_offset(params_.arm_base_frame, params_.tracked_frame,
@@ -119,7 +130,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
             params_.Q_reachs * (std::pow(reach - params_.max_reach, 2));
   }
 
-  if (distance_vector_.norm() < params_.min_dist) {
+  if (reach < params_.min_dist) {
     cost += params_.Q_reach +
             params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
   }

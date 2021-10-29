@@ -4,6 +4,7 @@
 #pragma once
 #include <ros/ros.h>
 #include <Eigen/Core>
+#include <tuple>
 
 namespace manipulation {
 struct FilterParams {
@@ -20,22 +21,17 @@ struct FilterParams {
   bool cartesian_limits_soft = false;
   double cartesian_limits_slack_multiplier = 0.0;
   double max_reach = 0.8;
-  double min_dist = 0.15;
+  double min_reach = 0.15;
 
-  // articulated object avoidance
-  bool object_avoidance = false;
-  bool object_avoidance_soft = false;
-  double object_avoidance_slack_multiplier = 0.0;
-  double min_object_distance = 0.2;
-  std::string object_urdf;
-  std::string object_frame_id;
+  typedef std::tuple<std::string, std::string, double> collision_info_t;
+  std::vector<collision_info_t> collision_info;
 
-  // obstacle avoidance
-  bool obstacle_avoidance = false;
-  bool obstacle_avoidance_soft = false;
-  double obstacle_avoidance_slack_multiplier = 0.0;
-  std::string obstacle_frame_id;
-  double min_obstacle_distance = 0.2;
+  // // obstacle avoidance
+  // bool obstacle_avoidance = false;
+  // bool obstacle_avoidance_soft = false;
+  // double obstacle_avoidance_slack_multiplier = 0.0;
+  // std::string obstacle_frame_id;
+  // double min_obstacle_distance = 0.2;
 
   // input limits
   bool input_limits = true;

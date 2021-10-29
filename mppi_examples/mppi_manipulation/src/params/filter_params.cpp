@@ -137,84 +137,6 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
   }
 
   /////////////////////
-  // Object avoidance
-  /////////////////////
-  if (!nh.param("safety_filter/object_avoidance/active", object_avoidance,
-                false)) {
-    ROS_WARN("Failed to parse safety_filter/object_avoidance/active");
-    return false;
-  }
-
-  if (object_avoidance) {
-    if (!nh.param<bool>("safety_filter/object_avoidance/soft",
-                        object_avoidance_soft, false)) {
-      ROS_WARN("Failed to parse safety_filter/object_avoidance/soft");
-      return false;
-    }
-
-    if (!nh.param<double>("safety_filter/object_avoidance/slack_multiplier",
-                          object_avoidance_slack_multiplier, 0.0)) {
-      ROS_WARN(
-          "Failed to parse safety_filter/object_avoidance/slack_multiplier");
-      return false;
-    }
-
-    if (!nh.param<std::string>("/robot_description_safety_filter", urdf, {})) {
-      ROS_WARN("Failed to parse /robot_description_safety_filter");
-      return false;
-    }
-
-    if (!nh.param<double>("safety_filter/object_avoidance/min_distance",
-                          min_obstacle_distance, 0.0)) {
-      ROS_WARN("safety_filter/object_avoidance/min_distance");
-      return false;
-    }
-
-    if (!nh.param<std::string>("safety_filter/object_avoidance/object_frame_id",
-                               object_frame_id, {})) {
-      ROS_WARN("safety_filter/object_avoidance/object_frame_id");
-      return false;
-    }
-  }
-
-  /////////////////////
-  // Obstacle avoidance
-  /////////////////////
-  if (!nh.param("safety_filter/obstacle_avoidance/active", obstacle_avoidance,
-                false)) {
-    ROS_WARN("Failed to parse safety_filter/obstacle_avoidance/active");
-    return false;
-  }
-
-  if (obstacle_avoidance) {
-    if (!nh.param<bool>("safety_filter/cartesian_limits/soft",
-                        cartesian_limits_soft, false)) {
-      ROS_WARN("Failed to parse safety_filter/cartesian_limits/soft");
-      return false;
-    }
-
-    if (!nh.param<double>("safety_filter/cartesian_limits/slack_multiplier",
-                          cartesian_limits_slack_multiplier, 0.0)) {
-      ROS_WARN(
-          "Failed to parse safety_filter/cartesian_limits/slack_multiplier");
-      return false;
-    }
-
-    if (!nh.param<double>("safety_filter/obstacle_avoidance/min_distance",
-                          min_obstacle_distance, 0.0)) {
-      ROS_WARN("safety_filter/object_avoidance/min_distance");
-      return false;
-    }
-
-    if (!nh.param<std::string>(
-            "safety_filter/obstacle_avoidance/obstacle_frame_id",
-            obstacle_frame_id, {})) {
-      ROS_WARN("safety_filter/object_avoidance/obstacle_frame_id");
-      return false;
-    }
-  }
-
-  /////////////////////
   // Second derivative limits
   /////////////////////
   if (!nh.param("safety_filter/second_derivative_limits/active",
@@ -281,10 +203,38 @@ bool FilterParams::init_from_ros(ros::NodeHandle& nh) {
       return false;
     }
 
-    if (!nh.param("safety_filter/cartesian_limits/min_distance", min_dist,
+    if (!nh.param("safety_filter/cartesian_limits/min_reach", min_reach,
                   0.15)) {
-      ROS_WARN("Failed to parse safety_filter/cartesian_limits/min_distance");
+      ROS_WARN("Failed to parse safety_filter/cartesian_limits/min_reach");
       return false;
+    }
+  
+
+    std::vector<std::string> link1;
+    if (!nh.param<std::vector<std::string>>("safety_filter/cartesian_limits/collision_link1", link1, {})){
+      ROS_WARN("safety_filter/cartesian_limits/distance");
+      return false;
+    }
+
+    std::vector<std::string> link2;
+    if (!nh.param<std::vector<std::string>>("safety_filter/cartesian_limits/collision_link2", link2, {})){
+      ROS_WARN("safety_filter/cartesian_limits/distance");
+      return false;
+    }
+
+    std::vector<double> distance;
+    if (!nh.param<std::vector<double>>("safety_filter/cartesian_limits/distance", distance, {})){
+      ROS_WARN("safety_filter/cartesian_limits/distance");
+      return false;
+    }
+
+    if (link1.size() != link2.size() || link1.size() != distance.size()){
+      ROS_ERROR("collision info size mismatch!");
+      return false;
+    }
+
+    for (int i=0;i<link1.size(); i++){
+      collision_info.emplace_back(link1[i], link2[i], distance[i]);
     }
   }
 
@@ -363,21 +313,11 @@ std::ostream& operator<<(std::ostream& os, const FilterParams& settings) {
   os << "soft: "          << settings.cartesian_limits_soft << std::endl;
   os << "slack_multiplier: " << settings.cartesian_limits_slack_multiplier << std::endl;
   os << "max_reach: "     << settings.max_reach << std::endl;
-  os << "min_distance: "  << settings.min_dist << std::endl;
-  os << "-----------------------------------------------" << std::endl;
-  os << "Object avoidance: " << std::endl;
-  os << "active: "        << settings.object_avoidance << std::endl;
-  os << "soft: "          << settings.object_avoidance_soft << std::endl;
-  os << "slack_multiplier: " << settings.object_avoidance_slack_multiplier << std::endl;
-  os << "max_distance: "  << settings.min_object_distance << std::endl;
-  os << "object_frame_id: " << settings.object_frame_id << std::endl; 
-  os << "-----------------------------------------------" << std::endl;
-  os << "Obstacle avoidance: " << std::endl;
-  os << "active: "        << settings.obstacle_avoidance << std::endl;
-  os << "soft: "          << settings.obstacle_avoidance_soft << std::endl;
-  os << "slack_multiplier: " << settings.obstacle_avoidance_slack_multiplier << std::endl;
-  os << "obstacle radius: " << settings.min_obstacle_distance << std::endl;
-  os << "obstacle frame: " << settings.obstacle_frame_id << std::endl;
+  os << "min_reach: "     << settings.min_reach << std::endl;
+  os << "collision_info: " << std::endl;
+  for (const auto& info : settings.collision_info){
+    os << "(" << std::get<0>(info) << ", " << std::get<1>(info) << ", " << std::get<2>(info) << ")" << std::endl;
+  }
   os << "-----------------------------------------------" << std::endl;
   os << "Passivity constraint: " << std::endl;
   os << "active: "        << settings.passivity_constraint << std::endl;

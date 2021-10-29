@@ -70,44 +70,57 @@ PandaMobileSafetyFilter::PandaMobileSafetyFilter(const FilterParams& params)
   }
 
   if (params_.cartesian_limits) {
-    // TODO(giuseppe) parse from params
-    // CartesianLimitSettings end_effector_self_collision;
-    // end_effector_self_collision.direction =
-    // CartesianLimitSettings::COLLISION; end_effector_self_collision.frame_a =
-    // "panda_link1"; end_effector_self_collision.frame_b = "panda_link7";
-    // end_effector_self_collision.distance = params_.min_dist;
-
-    // CartesianLimitSettings end_effector_self_collision_2;
-    // end_effector_self_collision_2.direction =
-    // CartesianLimitSettings::COLLISION; end_effector_self_collision_2.frame_a
-    // = "panda_link0"; end_effector_self_collision_2.frame_b = "panda_link7";
-    // end_effector_self_collision.distance = params_.min_dist;
-
-    CartesianLimitSettings end_effector_reach;
-    end_effector_reach.direction = CartesianLimitSettings::REACH;
-    end_effector_reach.P(2, 2) = 0;  // only 2d
-    end_effector_reach.frame_a = "panda_link0";
-    end_effector_reach.frame_b = "panda_hand";
-    end_effector_reach.distance = params_.max_reach;
-
-    CartesianLimitSettings obstacle_avoidance_sett;
-    if (params_.obstacle_avoidance) {
-      obstacle_avoidance_sett.direction = CartesianLimitSettings::COLLISION;
-      obstacle_avoidance_sett.frame_a = "panda_hand";
-      obstacle_avoidance_sett.frame_b = params_.obstacle_frame_id;
-      obstacle_avoidance_sett.distance = params_.min_obstacle_distance;
-    }
-
     CartesianLimitConstraintSettings cart_const_settings;
     cart_const_settings.urdf_string = params_.urdf;
     cart_const_settings.verbosity = params_.verbose;
-    // cart_const_settings.limits.push_back(end_effector_self_collision);
-    // cart_const_settings.limits.push_back(end_effector_self_collision_2);
-    cart_const_settings.limits.push_back(end_effector_reach);
 
-    if (params_.obstacle_avoidance) {
-      cart_const_settings.limits.push_back(obstacle_avoidance_sett);
+    for (const auto& tuple : params_.collision_info){
+      CartesianLimitSettings sett;
+      
+      sett.direction = CartesianLimitSettings::COLLISION; 
+      sett.frame_a = std::get<0>(tuple); //"panda_link1"; 
+      sett.frame_b = std::get<1>(tuple); //end_effector_self_collision.frame_b = "panda_link7";
+      sett.distance = std::get<2>(tuple); //end_effector_self_collision.distance = params_.min_dist;
+      cart_const_settings.limits.push_back(sett);
     }
+    
+    // CartesianLimitSettings end_effector_self_collision_2;
+    // end_effector_self_collision_2.direction = CartesianLimitSettings::COLLISION; 
+    // end_effector_self_collision_2.frame_a = "panda_link0"; 
+    // end_effector_self_collision_2.frame_b = "panda_link7";
+    // end_effector_self_collision.distance = params_.min_dist;
+
+
+    // CartesianLimitSettings end_effector_reach1;
+    // end_effector_reach1.direction = CartesianLimitSettings::COLLISION;
+    // end_effector_reach1.P(2, 2) = 0;  // only 2d
+    // end_effector_reach1.frame_a = "panda_link0";
+    // end_effector_reach1.frame_b = "panda_hand";
+    // end_effector_reach1.distance = params_.min_reach;
+    // cart_const_settings.limits.push_back(end_effector_reach1);
+
+    // CartesianLimitSettings end_effector_reach2;
+    // end_effector_reach2.direction = CartesianLimitSettings::REACH;
+    // end_effector_reach2.P(2, 2) = 0;  // only 2d
+    // end_effector_reach2.frame_a = "panda_link0";
+    // end_effector_reach2.frame_b = "panda_hand";
+    // end_effector_reach2.distance = params_.max_reach;
+    // cart_const_settings.limits.push_back(end_effector_reach2);
+
+    // CartesianLimitSettings obstacle_avoidance_sett;
+    // if (params_.obstacle_avoidance) {
+    //   obstacle_avoidance_sett.direction = CartesianLimitSettings::COLLISION;
+    //   obstacle_avoidance_sett.frame_a = "panda_hand";
+    //   obstacle_avoidance_sett.frame_b = params_.obstacle_frame_id;
+    //   obstacle_avoidance_sett.distance = params_.min_obstacle_distance;
+    // }
+
+    // CartesianLimitConstraintSettings cart_const_settings;
+    // cart_const_settings.urdf_string = params_.urdf;
+    // cart_const_settings.verbosity = params_.verbose;
+    // cart_const_settings.limits.push_back(end_effector_self_collision);
+    //  cart_const_settings.limits.push_back(end_effector_self_collision_2);
+    // cart_const_settings.limits.push_back(end_effector_reach);
 
     std::shared_ptr<ConstraintBase> cart_const =
         std::make_shared<CartesianLimitConstraints>(10, cart_const_settings);

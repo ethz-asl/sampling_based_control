@@ -6,11 +6,11 @@
 
         <!-- Sensor mount -->
         <link name="ridgeback_sensor_mount_link">
-            <visual>
+<!--             <visual>
                 <geometry>
                     <mesh filename="package://mppi_manipulation/data/meshes/ridgeback_sensor_mount.dae"/>
                 </geometry>
-            </visual>
+            </visual> -->
         </link>
 
         <joint name="ridgeback_sensor_mount_joint" type="fixed">

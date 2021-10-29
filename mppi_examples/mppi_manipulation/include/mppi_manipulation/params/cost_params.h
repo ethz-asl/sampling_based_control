@@ -6,6 +6,7 @@
 #include <mppi_pinocchio/model.h>
 #include <ros/ros.h>
 #include <mppi_manipulation/dimensions.h>
+#include <utility> // for std::pair
 
 namespace manipulation {
 
@@ -45,8 +46,8 @@ struct CostParams {
   std::string tracked_frame = "panda_grasp";
   std::string arm_base_frame = "panda_link0";
   
-  std::string collision_link_0;
-  std::string collision_link_1;
+  std::vector<std::pair<std::string, std::string>> collision_link_pairs;
+  std::vector<std::string> collision_links;
   double collision_threshold;
   double Q_collision;
   

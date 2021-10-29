@@ -59,6 +59,21 @@ bool PandaControllerInterface::init_ros() {
     return false;
   }
 
+
+  if (!nh_.param<double>("obstacle_radius", obstacle_radius_, 0.0) ||
+      obstacle_radius_ < 0) {
+    ROS_ERROR("Failed to parse the obstacle_radius_ or wrong params.");
+    return false;
+  }
+
+  std::vector<double> obstacle_position;
+  if (!nh_.param<std::vector<double>>("obstacle_position", obstacle_position, {}) ||
+      obstacle_position.size() != 3) {
+    ROS_ERROR("Failed to parse the obstacle_position or wrong params.");
+    return false;
+  }
+  obstacle_position_ << obstacle_position[0], obstacle_position[1], obstacle_position[2];
+  
   // initialize obstacle
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener(tfBuffer);
@@ -72,14 +87,14 @@ bool PandaControllerInterface::init_ros() {
   }
 
   obstacle_marker_.header.frame_id = "world";
-  obstacle_marker_.type = visualization_msgs::Marker::CYLINDER;
+  obstacle_marker_.type = visualization_msgs::Marker::SPHERE;
   obstacle_marker_.color.r = 1.0;
   obstacle_marker_.color.g = 0.0;
   obstacle_marker_.color.b = 0.0;
   obstacle_marker_.color.a = 0.4;
-  obstacle_marker_.scale.x = 2.0 * 0.01;
-  obstacle_marker_.scale.y = 2.0 * 0.01;
-  obstacle_marker_.scale.z = 0.01;
+  obstacle_marker_.scale.x = 2.0 * obstacle_radius_ - 0.1; // show a marker which does not collide with link
+  obstacle_marker_.scale.y = 2.0 * obstacle_radius_ - 0.1;
+  obstacle_marker_.scale.z = 2.0 * obstacle_radius_ - 0.1;
   obstacle_marker_.pose.orientation.x = transformStamped.transform.rotation.x;
   obstacle_marker_.pose.orientation.y = transformStamped.transform.rotation.y;
   obstacle_marker_.pose.orientation.z = transformStamped.transform.rotation.z;
@@ -167,6 +182,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
     ROS_ERROR("Failed to parse cost parameters.");
     return false;
   }
+  std::cout << cost_params << std::endl;
 
   auto cost = std::make_shared<PandaCost>(cost_params);
   local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);
@@ -299,9 +315,30 @@ void PandaControllerInterface::update_reference(const mppi::observation_t& x,
     reference_scheduler_.set_reference(t, ref_);
 
     std::unique_lock<std::mutex> lock(reference_mutex_);
+    if (obstacle_active_){
+      ref_.rr[0].segment<3>(7) = obstacle_position_;
+    }
     get_controller()->set_reference_trajectory(ref_);
     local_cost_->set_reference_trajectory(ref_);
     reference_set_ = true;
+  }
+
+  // activate obstacle only when the ee is very close to it
+  if(!obstacle_active_){
+    mppi_pinocchio::Pose ee_pose = get_pose_end_effector(x);
+    double distance = (ee_pose.translation - obstacle_position_).norm();
+    if(distance < obstacle_radius_ + 0.005){
+      ROS_INFO_STREAM("[ControllerInterface::update_reference]: setting the obstacle position to: " 
+        << obstacle_position_.transpose());
+      obstacle_marker_.pose.position.x = obstacle_position_[0];
+      obstacle_marker_.pose.position.y = obstacle_position_[1];
+      obstacle_marker_.pose.position.z = obstacle_position_[2];
+      
+      std::unique_lock<std::mutex> lock(reference_mutex_);
+      get_controller()->set_reference_trajectory(ref_);
+      local_cost_->set_reference_trajectory(ref_);
+      obstacle_active_ = true;
+    }
   }
 }
 
@@ -314,7 +351,7 @@ mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(
     const Eigen::VectorXd& x) {
   object_model_.update_state(
-      x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
+      x.head<BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION>().tail<OBJECT_DIMENSION>());
   return object_model_.get_pose(dynamics_params_.object_handle_link);
 }
 
@@ -393,7 +430,4 @@ void PandaControllerInterface::publish_ros() {
         (x_opt_[1](3) - x_opt_[0](3)) / config_.step_size;
     base_twist_from_path_publisher_.publish(base_twist_from_path);
   }
-
-  // for debug
-  pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));
 }

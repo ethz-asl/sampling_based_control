@@ -6,7 +6,7 @@ manipulation_controller:
   simulation: true
   debug: true
   type: manipulation_royalpanda/ManipulationController
-  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/tracking.yaml
+  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/tracking_constraint_exp.yaml
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
   object_tolerance: 0.09 # ~5 deg
 
@@ -17,8 +17,9 @@ manipulation_controller:
 
   static_optimization: false
 
-  logging: false
-  log_file_path: $(find mppi_manipulation_royalpanda)/logs/$(arg experiment_name).silo
+  logging: true
+  log_file_path: '/media/giuseppe/My Passport/Work/logs_mppi/$(arg experiment_name).silo' 
+    #$(find mppi_manipulation_royalpanda)/logs/$(arg experiment_name).silo
   
   fixed_base: false
   arm_id: panda
@@ -30,12 +31,13 @@ manipulation_controller:
   base_twist_topic: /ridgeback_velocity_controller/cmd_vel
   base_cmd_threshold: [0.0, 0.0, 0.0]
 
+  obstacle_position: [0.0, 0.0, 1.2]
+  obstacle_radius: 0.4
+
   sequential: false
   max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   log_every_steps: 15
-
-  
   record_bag: false
   bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
   
@@ -58,8 +60,8 @@ manipulation_controller:
     reach_weight_slope: 0 #10
 
     obstacle_weight: 1000
-    obstacle_weight_slope: 0
-    obstacle_radius: 0.5
+    obstacle_weight_slope: 100
+    obstacle_radius: 0.4
 
     contact_weight: 100.0
 
@@ -77,8 +79,8 @@ manipulation_controller:
     #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
     # Safer joint limits (+10 deg safety margin ~0.17)
-    upper_joint_limits: [ 3.0, 0.05, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-    lower_joint_limits: [ -3.0, -0.05, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
+    upper_joint_limits: [ 3.0, 0.42, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    lower_joint_limits: [ -3.0, -0.42, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
@@ -90,18 +92,27 @@ manipulation_controller:
     tracked_frame: panda_grasp
     arm_base_frame: panda_link0
 
-    collision_link_0: panda_link1
-    collision_link_1: panda_link7
-
+    # for self collision
+    collision_link_pair_0: [panda_link0, panda_link1]
+    collision_link_pair_1: [panda_link7, panda_link7]
     collision_threshold: 0.35
     collision_weight: 1000
-
+    
+    # for obstacle avoidance
+    collision_links : [panda_link1, 
+                       panda_link2, 
+                       panda_link3, 
+                       panda_link4, 
+                       panda_link5, 
+                       panda_link6, 
+                       panda_link7,
+                       panda_hand]
 
   controller_gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
       kd: [ 0.0, 0.0, 0.0 ]
-      ki: [ 1.0, 1.0, 1.0 ]
+      ki: [ 0.0, 0.0, 0.0 ]
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
@@ -154,43 +165,88 @@ manipulation_controller:
   # It processes the output of the sampled control action and enforces constraints
   apply_filter: $(arg filter_out)
   apply_filter_to_rollouts: $(arg filter_in)
+  test_filter_out: $(arg test_filter_out)
+  test_filter_in: $(arg test_filter_in)
+  react_to_obstacle: true
   safety_filter:
     input_limits: 
       active: true
       soft: false
       slack_multiplier: 0.0
-      u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
-      u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+      u_min: [ -0.5, -0.5, -0.5, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
+      u_max: [ 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
     joint_limits: 
       active: true
       soft: true
       slack_multiplier: 10.0
-      q_max: [ 3.0, 0.05, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-      q_min: [ -3.0, -0.05, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
+      q_max: [ 3.0, 0.42, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+      q_min: [ -3.0, -0.42, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     cartesian_limits: 
       active: true
       soft: true
-      slack_multiplier: 1000.0
+      slack_multiplier: 100.0
       max_reach: 0.65
-      min_distance: 0.35
+      min_reach: 0.15
 
-    # This is actually using the settings from the cartesian limits
-    obstacle_avoidance:
-      active: true
-      min_distance: 0.5   # Remember to change to the actual radius seen in the urdf
-      obstacle_frame_id: obstacle_link
+      # collision_link1: []
+      # collision_link2: []
+      # distance: []
 
-    object_avoidance:
-      active: false
-      soft: true
-      slack_multiplier: 1.0
-      min_distance: 0.9
-      object_frame_id: shelf
+      # collision_link1: [panda_link1]
+      # collision_link2: [obstacle_link]
+      # distance: [0.3]
+
+      # collision_link1: [panda_link0, 
+      #                   panda_link1, 
+      #                   panda_link0, 
+      #                   panda_link1, 
+      #                   panda_link2, 
+      #                   panda_link3, 
+      #                   panda_link4, 
+      #                   panda_link5, 
+      #                   panda_link6, 
+      #                   panda_link7,
+      #                   panda_hand]
+
+      # collision_link2: [panda_link7, 
+      #                   panda_link7, 
+      #                   obstacle_link, 
+      #                   obstacle_link, 
+      #                   obstacle_link, 
+      #                   obstacle_link, 
+      #                   obstacle_link, 
+      #                   obstacle_link, 
+      #                   obstacle_link,
+      #                   obstacle_link,
+      #                   obstacle_link]
+      # distance: [0.35, 0.35, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3] 
+  
+      collision_link1: [panda_link0, 
+                        panda_link1, 
+                        panda_link2, 
+                        panda_link3, 
+                        panda_link4, 
+                        panda_link5, 
+                        panda_link6, 
+                        panda_link7,
+                        panda_hand]
+
+      collision_link2: [obstacle_link, 
+                        obstacle_link, 
+                        obstacle_link, 
+                        obstacle_link, 
+                        obstacle_link, 
+                        obstacle_link, 
+                        obstacle_link,
+                        obstacle_link,
+                        obstacle_link]
+
+      distance: [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4] 
   
     passivity_constraint:
-      active: true
+      active: false
       soft: true
       slack_multiplier: 100.0
       initial_tank_energy: 10.0
