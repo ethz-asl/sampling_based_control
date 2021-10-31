@@ -25,8 +25,8 @@ objects_op = ["new_shelf"]  #["door", "shelf", "microwave", "drawer"]
 filter_in_op = [False, True, False, True]
 filter_out_op = [False, False, True, True]
 
-number_experiments = 1
-max_experiment_time = 140
+number_experiments = 10
+max_experiment_time = 90
 
 for fin in filter_in_op:
     for fout in filter_out_op:

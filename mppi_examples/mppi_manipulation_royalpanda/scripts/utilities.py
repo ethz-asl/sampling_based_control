@@ -31,11 +31,11 @@ def reload_plt_style():
 
 
 class ExperimentType:
-    NO_FILTER = "no_filter"
-    FILTER_OUT = "filter_out"
-    FILTER_IN = "filter_in"
-    FILTER_IN_OUT = "filter_in_out"
-    PASSIVITY_ZBF = "zbf"
+    NO_FILTER = r'$\Pi_{N}$'  # "no_filter"
+    FILTER_OUT = r'$\Pi_{O}$'  # "filter_out"
+    FILTER_IN = r'$\Pi_{I}$'  # "filter_in"
+    FILTER_IN_OUT = r'$\Pi_{IO}$'  # "filter_in_out"
+    PASSIVITY_ZBF = r'$\Pi_{IO}\ (\alpha = 1)$'
 
     @classmethod
     def get_labels(cls):
@@ -65,6 +65,8 @@ def get_object_from_name(name):
     ]
     for object_type in object_types:
         if object_type in name:
+            if object_type == 'door':
+                return 'dishwasher'
             return object_type
     return 'none'
 
@@ -91,10 +93,22 @@ def get_data(root_dir, required_fields, log_prefix=""):
 
         data['experiment_name'].append(experiment_name)
         for key, value in silo_dict.items():
-            if experiment_idx == 0:
-                data[key] = [value]
-            else:
-                data[key].append(value)
+            if isinstance(value, (np.ndarray, np.float, float, int, list)):
+                print(f"Adding {key} ")
+                if experiment_idx == 0:
+                    data[key] = [value]
+                else:
+                    data[key].append(value)
+
+    data_collection_step = 0.015
+    if 'sim_time' not in data.keys():
+        data['sim_time'] = []
+        print(f"No sim_time found: inferring from cartesian_limits_violation")
+
+        for experiment_idx in range(len(LOG_FILES)):
+            length = len(data['cartesian_limits_violation'][experiment_idx])
+            data['sim_time'].append(
+                np.arange(0.0, length) * data_collection_step)
     return data
 
 
@@ -124,22 +138,35 @@ def process_data(data, final_time):
         time = data['sim_time'][experiment_idx]
         print(f"t start = {time[0]}s, t end = {time[-1]}s")
 
-        joint_violation_se = matrix_to_se(
-            time, 0.0, final_time,
-            data['joint_limits_violation'][experiment_idx])
-        carts_violation_se = matrix_to_se(
-            time, 0.0, final_time,
-            data['cartesian_limits_violation'][experiment_idx])
-        average_wrench = average_col_norm(
-            time,
-            0.0,
-            final_time,
-            data['external_wrench_filtered'][experiment_idx],
-            threshold=0.0)
-        wrench_norm = col_norm(
-            time, 0.0, final_time,
-            data['external_wrench_filtered'][experiment_idx])
-        average_stage_cost = np.mean(data['stage_cost'][experiment_idx])
+        joint_violation_se = 0
+        if 'joint_limits_violation' in data.keys():
+            joint_violation_se = matrix_to_se(
+                time, 0.0, final_time,
+                data['joint_limits_violation'][experiment_idx])
+
+        carts_violation_se = 0
+        if 'cartesian_limits_violation' in data.keys():
+            carts_violation_se = matrix_to_se(
+                time, 0.0, final_time,
+                data['cartesian_limits_violation'][experiment_idx])
+
+        average_wrench = 0
+        wrench_norm = 0
+        if 'external_wrench_filtered' in data.keys():
+            average_wrench = average_col_norm(
+                time,
+                0.0,
+                final_time,
+                data['external_wrench_filtered'][experiment_idx],
+                threshold=0.0)
+
+            wrench_norm = col_norm(
+                time, 0.0, final_time,
+                data['external_wrench_filtered'][experiment_idx])
+
+        average_stage_cost = 0
+        if 'stage_cost' in data.keys():
+            average_stage_cost = np.mean(data['stage_cost'][experiment_idx])
 
         data['joint_limits_violation_se'].append(joint_violation_se)
         data['cartesian_limits_violation_se'].append(carts_violation_se)
@@ -386,7 +413,7 @@ def save_figure(b, figure):
         figure.savefig(save_name)
 
 
-def replace_legend_labels(ax, old_labels, new_labels, fontsize=10):
+def replace_legend_labels(ax, old_labels, new_labels):
     """ 
     Replace old labels (if in the axis) with the new ones
     """
@@ -395,10 +422,11 @@ def replace_legend_labels(ax, old_labels, new_labels, fontsize=10):
         raise NameError("old labels and new labels have different size.")
 
     # get legend and loop through the labels
-    l = ax.legend(fontsize=fontsize)
+    l = ax.legend()
     for text_idx, text in enumerate(l.get_texts()):
         text = text.get_text()
         new_text = text
         if text in old_labels:
             new_text = new_labels[old_labels.index(text)]
+            print(f"Replacing {text} with {new_text}")
         l.get_texts()[text_idx].set_text(new_text)
