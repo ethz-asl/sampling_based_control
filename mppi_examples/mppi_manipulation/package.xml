@@ -14,6 +14,7 @@
     <depend>mppi_panda_mobile</depend>
     <depend>mppi_ros</depend>
     <depend>mppi_pinocchio</depend>
+    <depend>pybind11_catkin</depend>
     <depend>roscpp</depend>
     <depend>roslib</depend>
     <depend>sensor_msgs</depend>

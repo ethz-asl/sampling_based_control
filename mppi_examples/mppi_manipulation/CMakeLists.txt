@@ -18,6 +18,7 @@ set(PACKAGE_DEPENDENCIES
         mppi_ros
         mppi_pinocchio
         mppi_panda_mobile
+        pybind11_catkin
         roslib
         roscpp
         manipulation_msgs
@@ -65,6 +66,15 @@ if (BUILD_WITH_OGRE)
   add_executable(raisim_rendering_node src/nodes/raisim_rendering_node.cpp)
   target_link_libraries(raisim_rendering_node PUBLIC ${PROJECT_NAME} ${catkin_LIBRARIES} raisim::raisimOgre)
   add_dependencies(raisim_rendering_node ${PROJECT_NAME})
+endif()
+
+option(PYTHON_BINDINGS "Build the python bindings" ON)
+if (${PYTHON_BINDINGS})
+#  find_package(catkin)
+#  add_subdirectory(../../submodules/pybind11 ../../submodules/pybind11)
+  pybind11_add_module(pymppi_manipulation python/python.cpp)
+  target_link_libraries(pymppi_manipulation PUBLIC ${PROJECT_NAME})
+  add_dependencies(pymppi_manipulation ${PROJECT_NAME})
 endif()
 
 install(DIRECTORY launch resources
