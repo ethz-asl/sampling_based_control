@@ -143,11 +143,6 @@ bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller)
   // -------------------------------
   // config
   // -------------------------------
-//  if (!config_.init_from_file(manipulation_config_.controller_config_file)) {
-//    ROS_ERROR_STREAM("Failed to init solver options from " << manipulation_config_.controller_config_file);
-//    return false;
-//  }
-
   if (!config_.init_from_file(manipulation_config_path_)) {
     ROS_ERROR_STREAM("Failed to init solver options from " << manipulation_config_.controller_config_file);
     return false;
