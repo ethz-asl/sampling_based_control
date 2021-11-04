@@ -8,6 +8,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include "mppi_manipulation/params/gains.h"
 
 namespace manipulation {
 
@@ -16,10 +17,25 @@ namespace manipulation {
 **/
 struct Config {
  public:
+  YAML::Node data;
+  // general params
   bool parsing_error = false;
   Eigen::VectorXd default_pose;
   double object_tolerance;
   std::string references_file;
+  std::string controller_config_file;
+  bool gaussian_policy;
+
+  // dynamics
+  double dt;
+  std::string robot_description;
+  std::string object_description;
+  PIDGains gains;
+  Eigen::VectorXd initial_state;
+
+  std::string articulation_joint;
+  std::string object_handle_link;
+  std::string object_handle_joint;
 
   bool init_from_file(const std::string& file);
 

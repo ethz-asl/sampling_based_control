@@ -49,96 +49,70 @@ void PandaControllerInterfaceNoRos::init_model(
   object_model_.init_from_xml(object_description);
   ROS_INFO("[PandaControllerInterface::init_model] ok!");
 }
-//
-//bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller) {
-//  // -------------------------------
-//  // internal model
-//  // -------------------------------
-//  std::string robot_description, object_description;
-//  if (!nh_.param<std::string>("/robot_description", robot_description, "")) {
-//    throw std::runtime_error(
-//        "Could not parse robot description. Is the parameter set?");
-//  }
-//  if (!nh_.param<std::string>("/object_description", object_description, "")) {
-//    throw std::runtime_error(
-//        "Could not parse object description. Is the parameter set?");
-//  }
-//  init_model(robot_description, object_description);
-//
-//  // -------------------------------
-//  // dynamics
-//  // -------------------------------
-//  mppi::dynamics_ptr dynamics;
-//  if (!dynamics_params_.init_from_ros(nh_)) {
-//    ROS_ERROR("Failed to init dynamics parameters.");
-//    return false;
-//  };
-//  ROS_INFO_STREAM("Successfully parsed controller dynamics parameters: "
-//                  << dynamics_params_);
-//  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_);
-//
-//  // -------------------------------
-//  // config
-//  // -------------------------------
-//  std::string config_file;
-//  if (!nh_.param<std::string>("/config_file", config_file, "")) {
-//    throw std::runtime_error(
-//        "Could not parse config_file. Is the parameter set?");
-//  }
-//  if (!config_.init_from_file(config_file)) {
-//    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
-//    return false;
-//  }
-//
-//  double rollouts;
-//  if (nh_.param<double>("rollouts", rollouts, 0.0)){
-//    ROS_INFO_STREAM("Overriding default rollouts to " << rollouts);
-//    config_.rollouts = rollouts;
-//  }
-//
-//  // -------------------------------
-//  // cost
-//  // -------------------------------
-//  CostParams cost_params;
-//  if (!cost_params.init_from_ros(nh_)) {
-//    ROS_ERROR("Failed to parse cost parameters.");
-//    return false;
-//  }
-//
-//  auto cost = std::make_shared<PandaCost>(cost_params);
-//  local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);
-//
-//  // -------------------------------
-//  // policy
-//  // -------------------------------
-//  std::shared_ptr<mppi::Policy> policy;
-//  bool gaussian_policy = false;
-//  nh_.param<bool>("gaussian_policy", gaussian_policy, true);
-//  if (gaussian_policy) {
-//    policy = std::make_shared<mppi::GaussianPolicy>(
-//        dynamics->get_input_dimension(), config_);
-//  } else {
-//    policy = std::make_shared<mppi::SplinePolicy>(
-//        dynamics->get_input_dimension(), config_);
-//  }
-//
-//  // -------------------------------
-//  // controller
-//  // -------------------------------
-//  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
-//
-//  // -------------------------------
-//  // initialize reference
-//  // -------------------------------
-//  ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
-//  // init obstacle fare away
-//  ref_.rr[0](7) = 100;
-//  ref_.rr[0](8) = 100;
-//  ref_.rr[0](9) = 100;
-//  ref_.rr[0].tail<1>()(0) = 0.0;
-//  ref_.tt.resize(1, 0.0);
-//  return true;
-//}
+
+bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller) {
+  // -------------------------------
+  // internal model
+  // -------------------------------
+  init_model(manipulation_config_.robot_description, manipulation_config_.object_description);
+
+  // -------------------------------
+  // dynamics
+  // -------------------------------
+  mppi::dynamics_ptr dynamics;
+  dynamics_params_.init_from_config(manipulation_config_);
+  ROS_INFO_STREAM("Successfully parsed controller dynamics parameters: " << dynamics_params_);
+  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_);
+
+  // -------------------------------
+  // config
+  // -------------------------------
+  if (!config_.init_from_file(manipulation_config_.controller_config_file)) {
+    ROS_ERROR_STREAM("Failed to init solver options from " << manipulation_config_.controller_config_file);
+    return false;
+  }
+
+  // -------------------------------
+  // cost
+  // -------------------------------
+  CostParams cost_params;
+  if (!cost_params.init_from_config(manipulation_config_)) {
+    ROS_ERROR("Failed to parse cost parameters.");
+    return false;
+  }
+
+  auto cost = std::make_shared<PandaCost>(cost_params);
+  local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);
+
+  // -------------------------------
+  // policy
+  // -------------------------------
+  std::shared_ptr<mppi::Policy> policy;
+  if (manipulation_config_.gaussian_policy) {
+    policy = std::make_shared<mppi::GaussianPolicy>(
+        dynamics->get_input_dimension(), config_);
+  } else {
+    policy = std::make_shared<mppi::SplinePolicy>(
+        dynamics->get_input_dimension(), config_);
+  }
+
+  // -------------------------------
+  // controller
+  // -------------------------------
+  controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
+
+  // -------------------------------
+  // initialize reference
+  // -------------------------------
+  ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
+  // init obstacle fare away
+  ref_.rr[0](7) = 100;
+  ref_.rr[0](8) = 100;
+  ref_.rr[0](9) = 100;
+  ref_.rr[0].tail<1>()(0) = 0.0;
+  ref_.tt.resize(1, 0.0);
+  return true;
+}
 
 bool PandaControllerInterfaceNoRos::init_reference_to_current_pose(
     const mppi::observation_t& x, const double t) {

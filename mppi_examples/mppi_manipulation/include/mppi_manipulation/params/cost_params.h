@@ -5,6 +5,7 @@
 #pragma once
 #include <mppi_pinocchio/model.h>
 #include <ros/ros.h>
+#include "mppi_manipulation/config_no_ros.h"
 
 namespace manipulation {
 
@@ -46,7 +47,8 @@ struct CostParams {
   std::string collision_link_1;
   double collision_threshold;
   double Q_collision;
-  
+
+  bool init_from_config(const manipulation::Config& config);
   bool init_from_ros(const ros::NodeHandle& nh);
 };
 

@@ -4,6 +4,7 @@
 
 #pragma once
 #include "mppi_manipulation/params/gains.h"
+#include "mppi_manipulation/config_no_ros.h"
 
 namespace manipulation {
 
@@ -19,7 +20,7 @@ struct DynamicsParams {
   std::string object_handle_joint;
 
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
-  bool init_from_yaml(const std::string& path, bool is_sim = false);
+  bool init_from_config(const manipulation::Config& config);
 };
 
 }  // namespace manipulation

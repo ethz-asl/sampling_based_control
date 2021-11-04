@@ -6,6 +6,55 @@
 
 using namespace manipulation;
 
+bool CostParams::init_from_config(const manipulation::Config& config){
+  YAML::Node cost = config.data["cost"]; 
+  if (!cost) {
+    std::cout << "Failed to parse dynamics." << std::endl;
+    return false;
+  }
+  bool sf = true;
+  Qreg = config.parse_key<double>(cost, "regularization", sf).value_or(0.0);
+  Qt = config.parse_key<double>(cost, "linear_weight", sf).value_or(0.0);    // translation cost
+  Qt2 = config.parse_key<double>(cost, "linear_weight_opening", sf).value_or(0.0);
+  Qr = config.parse_key<double>(cost, "angular_weight", sf).value_or(0.0);  // rotation cost
+  Qr2 = config.parse_key<double>(cost, "angular_weight_opening", sf).value_or(0.0);
+  Qo = config.parse_key<double>(cost, "obstacle_weight", sf).value_or(0.0);   // obstacle cost
+  Qos = config.parse_key<double>(cost, "obstacle_weight_slope", sf).value_or(0.0);  // obstacle cost slope
+  Qc = config.parse_key<double>(cost, "contact_weight", sf).value_or(0.0);   // contact cost
+  ro = config.parse_key<double>(cost, "obstacle_radius", sf).value_or(0.0);   // obstacle radius
+  max_reach = config.parse_key<double>(cost, "max_reach", sf).value_or(0.0);
+  min_dist = config.parse_key<double>(cost, "min_dist", sf).value_or(0.0);  // min distance from base for collision avoidance
+  Q_reach = config.parse_key<double>(cost, "reach_weight", sf).value_or(0.0);
+  Q_reachs = config.parse_key<double>(cost, "reach_weight_slope", sf).value_or(0.0);
+  Q_obj = config.parse_key<double>(cost, "object_weight", sf).value_or(0.0);
+  Q_tol = config.parse_key<double>(cost, "object_tolerance", sf).value_or(0.0);
+  std::vector<double> trans = config.parse_key<std::vector<double>>(cost, "grasp_translation_offset", sf).value_or(std::vector<double>{0.0, 0.0, 0.0});
+  std::vector<double> rot = config.parse_key<std::vector<double>>(cost, "grasp_orientation_offset", sf).value_or(std::vector<double>{0, -0.7071068, 0, 0.7071068});
+  Eigen::Vector3d t(trans[0], trans[1], trans[2]);
+  Eigen::Quaterniond q(rot[3], rot[0], rot[1], rot[2]);
+  grasp_offset = mppi_pinocchio::Pose(t, q);
+  
+  Q_joint_limit = config.parse_key<double>(cost, "joint_limit_cost", sf).value_or(0.0);;
+  Q_joint_limit_slope = config.parse_key<double>(cost, "joint_limit_slope", sf).value_or(0.0);;
+  upper_joint_limits = config.parse_key<std::vector<double>>(cost, "upper_joint_limits", sf).value_or(std::vector<double>{2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973});
+  lower_joint_limits = config.parse_key<std::vector<double>>(cost, "lower_joint_limits", sf).value_or(std::vector<double>{-2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973});
+  
+  // power cost
+  max_power = config.parse_key<double>(cost, "max_power", sf).value_or(0.0);
+  Q_power = config.parse_key<double>(cost, "power_weight", sf).value_or(0.0);
+  
+  // frames
+  handle_frame = config.parse_key<std::string>(cost, handle_frame, sf).value_or("");
+  tracked_frame = config.parse_key<std::string>(cost, tracked_frame, sf).value_or("");
+  arm_base_frame = config.parse_key<std::string>(cost, arm_base_frame, sf).value_or("");
+  
+  collision_link_0 = config.parse_key<std::string>(cost, collision_link_0, sf).value_or("");
+  collision_link_1 = config.parse_key<std::string>(cost, collision_link_1, sf).value_or("");
+  collision_threshold = config.parse_key<double>(cost, "collision_threshold", sf).value_or(0.0);
+  Q_collision = config.parse_key<double>(cost, "collision_weight", sf).value_or(0.0);
+  return sf;
+}
+
 bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
   if (!nh.getParam("/robot_description", robot_description) ||
       robot_description.empty()) {

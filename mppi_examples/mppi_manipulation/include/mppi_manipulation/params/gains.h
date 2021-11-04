@@ -61,7 +61,7 @@ struct gain_pair {
 
 struct PIDGains {
   PIDGains()
-      : base_gains(0, 1000), arm_gains(0.0, 10.0), gripper_gains(100.0, 50.0){};
+      : base_gains(0, 1000), arm_gains(0.0, 10.0, 0.0, 1.0), gripper_gains(100.0, 50.0){};
 
   gain_pair<BASE_DIMENSION> base_gains;
   gain_pair<ARM_DIMENSION> arm_gains;

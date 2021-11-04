@@ -6,8 +6,17 @@
 #include "mppi_manipulation/dimensions.h"
 
 using namespace manipulation;
-bool DynamicsParams::init_from_yaml(const std::string& path, bool is_sim) {
-  std::string prefix = (is_sim) ? "sim_" : "";
+bool DynamicsParams::init_from_config(const manipulation::Config& config) {
+  dt = config.dt;
+  robot_description = config.robot_description;
+  object_description = config.object_description;
+  gains = config.gains;
+  initial_state = config.initial_state;
+
+  articulation_joint = config.articulation_joint;
+  object_handle_link = config.object_handle_link;
+  object_handle_joint = config.object_handle_joint;
+
   return true;
 }
 
