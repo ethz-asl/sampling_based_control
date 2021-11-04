@@ -9,7 +9,7 @@
 using namespace manipulation;
 
 bool Config::init_from_file(const std::string& file) {
-  parsing_error = false;
+  bool success_flag = true;
   YAML::Node config;
   try {
     config = YAML::LoadFile(file);
@@ -24,9 +24,9 @@ bool Config::init_from_file(const std::string& file) {
     std::cout << "Failed to parse solver options." << std::endl;
     return false;
   }
-  default_pose = parse_key<Eigen::VectorXd>(options, "default_pose").value_or(Eigen::VectorXd(0));
-  object_tolerance = parse_key<double>(options, "object_tolerance").value_or(0.0);
-  references_file = parse_key<std::string>(options, "references_file").value_or("");
+  default_pose = parse_key<Eigen::VectorXd>(options, "default_pose", success_flag).value_or(Eigen::VectorXd(0));
+  object_tolerance = parse_key<double>(options, "object_tolerance", success_flag).value_or(0.0);
+  references_file = parse_key<std::string>(options, "references_file", success_flag).value_or("");
 
-  return not parsing_error;
+  return success_flag;
 }

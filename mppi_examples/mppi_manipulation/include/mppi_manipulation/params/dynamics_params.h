@@ -19,6 +19,7 @@ struct DynamicsParams {
   std::string object_handle_joint;
 
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
+  bool init_from_yaml(const std::string& path, bool is_sim = false);
 };
 
 }  // namespace manipulation

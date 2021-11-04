@@ -25,8 +25,7 @@ bool PandaControllerInterfaceNoRos::init(){
   if(manipulation_config_.init_from_file(config_path_)){
     default_pose_ = manipulation_config_.default_pose;
     object_tolerance_ = manipulation_config_.object_tolerance;
-    // todo: GIS this should be uncommented
-//    reference_scheduler_.parse_from_file(manipulation_config_.references_file);
+    reference_scheduler_.parse_from_file(manipulation_config_.references_file);
   }else{
     ROS_ERROR("Failed to parse manipulation config");
   }

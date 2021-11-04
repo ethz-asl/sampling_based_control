@@ -6,6 +6,11 @@
 #include "mppi_manipulation/dimensions.h"
 
 using namespace manipulation;
+bool DynamicsParams::init_from_yaml(const std::string& path, bool is_sim) {
+  std::string prefix = (is_sim) ? "sim_" : "";
+  return true;
+}
+
 
 bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
   std::string prefix = (is_sim) ? "sim_" : "";
