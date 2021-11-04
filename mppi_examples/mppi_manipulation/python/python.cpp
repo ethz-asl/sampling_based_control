@@ -20,5 +20,11 @@ PYBIND11_MODULE(pymppi_manipulation, m) {
   py::class_<PandaControllerInterfaceNoRos>(m, "PandaControllerInterface")
       .def(py::init<const std::string &>())
       .def("init", &PandaControllerInterfaceNoRos::init)
-      .def_readwrite("object_tolerance", &PandaControllerInterfaceNoRos::object_tolerance_);
+      .def("update_reference", &PandaControllerInterfaceNoRos::update_reference)
+      .def("set_observation", &PandaControllerInterfaceNoRos::set_observation)
+      .def("update_policy", &PandaControllerInterfaceNoRos::update_policy)
+      .def("get_input", &PandaControllerInterfaceNoRos::get_input)
+      .def("set_mode", &PandaControllerInterfaceNoRos::set_mode)
+      .def("set_desired_ee_pose", &PandaControllerInterfaceNoRos::set_desired_ee_pose)
+      .def_readwrite("object_tolerance", &PandaControllerInterfaceNoRos::observation_set_);
 }

@@ -27,52 +27,45 @@ class PandaControllerInterfaceNoRos{
   PandaControllerInterfaceNoRos(const std::string& config_path);
   ~PandaControllerInterfaceNoRos() = default;
 
-
-
   bool init();
   void update_reference(const mppi::observation_t& x, const double t);
-
-  mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
-  mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
-
-//  geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
-//  geometry_msgs::PoseStamped get_pose_end_effector_ros(
-//      const mppi::observation_t& x);
-//  geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
-
-
+  void set_observation(const mppi::observation_t &x, const double &t);
+  bool update_policy();
+  mppi::input_t get_input(const mppi::observation_t &x, const double &t);
   void set_mode(int mode);
+  void set_desired_ee_pose(const std::vector<double> pose);
 
-  double object_tolerance_;
+  bool observation_set_ = false;
 
  private:
+  // functions
+  bool init_ros();
   double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u, const double t);
   bool init_reference_to_current_pose(const mppi::observation_t& x, const double t);
   inline std::shared_ptr<Solver>& get_controller() { return controller_; };
   void init_model(const std::string& robot_description, const std::string& object_description);
-
   bool set_controller(mppi::solver_ptr& controller);
 
-  void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
-  void mode_callback(const std_msgs::Int64ConstPtr& msg);
 
-  std::string config_path_;
+  // todo: GIS are these needed??
+  mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
+  mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
+  //  geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
+  //  geometry_msgs::PoseStamped get_pose_end_effector_ros(
+  //      const mppi::observation_t& x);
+  //  geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
+
+  // configs
   mppi::config_t config_;
+  std::string manipulation_config_path_;
   manipulation::Config manipulation_config_;
+
+
+  // general params
   bool reference_set_;
-  std::unique_ptr<manipulation::PandaCost> local_cost_;
-
-  mppi::input_array_t u_opt_;
-  mppi::observation_array_t x_opt_;
-
-
-  Eigen::VectorXd default_pose_;
-  ReferenceScheduler reference_scheduler_;
-  size_t last_ee_ref_id_;
-  size_t last_ob_ref_id_;
   std::mutex reference_mutex_;
+  std::unique_ptr<manipulation::PandaCost> local_cost_;
   mppi::reference_trajectory_t ref_;
-
   DynamicsParams dynamics_params_;
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
@@ -80,19 +73,24 @@ class PandaControllerInterfaceNoRos{
   // from ControllerRos, former base class
   mppi::cost_ptr cost_;
   mppi::dynamics_ptr dynamics_;
-//  mppi::config_t config_;
-
   std::shared_ptr<mppi::Solver> controller_ = nullptr;
 
   // ros
-  ros::Subscriber mode_subscriber_;
-  ros::Subscriber ee_pose_desired_subscriber_;
+  double object_tolerance_;
+  Eigen::VectorXd default_pose_;
+  ReferenceScheduler reference_scheduler_;
+  size_t last_ee_ref_id_;
+  size_t last_ob_ref_id_;
 
   nav_msgs::Path optimal_path_;
   nav_msgs::Path optimal_base_path_;
   geometry_msgs::PoseStamped obstacle_pose_;
   geometry_msgs::PoseStamped ee_desired_pose_;
   visualization_msgs::Marker obstacle_marker_;
+
+  // todo: gis these are currently unused (belong to the ControllerRos::get_input_state function)
+  mppi::input_array_t u_opt_;
+  mppi::observation_array_t x_opt_;
 };
 
 }  // namespace manipulation

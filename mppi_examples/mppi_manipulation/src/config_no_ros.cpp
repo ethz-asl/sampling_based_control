@@ -18,7 +18,7 @@ bool Config::init_from_file(const std::string& file) {
     std::cout << ex.what() << std::endl;
   }
 
-  YAML::Node options = data["options"]; // todo: GIS change this according to config structure
+  YAML::Node options = data["options"];
   if (!options) {
     std::cout << "Failed to parse solver options." << std::endl;
     return false;

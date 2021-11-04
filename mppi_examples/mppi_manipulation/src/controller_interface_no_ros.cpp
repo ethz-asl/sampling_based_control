@@ -18,28 +18,104 @@
 
 using namespace manipulation;
 
-PandaControllerInterfaceNoRos::PandaControllerInterfaceNoRos(const std::string& config_path): config_path_(config_path){
-
-}
-bool PandaControllerInterfaceNoRos::init(){
-  if(manipulation_config_.init_from_file(config_path_)){
-    default_pose_ = manipulation_config_.default_pose;
-    object_tolerance_ = manipulation_config_.object_tolerance;
-    reference_scheduler_.parse_from_file(manipulation_config_.references_file);
+PandaControllerInterfaceNoRos::PandaControllerInterfaceNoRos(const std::string& config_path){
+  manipulation_config_path_ = config_path;
+  if(manipulation_config_.init_from_file(config_path)){
+    ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
   }else{
     ROS_ERROR("Failed to parse manipulation config");
   }
-  last_ee_ref_id_ = 0;
-  ee_desired_pose_.header.seq = last_ee_ref_id_;
+}
+//bool PandaControllerInterfaceNoRos::init_ros(){
+//  default_pose_ = manipulation_config_.default_pose;
+//  object_tolerance_ = manipulation_config_.object_tolerance;
+//  reference_scheduler_.parse_from_file(manipulation_config_.references_file);
+//  last_ee_ref_id_ = 0;
+//  ee_desired_pose_.header.seq = last_ee_ref_id_;
+//
+//  last_ob_ref_id_ = 0;
+//  obstacle_pose_.header.seq = last_ob_ref_id_;
+//
+//  optimal_path_.header.frame_id = "world";
+//  optimal_base_path_.header.frame_id = "world";
+//  reference_set_ = false;
+//  ROS_INFO("[PandaControllerInterface::init_ros] ok!");
+//  return true;
+//}
 
-  last_ob_ref_id_ = 0;
-  obstacle_pose_.header.seq = last_ob_ref_id_;
+bool PandaControllerInterfaceNoRos::init() {
+//  init_ros();
 
-  optimal_path_.header.frame_id = "world";
-  optimal_base_path_.header.frame_id = "world";
-  reference_set_ = false;
-  ROS_INFO("[PandaControllerInterface::init_ros] ok!");
+  bool ok;
+  try {
+    ok = set_controller(controller_);
+  } catch (std::runtime_error &err) {
+    ROS_ERROR_STREAM(err.what());
+    ok = false;
+  } catch (...) {
+    ROS_ERROR("Unknown exception caught while setting the controller.");
+    ok = false;
+  }
+  if (controller_ == nullptr || !ok) return false;
+  ROS_INFO("Controller interface initialized.");
   return true;
+}
+
+
+void PandaControllerInterfaceNoRos::set_observation(const mppi::observation_t &x,
+                                    const double &t) {
+  controller_->set_observation(x, t);
+  observation_set_ = true;
+}
+
+bool PandaControllerInterfaceNoRos::update_policy() {
+  controller_->update_policy();
+  return true;
+}
+
+mppi::input_t PandaControllerInterfaceNoRos::get_input(const mppi::observation_t &x, const double &t) {
+  mppi::input_t u;
+  controller_->get_input(x, u, t);
+  return u;
+}
+
+void PandaControllerInterfaceNoRos::set_mode(int mode) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr[0](11) = mode;
+  get_controller()->set_reference_trajectory(ref_);
+  local_cost_->set_reference_trajectory(ref_);
+  reference_set_ = true;
+}
+
+void PandaControllerInterfaceNoRos::set_desired_ee_pose(
+    const std::vector<double> pose) {
+  /*
+   * pose is [position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]
+   */
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  Eigen::VectorXd pr = Eigen::VectorXd::Zero(7);
+  ref_.rr[0].head<7>()(0) = pose[0];
+  ref_.rr[0].head<7>()(1) = pose[1];
+  ref_.rr[0].head<7>()(2) = pose[2];
+  ref_.rr[0].head<7>()(3) = pose[3];
+  ref_.rr[0].head<7>()(4) = pose[4];
+  ref_.rr[0].head<7>()(5) = pose[5];
+  ref_.rr[0].head<7>()(6) = pose[6];
+  get_controller()->set_reference_trajectory(ref_);
+  local_cost_->set_reference_trajectory(ref_);
+  reference_set_ = true;
+}
+
+void PandaControllerInterfaceNoRos::update_reference(const mppi::observation_t& x,
+                                                     const double t) {
+  if (reference_scheduler_.has_reference(t)) {
+    reference_scheduler_.set_reference(t, ref_);
+
+    std::unique_lock<std::mutex> lock(reference_mutex_);
+    get_controller()->set_reference_trajectory(ref_);
+    local_cost_->set_reference_trajectory(ref_);
+    reference_set_ = true;
+  }
 }
 
 void PandaControllerInterfaceNoRos::init_model(
@@ -67,7 +143,12 @@ bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller)
   // -------------------------------
   // config
   // -------------------------------
-  if (!config_.init_from_file(manipulation_config_.controller_config_file)) {
+//  if (!config_.init_from_file(manipulation_config_.controller_config_file)) {
+//    ROS_ERROR_STREAM("Failed to init solver options from " << manipulation_config_.controller_config_file);
+//    return false;
+//  }
+
+  if (!config_.init_from_file(manipulation_config_path_)) {
     ROS_ERROR_STREAM("Failed to init solver options from " << manipulation_config_.controller_config_file);
     return false;
   }
@@ -147,44 +228,6 @@ double PandaControllerInterfaceNoRos::get_stage_cost(const mppi::observation_t& 
   return local_cost_->get_stage_cost(x, u, t);
 }
 
-void PandaControllerInterfaceNoRos::ee_pose_desired_callback(
-    const geometry_msgs::PoseStampedConstPtr& msg) {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
-  ee_desired_pose_ = *msg;
-  Eigen::VectorXd pr = Eigen::VectorXd::Zero(7);
-  ref_.rr[0].head<7>()(0) = msg->pose.position.x;
-  ref_.rr[0].head<7>()(1) = msg->pose.position.y;
-  ref_.rr[0].head<7>()(2) = msg->pose.position.z;
-  ref_.rr[0].head<7>()(3) = msg->pose.orientation.x;
-  ref_.rr[0].head<7>()(4) = msg->pose.orientation.y;
-  ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
-  ref_.rr[0].head<7>()(6) = msg->pose.orientation.w;
-  get_controller()->set_reference_trajectory(ref_);
-  local_cost_->set_reference_trajectory(ref_);
-  reference_set_ = true;
-}
-
-// todo: expose this
-void PandaControllerInterfaceNoRos::set_mode(int mode) {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr[0](11) = mode;
-  get_controller()->set_reference_trajectory(ref_);
-  local_cost_->set_reference_trajectory(ref_);
-  reference_set_ = true;
-}
-
-void PandaControllerInterfaceNoRos::update_reference(const mppi::observation_t& x,
-                                                const double t) {
-  if (reference_scheduler_.has_reference(t)) {
-    reference_scheduler_.set_reference(t, ref_);
-
-    std::unique_lock<std::mutex> lock(reference_mutex_);
-    get_controller()->set_reference_trajectory(ref_);
-    local_cost_->set_reference_trajectory(ref_);
-    reference_set_ = true;
-  }
-}
-
 mppi_pinocchio::Pose PandaControllerInterfaceNoRos::get_pose_end_effector(
     const Eigen::VectorXd& x) {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
@@ -197,7 +240,7 @@ mppi_pinocchio::Pose PandaControllerInterfaceNoRos::get_pose_handle(
       x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
   return object_model_.get_pose(dynamics_params_.object_handle_link);
 }
-//
+
 //geometry_msgs::PoseStamped PandaControllerInterfaceNoRos::get_pose_base(
 //    const mppi::observation_t& x) {
 //  geometry_msgs::PoseStamped pose_ros;
