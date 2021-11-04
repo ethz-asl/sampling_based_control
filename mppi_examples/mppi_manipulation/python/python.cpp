@@ -10,7 +10,15 @@
 #include <pybind11/iostream.h>
 #include <pybind11/stl.h>
 
+#include "mppi_manipulation/controller_interface_no_ros.h"
+
+using namespace manipulation;
 namespace py = pybind11;
 
 PYBIND11_MODULE(pymppi_manipulation, m) {
+  m.doc() = "python library for mppi manipulation controller"; // optional module docstring
+  py::class_<PandaControllerInterfaceNoRos>(m, "PandaControllerInterface")
+      .def(py::init<const std::string &>())
+      .def("init", &PandaControllerInterfaceNoRos::init)
+      .def_readwrite("object_tolerance", &PandaControllerInterfaceNoRos::object_tolerance_);
 }
