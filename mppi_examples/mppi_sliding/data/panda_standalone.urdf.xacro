@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+    <xacro:include filename="$(find mppi_panda)/resources/panda/panda.urdf.xacro"/>
+
+    <link name="world"/>
+
+    <xacro:panda_robot parent_link="world"/>
+
+    <!--    Add utility grasp frame-->
+    <xacro:if value="${add_finger}">
+        <link name="panda_grasp"/>
+        <joint name="panda_grasp_joint" type="fixed">
+            <parent link="panda_hand"/>
+            <child link="panda_grasp"/>
+            <axis xyz="0 1 0"/>
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        </joint>
+    </xacro:if>
+
+</robot>

@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+
+<robot name="cylinder">
+
+    <link name="cylinder_frame">
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.1"/>
+            </geometry>
+            <material name="steel">
+                <color rgba="0 0 .8 1"/>
+            </material>
+        </visual>0
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.1"/>
+            </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
+        </collision>
+        <inertial>
+            <mass value="10"/>
+            <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+            <origin xyz="0 0 0"/>
+        </inertial>
+    </link>
+
+</robot>

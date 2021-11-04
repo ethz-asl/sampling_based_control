@@ -1,0 +1,35 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/boyang/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/boyang/raisim_ws/raisim_install/include/**",
+        "/home/boyang/raisim_ws/raisim_install/include/**",
+        "/home/boyang/catkin_ws/src/kindr/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/manipulation_msgs/include/**",
+        "/home/boyang/catkin_ws/src/message_logger/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda_mobile/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_pinocchio/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_pole_cart/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_ros/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/include/**",
+        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_tools/include/**",
+        "/home/boyang/catkin_ws/src/signal_logger/signal_logger/include/**",
+        "/home/boyang/catkin_ws/src/signal_logger/signal_logger_core/include/**",
+        "/home/boyang/catkin_ws/src/signal_logger/signal_logger_ros/include/**",
+        "/home/boyang/catkin_ws/src/signal_logger/signal_logger_std/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}

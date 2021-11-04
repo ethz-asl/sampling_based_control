@@ -1,49 +1,69 @@
-/*!
- * @file     dynamics_raisim.cpp
- * @author   Giuseppe Rizzi
- * @date     05.10.2020
- * @version  1.0
- * @brief    description
- */
+// /*!
+//  * @file     dynamics_raisim.cpp
+//  * @author   Giuseppe Rizzi
+//  * @date     05.10.2020
+//  * @version  1.0
+//  * @brief    description
+//  */
 
-#include "mppi_manipulation/dynamics.h"
+#include "mppi_sliding/dynamics.h"
 #include <ros/package.h>
 
 namespace manipulation {
 
-PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
+PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)   
     : params_(params) {
-  initialize_world(params_.robot_description, params_.object_description);
+  initialize_world(params_.robot_description, params_.object_description, params_.cylinder_description);
+  std::cout << "world inited" << std::endl;
   initialize_pd();
+  std::cout << "pd inited" << std::endl;
   set_collision();
-  
+  std::cout << "collision set" << std::endl;
+
   t_ = 0.0;
   ee_force_applied_ = false;
+  
 };
 
 void PandaRaisimDynamics::initialize_world(
     const std::string& robot_description,
-    const std::string& object_description) {
+    const std::string& object_description,
+    const std::string& cylinder_description) {
   dt_ = params_.dt;
   sim_.setTimeStep(params_.dt);
   sim_.setERP(0., 0.);
+  //sim_.setERP(sim_.getTimeStep(),sim_.getTimeStep());
 
   gravity_.e() << 0.0, 0.0, -9.81;
   sim_.setGravity(gravity_);
 
   // set friction properties
   sim_.setMaterialPairProp("steel", "steel", 0.01, 0.15, 0.001);
-
+  
   robot_description_ = robot_description;
   panda_ = sim_.addArticulatedSystem(robot_description_, "/");
-
   tau_ext_ = Eigen::VectorXd::Zero(panda_->getDOF());
   J_contact_.setZero(3, panda_->getDOF());
+  panda_->setName("Panda");
 
   /// create raisim objects
   object_description_ = object_description;
   object_ = sim_.addArticulatedSystem(object_description_, "/");
+  object_->setName("Object_1");
 
+  std::cout << "robot and obj inited" << std::endl;
+
+  // create cylinder object
+  cylinder_description_ = cylinder_description;
+  cylinder_ = sim_.addCylinder(0.1,0.5,10,"steel");
+  cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
+  cylinder_->setMass(20);
+  cylinder_->setName("Cylinder");
+  std::cout << "cylinder inited" << std::endl; 
+
+  // To simulate 2D sliding, we need a ground
+  auto ground = sim_.addGround(-10);
+  
   // robot dof
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
   state_dimension_ = STATE_DIMENSION;
@@ -51,6 +71,12 @@ void PandaRaisimDynamics::initialize_world(
   x_ = mppi::observation_t::Zero(STATE_DIMENSION);
 
   reset(params_.initial_state, t_);
+
+  //std::cout << cylinder_->getMass() <<std::endl;
+  //std::cout << cylinder_->getInertiaMatrix_B() <<std::endl;
+  //std::cout << cylinder_->getPosition() <<std::endl;
+  //std::cout << cylinder_->getLinearVelocity() <<std::endl;
+  //std::cout << cylinder_->getAngularVelocity() << std::endl;
 }
 
 void PandaRaisimDynamics::initialize_pd() {
@@ -77,9 +103,16 @@ void PandaRaisimDynamics::initialize_pd() {
   panda_->setPdGains(joint_p_gain_, joint_d_gain_);
   panda_->setGeneralizedForce(Eigen::VectorXd::Zero(panda_->getDOF()));
 
+  // why set PD for object?
   object_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
   object_->setPdGains(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
   object_->setGeneralizedForce({0.0});
+
+  // cylinder_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+  // cylinder_->setPdGains(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
+  // cylinder_->setGeneralizedForce({0.0});
+  cylinder_->setExternalForce(0, {0,0,0});
+  cylinder_->setExternalTorque(0, {0,0,0});
 }
 
 void PandaRaisimDynamics::set_collision() {
@@ -96,30 +129,46 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
   cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
       << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
 
+  // base
   cmdv_(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
   cmdv_(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
   cmdv_(2) = u(2);
-  cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);
 
+  // arm
+  cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);;
+
+  // gripper
   cmdv_.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
+  
+  // PD low-level controller
   panda_->setPdTarget(cmd_, cmdv_);
+
   panda_->setGeneralizedForce(panda_->getNonlinearities(gravity_));
 
   // gravity compensated object
   object_->setGeneralizedForce(object_->getNonlinearities(gravity_));
+  
 }
 
 void PandaRaisimDynamics::advance() {
   // get contact state
   double in_contact = -1;
-  std::cout << "contact size" << object_->getContacts().size() << std::endl;
-  for (const auto& contact : object_->getContacts()) {
+  //for (const auto& contact : object_->getContacts()) {
+  if(cylinder_->getContacts().size()>=0)
+  {
+    ROS_INFO_STREAM("contact size" << cylinder_->getContacts().size());
+  }
+  for (const auto& contact : cylinder_->getContacts()) {
     if (!contact.skip() && !contact.isSelfCollision()) {
+      //std::cout << "this contact position: " <<contact.getPosition().e().transpose()<<std::endl;
       in_contact = 1;
       break;
     }
   }
 
+  // manully set velocity for cylinder
+  //cylinder_->setLinearVelocity({-0.12, -0.12, 0});
+  
   // get external torque
   get_external_torque(tau_ext_);
 
@@ -127,19 +176,29 @@ void PandaRaisimDynamics::advance() {
   sim_.integrate();
   t_ += sim_.getTimeStep();
 
+  // update state x
   panda_->getState(joint_p_, joint_v_);
-  object_->getState(object_p_, object_v_);
+  //object_->getState(object_p_, object_v_);
+  object_p_.resize(OBJECT_DIMENSION);
+  object_p_(0) = cylinder_->getPosition()(0);
+  object_p_(1) = cylinder_->getPosition()(1);
+  object_p_(2) = 0;  //TODO(boyang), change to getRot or getQuat, and transform into z-angel
+  object_v_.resize(OBJECT_DIMENSION);
+  object_v_(0) = cylinder_->getLinearVelocity()(0);
+  object_v_(1) = cylinder_->getLinearVelocity()(1);
+  object_v_(2) = 0;  //TODO(boyang), change to getRot or getQuat, and transform into z-angel
 
   x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p_;
   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v_;
-  x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0) = object_p_(0);
-  x_.segment<2 * OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(1) = object_v_(0);
-  x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;
+  x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM) = object_p_;
+  x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) = object_v_;
+  x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;  // TODO: check collision 
   x_.tail<TORQUE_DIMENSION>() = tau_ext_;
+
 }
 
 mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
-                                              const double dt) {
+                                              const double dt) {                                             
   set_control(u);
   advance();
   return x_;
@@ -153,8 +212,12 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
   // reset arm
   panda_->setState(x_.head<BASE_ARM_GRIPPER_DIM>(),
                    x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
-  object_->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
-                    x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
+  // reset objects 
+  // object_->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
+  //                   x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
+  cylinder_->setPosition(Eigen::Vector3d(x_(2* robot_dof_),x_(2* robot_dof_+1),1));
+  cylinder_->setLinearVelocity(Eigen::Vector3d(x_(2* robot_dof_+3),x_(2* robot_dof_+4),0));
+
 }
 
 mppi::input_t PandaRaisimDynamics::get_zero_input(
@@ -318,3 +381,4 @@ void PandaRaisimDynamics::release_object() {
 }
 
 }  // namespace manipulation
+

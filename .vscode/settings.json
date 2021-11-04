@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "chrono": "cpp"
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/boyang/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages",
+        "/home/boyang/rasisim_ws/raisim_install/lib",
+        "/home/boyang/rasisim_ws/raisim_install/lib",
+        "/home/boyang/raisim_ws/raisim_install/lib",
+        "/home/boyang/raisim_ws/raisim_install/lib"
+    ]
+}

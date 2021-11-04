@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(mppi_manipulation)
+cmake_minimum_required(VERSION 3.0.2)
+project(mppi_sliding)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)

@@ -5,10 +5,10 @@
  * @version  1.0
  * @brief    description
  */
-#include "mppi_manipulation/controller_interface.h"
+#include "mppi_sliding/controller_interface.h"
 
 #include <manipulation_msgs/conversions.h>
-#include <mppi_manipulation/dynamics_ros.h>
+#include <mppi_sliding/dynamics_ros.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
@@ -30,18 +30,21 @@ int main(int argc, char** argv) {
   signal_logger::logger->initLogger(silo_options);
 
   // ros interface
-  auto controller = PandaControllerInterface(nh);
+  auto controller = PandaControllerInterface(nh);  // constructors are empty 
 
   bool is_sim = true;
-  DynamicsParams dynamics_params;
+  DynamicsParams dynamics_params;     // init params (dynamics_param.cpp)
   if (!dynamics_params.init_from_ros(nh, is_sim)) {
     ROS_ERROR("Failed to parse dynamics parameters");
     return 0;
   }
   ROS_INFO_STREAM(
       "Successfully parsed simulation dynamics parameter: " << dynamics_params);
+
   auto simulation =
-      std::make_shared<ManipulatorDynamicsRos>(nh, dynamics_params);
+      std::make_shared<ManipulatorDynamicsRos>(nh, dynamics_params);  // init sim dynamics (->dynamic_ros.cpp -> dynamic.cpp)
+
+  ROS_INFO_STREAM("real world simulation initiated");
 
   observation_t x_nom;
   manipulation_msgs::State x_nom_ros;
@@ -49,16 +52,23 @@ int main(int argc, char** argv) {
       nh.advertise<manipulation_msgs::State>("/observer/state", 10);
 
   // init state and input
-  mppi::observation_t x = simulation->get_state();
+  mppi::observation_t x = simulation->get_state();  // get_state() returns x
   mppi::input_t u = simulation->get_zero_input(x);
+
+  ROS_INFO_STREAM("state and input inited");
+  ROS_INFO_STREAM("init state: " << x.transpose());
 
   // init the controller
   double sim_time = 0.0;
   bool ok = controller.init();
   if (!ok) throw std::runtime_error("Failed to initialize controller!");
 
+  ROS_INFO_STREAM("controller inited");
+
   // set the very first observation
   controller.set_observation(x, sim_time);
+  ROS_INFO_STREAM("init first observation as : " << x.transpose());
+  
 
   // start controller
   bool sequential;
@@ -66,6 +76,8 @@ int main(int argc, char** argv) {
   ROS_INFO_STREAM("Running in sequential mode? " << sequential);
 
   if (!sequential) controller.start();
+
+  ROS_INFO_STREAM( "controller started" );
 
   // do some timing
   double elapsed;
@@ -75,6 +87,7 @@ int main(int argc, char** argv) {
   signal_logger::add(u, "input");
   signal_logger::logger->updateLogger();
   signal_logger::logger->startLogger();
+
 
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
@@ -90,14 +103,17 @@ int main(int argc, char** argv) {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
     }
+    //ROS_INFO_STREAM( "controller update ");
 
     x = simulation->step(u, simulation->get_dt());
     sim_time += simulation->get_dt();
+    // ROS_INFO_STREAM( "sim world update ") ;
 
     controller.get_input_state(x, x_nom, u, sim_time);
     manipulation::conversions::eigenToMsg(x_nom, sim_time, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
-
+    //ROS_INFO_STREAM( "contoller state published ") ;
+    
     end = steady_clock::now();
     elapsed = duration_cast<milliseconds>(end - start).count() / 1000.0;
     if (simulation->get_dt() - elapsed > 0)
@@ -106,13 +122,13 @@ int main(int argc, char** argv) {
       ROS_INFO_STREAM_THROTTLE(
           3.0, "Slower than real-time: " << elapsed / simulation->get_dt()
                                          << "x slower.");
-
     simulation->publish_ros();
+    //ROS_INFO_STREAM( "sim world state published ") ;
 
     signal_logger::logger->collectLoggerData();
     ros::spinOnce();
   }
-
+  
   // save logs
   std::cout << "Saving logged data..." << std::endl;
   std::string file_path = __FILE__;
@@ -124,3 +140,4 @@ int main(int argc, char** argv) {
   signal_logger::logger->cleanup();
   std::cout << "Done." << std::endl;
 }
+
