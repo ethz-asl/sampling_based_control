@@ -20,7 +20,7 @@ set(PACKAGE_DEPENDENCIES
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 catkin_package(
-        LIBRARIES ${PROJECT_NAME} panda_mobile_safety_filter
+        LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
         DEPENDS )
