@@ -113,9 +113,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   Eigen::VectorXd tau_ext_;
   Eigen::VectorXd joint_p_, joint_v_;
 
-public:
-  raisim::World sim_;
-
  protected:
 
   double dt_;
@@ -126,13 +123,14 @@ public:
   std::string object_description_;
   std::string cylinder_description_;
 
-  // raisim::World sim_;
+  raisim::World sim_;
 
   raisim::ArticulatedSystem* panda_;
   raisim::ArticulatedSystem* object_;
-  //raisim::ArticulatedSystem* cylinder_;
+  raisim::Box* table_;
   raisim::Cylinder* cylinder_;
-  
+  raisim::Cylinder* cylinder_2;
+
   Eigen::VectorXd object_p_, object_v_;
   Eigen::VectorXd box_p_, box_v_;
   Eigen::VectorXd cmd_, cmdv_;

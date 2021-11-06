@@ -139,5 +139,6 @@ int main(int argc, char** argv) {
                                         file_path);
   signal_logger::logger->cleanup();
   std::cout << "Done." << std::endl;
+
 }
 

@@ -1,3 +1,9 @@
+geometry:
+  cylinder_height: 0.2
+  cylinder_radius: 0.04
+  cylinder_z: 0.9 # table_z + 1/2(table_height+cylinder_height)
+  table_position: [2.4,2.4,0.7] 
+
 dynamics:
   dt: 0.015
   object_handle_link: handle_link
@@ -79,12 +85,12 @@ cost:
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
   grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
 
-  # upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
-  # lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+  #upper_joint_limits: [ 5, 5, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+  #lower_joint_limits: [ -5, -5, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
 
-  upper_joint_limits: [ 100, 100, 180, 180, 180, 180, 180, 180, 180, 180 ]
-  lower_joint_limits: [ -100, -100, -180, -180, -180, -180, -180, -180, -180, -180 ]
+  upper_joint_limits: [ 1.15, 1.15, 180, 180, 180, 180, 180, 180, 180, 180 ]
+  lower_joint_limits: [ -0.8, -0.8, -180, -180, -180, -180, -180, -180, -180, -180 ]
 
   joint_limit_cost: 1000 #1000
   joint_limit_slope: 1000000 #100

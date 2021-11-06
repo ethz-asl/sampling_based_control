@@ -30,13 +30,7 @@
         <remap from="joint_states" to="/joint_states"/>
     </node>
 
-    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="object_description_raisim"/>
-        <remap from="joint_states" to="/object/joint_state"/>
-    </node>
-
-    <!-- added cylinder for test -->>
+    <!-- add cylinder for test -->>
     <!-- TODO: add another sim cylinder -->>
     <node name="sim_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <remap from="robot_description" to="cylinder_description_raisim_simulation"/>
@@ -50,18 +44,47 @@
     </node>
 
     <!--       ..............         -->>
+    
+    <!-- cylinder target -->
+    <node name="target_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="target_cylinder_description"/>
+        <remap from="joint_states" to="/target_cylinder/joint_states"/>
+    </node>
+    <!--     .....................    -->
+
+    
+    <!-- add table -->
+    <node name="sim_table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="table_description_raisim_simulation"/>
+        <remap from="joint_states" to="/sim/table/joint_states"/>
+    </node>
+
+    <node name="table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="table_description_raisim"/>
+        <remap from="joint_states" to="/table/joint_state"/>
+    </node>
+    <!--       ..............         -->>
+
+
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="object_description_raisim"/>
+        <remap from="joint_states" to="/object/joint_state"/>
+    </node>
 
     <node name="simulation_object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="object_description_raisim_simulation"/>
         <remap from="joint_states" to="/object/joint_state"/>
     </node>
-
     <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="obstacle_description"/>
         <remap from="joint_states" to="/fake_joint_state"/>
     </node>
+
+
 
     <param name="/config_file" value="$(find mppi_sliding)/params/controller.yaml"/>
 

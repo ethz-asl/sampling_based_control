@@ -34,6 +34,12 @@ struct CostParams {
   std::vector<double> upper_joint_limits;
   std::vector<double> lower_joint_limits;
 
+  //geomety
+  double cylinder_height;
+  double cylinder_radius;
+  double cylinder_z;
+  std::vector<double> table_position;
+
   // power cost
   double max_power = 0.0;
   double Q_power = 0.0;

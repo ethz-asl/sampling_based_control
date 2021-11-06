@@ -76,6 +76,32 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  //parse geometry params
+  if (!nh.getParam("geometry/cylinder_height",cylinder_height))
+  {
+    ROS_ERROR_STREAM("geometry params parsing: failed to parse geometry/cylinder_height or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("geometry/cylinder_radius",cylinder_radius))
+  {
+    ROS_ERROR_STREAM("geometry params parsing: failed to parse geometry/cylinder_radius or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("geometry/cylinder_z",cylinder_z))
+  {
+    ROS_ERROR_STREAM("geometry params parsing: failed to parse geometry/cylinder_z or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("geometry/table_position",table_position))
+  {
+    ROS_ERROR_STREAM("geometry params parsing: failed to parse geometry/table_position or invalid!");
+    return false;
+  }
+
+  // parse gains
   if (!gains.init_from_ros(nh, prefix + "dynamics/")) {
     ROS_ERROR("Failed to parse simulation gains.");
     return false;

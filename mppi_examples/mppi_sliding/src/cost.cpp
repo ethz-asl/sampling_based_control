@@ -15,7 +15,6 @@ using namespace manipulation;
 PandaCost::PandaCost(const CostParams& params) : params_(params) {
   robot_model_.init_from_xml(params_.robot_description);
   object_model_.init_from_xml(params_.object_description);
-  cylinder_model_.init_from_xml(params_.cylinder_description);
 }
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
@@ -28,10 +27,9 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   //object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
-  cylinder_state_ = Eigen::Vector3d(x(2*BASE_ARM_GRIPPER_DIM),x(2*BASE_ARM_GRIPPER_DIM+1),0);
-  //ROS_INFO_STREAM("cylinder state [x,y,fi]: " <<  cylinder_state_);
+  cylinder_position_ = Eigen::Vector3d(x(2*BASE_ARM_GRIPPER_DIM),x(2*BASE_ARM_GRIPPER_DIM+1),params_.cylinder_z);
   //ROS_INFO_STREAM("EE in world frame: " << robot_model_.get_pose(params_.tracked_frame).translation);
-  
+
   // regularization cost
   cost += params_.Qreg *
           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
@@ -54,15 +52,11 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     // error_ = mppi_pinocchio::diff(
     //     robot_model_.get_pose(params_.tracked_frame),
     //     object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    error_.resize(3);
-    error_(0) = robot_model_.get_pose(params_.tracked_frame).translation(0) - cylinder_state_(0) -0.2;
-    error_(1) = robot_model_.get_pose(params_.tracked_frame).translation(1) - cylinder_state_(1);
-    error_(2) = robot_model_.get_pose(params_.tracked_frame).translation(2) - 1;
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-    // cost +=
-    //     (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
-    
+    //error_.resize(3);
+    Eigen::Vector2d position_dist;
+    position_dist = robot_model_.get_pose(params_.tracked_frame).translation.head<2>() - cylinder_position_.head<2>(); 
+    cost += (position_dist.norm() - 0.1) * params_.Qt;
+    cost += (robot_model_.get_pose(params_.tracked_frame).translation(2) - cylinder_position_(2))*params_.Qt;
 
     // adjust ee pose, when manipulating cylinder
     Eigen::Vector3d ref_t = ref.head<3>();
@@ -82,26 +76,35 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     // error_ = mppi_pinocchio::diff(
     //     robot_model_.get_pose(params_.tracked_frame),
     //     object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    error_.resize(3);
-    error_(0) = robot_model_.get_pose(params_.tracked_frame).translation(0) - cylinder_state_(0);
-    error_(1) = robot_model_.get_pose(params_.tracked_frame).translation(1) - cylinder_state_(1);
-    error_(2) = robot_model_.get_pose(params_.tracked_frame).translation(2) - 1;
+    //error_.resize(3);
+    Eigen::Vector3d pose_diff_1;
+    double pose_diff, pose_error;
+  
+    pose_diff_1(0) = robot_model_.get_pose(params_.tracked_frame).translation(0) - cylinder_position_(0);
+    pose_diff_1(1) = robot_model_.get_pose(params_.tracked_frame).translation(1) - cylinder_position_(1);
+    pose_diff = pose_diff_1(0)*pose_diff_1(0) + pose_diff_1(1)*pose_diff_1(1);
+    pose_diff_1(2) = robot_model_.get_pose(params_.tracked_frame).translation(2) 
+                      - params_.cylinder_z - 0.25 * params_.cylinder_height;
+    // EE stay near the cylinder
+    pose_error = (pose_diff>params_.cylinder_height*params_.cylinder_height) ? sqrt(pose_diff)*1.5 : 0;
+    // EE not stay ahead of cylinder
+    pose_error += (pose_diff_1(0) > 0) ? pose_diff_1(0) : 0;
+    pose_error += (pose_diff_1(1) > 0) ? pose_diff_1(1) : 0;
 
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt2;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr2;
-
-    double object_error =
-        x(2 * BASE_ARM_GRIPPER_DIM) -
-        ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);  // TODO: object position diff 
-    std::cout << "object error : " << object_error << std::endl;
+    cost += (pose_error*pose_error + pose_diff_1(2)*pose_diff_1(2)) *params_.Qt2;
+    
+    Eigen::Vector3d object_position_diff;
+    object_position_diff(0) = x(2 * BASE_ARM_GRIPPER_DIM) -
+        ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
+    object_position_diff(1) = x(2 * BASE_ARM_GRIPPER_DIM+1) -
+        ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE+1);
+    object_position_diff(2) = 0;
+    double object_error = object_position_diff.norm();
     cost += object_error * object_error * params_.Q_obj;
   }
   
   // power cost
-  // cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
-  cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power) * 0.1; 
+  cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
   
   // self collision cost
   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,

@@ -1,21 +1,21 @@
 <?xml version="1.0" ?>
 
-<robot name="cylinder">
+<robot name="table">
 
-    <link name="cylinder_frame">
+    <link name="table_frame">
         <visual>
             <origin xyz="0 0 0"/>
             <geometry>
-                <cylinder length="0.2" radius="0.04"/>
+                <box size="3 3 0.2"/>
             </geometry>
             <material name="steel">
-                <color rgba="0 0 .8 1"/>
+                <color rgba="0.5 0 0 1"/>
             </material>
         </visual>0
         <collision>
             <origin xyz="0 0 0"/>
             <geometry>
-                <cylinder length="0.2" radius="0.04"/>
+                <box size="3 3 0.2"/>
             </geometry>
             <material name="">
                 <contact name="steel"/>
@@ -23,7 +23,7 @@
         </collision>
         <inertial>
             <mass value="10"/>
-            <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+            <inertia ixx="100" ixy="0.0" ixz="0.0" iyy="100" iyz="0.0" izz="100"/>
             <origin xyz="0 0 0"/>
         </inertial>
     </link>

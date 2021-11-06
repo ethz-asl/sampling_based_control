@@ -19,6 +19,12 @@ struct DynamicsParams {
   std::string object_handle_link;
   std::string object_handle_joint;
 
+  //geometry
+  double cylinder_height;
+  double cylinder_radius;
+  double cylinder_z;
+  std::vector<double> table_position;
+
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };
 

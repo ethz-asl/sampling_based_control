@@ -34,9 +34,21 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   // cylinder
   cylinder_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/cylinder/joint_state", 10);
-
   cylinder_trans.header.frame_id = "world";
   cylinder_trans.child_frame_id = "cylinder_frame";
+
+  //target
+  cylinder_target_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/target_cylinder/joint_states", 10);
+  cylinder_target_trans.header.frame_id = "world";
+  cylinder_target_trans.child_frame_id = "cylinder_t_frame";
+
+  //table 
+  table_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/table/joint_state", 10);
+  table_trans.header.frame_id = "world";
+  table_trans.child_frame_id = "table_frame";
+
 
   joint_state_.name = {
       "x_base_joint", "y_base_joint",        "pivot_joint",
@@ -99,24 +111,54 @@ void ManipulatorDynamicsRos::publish_ros() {
   object_state_publisher_.publish(object_state_);
 
   // update cylinder state and its visulization
-  Eigen::Vector3d cylinder_position;
-  Eigen::Quaterniond cylinder_orientation;
   cylinder_state_.header.stamp = ros::Time::now();
-  
   cylinder_trans.header.stamp = ros::Time::now();
   cylinder_trans.transform.translation.x = x_(2 * robot_dof_);
   cylinder_trans.transform.translation.y = x_(2 * robot_dof_ +1 );
-  cylinder_trans.transform.translation.z = 1;
-  tf2::Quaternion q;
-  q.setRPY(0, 0, x_(2 * robot_dof_)+2);
-  cylinder_trans.transform.rotation.x = q.x();
-  cylinder_trans.transform.rotation.y = q.y();
-  cylinder_trans.transform.rotation.z = q.z();
-  cylinder_trans.transform.rotation.w = q.w();
+  cylinder_trans.transform.translation.z = params_.cylinder_z;
+  tf2::Quaternion q_cylinder;
+  q_cylinder.setRPY(0, 0, x_(2 * robot_dof_)+2);
+  cylinder_trans.transform.rotation.x = q_cylinder.x();
+  cylinder_trans.transform.rotation.y = q_cylinder.y();
+  cylinder_trans.transform.rotation.z = q_cylinder.z();
+  cylinder_trans.transform.rotation.w = q_cylinder.w();
+
+  // update cylinder target state and its visulization
+  cylinder_target_.header.stamp = ros::Time::now();
+  cylinder_target_trans.header.stamp = ros::Time::now();
+  cylinder_target_trans.transform.translation.x = 1.25;
+  cylinder_target_trans.transform.translation.y = 1.25;
+  cylinder_target_trans.transform.translation.z = 0.9;
+  tf2::Quaternion q_cylinder_t;
+  q_cylinder_t.setRPY(0, 0, 0);
+  cylinder_target_trans.transform.rotation.x = q_cylinder_t.x();
+  cylinder_target_trans.transform.rotation.y = q_cylinder_t.y();
+  cylinder_target_trans.transform.rotation.z = q_cylinder_t.z();
+  cylinder_target_trans.transform.rotation.w = q_cylinder_t.w();
+  
+
+  // update table state and its visulization
+  table_state_.header.stamp = ros::Time::now();
+  table_trans.header.stamp = ros::Time::now();
+  table_trans.transform.translation.x = params_.table_position[0];  //TODO (boyang): table state is hardcoded, good for now
+  table_trans.transform.translation.y = params_.table_position[1];
+  table_trans.transform.translation.z = params_.table_position[2];
+  tf2::Quaternion q_table;
+  q_table.setRPY(0, 0, 0);
+  table_trans.transform.rotation.x = q_table.x();
+  table_trans.transform.rotation.y = q_table.y();
+  table_trans.transform.rotation.z = q_table.z();
+  table_trans.transform.rotation.w = q_table.w();
 
   //send the joint state and transform
   cylinder_state_publisher_.publish(cylinder_state_);
   broadcaster.sendTransform(cylinder_trans);
+
+  cylinder_target_publisher_.publish(cylinder_target_);
+  broadcaster.sendTransform(cylinder_target_trans);
+
+  table_state_publisher_.publish(table_state_);
+  broadcaster.sendTransform(table_trans);
 
   // visualize contact forces
   std::vector<force_t> forces = get_contact_forces();

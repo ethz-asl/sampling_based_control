@@ -3,6 +3,7 @@
     <arg name="debug" default="false"/>
     <arg name="object" default="door"/>
     <arg name="cylinder" default="cylinder"/>
+    <arg name="table" default="table"/>
     <arg name="description_file" default="$(find mppi_sliding)/data/panda_mobile.urdf.xacro"/>
     <arg name="object_height" default="1.0"/>
     <arg name="load_simulation_object" default="true"/>
@@ -54,6 +55,18 @@
     <param name="cylinder_description_raisim"
            textfile="$(find mppi_sliding)/data/objects/$(arg cylinder).urdf"/>
 
+    <!-- target cylinder descriptor -->
+    <param name="target_cylinder_description"
+           textfile="$(find mppi_sliding)/data/objects/cylinder_t.urdf"/>
+
+    <!-- table descriptor -->
+    <param name="table_description"
+           textfile="$(find mppi_sliding)/data/objects/$(arg table).urdf"/>
+
+    <param name="table_description_raisim"
+           textfile="$(find mppi_sliding)/data/objects/$(arg table).urdf"/>
+
+
     <group if="$(arg load_simulation_object)">
     <!-- This object description is used in simulation and can differ from the model used in the controller -->
         <param name="object_description_raisim_simulation"
@@ -65,6 +78,9 @@
         
         <param name="cylinder_description_raisim_simulation"
             textfile="$(find mppi_sliding)/data/objects/$(arg cylinder).urdf"/>
+
+        <param name="table_description_raisim_simulation"
+            textfile="$(find mppi_sliding)/data/objects/$(arg table).urdf"/>
 
     </group>
     

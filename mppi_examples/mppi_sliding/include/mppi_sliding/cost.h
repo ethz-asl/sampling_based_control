@@ -38,9 +38,8 @@ class PandaCost : public mppi::Cost {
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
   mppi_pinocchio::RobotModel cylinder_model_;
-
-  mppi_pinocchio::Pose cylinder_pose_; // cylinder pose for cost calculation
-  Eigen::Vector3d cylinder_state_;
+  
+  Eigen::Vector3d cylinder_position_;
 
   int frame_id_;
   int arm_base_frame_id_;

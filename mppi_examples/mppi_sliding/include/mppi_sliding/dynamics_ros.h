@@ -43,6 +43,16 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   sensor_msgs::JointState cylinder_state_;
   tf2_ros::TransformBroadcaster broadcaster;
   geometry_msgs::TransformStamped cylinder_trans;
+
+  ros::Publisher cylinder_target_publisher_;
+  sensor_msgs::JointState cylinder_target_;
+  geometry_msgs::TransformStamped cylinder_target_trans;
+
+  ros::Publisher table_state_publisher_;
+  sensor_msgs::JointState table_state_;
+  geometry_msgs::TransformStamped table_trans;
+
+
   double tweak = 0;
 
   sensor_msgs::JointState joint_state_;
