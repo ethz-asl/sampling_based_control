@@ -3,6 +3,7 @@
 //
 #include <cmath>
 #include <iostream>
+#include <fstream>
 
 #include "mppi_manipulation/config_no_ros.h"
 
@@ -39,8 +40,19 @@ bool Config::init_from_file(const std::string& file) {
 
   // these values are parsed here in order to have better access from python, if needed
   dt = parse_key<double>(dynamics, "dt", sf).value_or(0.015);
-  robot_description = parse_key<std::string>(dynamics, "robot_description", sf).value_or("");
-  object_description = parse_key<std::string>(dynamics, "object_description", sf).value_or("");
+  std::string robot_description_file = parse_key<std::string>(dynamics, "robot_description", sf).value_or("");
+  std::string object_description_file = parse_key<std::string>(dynamics, "object_description", sf).value_or("");
+
+  // need to load the file manually to string
+  std::ifstream robot_stream(robot_description_file);
+  std::string robot_model(std::istreambuf_iterator<char>{robot_stream}, {});
+  robot_description = robot_model;
+
+  std::ifstream object_stream(object_description_file);
+  std::string object_model(std::istreambuf_iterator<char>{object_stream}, {});
+  object_description = object_model;
+
+
   gains = PIDGains(); // initialize gains to default value, lets me skip another config parsing
   initial_state = parse_key<Eigen::VectorXd>(dynamics, "initial_state", sf).value_or(Eigen::VectorXd(0));
 

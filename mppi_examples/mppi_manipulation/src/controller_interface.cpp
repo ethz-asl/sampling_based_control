@@ -108,6 +108,16 @@ bool PandaControllerInterface::init_ros() {
 void PandaControllerInterface::init_model(
     const std::string& robot_description,
     const std::string& object_description) {
+  // saved in ~/.ros
+  bool save_generated_urdf = true;
+  if (save_generated_urdf){
+    std::ofstream r_file("robot_model.urdf");
+    std::ofstream o_file("object_model.urdf");
+    r_file << robot_description;
+    r_file.close();
+    o_file << object_description;
+    o_file.close();
+  }
   robot_model_.init_from_xml(robot_description);
   object_model_.init_from_xml(object_description);
   ROS_INFO("[PandaControllerInterface::init_model] ok!");

@@ -26,25 +26,25 @@ PandaControllerInterfaceNoRos::PandaControllerInterfaceNoRos(const std::string& 
     ROS_ERROR("Failed to parse manipulation config");
   }
 }
-//bool PandaControllerInterfaceNoRos::init_ros(){
-//  default_pose_ = manipulation_config_.default_pose;
-//  object_tolerance_ = manipulation_config_.object_tolerance;
-//  reference_scheduler_.parse_from_file(manipulation_config_.references_file);
-//  last_ee_ref_id_ = 0;
-//  ee_desired_pose_.header.seq = last_ee_ref_id_;
-//
-//  last_ob_ref_id_ = 0;
-//  obstacle_pose_.header.seq = last_ob_ref_id_;
-//
-//  optimal_path_.header.frame_id = "world";
-//  optimal_base_path_.header.frame_id = "world";
-//  reference_set_ = false;
-//  ROS_INFO("[PandaControllerInterface::init_ros] ok!");
-//  return true;
-//}
+bool PandaControllerInterfaceNoRos::init_ros(){
+  default_pose_ = manipulation_config_.default_pose;
+  object_tolerance_ = manipulation_config_.object_tolerance;
+  reference_scheduler_.parse_from_file(manipulation_config_.references_file);
+  last_ee_ref_id_ = 0;
+  ee_desired_pose_.header.seq = last_ee_ref_id_;
+
+  last_ob_ref_id_ = 0;
+  obstacle_pose_.header.seq = last_ob_ref_id_;
+
+  optimal_path_.header.frame_id = "world";
+  optimal_base_path_.header.frame_id = "world";
+  reference_set_ = false;
+  ROS_INFO("[PandaControllerInterface::init_ros] ok!");
+  return true;
+}
 
 bool PandaControllerInterfaceNoRos::init() {
-//  init_ros();
+  init_ros();
 
   bool ok;
   try {

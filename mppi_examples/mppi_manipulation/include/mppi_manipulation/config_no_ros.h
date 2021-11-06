@@ -49,9 +49,8 @@ std::optional<T> Config::parse_key(const YAML::Node& node,
                                    bool& success_flag) {
 
   if (not node[key]) {
-    std::cout << "Could not find entry: " << key << std::endl;
+    std::cout << "Manipulation Config - could not find entry: " << key << std::endl;
     success_flag = false;
-//    if (!quiet) parsing_error = true;
     return {};
   }else {
     return node[key].as<T>();
@@ -63,9 +62,8 @@ inline std::optional<Eigen::VectorXd> Config::parse_key<Eigen::VectorXd>(
     const YAML::Node& node, const std::string& key, bool& success_flag) {
 
   if (not node[key]) {
-    std::cout << "Could not find entry: " << key << std::endl;
+    std::cout << "Manipulation Config - could not find entry: " << key << std::endl;
     success_flag = false;
-//    if (!quiet) parsing_error = true;
     return {};
   }else {
     auto v = node[key].as<std::vector<double>>();

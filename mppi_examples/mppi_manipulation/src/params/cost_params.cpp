@@ -9,7 +9,7 @@ using namespace manipulation;
 bool CostParams::init_from_config(const manipulation::Config& config){
   YAML::Node cost = config.data["cost"]; 
   if (!cost) {
-    std::cout << "Failed to parse dynamics." << std::endl;
+    std::cout << "Failed to load cost YAML node." << std::endl;
     return false;
   }
   bool sf = true;
@@ -44,14 +44,17 @@ bool CostParams::init_from_config(const manipulation::Config& config){
   Q_power = config.parse_key<double>(cost, "power_weight", sf).value_or(0.0);
   
   // frames
-  handle_frame = config.parse_key<std::string>(cost, handle_frame, sf).value_or("");
-  tracked_frame = config.parse_key<std::string>(cost, tracked_frame, sf).value_or("");
-  arm_base_frame = config.parse_key<std::string>(cost, arm_base_frame, sf).value_or("");
+  handle_frame = config.parse_key<std::string>(cost, "handle_frame", sf).value_or("");
+  tracked_frame = config.parse_key<std::string>(cost, "tracked_frame", sf).value_or("");
+  arm_base_frame = config.parse_key<std::string>(cost, "arm_base_frame", sf).value_or("");
   
-  collision_link_0 = config.parse_key<std::string>(cost, collision_link_0, sf).value_or("");
-  collision_link_1 = config.parse_key<std::string>(cost, collision_link_1, sf).value_or("");
+  collision_link_0 = config.parse_key<std::string>(cost, "collision_link_0", sf).value_or("");
+  collision_link_1 = config.parse_key<std::string>(cost, "collision_link_1", sf).value_or("");
   collision_threshold = config.parse_key<double>(cost, "collision_threshold", sf).value_or(0.0);
   Q_collision = config.parse_key<double>(cost, "collision_weight", sf).value_or(0.0);
+
+  robot_description = config.robot_description;
+  object_description = config.object_description;
   return sf;
 }
 
