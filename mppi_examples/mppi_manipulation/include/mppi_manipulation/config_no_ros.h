@@ -23,7 +23,7 @@ struct Config {
   Eigen::VectorXd default_pose;
   double object_tolerance;
   std::string references_file;
-  std::string controller_config_file;
+  std::string solver_config_file;
   bool gaussian_policy;
 
   // dynamics

@@ -28,7 +28,7 @@ bool Config::init_from_file(const std::string& file) {
   default_pose = parse_key<Eigen::VectorXd>(options, "default_pose", sf).value_or(Eigen::VectorXd(0));
   object_tolerance = parse_key<double>(options, "object_tolerance", sf).value_or(0.0);
   references_file = parse_key<std::string>(options, "references_file", sf).value_or("");
-  controller_config_file = parse_key<std::string>(options, "controller_config_file", sf).value_or("");
+  solver_config_file = parse_key<std::string>(options, "solver_config_file", sf).value_or("");
   gaussian_policy = parse_key<bool>(options, "gaussian_policy", sf).value_or(false);
 
   // dynamics

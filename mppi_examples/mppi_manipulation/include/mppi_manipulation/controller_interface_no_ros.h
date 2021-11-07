@@ -28,14 +28,15 @@ class PandaControllerInterfaceNoRos{
   ~PandaControllerInterfaceNoRos() = default;
 
   bool init();
-  void update_reference(const mppi::observation_t& x, const double t);
   void set_observation(const mppi::observation_t &x, const double &t);
   bool update_policy();
   mppi::input_t get_input(const mppi::observation_t &x, const double &t);
+  void set_reference(mppi::reference_array_t refs, mppi::time_array_t t);
+
+  // not used
   void set_mode(int mode);
   void set_desired_ee_pose(const std::vector<double> pose);
-
-  bool observation_set_ = false;
+  void update_reference(const mppi::observation_t& x, const double t);
 
  private:
   // functions
@@ -56,8 +57,7 @@ class PandaControllerInterfaceNoRos{
   //  geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
 
   // configs
-  mppi::config_t config_;
-  std::string manipulation_config_path_;
+  mppi::config_t solver_config_;
   manipulation::Config manipulation_config_;
 
 
@@ -69,6 +69,7 @@ class PandaControllerInterfaceNoRos{
   DynamicsParams dynamics_params_;
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
+  bool observation_set_ = false;
 
   // from ControllerRos, former base class
   mppi::cost_ptr cost_;
