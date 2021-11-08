@@ -9,7 +9,7 @@
         <visual>
             <origin xyz="0 0 0"/>
             <geometry>
-                <mesh filename="file:///home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/object_modeling_playground/data/mesh/Mug_1.dae" scale="0.1 0.1 0.1" rgba="0 0 .8 1"/>
+                <mesh filename="file:///home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/object_modeling_playground/data/mesh/Mug_1.dae" scale="0.1 0.1 0.1"/>
             
             </geometry>
             <material name="WHITE_MTL"/> <!-- rviz will use this color -->
@@ -17,7 +17,7 @@
         <collision>
             <origin xyz="0 0 0"/>
             <geometry>
-                <mesh filename="file:///home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/object_modeling_playground/data/mesh/Mug_1.obj" scale="0.1 0.1 0.1" rgba="0 0 .8 1"/>
+                <mesh filename="file:///home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/object_modeling_playground/data/mesh/Mug_1.obj" scale="0.1 0.1 0.1"/>
             </geometry>
         </collision>
     </link>

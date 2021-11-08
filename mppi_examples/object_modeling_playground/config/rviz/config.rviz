@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /object_gt1
         - /TF1
+        - /MarkerArray1
       Splitter Ratio: 0.5
     Tree Height: 866
   - Class: rviz/Selection
@@ -64,6 +65,11 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        mug_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: object_gt
       Robot Description: mug_description
       TF Prefix: ""
@@ -90,6 +96,14 @@ Visualization Manager:
           mug_frame:
             {}
       Update Interval: 0
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: keypoints_marker_array
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -119,7 +133,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.1962664127349854
+      Distance: 0.8593416810035706
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -127,17 +141,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.20478782057762146
-        Y: -0.041173167526721954
-        Z: 0.6630553603172302
+        X: -0.0001265878090634942
+        Y: -0.09068890661001205
+        Z: 1.1369903087615967
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6803981065750122
+      Pitch: 0.4247972071170807
       Target Frame: <Fixed Frame>
-      Yaw: 2.4403984546661377
+      Yaw: 3.6554081439971924
     Saved: ~
 Window Geometry:
   Displays:

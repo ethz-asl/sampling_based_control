@@ -9,22 +9,23 @@ int main(int argc, char** argv) {
 
     // mug
     auto mug = Object(nh);
-    mug.init_publisher("/mug/joint_states", 10);
+    mug.init_param();
+    mug.init_object_publisher("/mug/joint_states", 10);
     mug.trans.header.frame_id = "world";
     mug.trans.child_frame_id = "mug_frame";
-    
-    // keypoints gt
+        // keypoints gt
+    mug.init_kp_array_publisher("/keypoints_marker_array", 10);
+    mug.create_kp_markers("mug_frame");
+
+    mug.fit_primitive();
+
     while (ros::ok())
     {   
         // update mug state and its visulization
-        Eigen::VectorXd mug_state(6);
-        mug_state << 0,0,1,0,0,0;
-        mug.setTF(mug_state);
-
+        mug.setTF();
         //send the joint state and transform
         mug.pub_state();
         broadcaster.sendTransform(mug.trans);
-
         ros::spinOnce();
 
         loop_rate.sleep();

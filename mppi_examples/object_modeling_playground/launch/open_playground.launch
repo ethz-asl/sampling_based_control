@@ -9,15 +9,17 @@
            textfile="$(find object_modeling_playground)/data/objects/mug.urdf"/>
     
         
-    <!-- cylinder target -->
-    <node name="target_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <!-- mug -->
+    <node name="mug_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <remap from="robot_description" to="mug_description"/>
         <remap from="joint_states" to="/mug/joint_states"/>
     </node>
     <!--     .....................    -->
 
     <node name="object_model_node" type="object_modeling_playground" pkg="object_modeling_playground" output="screen">
+        <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
     </node>
+
 
     <!-- Open Rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
