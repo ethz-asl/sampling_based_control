@@ -53,7 +53,7 @@
     <node name="manipulation_raisim" type="manipulation_raisim" pkg="mppi_manipulation" output="screen"
           launch-prefix="gdb -ex run --args">
       <rosparam command="load" file="$(find mppi_manipulation)/params/params.yaml"/>
-      <param name="activation_file" value="/home/giuseppe/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
+      <param name="activation_file" value="/home/boyang/raisim_ws/raisimLib/build/examples/rsc/activation.raisim"/>
     </node>
 
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_manipulation)/config/rviz/config.rviz" output="screen"/>

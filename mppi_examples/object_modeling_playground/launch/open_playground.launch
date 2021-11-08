@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="debug" default="false"/>
+    <arg name="launch_prefix" value="" unless="$(arg debug)"/>
+    <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
+
+
+    <param name="mug_description"
+           textfile="$(find object_modeling_playground)/data/objects/mug.urdf"/>
+    
+        
+    <!-- cylinder target -->
+    <node name="target_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="mug_description"/>
+        <remap from="joint_states" to="/mug/joint_states"/>
+    </node>
+    <!--     .....................    -->
+
+    <node name="object_model_node" type="object_modeling_playground" pkg="object_modeling_playground" output="screen">
+    </node>
+
+    <!-- Open Rviz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
+
+</launch>

@@ -58,7 +58,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/body.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/body.stl"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -82,7 +82,7 @@
     <visual>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/side-cover.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/side-cover.stl"/>
       </geometry>
       <material name="yellow"/>
     </visual>
@@ -91,7 +91,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/side-cover.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/side-cover.stl"/>
       </geometry>
       <material name="yellow"/>
     </visual>
@@ -105,7 +105,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/end-cover.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/end-cover.stl"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -119,7 +119,7 @@
     <visual>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/end-cover.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/end-cover.stl"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -138,7 +138,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/lights.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/lights.stl"/>
       </geometry>
       <material name="white"/>
     </visual>
@@ -147,7 +147,7 @@
     <visual>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/lights.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/lights.stl"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -161,7 +161,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/top.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/top.stl"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -175,7 +175,7 @@
     <visual>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/ridgeback/ridgeback_description/meshes/axle.stl"/>
+        <mesh filename="/home/boyang/catkin_ws/src/ridgeback/ridgeback_description/meshes/axle.stl"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -202,7 +202,7 @@
   <link name="ridgeback_sensor_mount_link">
     <visual>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/data/meshes/ridgeback_sensor_mount.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/data/meshes/ridgeback_sensor_mount.dae"/>
       </geometry>
     </visual>
   </link>
@@ -317,7 +317,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link0.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link0.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -326,7 +326,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link0.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link0.obj"/>
       </geometry>
     </collision>
   </link>
@@ -339,7 +339,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link1.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link1.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -348,7 +348,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link1.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link1.obj"/>
       </geometry>
     </collision>
   </link>
@@ -369,7 +369,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link2.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link2.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -378,7 +378,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link2.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link2.obj"/>
       </geometry>
     </collision>
   </link>
@@ -399,7 +399,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link3.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link3.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -408,7 +408,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link3.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link3.obj"/>
       </geometry>
     </collision>
   </link>
@@ -429,7 +429,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link4.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link4.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -438,7 +438,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link4.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link4.obj"/>
       </geometry>
     </collision>
   </link>
@@ -460,7 +460,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link5.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link5.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -469,7 +469,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link5.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link5.obj"/>
       </geometry>
     </collision>
   </link>
@@ -490,7 +490,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link6.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link6.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -499,7 +499,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link6.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link6.obj"/>
       </geometry>
     </collision>
   </link>
@@ -520,7 +520,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link7.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/link7.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -529,7 +529,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link7.obj"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/collision/link7.obj"/>
       </geometry>
     </collision>
   </link>
@@ -568,7 +568,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/hand.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/hand.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -613,7 +613,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -637,7 +637,7 @@
     <visual>
       <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/giuseppe/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
+        <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/resources/panda/meshes/visual/finger.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
