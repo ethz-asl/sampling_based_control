@@ -5,7 +5,7 @@
  * @version 1.0
  * @brief   description
  */
-#include "mppi_omav_interaction/omav_trajectory_generator.h"
+#include <mppi_omav_interaction/omav_trajectory_generator.h>
 
 using namespace omav_interaction;
 
@@ -60,20 +60,20 @@ int main(int argc, char **argv) {
   ROS_INFO_STREAM("Simulation Created");
 
   // Set nominal state
-  observation_t x_nom = observation_t::Zero(simulation->get_state_dimension());
+  observation_t state_nom = observation_t::Zero(simulation->get_state_dimension());
   // set initial state
-  observation_t x = observation_t::Zero(simulation->get_state_dimension());
-  for (size_t i = 0; i < x0.size(); i++) x(i) = x0[i];
-  ROS_INFO_STREAM("Resetting initial state to " << x.transpose());
-  simulation->reset(x);
+  observation_t state = observation_t::Zero(simulation->get_state_dimension());
+  for (size_t i = 0; i < x0.size(); i++) state(i) = x0[i];
+  ROS_INFO_STREAM("Resetting initial state to " << state.transpose());
+  simulation->reset(state);
 
   // init control input
-  mppi::DynamicsBase::input_t u = input_t::Zero(6);
+  mppi::DynamicsBase::input_t input = input_t::Zero(6);
 
   // init the controller
   bool ok = controller.init();
   if (!ok) throw std::runtime_error("Failed to initialize controller");
-  controller.set_observation(x, 0.0);
+  controller.set_observation(state, 0.0);
   if (running_rotors) {
     while (omav_trajectory_node->odometry_bool_) {
       ROS_INFO_STREAM_ONCE("No Odometry received yet");
@@ -84,9 +84,9 @@ int main(int argc, char **argv) {
 
   // Set first odometry value as reference
   if (running_rotors) {
-    omav_trajectory_node->get_odometry(x);
-    controller.set_initial_reference(x);
-    omav_trajectory_node->initialize_integrators(x);
+    omav_trajectory_node->get_odometry(state);
+    controller.set_initial_reference(state);
+    omav_trajectory_node->initialize_integrators(state);
   }
 
   // start controller
@@ -98,26 +98,26 @@ int main(int argc, char **argv) {
 
   // do some timing
   double elapsed;
-  std::chrono::time_point<std::chrono::steady_clock> start, end;
-  ros::Rate r(control_rate);
+  std::chrono::time_point<std::chrono::steady_clock> t_start, t_end;
+  ros::Rate r_control(control_rate);
   while (ros::ok()) {
-    start = std::chrono::steady_clock::now();
+    t_start = std::chrono::steady_clock::now();
     if (omav_trajectory_node->rqt_cost_bool_) {
       omav_trajectory_node->rqt_cost_bool_ =
           controller.update_cost_param(omav_trajectory_node->rqt_cost_);
       ROS_INFO_STREAM("New Cost Param Set");
     }
     if (omav_trajectory_node->reset_object_) {
-      x(13) = 0;
-      simulation->reset(x);
+      state(13) = 0;
+      simulation->reset(state);
       omav_trajectory_node->reset_object_ = false;
       ROS_INFO_STREAM("Reset Object");
     }
     if (sequential) {
       controller.update_reference();
-      // controller.set_observation(x, sim_time);
+      // controller.set_observation(state, sim_time);
       controller.update_policy();
-      controller.get_input_state(x, x_nom, u, sim_time);
+      controller.get_input_state(state, state_nom, input, sim_time);
       controller.publish_ros_default();
       if (omav_trajectory_node->target_state_time_ > 0.1) {
         controller.publish_ros();
@@ -126,20 +126,20 @@ int main(int argc, char **argv) {
       controller.publish_optimal_rollout();
       controller.publish_all_trajectories();
     } else if (running_rotors) {
-      omav_trajectory_node->get_odometry(x);
+      omav_trajectory_node->get_odometry(state);
       sim_time += 1.0 / control_rate;
       omav_trajectory_node->target_state_time_ += 1.0 / control_rate;
     }
 
     if (!running_rotors) {
-      x = simulation->step(u, sim_dt);
+      state = simulation->step(input, sim_dt);
       simulation->publish_ros();
       sim_time += sim_dt;
       omav_trajectory_node->target_state_time_ += sim_dt;
 
-      end = std::chrono::steady_clock::now();
+      t_end = std::chrono::steady_clock::now();
       elapsed =
-          std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+          std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start)
               .count() /
           1000.0;
     }
@@ -179,11 +179,11 @@ int main(int argc, char **argv) {
     }
 
     // Set new observation
-    controller.set_observation(x, sim_time);
-    controller.get_input_state(x, x_nom, u, sim_time);
+    controller.set_observation(state, sim_time);
+    controller.get_input_state(state, state_nom, input, sim_time);
     // Timing Tasks
     if (running_rotors) {
-      r.sleep();
+      r_control.sleep();
     } else if (sim_dt - elapsed > 0) {
       ros::Duration(sim_dt - elapsed).sleep();
     } else {

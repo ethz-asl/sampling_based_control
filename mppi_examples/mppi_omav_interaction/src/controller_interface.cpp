@@ -6,11 +6,7 @@
  * @brief    description
  */
 
-#include "mppi_omav_interaction/controller_interface.h"
-
-#include <ros/package.h>
-#include <memory>
-#include <string>
+#include <mppi_omav_interaction/controller_interface.h>
 
 using namespace omav_interaction;
 
@@ -219,11 +215,12 @@ void OMAVControllerInterface::publish_ros() {
 
 void OMAVControllerInterface::publish_trajectory(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const mppi::observation_t &x0_opt) {
+    const mppi::observation_t &x0_opt) const {
+  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg;
   omav_interaction::conversions::to_trajectory_msg(x_opt, u_opt, x0_opt,
-                                                   current_trajectory_msg_);
-  current_trajectory_msg_.header.stamp = ros::Time::now();
-  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);
+                                                   current_trajectory_msg);
+  current_trajectory_msg.header.stamp = ros::Time::now();
+  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg);
 }
 
 void OMAVControllerInterface::publish_all_trajectories() {
@@ -275,13 +272,13 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_ang_vel.header.frame_id = "world";
   optimal_rollout_ang_vel.header.stamp = t_now;
 
-  velocity_cost_ = 0;
-  power_cost_ = 0;
-  object_cost_ = 0;
-  torque_cost_ = 0;
-  handle_hook_cost_ = 0;
-  pose_cost_ = 0;
-  overall_cost_ = 0;
+  float velocity_cost = 0.0f;
+  float power_cost = 0.0f;
+  float object_cost = 0.0f;
+  float torque_cost = 0.0f;
+  float handle_hook_cost = 0.0f;
+  float pose_cost = 0.0f;
+  float overall_cost = 0.0f;
   omav_interaction::conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7),
                                                               current_lin_vel);
   omav_interaction::conversions::PoseMsgForVelocityFromVector(
@@ -312,59 +309,59 @@ void OMAVControllerInterface::publish_optimal_rollout() {
       // Cost publishing
       cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
       // Velocity Cost
-      velocity_cost_ += cost_->velocity_cost_;
+      velocity_cost += cost_->velocity_cost_;
       // Efficiency Cost
-      power_cost_ += cost_->efficiency_cost_;
+      power_cost += cost_->efficiency_cost_;
       // Object Cost
-      object_cost_ += cost_->object_cost_;
+      object_cost += cost_->object_cost_;
       // Torque Cost
-      torque_cost_ += cost_->torque_cost_;
+      torque_cost += cost_->torque_cost_;
       // Handle Hook Cost
-      handle_hook_cost_ += cost_->handle_hook_cost_;
+      handle_hook_cost += cost_->handle_hook_cost_;
       // Pose Cost
-      pose_cost_ += cost_->pose_cost_;
-      overall_cost_ += cost_->cost_;
+      pose_cost += cost_->pose_cost_;
+      overall_cost += cost_->cost_;
 
-      force_normed_ = optimal_rollout_states_[i].segment<3>(15).normalized();
+      Eigen::Vector3d force_normed = optimal_rollout_states_[i].segment<3>(15).normalized();
 
       force_marker.points[0].x = cost_->hook_pos_(0);
       force_marker.points[0].y = cost_->hook_pos_(1);
       force_marker.points[0].z = cost_->hook_pos_(2);
-      force_marker.points[1].x = cost_->hook_pos_(0) + force_normed_(0);
-      force_marker.points[1].y = cost_->hook_pos_(1) + force_normed_(1);
-      force_marker.points[1].z = cost_->hook_pos_(2) + force_normed_(2);
+      force_marker.points[1].x = cost_->hook_pos_(0) + force_normed(0);
+      force_marker.points[1].y = cost_->hook_pos_(1) + force_normed(1);
+      force_marker.points[1].z = cost_->hook_pos_(2) + force_normed(2);
       force_marker.id = i;
 
       force_marker_array.markers.push_back(force_marker);
     }
   }
   if (detailed_publishing_) {
-    mppi_ros::Array cost_array_message_;
-    cost_array_message_.array.push_back(velocity_cost_);
-    cost_array_message_.array.push_back(power_cost_);
-    cost_array_message_.array.push_back(object_cost_);
-    cost_array_message_.array.push_back(torque_cost_);
-    cost_array_message_.array.push_back(handle_hook_cost_);
-    cost_array_message_.array.push_back(optimal_rollout_states_[0](15));
-    cost_array_message_.array.push_back(optimal_rollout_states_[0](16));
-    cost_array_message_.array.push_back(optimal_rollout_states_[0](17));
-    cost_array_message_.array.push_back(
+    mppi_ros::Array cost_array_message;
+    cost_array_message.array.push_back(velocity_cost);
+    cost_array_message.array.push_back(power_cost);
+    cost_array_message.array.push_back(object_cost);
+    cost_array_message.array.push_back(torque_cost);
+    cost_array_message.array.push_back(handle_hook_cost);
+    cost_array_message.array.push_back(optimal_rollout_states_[0](15));
+    cost_array_message.array.push_back(optimal_rollout_states_[0](16));
+    cost_array_message.array.push_back(optimal_rollout_states_[0](17));
+    cost_array_message.array.push_back(
         optimal_rollout_states_[0].segment<3>(15).norm());
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
             com_hook_.normalized())) *
         180.0 / M_PI);
-    cost_array_message_.array.push_back(pose_cost_);
-    cost_array_message_.array.push_back(overall_cost_);
-    cost_publisher_.publish(cost_array_message_);
+    cost_array_message.array.push_back(pose_cost);
+    cost_array_message.array.push_back(overall_cost);
+    cost_publisher_.publish(cost_array_message);
     normalized_force_publisher_.publish(force_marker_array);
   }
   mppi_reference.position.x = ref_.rr[0](0);

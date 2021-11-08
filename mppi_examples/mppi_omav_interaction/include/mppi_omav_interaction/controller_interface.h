@@ -8,13 +8,12 @@
 
 #pragma once
 
+#include <mppi_omav_interaction/cost.h>
 #include <mppi_omav_interaction/dynamics.h>
 #include <mppi_omav_interaction/ros_conversions.h>
-#include <mppi_omav_interaction/cost.h>
 #include <mppi_ros/controller_interface.h>
 
 #include <geometry_msgs/Pose.h>
-
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
 #include <sensor_msgs/JointState.h>
@@ -23,6 +22,8 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <memory>
+
+#include <ros/ros.h>
 
 namespace omav_interaction {
 
@@ -61,7 +62,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   void publish_trajectory(const mppi::observation_array_t &x_opt,
                           const mppi::input_array_t &u_opt,
-                          const mppi::observation_t &x0_opt);
+                          const mppi::observation_t &x0_opt) const;
 
  public:
   mppi::SolverConfig config_;
@@ -71,7 +72,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   bool reference_set_ = false;
   bool detailed_publishing_;
 
-  observation_t x_0_temp;
+  // observation_t x_0_temp;
 
   OMAVInteractionCostParam cost_param_;
 
@@ -85,8 +86,6 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   ros::Publisher optimal_angular_input_publisher_;
   ros::Publisher optimal_rollout_lin_vel_;
   ros::Publisher optimal_rollout_ang_vel_;
-
-  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
 
   ros::Subscriber reference_subscriber_;
   ros::Subscriber mode_subscriber_;
@@ -102,25 +101,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   observation_array_t xx_opt_;
   input_array_t uu_opt_;
   observation_t x0_;
-
-  mppi_pinocchio::RobotModel robot_model_;
-  mppi_pinocchio::RobotModel object_model_;
-  Eigen::Vector3d tip_lin_velocity_;
-  Eigen::Matrix<double, 6, 1> tip_velocity_;
-  Eigen::Vector3d torque_;
-  Eigen::Vector3d hook_handle_vector_;
-  float distance_hook_handle_;
-  Eigen::Vector3d force_normed_;
   Eigen::Vector3d com_hook_;
-  float torque_angle_;
-  // cost floats to publish
-  float velocity_cost_;
-  float handle_hook_cost_;
-  float object_cost_;
-  float power_cost_;
-  float torque_cost_;
-  float pose_cost_;
-  float overall_cost_;
 
   sensor_msgs::JointState object_state_;
 };
