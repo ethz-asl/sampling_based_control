@@ -8,25 +8,26 @@
 
 #pragma once
 
-#include "mppi_omav_interaction/dynamics.h"
-#include "mppi_omav_interaction/ros_conversions.h"
-#include <geometry_msgs/Pose.h>
+#include <mppi_omav_interaction/dynamics.h>
+#include <mppi_omav_interaction/ros_conversions.h>
 #include <mppi_omav_interaction/cost.h>
 #include <mppi_ros/controller_interface.h>
 
+#include <geometry_msgs/Pose.h>
+
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
-#include <memory>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <memory>
 
 namespace omav_interaction {
 
 class OMAVControllerInterface : public mppi_ros::ControllerRos {
-public:
+ public:
   explicit OMAVControllerInterface(ros::NodeHandle &nh,
                                    ros::NodeHandle &nh_public)
       : ControllerRos(nh, nh_public) {}
@@ -49,7 +50,7 @@ public:
 
   void manually_shift_input(const int i);
 
-private:
+ private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 
   void desired_pose_callback(const geometry_msgs::PoseStampedConstPtr &msg);
@@ -62,11 +63,11 @@ private:
                           const mppi::input_array_t &u_opt,
                           const mppi::observation_t &x0_opt);
 
-public:
+ public:
   mppi::SolverConfig config_;
   std::shared_ptr<OMAVInteractionCost> cost_;
 
-private:
+ private:
   bool reference_set_ = false;
   bool detailed_publishing_;
 
@@ -123,4 +124,4 @@ private:
 
   sensor_msgs::JointState object_state_;
 };
-} // namespace omav_interaction
+}  // namespace omav_interaction

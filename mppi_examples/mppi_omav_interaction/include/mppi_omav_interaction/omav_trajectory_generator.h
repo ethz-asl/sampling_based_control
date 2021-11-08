@@ -2,17 +2,17 @@
 // Created by studigem on 13.04.21.
 //
 
-#ifndef MPPI_OMAV_VELOCITY_OMAV_VELOCITY_CONTROL_H_
-#define MPPI_OMAV_VELOCITY_OMAV_VELOCITY_CONTROL_H_
+#ifndef MPPI_OMAV_TRAJECTORY_GENERATOR_H_
+#define MPPI_OMAV_TRAJECTORY_GENERATOR_H_
 
 #include "mppi_omav_interaction/controller_interface.h"
 #include "mppi_omav_interaction/cost.h"
 #include "mppi_omav_interaction/dynamics_ros.h"
 #include "mppi_omav_interaction/ros_conversions.h"
 
+#include <ros/ros.h>
 #include <chrono>
 #include <memory>
-#include <ros/ros.h>
 #include <vector>
 
 #include <mav_msgs/conversions.h>
@@ -28,10 +28,9 @@
 namespace omav_interaction {
 
 class OmavTrajectoryGenerator {
-public:
+ public:
   OmavTrajectoryGenerator(const ros::NodeHandle &nh,
                           const ros::NodeHandle &private_nh);
-
   ~OmavTrajectoryGenerator();
 
   void get_odometry(observation_t &x);
@@ -42,17 +41,11 @@ public:
   void initialize_integrators(observation_t &x);
 
   bool odometry_bool_;
-
   bool rqt_cost_bool_ = false;
-
   bool reset_object_ = false;
-
   bool first_trajectory_sent_ = false;
-
   bool shift_lock_ = false;
-
   double target_state_time_ = 0.0;
-
   int shift_index_ = 0;
 
   OMAVInteractionCostParam rqt_cost_;
@@ -62,22 +55,15 @@ public:
   // Target Variables
   mav_msgs::EigenTrajectoryPoint target_state_;
 
-private:
+ private:
   void initializeSubscribers();
-
   void initializePublishers();
-
   void odometryCallback(const nav_msgs::OdometryConstPtr &odometry_msg);
-
   void objectCallback(const sensor_msgs::JointState &object_msg);
-
   void TargetCallback(
       const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg);
-
-  void
-  ReferenceParamCallback(mppi_omav_interaction::MPPIOmavReferenceConfig &config,
-                         uint32_t level);
-
+  void ReferenceParamCallback(
+      mppi_omav_interaction::MPPIOmavReferenceConfig &config, uint32_t level);
   void CostParamCallback(mppi_omav_interaction::MPPIOmavCostConfig &config,
                          uint32_t level);
 
@@ -106,6 +92,6 @@ private:
 
   observation_t rqt_odometry;
 };
-} // namespace omav_interaction
+}  // namespace omav_interaction
 
-#endif // MPPI_OMAV_VELOCITY_OMAV_VELOCITY_CONTROL_H_
+#endif  // MPPI_OMAV_TRAJECTORY_GENERATOR_H_

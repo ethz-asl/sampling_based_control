@@ -8,8 +8,8 @@
 
 #include "mppi_omav_interaction/controller_interface.h"
 
-#include <memory>
 #include <ros/package.h>
+#include <memory>
 #include <string>
 
 using namespace omav_interaction;
@@ -177,8 +177,7 @@ void OMAVControllerInterface::object_reference_callback(
 }
 
 bool OMAVControllerInterface::update_reference() {
-  if (!reference_set_)
-    get_controller()->set_reference_trajectory(ref_);
+  if (!reference_set_) get_controller()->set_reference_trajectory(ref_);
   reference_set_ = true;
   return true;
 }
@@ -262,18 +261,19 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   visualization_msgs::MarkerArray force_marker_array;
   Eigen::Vector3d force;
   Eigen::Vector3d force_normalized;
+  ros::Time t_now = ros::Time::now();
   optimal_rollout_array.header.frame_id = "world";
-  optimal_rollout_array.header.stamp = ros::Time::now();
+  optimal_rollout_array.header.stamp = t_now;
   optimal_rollout_array_des.header.frame_id = "world";
-  optimal_rollout_array_des.header.stamp = ros::Time::now();
+  optimal_rollout_array_des.header.stamp = t_now;
   optimal_inputs_lin_array.header.frame_id = "world";
-  optimal_inputs_lin_array.header.stamp = ros::Time::now();
+  optimal_inputs_lin_array.header.stamp = t_now;
   optimal_inputs_ang_array.header.frame_id = "world";
-  optimal_inputs_ang_array.header.stamp = ros::Time::now();
+  optimal_inputs_ang_array.header.stamp = t_now;
   optimal_rollout_lin_vel.header.frame_id = "world";
-  optimal_rollout_lin_vel.header.stamp = ros::Time::now();
+  optimal_rollout_lin_vel.header.stamp = t_now;
   optimal_rollout_ang_vel.header.frame_id = "world";
-  optimal_rollout_ang_vel.header.stamp = ros::Time::now();
+  optimal_rollout_ang_vel.header.stamp = t_now;
 
   velocity_cost_ = 0;
   power_cost_ = 0;
