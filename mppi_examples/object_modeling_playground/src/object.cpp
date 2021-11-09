@@ -1,5 +1,5 @@
 #include "object.h"
-
+#include <cmath>
 
 bool Object::init_param()
 {   
@@ -24,11 +24,24 @@ bool Object::init_param()
     return false;
   }    
 
+    if (!nh_.getParam("approx_params/primitive_numbers", primitive_num)) {
+    ROS_ERROR("Failed to parse approx_params/primitive_numbers or invalid!");
+    return false;
+  }    
+    if (!nh_.getParam("approx_params/bottom_ind", bottom_ind)) {
+    ROS_ERROR("Failed to parse approx_params/bottom_ind or invalid!");
+    return false;
+  }  
+
+
+
     obj_scale_ = obj_scale;
     obj_pos_ = obj_pos;
     obj_rot_ = obj_rot;
     keypoints_ = keypoints;
 
+    height.resize(primitive_num);
+    radius.resize(primitive_num);
     // for (int i = 0 ; i < obj_scale_.size(); i++)
     // {
     //     std::cout << obj_scale_[i] << std::endl;
@@ -63,14 +76,21 @@ void Object::init_kp_array_publisher(std::string topic_name, int rate)
     kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>(topic_name,rate);
 }
 
-void Object::create_kp_markers(std::string ref_frame)
+void Object::init_primitive_array_publisher(std::string topic_name, int rate)
+{
+    primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>(topic_name,rate);
+}
+
+void Object::update_kp_markers(std::string ref_frame)
 {   
+    this->ref_frame = ref_frame;
     kp_num = keypoints_.size()/4;
-    // handle
+    set_nums.resize(kp_num,0);
+
     for(int i = 0 ; i<kp_num; i++)
     {
         kp_marker_.type = visualization_msgs::Marker::SPHERE;
-        kp_marker_.id = keypoints_[i*4];
+        kp_marker_.id = i;
         kp_marker_.header.frame_id = ref_frame;
         kp_marker_.action = visualization_msgs::Marker::ADD;
         kp_marker_.color.r = 1.0;
@@ -88,33 +108,71 @@ void Object::create_kp_markers(std::string ref_frame)
         kp_marker_.pose.position.y = keypoints_[i*4+2];
         kp_marker_.pose.position.x = keypoints_[i*4+1];
         kp_markers_.markers.push_back(kp_marker_);
-    }
 
+        // count each set numbers
+        set_nums[keypoints_[i*4]] +=1;
+    }
+    // for (int i = 0; i < set_nums.size();i++)
+    // {
+    //     std::cout << set_nums[i] << std::endl;
+    // }
 }
 
 void Object::fit_primitive()
 {
-    std::vector<double> z_pos;
-    z_pos.clear();
+    // fit mug body
+    double z_top_mean = 0.0;
+    double z_bottom_mean = 0.0;
+    double radius_mean = 0.0;
+    
     for (int i = 0 ; i < kp_num; i++ )
-    {
-        z_pos.push_back(keypoints_[i*4+3]);
-        std::cout << "z pos: " << keypoints_[i*4+3]<<std::endl;
+    {   
+        if (keypoints_[i*4] == 1)
+            z_top_mean += keypoints_[i*4+3] - keypoints_[bottom_ind*4+3];
+            radius_mean += sqrt(pow(keypoints_[i*4+2]-keypoints_[bottom_ind*4+2],2)
+                                +pow(keypoints_[i*4+1]-keypoints_[bottom_ind*4+1],2)); 
     }
-    int max_z_index = std::max_element(z_pos.begin(),z_pos.end()) - z_pos.begin();
-    double max_z = *std::max_element(z_pos.begin(), z_pos.end());
-    int min_z_index = std::min_element(z_pos.begin(),z_pos.end()) - z_pos.begin();
-    double min_z = *std::min_element(z_pos.begin(), z_pos.end());
 
-    //std::cout << "max z : " << max_z << std::endl;
-    //std::cout << "min z : " << min_z << std::endl;
+    // todo: switch to multi primitives
+    height[0] = z_top_mean/set_nums[1];
+    radius[0] = radius_mean/set_nums[1];
 
-    double height = max_z - min_z;
+    std::cout << "height" << height[0] << std::endl;
+    std::cout << "radius" << radius[0] << std::endl;
 
+    
+}
+
+void Object::vis_primitive()
+{   
+    primitive_markers_.markers.resize(primitive_num);
+    for(int i = 0 ; i < primitive_num; i++)
+    {
+        primitive_marker_.type = visualization_msgs::Marker::CYLINDER;
+        primitive_marker_.id = i;
+        primitive_marker_.header.frame_id = ref_frame;
+        primitive_marker_.action = visualization_msgs::Marker::ADD;
+        primitive_marker_.color.r = 0.0;
+        primitive_marker_.color.b = 0.0;
+        primitive_marker_.color.g = 1.0;
+        primitive_marker_.color.a = 0.8;
+        primitive_marker_.scale.x = radius[i];
+        primitive_marker_.scale.y = radius[i];
+        primitive_marker_.scale.z = height[i];
+        primitive_marker_.pose.orientation.x = 0.0;
+        primitive_marker_.pose.orientation.y = 0.0;
+        primitive_marker_.pose.orientation.z = 0.0;
+        primitive_marker_.pose.orientation.w = 1.0;
+        primitive_marker_.pose.position.z = keypoints_[bottom_ind*4+3] + height[i]/2;
+        primitive_marker_.pose.position.y = keypoints_[bottom_ind*4+2];
+        primitive_marker_.pose.position.x = keypoints_[bottom_ind*4+1];
+        primitive_markers_.markers[i]=primitive_marker_;
+    }
 }
 
 void Object::pub_state()
 {
     state_publisher_.publish(state_);
     kp_publisher_.publish(kp_markers_);
+    primitive_publisher_.publish(primitive_markers_);
 }

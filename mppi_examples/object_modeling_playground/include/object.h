@@ -22,11 +22,21 @@ public:
     void setTF();
     void pub_state();
     void init_kp_array_publisher(std::string topic_name, int rate);
-    void create_kp_markers(std::string ref_frame);
+    void init_primitive_array_publisher(std::string topic_name, int rate);
+    void update_kp_markers(std::string ref_frame);
     void fit_primitive();
+    void vis_primitive();
 
 private:
     int kp_num;
+    std::vector<int> set_nums;
+    int bottom_ind;
+    std::string ref_frame;
+
+    // params of approx primitive
+    int primitive_num = 0 ;
+    std::vector<double> height;
+    std::vector<double> radius;
 
     ros::NodeHandle nh_;
 
@@ -36,6 +46,10 @@ private:
     ros::Publisher kp_publisher_;
     visualization_msgs::MarkerArray kp_markers_;
     visualization_msgs::Marker kp_marker_;
+
+    ros::Publisher primitive_publisher_;
+    visualization_msgs::MarkerArray primitive_markers_;
+    visualization_msgs::Marker primitive_marker_;
 
     std::vector<double> obj_scale_;
     std::vector<double> obj_pos_;
