@@ -54,6 +54,10 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>tf2_ros</build_depend>
+  <build_depend>interactive_markers</build_depend>
+
+  <exec_depend>interactive_markers</exec_depend>
+
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>roslib</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>

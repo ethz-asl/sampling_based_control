@@ -9,23 +9,24 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <interactive_markers/interactive_marker_server.h>
+
 
 class Object
 {
 
 public:
 
-    Object(const ros::NodeHandle& nh):nh_(nh){};
+    Object(const ros::NodeHandle& nh);
+
 
     bool init_param();
-    void init_object_publisher(std::string topic_name, int rate);
     void setTF();
     void pub_state();
-    void init_kp_array_publisher(std::string topic_name, int rate);
-    void init_primitive_array_publisher(std::string topic_name, int rate);
     void update_kp_markers(std::string ref_frame);
     void fit_primitive();
     void vis_primitive();
+
 
 private:
     int kp_num;
@@ -44,8 +45,9 @@ private:
     sensor_msgs::JointState state_; 
 
     ros::Publisher kp_publisher_;
-    visualization_msgs::MarkerArray kp_markers_;
+    
     visualization_msgs::Marker kp_marker_;
+    visualization_msgs::MarkerArray kp_markers_;
 
     ros::Publisher primitive_publisher_;
     visualization_msgs::MarkerArray primitive_markers_;

@@ -1,6 +1,17 @@
 #include "object.h"
 #include <cmath>
 
+
+Object::Object(const ros::NodeHandle& nh):nh_(nh)
+{
+    state_publisher_=nh_.advertise<sensor_msgs::JointState>("/mug/joint_states",10);   
+    kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/keypoints_marker_array",10);
+    primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/primitives_marker_array",10);
+    this->trans.header.frame_id = "world";
+    this->trans.child_frame_id = "mug_frame";
+};
+
+
 bool Object::init_param()
 {   
     std::vector<double> obj_scale;
@@ -33,8 +44,6 @@ bool Object::init_param()
     return false;
   }  
 
-
-
     obj_scale_ = obj_scale;
     obj_pos_ = obj_pos;
     obj_rot_ = obj_rot;
@@ -51,6 +60,8 @@ bool Object::init_param()
     return true;
 }
 
+
+
 void Object::setTF()
 {
     state_.header.stamp = ros::Time::now();
@@ -66,29 +77,15 @@ void Object::setTF()
     trans.transform.rotation.w = q_.w();
 }
 
-void Object::init_object_publisher(std::string topic_name, int rate)
-{
-    state_publisher_=nh_.advertise<sensor_msgs::JointState>(topic_name,rate);   
-}
-
-void Object::init_kp_array_publisher(std::string topic_name, int rate)
-{
-    kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>(topic_name,rate);
-}
-
-void Object::init_primitive_array_publisher(std::string topic_name, int rate)
-{
-    primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>(topic_name,rate);
-}
 
 void Object::update_kp_markers(std::string ref_frame)
 {   
     this->ref_frame = ref_frame;
     kp_num = keypoints_.size()/4;
     set_nums.resize(kp_num,0);
-
+    
     for(int i = 0 ; i<kp_num; i++)
-    {
+    {   
         kp_marker_.type = visualization_msgs::Marker::SPHERE;
         kp_marker_.id = i;
         kp_marker_.header.frame_id = ref_frame;
@@ -109,14 +106,16 @@ void Object::update_kp_markers(std::string ref_frame)
         kp_marker_.pose.position.x = keypoints_[i*4+1];
         kp_markers_.markers.push_back(kp_marker_);
 
-        // count each set numbers
         set_nums[keypoints_[i*4]] +=1;
     }
     // for (int i = 0; i < set_nums.size();i++)
     // {
     //     std::cout << set_nums[i] << std::endl;
     // }
+
+
 }
+
 
 void Object::fit_primitive()
 {
@@ -145,6 +144,7 @@ void Object::fit_primitive()
 
 void Object::vis_primitive()
 {   
+    primitive_markers_.markers.clear();
     primitive_markers_.markers.resize(primitive_num);
     for(int i = 0 ; i < primitive_num; i++)
     {

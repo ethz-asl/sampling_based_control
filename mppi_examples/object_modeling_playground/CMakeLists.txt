@@ -10,6 +10,7 @@ set(PACKAGE_DEPENDENCIES
         roslib
         roscpp
         tf2_ros
+        interactive_markers
         )
 
 find_package(Eigen3 REQUIRED 3.3)
@@ -29,6 +30,10 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_executable(object_modeling_playground src/main.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} )
 
+
+catkin_install_python(PROGRAMS scripts/interactive_marker.py 
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
