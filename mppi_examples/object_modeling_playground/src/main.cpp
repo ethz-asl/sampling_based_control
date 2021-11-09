@@ -31,11 +31,13 @@ int main(int argc, char** argv) {
         // update mug state and its visulization
         mug.setTF();
         //send the joint state and transform
-        //mug.fit_primitive();
-        mug.vis_primitive();
-        mug.update_kp_markers("mug_frame");
-        mug.pub_state();
+        mug.fit_primitive();
         broadcaster.sendTransform(mug.trans);
+        mug.update_kp_markers("mug_frame");
+
+        mug.vis_primitive();
+
+        mug.pub_state();
         ros::spinOnce();
 
         loop_rate.sleep();

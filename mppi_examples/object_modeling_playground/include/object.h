@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 #include <std_msgs/String.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -27,6 +28,8 @@ public:
     void fit_primitive();
     void vis_primitive();
 
+private:
+    void kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg);
 
 private:
     int kp_num;
@@ -41,11 +44,12 @@ private:
 
     ros::NodeHandle nh_;
 
+    ros::Subscriber kp_int_subscriber_;
+
     ros::Publisher state_publisher_;
     sensor_msgs::JointState state_; 
 
     ros::Publisher kp_publisher_;
-    
     visualization_msgs::Marker kp_marker_;
     visualization_msgs::MarkerArray kp_markers_;
 
@@ -58,9 +62,7 @@ private:
     std::vector<double> obj_rot_;
     std::vector<double> keypoints_;
 
-
-
 public:
-
     geometry_msgs::TransformStamped trans;
+
 };

@@ -20,7 +20,7 @@ class SingleMarkerBroadcaster:
         target_frame = rospy.get_param("~target_frame", "")
 
         # init talker
-        self.pub = rospy.Publisher('keypoints_state', PoseArray, queue_size=10)
+        self.pub = rospy.Publisher('/keypoints_state', PoseArray, queue_size=10)
         self.msg = PoseArray()
         self.msg.header.frame_id = self.frame_id
         self.msg.header.stamp = rospy.Time.now()
@@ -111,10 +111,10 @@ class SingleMarkerBroadcaster:
         marker.scale.x = msg.scale * 0.45
         marker.scale.y = msg.scale * 0.45
         marker.scale.z = msg.scale * 0.45
-        marker.color.r = 0.0
-        marker.color.g = 0.5
-        marker.color.b = 0.5
-        marker.color.a = 0.5
+        marker.color.r = 1.0
+        marker.color.g = 0
+        marker.color.b = 0
+        marker.color.a = 0.8
 
         return marker
 
