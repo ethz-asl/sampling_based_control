@@ -43,7 +43,8 @@ add_library(${PROJECT_NAME}
         src/controller_interface.cpp
         src/controller_interface_no_ros.cpp
         src/reference_scheduler.cpp
-        src/dynamics_ros.cpp src/config_no_ros.cpp include/mppi_manipulation/config_no_ros.h)
+        src/dynamics_ros.cpp
+        src/config_no_ros.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp)
 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
