@@ -4,12 +4,10 @@
     <arg name="launch_prefix" value="" unless="$(arg debug)"/>
     <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
 
-
+    <!-- mug -->
     <param name="mug_description"
            textfile="$(find object_modeling_playground)/data/objects/mug.urdf"/>
-    
-        
-    <!-- mug -->
+           
     <node name="mug_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <remap from="robot_description" to="mug_description"/>
         <remap from="joint_states" to="/mug/joint_states"/>

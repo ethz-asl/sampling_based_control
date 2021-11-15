@@ -12,6 +12,7 @@ struct DynamicsParams {
   std::string robot_description;
   std::string object_description;
   std::string cylinder_description;
+  std::string mug_description;
   PIDGains gains;
   Eigen::VectorXd initial_state;
 

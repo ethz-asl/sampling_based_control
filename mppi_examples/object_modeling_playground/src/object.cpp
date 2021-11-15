@@ -133,18 +133,32 @@ void Object::fit_primitive()
     double z_top_mean = 0.0;
     double z_bottom_mean = 0.0;
     double radius_mean = 0.0;
-    
+    height.clear();
+    radius.clear();
+    height.resize(primitive_num,0.0);
+    radius.resize(primitive_num,0.0);
     for (int i = 0 ; i < kp_num; i++ )
     {   
         if (keypoints_[i*4] == 1)
-            z_top_mean += keypoints_[i*4+3] - keypoints_[bottom_ind*4+3];
-            radius_mean += sqrt(pow(keypoints_[i*4+2]-keypoints_[bottom_ind*4+2],2)
+        {
+            height[0] += keypoints_[i*4+3] - keypoints_[bottom_ind*4+3];
+            radius[0] += sqrt(pow(keypoints_[i*4+2]-keypoints_[bottom_ind*4+2],2)
                                 +pow(keypoints_[i*4+1]-keypoints_[bottom_ind*4+1],2)); 
+        }
+        if (keypoints_[i*4] == 0){
+            radius[0] += sqrt(pow(keypoints_[i*4+2]-keypoints_[bottom_ind*4+2],2)
+                                +pow(keypoints_[i*4+1]-keypoints_[bottom_ind*4+1],2)); 
+            //height[1] += keypoints_[i*4+3] - keypoints_[bottom_ind*4+3];
+        }
+
     }
 
     // todo: switch to multi primitives
-    height[0] = z_top_mean/set_nums[1];
-    radius[0] = radius_mean/set_nums[1];
+    height[0] = height[0]/set_nums[1];
+    radius[0] = radius[0]/set_nums[1];
+
+    // // fit mug handle 
+    // height[1] = height[1]
    
 }
 

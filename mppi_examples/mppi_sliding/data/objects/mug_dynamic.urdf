@@ -5,23 +5,25 @@
         <color rgba="0.0 0.0 0.8 1.0"/> <!-- rviz green color -->
     </material>
 
-    <link name="world">
+    <link name="mug_frame">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="file:///home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/Mug.dae" scale="0.1 0.1 0.1"/>
+                <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/Mug.dae" scale="0.05 0.05 0.05"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-               <mesh filename="file:///home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/Mug_2.obj" scale="0.1 0.1 0.1"/>
+               <mesh filename="/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/Mug_2_low.obj" scale="0.05 0.05 0.05"/>
             </geometry>
         </collision>
+
+        
     </link>
 
     <joint name="base_to_base_inertia" type="fixed">
-        <parent link="world"/>
+        <parent link="mug_frame"/>
         <child link="base_inertia"/>
         <origin rpy="0 0 0" xyz="0 0 0"/>
     </joint>
@@ -29,8 +31,8 @@
     <link name="base_inertia">
         <inertial>
             <origin rpy="0 0 0" xyz="-0.001960558279 -0.001413217745 0.050207125344"/>
-            <mass value="16.793507758"/>
-            <inertia ixx="0.217391101503" ixy="-0.00132873239126" ixz="-0.00228200226173" iyy="0.639432546734" iyz="-0.00138078263145" izz="0.62414077654"/>
+            <mass value="1.0"/>
+            <inertia ixx="0.4" ixy="0.0" ixz="1.0" iyy="0.4" iyz="1.0" izz="1.0"/>
         </inertial>
     </link>
 

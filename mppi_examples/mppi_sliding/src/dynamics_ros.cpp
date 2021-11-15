@@ -28,8 +28,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
       nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
   power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
 
-  // keypoints markers
-  kp_publisher_ = nh_.advertise<visualization_msgs::MarkerArray>( "/keypoints_marker_array", 10);
 
   // cylinder
   cylinder_state_publisher_ =
@@ -42,6 +40,13 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
       nh_.advertise<sensor_msgs::JointState>("/target_cylinder/joint_states", 10);
   cylinder_target_trans.header.frame_id = "world";
   cylinder_target_trans.child_frame_id = "cylinder_t_frame";
+
+  //mug
+  mug_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/mug/joint_states", 10);
+  mug_state_trans.header.frame_id = "world";
+  mug_state_trans.child_frame_id = "mug_frame";
+
 
   //table 
   table_state_publisher_ =
@@ -136,6 +141,18 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_target_trans.transform.rotation.z = q_cylinder_t.z();
   cylinder_target_trans.transform.rotation.w = q_cylinder_t.w();
   
+  // update mug state and its visulization
+  mug_state_.header.stamp = ros::Time::now();
+  mug_state_trans.header.stamp = ros::Time::now();
+  mug_state_trans.transform.translation.x = x_(2 * robot_dof_);
+  mug_state_trans.transform.translation.y = x_(2 * robot_dof_+1);
+  mug_state_trans.transform.translation.z = params_.cylinder_z;
+  tf2::Quaternion mug_rot;
+  mug_rot.setRPY(0, 0, 0);
+  mug_state_trans.transform.rotation.x = mug_rot.x();
+  mug_state_trans.transform.rotation.y = mug_rot.y();
+  mug_state_trans.transform.rotation.z = mug_rot.z();
+  mug_state_trans.transform.rotation.w = mug_rot.w();
 
   // update table state and its visulization
   table_state_.header.stamp = ros::Time::now();
@@ -157,6 +174,9 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_target_publisher_.publish(cylinder_target_);
   broadcaster.sendTransform(cylinder_target_trans);
 
+  mug_state_publisher_.publish(mug_state_);
+  broadcaster.sendTransform(mug_state_trans);
+
   table_state_publisher_.publish(table_state_);
   broadcaster.sendTransform(table_trans);
 
@@ -175,50 +195,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   }
   contact_forces_publisher_.publish(force_markers);
 
-  visualization_msgs::MarkerArray kp_markers_;
-  int kp_numbers = 10;
-  for(int i = 0 ; i < int(kp_numbers); i ++)
-  {
-    double rand_num = ((double) std::rand() / (RAND_MAX));
-    double rand_positive_1 = ((double) std::rand() / (RAND_MAX));
-    double rand_positive_2 = ((double) std::rand() / (RAND_MAX));
-    int multi_1 = 1;
-    int multi_2 = 1;
-    int multi_3 = 1;
-    if (rand_positive_1 < 0.5)
-    {
-      multi_1 = -1;
-    } 
-    if (rand_positive_2 < 0.5)
-    {
-      multi_2 = -1;
-    } 
-    if (i > 4)
-    {
-      multi_3 = -1;
-    } 
-    // keypoints marker
-    kp_marker_.type = visualization_msgs::Marker::SPHERE;
-    kp_marker_.id = i;
-    kp_marker_.header.frame_id = "world";
-    kp_marker_.action = visualization_msgs::Marker::ADD;
-    kp_marker_.color.r = 1.0;
-    kp_marker_.color.b = 0.0;
-    kp_marker_.color.g = 0.0;
-    kp_marker_.color.a = 1.0;
-    kp_marker_.scale.x = 0.03;
-    kp_marker_.scale.y = 0.03;
-    kp_marker_.scale.z = 0.03;
-    kp_marker_.pose.orientation.x = 0.0;
-    kp_marker_.pose.orientation.y = 0.0;
-    kp_marker_.pose.orientation.z = 0.0;
-    kp_marker_.pose.orientation.w = 1.0;
-    kp_marker_.pose.position.z = cylinder_trans.transform.translation.z + multi_3*0.25;
-    kp_marker_.pose.position.y = cylinder_trans.transform.translation.y + multi_1*0.1 * rand_num;
-    kp_marker_.pose.position.x = cylinder_trans.transform.translation.x + multi_2*0.1 * sqrt(1-rand_num*rand_num) ;
-    kp_markers_.markers.push_back(kp_marker_);
-  }
-  kp_publisher_.publish(kp_markers_);
 
   // publish external torques
   get_external_torque(tau_ext_);

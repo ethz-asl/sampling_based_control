@@ -29,6 +29,14 @@
         <remap from="robot_description" to="robot_description"/>
         <remap from="joint_states" to="/joint_states"/>
     </node>
+    
+    <!-- mug -->
+    <node name="mug_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="mug_description"/>
+        <remap from="joint_states" to="/mug/joint_states"/>
+    </node>
+    <!--     .....................    -->
+
 
     <!-- add cylinder for test -->>
     <!-- TODO: add another sim cylinder -->>

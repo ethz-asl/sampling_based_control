@@ -62,6 +62,11 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
       (is_sim) ? "/cylinder_description_raisim_simulation"
                : "/cylinder_description_raisim";
 
+
+  std::string mug_description_name =
+      (is_sim) ? "/mug_description_raisim"
+               : "/mug_description_raisim";
+
   if (!nh.getParam(object_description_name, object_description) ||
       object_description.empty()) {
     ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << object_description_name
@@ -71,6 +76,13 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
 
   if (!nh.getParam(cylinder_description_name, cylinder_description) ||
       cylinder_description.empty()) {
+    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << cylinder_description_name
+                                        << " or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam(mug_description_name, mug_description) ||
+      mug_description.empty()) {
     ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << cylinder_description_name
                                         << " or invalid!");
     return false;

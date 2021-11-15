@@ -36,9 +36,6 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   ros::Publisher tau_ext_publisher_;
   ros::Publisher power_publisher_;
 
-  ros::Publisher kp_publisher_;
-  visualization_msgs::Marker kp_marker_;
-
   ros::Publisher cylinder_state_publisher_;
   sensor_msgs::JointState cylinder_state_;
   tf2_ros::TransformBroadcaster broadcaster;
@@ -47,6 +44,10 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   ros::Publisher cylinder_target_publisher_;
   sensor_msgs::JointState cylinder_target_;
   geometry_msgs::TransformStamped cylinder_target_trans;
+
+  ros::Publisher mug_state_publisher_;
+  sensor_msgs::JointState mug_state_;
+  geometry_msgs::TransformStamped mug_state_trans;
 
   ros::Publisher table_state_publisher_;
   sensor_msgs::JointState table_state_;
