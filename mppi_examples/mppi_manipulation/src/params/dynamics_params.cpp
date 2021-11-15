@@ -8,8 +8,8 @@
 using namespace manipulation;
 bool DynamicsParams::init_from_config(const manipulation::Config& config) {
   dt = config.dt;
-  robot_description = config.robot_description;
-  object_description = config.object_description;
+  robot_description = config.robot_description_raisim;
+  object_description = config.object_description_raisim;
   gains = config.gains;
   initial_state = config.initial_state;
 

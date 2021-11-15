@@ -30,6 +30,8 @@ struct Config {
   double dt;
   std::string robot_description;
   std::string object_description;
+  std::string robot_description_raisim;
+  std::string object_description_raisim;
   std::string articulation_joint;
   std::string object_handle_link;
   std::string object_handle_joint;
@@ -41,6 +43,9 @@ struct Config {
 
   template <typename T>
   static std::optional<T> parse_key(const YAML::Node& node, const std::string& key, bool& success_flag);
+
+ private:
+  std::string get_model(YAML::Node yaml_mode, std::string key);
 };
 
 template <typename T>

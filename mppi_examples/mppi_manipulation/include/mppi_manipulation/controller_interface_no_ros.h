@@ -32,6 +32,8 @@ class PandaControllerInterfaceNoRos{
   bool update_policy();
   mppi::input_t get_input(const mppi::observation_t &x, const double &t);
   void set_reference(mppi::reference_array_t refs, mppi::time_array_t t);
+  double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u, const double t);
+  inline double get_rollout_cost(){return controller_->get_rollout_cost();};
 
   // not used
   void set_mode(int mode);
@@ -41,7 +43,6 @@ class PandaControllerInterfaceNoRos{
  private:
   // functions
   bool init_ros();
-  double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u, const double t);
   bool init_reference_to_current_pose(const mppi::observation_t& x, const double t);
   inline std::shared_ptr<Solver>& get_controller() { return controller_; };
   void init_model(const std::string& robot_description, const std::string& object_description);

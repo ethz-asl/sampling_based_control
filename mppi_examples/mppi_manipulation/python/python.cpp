@@ -23,5 +23,7 @@ PYBIND11_MODULE(pymppi_manipulation, m) {
       .def("set_observation", &PandaControllerInterfaceNoRos::set_observation)
       .def("update_policy", &PandaControllerInterfaceNoRos::update_policy)
       .def("get_input", &PandaControllerInterfaceNoRos::get_input)
+      .def("get_rollout_cost", &PandaControllerInterfaceNoRos::get_rollout_cost)
+      .def("get_stage_cost", &PandaControllerInterfaceNoRos::get_stage_cost, py::return_value_policy::copy)
       .def("set_reference", &PandaControllerInterfaceNoRos::set_reference);
 }
