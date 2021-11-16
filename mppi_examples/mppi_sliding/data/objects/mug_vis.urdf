@@ -29,8 +29,8 @@
     <link name="base_inertia">
         <inertial>
             <origin rpy="0 0 0" xyz="-0.001960558279 -0.001413217745 0.050207125344"/>
-            <mass value="1"/>
-            <inertia ixx="0.2" ixy="-0.0013" ixz="-0.002" iyy="0.64" iyz="-0.0014" izz="0.624"/>
+            <mass value="0.3"/>
+            <inertia ixx="0.2" ixy="-0.0013" ixz="-0.2" iyy="0.5" iyz="-0.24" izz="0.5"/>
         </inertial>
     </link>
 

@@ -35,7 +35,6 @@ void PandaRaisimDynamics::initialize_world(
   dt_ = params_.dt;
   sim_.setTimeStep(params_.dt);
   sim_.setERP(0., 0.);
-  //sim_.setERP(sim_.getTimeStep(),sim_.getTimeStep());
   gravity_.e() << 0.0, 0.0, -9.81;
   sim_.setGravity(gravity_);
   sim_.setMaterialPairProp("steel", "steel", 0.01, 0.15, 0.001); //set friction properties
@@ -70,7 +69,6 @@ void PandaRaisimDynamics::initialize_world(
           raisim::COLLISION(1), -1);
   table_->setBodyType(raisim::BodyType::STATIC); //no velocity, inf mass
   table_->setName("Table");
-
   
   // state size init, according to DOF
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
@@ -158,11 +156,6 @@ void PandaRaisimDynamics::advance() {
   // get contact state
   double in_contact = -1;
 
-  // if(cylinder_->getContacts().size()>=0)
-  // {
-  //ROS_INFO_STREAM("contact size" << cylinder_->getContacts().size());
-  // }
-
   // for (const auto& contact : cylinder_->getContacts()) {
   //   if (!contact.skip() && !contact.isSelfCollision()) {
   //     //std::cout << "this contact position: " <<contact.getPosition().e().transpose()<<std::endl;
@@ -171,9 +164,18 @@ void PandaRaisimDynamics::advance() {
   //   }
   // }
 
+  for (const auto& contact : mug_->getContacts()) {
+    if (!contact.skip() && !contact.isSelfCollision()) {
+      in_contact = 1;
+      break;
+    }
+  }
+
   // manully set velocity for cylinder
   //cylinder_->setLinearVelocity({-0.12, -0.12, 0});
   //std::cout << "mug at: " << mug_->getGeneralizedCoordinate() << std::endl;
+
+
   // get external torque
   get_external_torque(tau_ext_);
 
@@ -181,7 +183,7 @@ void PandaRaisimDynamics::advance() {
   sim_.integrate();
   t_ += sim_.getTimeStep();
 
-  //ROS_INFO_STREAM("contact size" << cylinder_->getContacts().size());
+
   // update state x
   panda_->getState(joint_p_, joint_v_);
   //object_->getState(object_p_, object_v_);
@@ -190,18 +192,22 @@ void PandaRaisimDynamics::advance() {
   // object_p_(1) = cylinder_->getPosition()(1);
   // object_p_(2) = 0;  //TODO(boyang), change to getRot or getQuat, and transform into z-angel
   object_p_(0) = mug_->getGeneralizedCoordinate().e()[0];
-  object_p_(1) = mug_->getGeneralizedCoordinate().e()[1];;
-  object_p_(2) = 0;  //TODO(boyang), change to getRot or getQuat, and transform into z-angel
-
+  object_p_(1) = mug_->getGeneralizedCoordinate().e()[1];
+  object_p_(2) = mug_->getGeneralizedCoordinate().e()[2];  // for mug this is z axis 
+  object_p_(3) = mug_->getGeneralizedCoordinate().e()[3];  
+  object_p_(4) = mug_->getGeneralizedCoordinate().e()[4];  
+  object_p_(5) = mug_->getGeneralizedCoordinate().e()[5];  
+  object_p_(6) = mug_->getGeneralizedCoordinate().e()[6]; 
   
   object_v_.resize(OBJECT_DIMENSION);
   // object_v_(0) = cylinder_->getLinearVelocity()(0);
   // object_v_(1) = cylinder_->getLinearVelocity()(1);
   // object_v_(2) = 0;  //TODO(boyang), change to getRot or getQuat, and transform into z-angel
 
-  object_v_(0) = 0;
-  object_v_(1) = 0;
-  object_v_(2) = 0;  //TODO(boyang), change to getRot or getQuat, and transform into z-angel
+  object_v_.setZero();   //TODO: update real rot vel here
+  object_v_(0) = mug_->getGeneralizedVelocity().e()[0];
+  object_v_(1) = mug_->getGeneralizedVelocity().e()[1];
+  object_v_(2) = mug_->getGeneralizedVelocity().e()[2];
 
   x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p_;
   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v_;
@@ -230,7 +236,9 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
   //                   x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
   //cylinder_->setPosition(Eigen::Vector3d(x_(2* robot_dof_),x_(2* robot_dof_+1),params_.cylinder_z));
   //cylinder_->setLinearVelocity(Eigen::Vector3d(x_(2* robot_dof_+3),x_(2* robot_dof_+4),0));
-  mug_->setGeneralizedCoordinate({3,3,1.2,1,0,0,0});
+  mug_->setGeneralizedCoordinate({x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2),
+                           x_(2* robot_dof_+3),x_(2* robot_dof_+4),x_(2* robot_dof_+5),x_(2* robot_dof_+6)});
+                           
   table_->setPosition(Eigen::Vector3d(params_.table_position[0],params_.table_position[1],params_.table_position[2]));
 }
 
@@ -249,6 +257,9 @@ void PandaRaisimDynamics::get_end_effector_pose(
   position = pos.e();
   orientation = Eigen::Quaterniond(rot.e());
 }
+
+
+
 
 // void PandaRaisimDynamics::get_handle_pose(Eigen::Vector3d& position,
 //                                           Eigen::Quaterniond& orientation) {

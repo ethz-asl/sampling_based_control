@@ -12,7 +12,7 @@ enum PandaDim : char {
   ARM_DIMENSION = 7,      // arm only joints
   BASE_DIMENSION = 3,
   //OBJECT_DIMENSION = 1,
-  OBJECT_DIMENSION = 3,  // 2D plane (x,y,theta)
+  OBJECT_DIMENSION = 7,  // 2D plane (x,y,theta)
   CONTACT_STATE = 1,
   TORQUE_DIMENSION = BASE_DIMENSION + ARM_DIMENSION + GRIPPER_DIMENSION,
 

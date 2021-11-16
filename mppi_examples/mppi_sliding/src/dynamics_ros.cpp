@@ -146,13 +146,13 @@ void ManipulatorDynamicsRos::publish_ros() {
   mug_state_trans.header.stamp = ros::Time::now();
   mug_state_trans.transform.translation.x = x_(2 * robot_dof_);
   mug_state_trans.transform.translation.y = x_(2 * robot_dof_+1);
-  mug_state_trans.transform.translation.z = params_.cylinder_z;
-  tf2::Quaternion mug_rot;
-  mug_rot.setRPY(0, 0, 0);
-  mug_state_trans.transform.rotation.x = mug_rot.x();
-  mug_state_trans.transform.rotation.y = mug_rot.y();
-  mug_state_trans.transform.rotation.z = mug_rot.z();
-  mug_state_trans.transform.rotation.w = mug_rot.w();
+  mug_state_trans.transform.translation.z = x_(2 * robot_dof_+2);
+  // tf2::Quaternion mug_rot;
+  // mug_rot.setRPY(0, 0, 0);
+  mug_state_trans.transform.rotation.x = x_(2* robot_dof_+4);
+  mug_state_trans.transform.rotation.y = x_(2* robot_dof_+5);
+  mug_state_trans.transform.rotation.z = x_(2* robot_dof_+6);
+  mug_state_trans.transform.rotation.w = x_(2* robot_dof_+3);
 
   // update table state and its visulization
   table_state_.header.stamp = ros::Time::now();

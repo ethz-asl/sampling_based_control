@@ -1,8 +1,8 @@
 geometry:
   cylinder_height: 0.2
   cylinder_radius: 0.04
-  cylinder_z: 0.9 # table_z + 1/2(table_height+cylinder_height)
-  table_position: [2.4,2.4,0.7] 
+  cylinder_z: 1.1 # table_z + 1/2(table_height+cylinder_height)
+  table_position: [2.4,2.4,0.9] 
 
 dynamics:
   dt: 0.015
@@ -11,8 +11,8 @@ dynamics:
   articulation_joint: articulation_joint
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position 12
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 12
-                   1.0, 1.0, 0,                                                            # object joint pose 3 [x,y,fi] in 2D
-                   0.0, 0.0, 0.0,                                                          # object joint velocity 3
+                   1.0, 1.0, 1.05, 1.0, 0.0, 0.0, 0.0,                                      # object joint pose 3 [x,y,fi] in 2D
+                   0.0, 0.0, 0.0, 0.0,0.0,0.0,0.0,                                                         # object joint velocity 3
                    0,                                                                      # contact flag 1
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques 12
   gains:
@@ -39,8 +39,8 @@ sim_dynamics:
   articulation_joint: articulation_joint
   initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
-                   1.0, 1.0, 0,                                                        # object joint position
-                   0.0, 0.0, 0.0,                                                          # object joint velocity
+                   1.0, 1.0, 1.05, 1.0, 0.0, 0.0, 0.0,                                      # object joint position
+                   0.0, 0.0, 0.0, 0.0,0.0,0.0,0.0,                                                      # object joint velocity
                    0,                                                                      # contact flag
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
   gains:

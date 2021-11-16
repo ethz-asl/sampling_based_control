@@ -102,6 +102,8 @@ Visualization Manager:
           Value: false
         mid_mount:
           Value: false
+        mug_frame:
+          Value: true
         obstacle:
           Value: false
         omni_base_root_link:
@@ -182,12 +184,13 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          base_inertia:
-            {}
           cylinder_frame:
             {}
           cylinder_t_frame:
             {}
+          mug_frame:
+            base_inertia:
+              {}
           obstacle:
             {}
           omni_base_root_link:
@@ -551,23 +554,18 @@ Visualization Manager:
         - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: true
+          Enabled: false
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            cylinder_frame:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
           Name: cylinder
           Robot Description: cylinder_description_raisim
           TF Prefix: ""
           Update Interval: 0
-          Value: true
+          Value: false
           Visual Enabled: true
         - Alpha: 1
           Class: rviz/RobotModel
@@ -625,7 +623,7 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-            world:
+            mug_frame:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -820,7 +818,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.876858711242676
+      Distance: 2.191075086593628
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -828,17 +826,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 1.526296854019165
-        Y: 0.12352965772151947
-        Z: -0.2301926463842392
+        X: 0.31421390175819397
+        Y: 1.4678741693496704
+        Z: 0.0840163454413414
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.45479756593704224
+      Pitch: 0.789797306060791
       Target Frame: <Fixed Frame>
-      Yaw: 3.2155649662017822
+      Yaw: 5.748748302459717
     Saved: ~
 Window Geometry:
   Displays:
