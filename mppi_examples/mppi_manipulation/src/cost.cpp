@@ -47,10 +47,16 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // handle reaching cost
+  // this cost enforces the offset between the tracked_frame and the handle_frame
+  // to be equal to the chosen reference
   else if (mode == 1) {
+    // get the desired offset from reference and not from configs
+    Eigen::Vector3d ref_t = ref.head<3>();
+    Eigen::Quaterniond ref_q(ref.segment<4>(3));
+    auto offset = mppi_pinocchio::Pose(ref_t, ref_q);
     error_ = mppi_pinocchio::diff(
         robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
+        object_model_.get_pose(params_.handle_frame) * offset);
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
@@ -64,9 +70,13 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   // object displacement cost
   else if (mode == 2) {
+    // get the desired offset from reference and not from configs (see mode 1 for details)
+    Eigen::Vector3d ref_t = ref.head<3>();
+    Eigen::Quaterniond ref_q(ref.segment<4>(3));
+    auto offset = mppi_pinocchio::Pose(ref_t, ref_q);
     error_ = mppi_pinocchio::diff(
         robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
+        object_model_.get_pose(params_.handle_frame) * offset);
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt2;
     cost +=
