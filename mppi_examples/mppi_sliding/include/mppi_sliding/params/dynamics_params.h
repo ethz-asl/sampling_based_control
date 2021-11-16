@@ -24,7 +24,9 @@ struct DynamicsParams {
   double cylinder_height;
   double cylinder_radius;
   double cylinder_z;
+  double cylinder_mass;
   std::vector<double> table_position;
+  double friction;
 
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };

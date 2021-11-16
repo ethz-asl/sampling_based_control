@@ -17,6 +17,7 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 namespace manipulation {
 
@@ -52,6 +53,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
+  void publish_ros_obj(const Eigen::VectorXd& state);
 
  public:
   mppi::config_t config_;
@@ -76,6 +78,12 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   mppi_pinocchio::RobotModel object_model_;
   mppi_pinocchio::RobotModel cylinder_model_;
 
+  // estimated object in closed-loop
+  Eigen::VectorXd obj_state;
+  ros::Publisher cylinder_state_publisher_;
+  sensor_msgs::JointState cylinder_state_;
+  tf2_ros::TransformBroadcaster broadcaster;
+  geometry_msgs::TransformStamped cylinder_trans;
 
   // ros
   ros::Publisher optimal_trajectory_publisher_;

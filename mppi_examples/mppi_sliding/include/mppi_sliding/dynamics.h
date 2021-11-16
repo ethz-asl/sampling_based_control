@@ -40,9 +40,13 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void initialize_pd();
   void set_collision();
   void display_state();
-
+  void update_model();
+  
  protected:
   const bool if_sim_;
+  bool if_update_;
+  Eigen::VectorXd state_buffer;
+
   const std::vector<raisim::Vec<2>> object_limits_;
 
  public:

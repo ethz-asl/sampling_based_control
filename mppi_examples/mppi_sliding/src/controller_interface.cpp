@@ -103,6 +103,13 @@ bool PandaControllerInterface::init_ros() {
   optimal_path_.header.frame_id = "world";
   optimal_base_path_.header.frame_id = "world";
   reference_set_ = false;
+
+  // closed-loop object-related units
+  cylinder_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/cylinder/joint_state", 10);
+  cylinder_trans.header.frame_id = "world";
+  cylinder_trans.child_frame_id = "cylinder_frame";
+
   ROS_INFO("[PandaControllerInterface::init_ros] ok!");
   return true;
 }
@@ -205,6 +212,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   ROS_INFO("setting controller solver");
   controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
+
 
   // -------------------------------
   // initialize reference
@@ -348,6 +356,24 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(
   return pose_ros;
 }
 
+ void PandaControllerInterface::publish_ros_obj(const Eigen::VectorXd& state)
+ {
+  //ROS_INFO_STREAM("estimated:  " << state );
+  cylinder_state_.header.stamp = ros::Time::now();
+  cylinder_trans.header.stamp = ros::Time::now();
+  cylinder_trans.transform.translation.x = state[0];
+  cylinder_trans.transform.translation.y = state[1];
+  cylinder_trans.transform.translation.z = state[2];
+
+  cylinder_trans.transform.rotation.x = state[4];
+  cylinder_trans.transform.rotation.y = state[5];
+  cylinder_trans.transform.rotation.z = state[6];
+  cylinder_trans.transform.rotation.w = state[3];
+
+  cylinder_state_publisher_.publish(cylinder_state_);
+  broadcaster.sendTransform(cylinder_trans);
+ }
+
 void PandaControllerInterface::publish_ros() {
   obstacle_marker_publisher_.publish(obstacle_marker_);
 
@@ -364,6 +390,10 @@ void PandaControllerInterface::publish_ros() {
     optimal_path_.poses.push_back(get_pose_end_effector_ros(x));
     optimal_base_path_.poses.push_back(get_pose_base(x));
   }
+
+  obj_state.setZero(7);
+  obj_state = x_opt_[0].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
+  publish_ros_obj(obj_state);
 
   optimal_trajectory_publisher_.publish(optimal_path_);
   optimal_base_trajectory_publisher_.publish(optimal_base_path_);

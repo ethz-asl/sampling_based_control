@@ -554,18 +554,23 @@ Visualization Manager:
         - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: false
+          Enabled: true
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            cylinder_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
           Name: cylinder
           Robot Description: cylinder_description_raisim
           TF Prefix: ""
           Update Interval: 0
-          Value: false
+          Value: true
           Visual Enabled: true
         - Alpha: 1
           Class: rviz/RobotModel
@@ -818,7 +823,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.191075086593628
+      Distance: 2.282332181930542
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -826,17 +831,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.31421390175819397
-        Y: 1.4678741693496704
-        Z: 0.0840163454413414
+        X: 0.7081576585769653
+        Y: 1.9191086292266846
+        Z: 0.2288559526205063
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.789797306060791
+      Pitch: 0.5897976160049438
       Target Frame: <Fixed Frame>
-      Yaw: 5.748748302459717
+      Yaw: 4.898736476898193
     Saved: ~
 Window Geometry:
   Displays:

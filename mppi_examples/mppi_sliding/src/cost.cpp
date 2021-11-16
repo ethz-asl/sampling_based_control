@@ -27,7 +27,9 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   //object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
-  cylinder_position_ = Eigen::Vector3d(x(2*BASE_ARM_GRIPPER_DIM),x(2*BASE_ARM_GRIPPER_DIM+1),params_.cylinder_z);
+  cylinder_position_  <<  x(2*BASE_ARM_GRIPPER_DIM),
+                          x(2*BASE_ARM_GRIPPER_DIM+1),
+                          x(2*BASE_ARM_GRIPPER_DIM+2);
   //ROS_INFO_STREAM("EE in world frame: " << robot_model_.get_pose(params_.tracked_frame).translation);
 
   // regularization cost
@@ -36,6 +38,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   
   // end effector reaching cost
   if (mode == 0) {
+
+    //ROS_INFO_STREAM("cylinder pose " << cylinder_position_);
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
@@ -49,16 +53,17 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   // handle reaching cost
   else if (mode == 1) {
+    
     // error_ = mppi_pinocchio::diff(
     //     robot_model_.get_pose(params_.tracked_frame),
     //     object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    //error_.resize(3);
+    // error_.resize(3);
     Eigen::Vector2d position_dist;
     position_dist = robot_model_.get_pose(params_.tracked_frame).translation.head<2>() - cylinder_position_.head<2>(); 
-    cost += (position_dist.norm() - 0.1) * params_.Qt;
-    cost += (robot_model_.get_pose(params_.tracked_frame).translation(2) - cylinder_position_(2))*params_.Qt;
+    cost += (position_dist.norm() - 0.05) * params_.Qt;
+    cost += abs( robot_model_.get_pose(params_.tracked_frame).translation(2) - (cylinder_position_(2) - 0.05) ) *params_.Qt;
 
-    // adjust ee pose, when manipulating cylinder
+    // adjust ee pose ONLY the orientation, when manipulating cylinder
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
@@ -77,16 +82,20 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     //     robot_model_.get_pose(params_.tracked_frame),
     //     object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
     //error_.resize(3);
+    //ROS_INFO_STREAM("cylinder pose " << cylinder_position_);
     Eigen::Vector3d pose_diff_1;
     double pose_diff, pose_error;
   
     pose_diff_1(0) = robot_model_.get_pose(params_.tracked_frame).translation(0) - cylinder_position_(0);
     pose_diff_1(1) = robot_model_.get_pose(params_.tracked_frame).translation(1) - cylinder_position_(1);
     pose_diff = pose_diff_1(0)*pose_diff_1(0) + pose_diff_1(1)*pose_diff_1(1);
-    pose_diff_1(2) = robot_model_.get_pose(params_.tracked_frame).translation(2) 
-                      - params_.cylinder_z - 0.25 * params_.cylinder_height;
+    // pose_diff_1(2) = abs(robot_model_.get_pose(params_.tracked_frame).translation(2)-
+    //                   (cylinder_position_(2) - 0.058) );
+  
+    pose_diff_1(2) = abs(robot_model_.get_pose(params_.tracked_frame).translation(2) - params_.cylinder_z);
+
     // EE stay near the cylinder
-    pose_error = (pose_diff>params_.cylinder_height*params_.cylinder_height) ? sqrt(pose_diff)*1.5 : 0;
+    pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
     // EE not stay ahead of cylinder
     pose_error += (pose_diff_1(0) > 0) ? pose_diff_1(0) : 0;
     pose_error += (pose_diff_1(1) > 0) ? pose_diff_1(1) : 0;

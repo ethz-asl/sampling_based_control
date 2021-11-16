@@ -4,18 +4,18 @@
 
     <link name="cylinder_t_frame">
         <visual>
-            <origin xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder length="0.2" radius="0.04"/>
+                <cylinder length="0.1" radius="0.05"/>
             </geometry>
             <material name="steel">
                 <color rgba="0 0 .8 1"/>
             </material>
-        </visual>0
+        </visual>
         <collision>
-            <origin xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder length="0.2" radius="0.04"/>
+                <cylinder length="0.1" radius="0.05"/>
             </geometry>
             <material name="">
                 <contact name="steel"/>
@@ -23,7 +23,7 @@
         </collision>
         <inertial>
             <mass value="10"/>
-            <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+            <inertia ixx="0.2" ixy="-0.0013" ixz="-0.2" iyy="0.5" iyz="-0.24" izz="0.5"/>
             <origin xyz="0 0 0"/>
         </inertial>
     </link>
