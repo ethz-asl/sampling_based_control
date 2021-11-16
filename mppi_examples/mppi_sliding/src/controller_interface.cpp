@@ -151,7 +151,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   };
   ROS_INFO_STREAM("Successfully parsed controller dynamics parameters: "
                   << dynamics_params_);
-  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_);
+  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_,false);
 
   // -------------------------------
   // config

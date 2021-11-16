@@ -30,7 +30,7 @@ struct force_t {
 
 class PandaRaisimDynamics : public mppi::Dynamics {
  public:
-  PandaRaisimDynamics(const DynamicsParams& params);
+  PandaRaisimDynamics(const DynamicsParams& params, const bool if_sim);  //if_sim is true means is to simulate the "real world dynamics"
   ~PandaRaisimDynamics() = default;
  private:
   void initialize_world(const std::string& robot_description,
@@ -39,8 +39,10 @@ class PandaRaisimDynamics : public mppi::Dynamics {
                         const std::string& mug_description);
   void initialize_pd();
   void set_collision();
+  void display_state();
 
  protected:
+  const bool if_sim_;
   const std::vector<raisim::Vec<2>> object_limits_;
 
  public:
@@ -51,7 +53,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   size_t get_state_dimension() override { return state_dimension_; }
   
   mppi::dynamics_ptr create() override {
-    return std::make_shared<PandaRaisimDynamics>(params_);
+    return std::make_shared<PandaRaisimDynamics>(params_,if_sim_);
   }
 
   mppi::dynamics_ptr clone() const override {

@@ -12,7 +12,7 @@ namespace manipulation {
 
 ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
                                                const DynamicsParams& params)
-    : nh_(nh), PandaRaisimDynamics(params) {
+    : nh_(nh), PandaRaisimDynamics(params, true) {  
 
   std::cout << "In dynamic ros constructor, dynamic.cpp finished, params set up " << std::endl;
   state_publisher_ =
