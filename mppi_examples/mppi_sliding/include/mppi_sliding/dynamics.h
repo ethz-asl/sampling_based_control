@@ -35,7 +35,8 @@ class PandaRaisimDynamics : public mppi::Dynamics {
  private:
   void initialize_world(const std::string& robot_description,
                         const std::string& object_description,
-                        const std::string& cylinder_description);
+                        const std::string& cylinder_description,
+                        const std::string& mug_description);
   void initialize_pd();
   void set_collision();
 
@@ -122,14 +123,17 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   std::string robot_description_;
   std::string object_description_;
   std::string cylinder_description_;
+  std::string mug_description_;
 
   raisim::World sim_;
 
   raisim::ArticulatedSystem* panda_;
   raisim::ArticulatedSystem* object_;
+  raisim::ArticulatedSystem* mug_;
   raisim::Box* table_;
   raisim::Cylinder* cylinder_;
   raisim::Cylinder* cylinder_2;
+
 
   Eigen::VectorXd object_p_, object_v_;
   Eigen::VectorXd box_p_, box_v_;

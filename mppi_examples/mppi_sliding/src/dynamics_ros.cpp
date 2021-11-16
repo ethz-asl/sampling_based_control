@@ -225,20 +225,20 @@ void ManipulatorDynamicsRos::publish_ros() {
   ee_publisher_.publish(pose_ros);
 
   // publish handle pose
-  Eigen::Vector3d handle_position;
-  Eigen::Quaterniond handle_orientation;
-  get_handle_pose(handle_position, handle_orientation);
-  geometry_msgs::PoseStamped handle_pose;
-  handle_pose.header.stamp = ros::Time::now();
-  handle_pose.header.frame_id = "world";
-  handle_pose.pose.position.x = handle_position.x();
-  handle_pose.pose.position.y = handle_position.y();
-  handle_pose.pose.position.z = handle_position.z();
-  handle_pose.pose.orientation.x = handle_orientation.x();
-  handle_pose.pose.orientation.y = handle_orientation.y();
-  handle_pose.pose.orientation.z = handle_orientation.z();
-  handle_pose.pose.orientation.w = handle_orientation.w();
-  handle_publisher_.publish(handle_pose);
+  // Eigen::Vector3d handle_position;
+  // Eigen::Quaterniond handle_orientation;
+  // get_handle_pose(handle_position, handle_orientation);
+  // geometry_msgs::PoseStamped handle_pose;
+  // handle_pose.header.stamp = ros::Time::now();
+  // handle_pose.header.frame_id = "world";
+  // handle_pose.pose.position.x = handle_position.x();
+  // handle_pose.pose.position.y = handle_position.y();
+  // handle_pose.pose.position.z = handle_position.z();
+  // handle_pose.pose.orientation.x = handle_orientation.x();
+  // handle_pose.pose.orientation.y = handle_orientation.y();
+  // handle_pose.pose.orientation.z = handle_orientation.z();
+  // handle_pose.pose.orientation.w = handle_orientation.w();
+  // handle_publisher_.publish(handle_pose);
 }
 
 }  // namespace manipulation
