@@ -18,6 +18,7 @@
 #include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace manipulation {
 
@@ -54,7 +55,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
   void publish_ros_obj(const Eigen::VectorXd& state);
-
+  void publish_ros_obj(const mppi::observation_array_t& x_opt_);
+ 
  public:
   mppi::config_t config_;
 
@@ -84,6 +86,10 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   sensor_msgs::JointState cylinder_state_;
   tf2_ros::TransformBroadcaster broadcaster;
   geometry_msgs::TransformStamped cylinder_trans;
+
+  visualization_msgs::MarkerArray object_predict_markers;
+  visualization_msgs::Marker object_predict_marker_;
+  ros::Publisher object_predict_publisher_;
 
   // ros
   ros::Publisher optimal_trajectory_publisher_;

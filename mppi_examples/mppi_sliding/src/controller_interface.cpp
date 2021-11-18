@@ -42,6 +42,7 @@ bool PandaControllerInterface::init_ros() {
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaControllerInterface::ee_pose_desired_callback, this);
 
+  
   std::vector<double> default_pose;
   if (!nh_.param<std::vector<double>>("default_pose", default_pose, {}) ||
       default_pose.size() != 7) {
@@ -109,6 +110,17 @@ bool PandaControllerInterface::init_ros() {
       nh_.advertise<sensor_msgs::JointState>("/cylinder/joint_state", 10);
   cylinder_trans.header.frame_id = "world";
   cylinder_trans.child_frame_id = "cylinder_frame";
+
+  object_predict_publisher_ =  
+    nh_.advertise<visualization_msgs::MarkerArray>("/predicted_objects", 10);
+  object_predict_marker_.type = visualization_msgs::Marker::CYLINDER;
+  object_predict_marker_.header.frame_id = "world";
+  object_predict_marker_.action = visualization_msgs::Marker::ADD;
+  object_predict_marker_.color.r = 0.0;
+  object_predict_marker_.color.b = 1.0;
+  object_predict_marker_.color.g = 0.0;
+  object_predict_marker_.color.a = 1.0;
+
 
   ROS_INFO("[PandaControllerInterface::init_ros] ok!");
   return true;
@@ -374,6 +386,35 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(
   broadcaster.sendTransform(cylinder_trans);
  }
 
+void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& x_opt_)
+{
+  int step_num = (x_opt_.size()>50) ? 50 : x_opt_.size();
+
+  object_predict_marker_.scale.x = 0.1;
+  object_predict_marker_.scale.y = 0.1;
+  object_predict_marker_.scale.z = 0.1;
+
+  obj_state.setZero(OBJECT_DIMENSION);
+  object_predict_markers.markers.clear();
+  for (int i=0;i<step_num;i++)
+  { 
+    obj_state = x_opt_[i].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
+    object_predict_marker_.pose.position.x = obj_state[0];
+    object_predict_marker_.pose.position.y = obj_state[1];
+    object_predict_marker_.pose.position.z = obj_state[2];
+    object_predict_marker_.pose.orientation.x = obj_state[4];
+    object_predict_marker_.pose.orientation.y = obj_state[5];
+    object_predict_marker_.pose.orientation.z = obj_state[6];
+    object_predict_marker_.pose.orientation.w = obj_state[3];
+    object_predict_marker_.id = i;
+    object_predict_marker_.color.a = 1.0 - (i/step_num);
+    object_predict_markers.markers.push_back(object_predict_marker_);
+  }
+
+  object_predict_publisher_.publish(object_predict_markers);
+
+}
+
 void PandaControllerInterface::publish_ros() {
   obstacle_marker_publisher_.publish(obstacle_marker_);
 
@@ -393,7 +434,8 @@ void PandaControllerInterface::publish_ros() {
 
   obj_state.setZero(7);
   obj_state = x_opt_[0].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
-  publish_ros_obj(obj_state);
+  //publish_ros_obj(obj_state);
+  publish_ros_obj(x_opt_);
 
   optimal_trajectory_publisher_.publish(optimal_path_);
   optimal_base_trajectory_publisher_.publish(optimal_base_path_);

@@ -296,8 +296,8 @@ void PandaRaisimDynamics::update_model()
   cylinder_->setMass(params_.cylinder_mass);
   cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
   cylinder_->setName("Cylinder");
-  pos_c[0] = pos_c[0] + (r-0.5)/50;
-  pos_c[1] = pos_c[1] + (r-0.5)/50;
+  // pos_c[0] = pos_c[0] + (r-0.5)/50;
+  // pos_c[1] = pos_c[1] + (r-0.5)/50;
   cylinder_->setPosition(pos_c);
   cylinder_->setOrientation(q);
   cylinder_->setLinearVelocity(vel_c);  //todo:  add angular velocity
