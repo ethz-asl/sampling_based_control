@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<robot name="dishwasher" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+    <xacro:arg name="prefix" default=""/>
+    <xacro:property name="prefix" default="$(arg prefix)"/>
+
+    <link name="world"/>
+	<joint name="${prefix}fixed" type="fixed">
+		<origin rpy="1.57 0 -1.57" xyz="2 -0.8 1.0"/>
+		<child link="dish_link"/>
+		<parent link="world"/>
+	</joint>
+	<link name="dish_link">
+		<visual name="frame-5">
+			<origin xyz="0 0 0"/>
+			<geometry>
+			    <box size="0.65 0.9 0.65"/>
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="0 0 0"/>
+			<geometry>
+			    <box size="0.65 0.9 0.65"/>
+			</geometry>
+		</collision>
+	</link>
+	<joint name="articulation_joint" type="revolute">
+		<origin xyz="0.325 -0.45 0.325"/>
+		<axis xyz="1 0 0"/>
+		<child link="door_link"/>
+		<parent link="dish_link"/>
+		<dynamics friction="4" damping="2"/>
+		<limit effort="1000" velocity="1.0" lower="0.0" upper="1.5707963267948966"/>
+	</joint>
+	<link name="door_link">
+	    <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="5.8"/>
+            <inertia ixx="0.4333886585" ixy="0" ixz="0" iyy="0.39146708384" iyz="0" izz="0.042168942339999994"/>
+        </inertial>
+		<visual name="door_visual">
+		    <origin xyz="-0.325 0.45 0.025"/>
+			<geometry>
+			    <box size="0.65 0.9 0.05"/>
+			</geometry>
+		</visual>
+		<collision>
+		    <origin xyz="-0.325 0.45 0.025"/>
+			<geometry>
+			    <box size="0.65 0.9 0.05"/>
+			</geometry>
+		</collision>
+	</link>
+	<joint name="${prefix}handle_joint" type="fixed">
+		<origin rpy="0 0 0" xyz="-0.25 0.8 0.08"/>
+		<child link="${prefix}handle_link"/>
+		<parent link="door_link"/>
+	</joint>
+	<link name="${prefix}handle_link">
+		<visual name="handle-8">
+			<origin xyz="0 0 0.03"/>
+			<geometry>
+			    <box size="0.5 0.02 0.02"/>
+			</geometry>
+			<material name="">
+                <color rgba="0 0 1 1"/>
+            </material>
+		</visual>
+		<collision>
+			<origin xyz="0 0 0.03"/>
+			<geometry>
+			    <box size="0.5 0.02 0.02"/>
+			</geometry>
+		</collision>
+	</link>
+</robot>

@@ -21,6 +21,22 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
   ee_force_applied_ = false;
 };
 
+PandaRaisimDynamics::PandaRaisimDynamics(const std::string& config_path){
+  manipulation::Config manipulation_config_;
+  if(manipulation_config_.init_from_file(config_path)){
+    ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
+  }else{
+    ROS_ERROR("Failed to parse manipulation config");
+  }
+  params_.init_from_config(manipulation_config_);
+  initialize_world(params_.robot_description, params_.object_description);
+  initialize_pd();
+  set_collision();
+
+  t_ = 0.0;
+  ee_force_applied_ = false;
+};
+
 void PandaRaisimDynamics::initialize_world(
     const std::string& robot_description,
     const std::string& object_description) {

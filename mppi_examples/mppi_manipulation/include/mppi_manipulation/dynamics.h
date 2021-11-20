@@ -30,6 +30,7 @@ struct force_t {
 class PandaRaisimDynamics : public mppi::Dynamics {
  public:
   PandaRaisimDynamics(const DynamicsParams& params);
+  PandaRaisimDynamics(const std::string& config_path);
   ~PandaRaisimDynamics() = default;
  private:
   void initialize_world(const std::string& robot_description,

@@ -11,6 +11,7 @@
 #include <pybind11/stl.h>
 
 #include "mppi_manipulation/controller_interface_no_ros.h"
+#include "mppi_manipulation/dynamics.h"
 
 using namespace manipulation;
 namespace py = pybind11;
@@ -26,4 +27,9 @@ PYBIND11_MODULE(pymppi_manipulation, m) {
       .def("get_rollout_cost", &PandaControllerInterfaceNoRos::get_rollout_cost)
       .def("get_stage_cost", &PandaControllerInterfaceNoRos::get_stage_cost, py::return_value_policy::copy)
       .def("set_reference", &PandaControllerInterfaceNoRos::set_reference);
+  py::class_<PandaRaisimDynamics>(m, "PandaRaisimDynamics")
+      .def(py::init<const std::string &>())
+      .def("step", &PandaRaisimDynamics::step, py::return_value_policy::copy)
+      .def("get_dt", &PandaRaisimDynamics::get_dt, py::return_value_policy::copy)
+      .def("get_state", &PandaRaisimDynamics::get_state, py::return_value_policy::copy);
 }
