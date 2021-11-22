@@ -33,6 +33,7 @@ class PandaControllerInterfaceNoRos{
   mppi::input_t get_input(const mppi::observation_t &x, const double &t);
   void set_reference(mppi::reference_array_t refs, mppi::time_array_t t);
   double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u, const double t);
+  std::map<std::string, double> get_cost_map(const mppi::observation_t& x, const mppi::input_t& u, const double t);
   inline double get_rollout_cost(){return controller_->get_rollout_cost();};
 
   // not used

@@ -44,6 +44,8 @@ class PandaCost : public mppi::Cost {
   Eigen::Vector3d distance_vector_;
   Eigen::Vector3d collision_vector_;
 
+  std::map<std::string, double> cost_map_;
+
  public:
   mppi::cost_ptr create() override {
     return std::make_shared<PandaCost>(params_);
@@ -62,5 +64,7 @@ class PandaCost : public mppi::Cost {
                             const mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
+
+  inline std::map<std::string, double> get_cost_map(){ return cost_map_;};
 };
 }  // namespace manipulation

@@ -243,6 +243,13 @@ double PandaControllerInterfaceNoRos::get_stage_cost(const mppi::observation_t& 
   return local_cost_->get_stage_cost(x, u, t);
 }
 
+std::map<std::string, double> PandaControllerInterfaceNoRos::
+    get_cost_map(const mppi::observation_t& x, const mppi::input_t& u, const double t) {
+  if (!reference_set_) return std::map<std::string, double>{};
+  local_cost_->get_stage_cost(x, u, t);
+  return local_cost_->get_cost_map();
+}
+
 mppi_pinocchio::Pose PandaControllerInterfaceNoRos::get_pose_end_effector(
     const Eigen::VectorXd& x) {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
