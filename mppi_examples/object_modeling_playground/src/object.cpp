@@ -1,28 +1,52 @@
-#include "object.h"
+
 #include <cmath>
+#include "../include/object.h"
 
 
 void Object::kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg)
-{
+{   
+    // save the current kp for state estiamtion
+    keypoints_past_ = keypoints_;
+
     for (int i = 0 ; i < kp_num; i++)
     {
         keypoints_[i*4+1] = msg->poses[i].position.x;
         keypoints_[i*4+2] = msg->poses[i].position.y;
         keypoints_[i*4+3] = msg->poses[i].position.z;
     }
+
+    pose_estimate();
+    
 }
+
+void Object::pose_estimate()
+{
+    // estimate T for TX = Y,  X is the kp of last frame and Y is kp of this frame
+
+    std::cout << "I need to be updated! " << std::endl;
+    
+
+
+}
+
 
 Object::Object(const ros::NodeHandle& nh):nh_(nh)
 {
+    init_param();
+
     state_publisher_=nh_.advertise<sensor_msgs::JointState>("/mug/joint_states",10);   
     kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/keypoints_marker_array",10);
     primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/primitives_marker_array",1000);
     kp_int_subscriber_ = 
         nh_.subscribe("/keypoints_state",100, &Object::kp_int_callback, this);
-    this->trans.header.frame_id = "world";
-    this->trans.child_frame_id = "mug_frame";
-};
+    this->obj_trans.header.frame_id = "world";
+    this->obj_trans.child_frame_id = ref_frame;
 
+    this->kp_trans.header.frame_id = "world";
+    this->kp_trans.child_frame_id = "kp_frame";
+
+    init_kp_TF();
+}
 
 bool Object::init_param()
 {   
@@ -30,6 +54,12 @@ bool Object::init_param()
     std::vector<double> obj_pos;
     std::vector<double> obj_rot;
     std::vector<double> keypoints;
+
+    if (!nh_.getParam("object/object_frame", ref_frame)) {
+    ROS_ERROR("Failed to parse /object/object_frame or invalid!");
+    return false;
+  }  
+
     if (!nh_.getParam("object/scale", obj_scale)) {
     ROS_ERROR("Failed to parse /object/scale or invalid!");
     return false;
@@ -56,6 +86,7 @@ bool Object::init_param()
     return false;
   }  
 
+
     obj_scale_ = obj_scale;
     obj_pos_ = obj_pos;
     obj_rot_ = obj_rot;
@@ -64,36 +95,44 @@ bool Object::init_param()
 
     height.resize(primitive_num);
     radius.resize(primitive_num);
-    // for (int i = 0 ; i < obj_scale_.size(); i++)
-    // {
-    //     std::cout << obj_scale_[i] << std::endl;
-    // }   
-    // nh.setParam("/global_param", 5);
 
     return true;
 }
 
-
-
-void Object::setTF()
+void Object::init_kp_TF()
 {
-    state_.header.stamp = ros::Time::now();
-    trans.header.stamp = ros::Time::now();
-    trans.transform.translation.x = obj_pos_[0];
-    trans.transform.translation.y = obj_pos_[1];
-    trans.transform.translation.z = obj_pos_[2];
+    kp_trans.header.stamp = ros::Time::now();
+    kp_trans.transform.translation.x = obj_pos_[0];
+    kp_trans.transform.translation.y = obj_pos_[1];
+    kp_trans.transform.translation.z = obj_pos_[2];
     tf2::Quaternion q_;
     q_.setRPY(obj_rot_[0], obj_rot_[1], obj_rot_[2]);
-    trans.transform.rotation.x = q_.x();
-    trans.transform.rotation.y = q_.y();
-    trans.transform.rotation.z = q_.z();
-    trans.transform.rotation.w = q_.w();
+    kp_trans.transform.rotation.x = q_.x();
+    kp_trans.transform.rotation.y = q_.y();
+    kp_trans.transform.rotation.z = q_.z();
+    kp_trans.transform.rotation.w = q_.w();
 }
 
 
-void Object::update_kp_markers(std::string ref_frame)
+void Object::update_obj_TF()
+{
+    state_.header.stamp = ros::Time::now();
+    kp_trans.header.stamp = ros::Time::now();
+    obj_trans.header.stamp = ros::Time::now();
+    obj_trans.transform.translation.x = obj_pos_[0];
+    obj_trans.transform.translation.y = obj_pos_[1];
+    obj_trans.transform.translation.z = obj_pos_[2];
+    tf2::Quaternion q_;
+    q_.setRPY(obj_rot_[0], obj_rot_[1], obj_rot_[2]);
+    obj_trans.transform.rotation.x = q_.x();
+    obj_trans.transform.rotation.y = q_.y();
+    obj_trans.transform.rotation.z = q_.z();
+    obj_trans.transform.rotation.w = q_.w();
+}
+
+
+void Object::update_kp_markers()
 {   
-    this->ref_frame = ref_frame;
     kp_num = keypoints_.size()/4;
     set_nums.clear();
     set_nums.resize(kp_num,0);
@@ -193,7 +232,7 @@ void Object::vis_primitive()
 
 void Object::pub_state()
 {
-    state_publisher_.publish(state_);
+    //state_publisher_.publish(state_);
     kp_publisher_.publish(kp_markers_);
     primitive_publisher_.publish(primitive_markers_);
 }

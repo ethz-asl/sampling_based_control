@@ -23,9 +23,7 @@
         <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
         <param name="marker_server_name" value="reference_marker_server"/>
         <param name="subscribe_initial_pose" value="true"/>
-        <param name="initial_pose_topic" value="/end_effector"/>
         <param name="frame_id" value="mug_frame"/>
-        <param name="target_pose_topic" value="/end_effector_pose_desired"/>
     </node>
 
     <!-- Open Rviz -->

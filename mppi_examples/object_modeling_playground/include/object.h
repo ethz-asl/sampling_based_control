@@ -19,17 +19,17 @@ class Object
 public:
 
     Object(const ros::NodeHandle& nh);
-
-
-    bool init_param();
-    void setTF();
+    void update_obj_TF();
     void pub_state();
-    void update_kp_markers(std::string ref_frame);
+    void update_kp_markers();
     void fit_primitive();
     void vis_primitive();
+    void pose_estimate();
 
 private:
+    bool init_param();
     void kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg);
+    void init_kp_TF(); // init keypoints frame TF
 
 private:
     int kp_num;
@@ -61,8 +61,9 @@ private:
     std::vector<double> obj_pos_;
     std::vector<double> obj_rot_;
     std::vector<double> keypoints_;
+    std::vector<double> keypoints_past_;
 
 public:
-    geometry_msgs::TransformStamped trans;
-
+    geometry_msgs::TransformStamped obj_trans;
+    geometry_msgs::TransformStamped kp_trans;
 };

@@ -1,0 +1,12 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/boyang/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages",
+        "/home/boyang/raisim_ws/raisim_install/lib"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/boyang/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages",
+        "/home/boyang/raisim_ws/raisim_install/lib"
+    ]
+}

@@ -5,7 +5,7 @@
         <color rgba="0.0 0.0 0.8 1.0"/> <!-- rviz green color -->
     </material>
 
-    <link name="world">
+    <link name="mug_frame">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
@@ -21,7 +21,7 @@
     </link>
 
     <joint name="base_to_base_inertia" type="fixed">
-        <parent link="world"/>
+        <parent link="mug_frame"/>
         <child link="base_inertia"/>
         <origin rpy="0 0 0" xyz="0 0 0"/>
     </joint>
