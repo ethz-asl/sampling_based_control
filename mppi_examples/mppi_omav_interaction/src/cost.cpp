@@ -99,8 +99,11 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
     compute_torque_cost(x);
     cost += torque_cost_;
     // Efficiency cost
-    compute_efficiency_cost(x);
-    cost += efficiency_cost_;
+    // compute_efficiency_cost(x);
+    // cost += efficiency_cost_;
+    // Minimize force
+    double force = x.segment<3>(15).norm();
+    cost += param_ptr_->Q_power * force * force;
   }
   cost_ = cost;
 

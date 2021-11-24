@@ -42,6 +42,7 @@ add_library(${PROJECT_NAME}
         src/controller_interface.cpp
         src/ros_conversions.cpp
         src/state_observer.cpp
+        src/omav_trajectory_generator.cpp
         )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})

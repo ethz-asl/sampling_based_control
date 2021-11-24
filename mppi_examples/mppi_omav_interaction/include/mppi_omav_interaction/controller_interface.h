@@ -8,25 +8,27 @@
 
 #pragma once
 
-#include "mppi_omav_interaction/dynamics.h"
-#include "mppi_omav_interaction/ros_conversions.h"
-#include <geometry_msgs/Pose.h>
 #include <mppi_omav_interaction/cost.h>
+#include <mppi_omav_interaction/dynamics.h>
+#include <mppi_omav_interaction/ros_conversions.h>
 #include <mppi_ros/controller_interface.h>
 
+#include <geometry_msgs/Pose.h>
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
-#include <memory>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <memory>
+
+#include <ros/ros.h>
 
 namespace omav_interaction {
 
 class OMAVControllerInterface : public mppi_ros::ControllerRos {
-public:
+ public:
   explicit OMAVControllerInterface(ros::NodeHandle &nh,
                                    ros::NodeHandle &nh_public)
       : ControllerRos(nh, nh_public) {}
@@ -47,9 +49,9 @@ public:
 
   bool set_initial_reference(const observation_t &x);
 
-  void manually_shift_input();
+  void manually_shift_input(const int i);
 
-private:
+ private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 
   void desired_pose_callback(const geometry_msgs::PoseStampedConstPtr &msg);
@@ -60,17 +62,17 @@ private:
 
   void publish_trajectory(const mppi::observation_array_t &x_opt,
                           const mppi::input_array_t &u_opt,
-                          const mppi::observation_t &x0_opt);
+                          const mppi::observation_t &x0_opt) const;
 
-public:
+ public:
   mppi::SolverConfig config_;
   std::shared_ptr<OMAVInteractionCost> cost_;
 
-private:
+ private:
   bool reference_set_ = false;
   bool detailed_publishing_;
 
-  observation_t x_0_temp;
+  // observation_t x_0_temp;
 
   OMAVInteractionCostParam cost_param_;
 
@@ -82,8 +84,8 @@ private:
   ros::Publisher mppi_reference_publisher_;
   ros::Publisher optimal_linear_input_publisher_;
   ros::Publisher optimal_angular_input_publisher_;
-
-  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
+  ros::Publisher optimal_rollout_lin_vel_;
+  ros::Publisher optimal_rollout_ang_vel_;
 
   ros::Subscriber reference_subscriber_;
   ros::Subscriber mode_subscriber_;
@@ -99,26 +101,8 @@ private:
   observation_array_t xx_opt_;
   input_array_t uu_opt_;
   observation_t x0_;
-
-  mppi_pinocchio::RobotModel robot_model_;
-  mppi_pinocchio::RobotModel object_model_;
-  Eigen::Vector3d tip_lin_velocity_;
-  Eigen::Matrix<double, 6, 1> tip_velocity_;
-  Eigen::Vector3d torque_;
-  Eigen::Vector3d hook_handle_vector_;
-  float distance_hook_handle_;
-  Eigen::Vector3d force_normed_;
   Eigen::Vector3d com_hook_;
-  float torque_angle_;
-  // cost floats to publish
-  float velocity_cost_;
-  float handle_hook_cost_;
-  float object_cost_;
-  float power_cost_;
-  float torque_cost_;
-  float pose_cost_;
-  float overall_cost_;
 
   sensor_msgs::JointState object_state_;
 };
-} // namespace omav_interaction
+}  // namespace omav_interaction

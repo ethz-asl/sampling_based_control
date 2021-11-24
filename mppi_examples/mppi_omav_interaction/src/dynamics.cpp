@@ -50,8 +50,8 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
 
   Eigen::VectorXd pGain(robot_dof_), dGain(robot_dof_);
-  pGain << 15.0, 15.0, 15.0, 20.0, 20.0, 20.0;
-  dGain << 5.0, 5.0, 5.0, 15.0, 15.0, 15.0;
+  pGain << 20.0, 20.0, 20.0, 35.0, 35.0, 35.0;
+  dGain << 5.0, 5.0, 5.0, 12.0, 12.0, 12.0;
 
   omav_->setPdGains(pGain, dGain);
 }
@@ -66,7 +66,10 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   cmd_ = x_.segment<7>(19);
   cmdv_ = x_.segment<6>(26);
   omav_->setPdTarget(cmd_, cmdv_);
-  omav_->setGeneralizedForce(omav_->getNonlinearities());
+  feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
+  nonLinearities_ = omav_->getNonlinearities().e();
+  feedforward_force_ = feedforward_acceleration_ * 4.337 + nonLinearities_;
+  omav_->setGeneralizedForce(feedforward_force_);
   sim_.integrate();
   omav_->getState(omav_pose_, omav_velocity_);
   object_->getState(object_pose_, object_velocity_);
@@ -167,7 +170,7 @@ void OMAVVelocityDynamics::integrate_quaternion(
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
   xd_.head<6>() = x_.segment<6>(26);
-  xd_.segment<6>(6) = u - x_.segment<6>(26);
+  xd_.segment<6>(6) = u - 5 * x_.segment<6>(26);
 }
 
 void OMAVVelocityDynamics::integrate_internal(

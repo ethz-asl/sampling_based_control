@@ -12,7 +12,8 @@ void to_trajectory_msg(
   double dt = 0.015;
   mav_msgs::EigenTrajectoryPoint current_trajectory_point;
   mav_msgs::EigenTrajectoryPointVector current_trajectory;
-  EigenTrajectoryPointFromState(x0_opt, u_opt[0], current_trajectory_point);
+  EigenTrajectoryPointFromState(x0_opt, u_opt[0] - 5 * x0_opt.segment<6>(26),
+                                current_trajectory_point);
   current_trajectory.push_back(current_trajectory_point);
   for (int i = 0; i < (x_opt.size() - 6); i++) {
     EigenTrajectoryPointFromStates(x_opt, u_opt, i, current_trajectory_point,
@@ -32,7 +33,7 @@ void EigenTrajectoryPointFromStates(
   trajectorypoint.orientation_W_B = Eigen::Quaternion(
       states[i](22), states[i](23), states[i](24), states[i](25));
   trajectorypoint.velocity_W = states[i].segment<3>(26);
-  // Angluar velocities and accelerations need to be represented in body frame
+  // Angular velocities and accelerations need to be represented in body frame
   trajectorypoint.angular_velocity_W = states[i].segment<3>(29);
   if (!use_input) {
     // Filter the velocities to calculate the desired accelerations
@@ -73,8 +74,10 @@ void EigenTrajectoryPointFromStates(
     trajectorypoint.acceleration_W = linear_acceleration;
     trajectorypoint.angular_acceleration_W = angular_acceleration_W;
   } else {
-    trajectorypoint.acceleration_W = inputs[i + 1].head<3>();
-    trajectorypoint.angular_acceleration_W = inputs[i + 1].segment<3>(3);
+    trajectorypoint.acceleration_W =
+        inputs[i + 1].head<3>() - 5 * states[i].segment<3>(26);
+    trajectorypoint.angular_acceleration_W =
+        inputs[i + 1].segment<3>(3) - 5 * states[i].segment<3>(29);
   }
   trajectorypoint.time_from_start_ns = ros::Duration((i + 1) * dt).toNSec();
 }

@@ -6,11 +6,7 @@
  * @brief    description
  */
 
-#include "mppi_omav_interaction/controller_interface.h"
-
-#include <memory>
-#include <ros/package.h>
-#include <string>
+#include <mppi_omav_interaction/controller_interface.h>
 
 using namespace omav_interaction;
 
@@ -24,6 +20,10 @@ bool OMAVControllerInterface::init_ros() {
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_linear", 1);
   optimal_angular_input_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_angular", 1);
+  optimal_rollout_ang_vel_ =
+      nh_.advertise<geometry_msgs::PoseArray>("/optimal_ang_vel", 1);
+  optimal_rollout_lin_vel_ =
+      nh_.advertise<geometry_msgs::PoseArray>("/optimal_lin_vel", 1);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
@@ -173,8 +173,7 @@ void OMAVControllerInterface::object_reference_callback(
 }
 
 bool OMAVControllerInterface::update_reference() {
-  if (!reference_set_)
-    get_controller()->set_reference_trajectory(ref_);
+  if (!reference_set_) get_controller()->set_reference_trajectory(ref_);
   reference_set_ = true;
   return true;
 }
@@ -216,11 +215,12 @@ void OMAVControllerInterface::publish_ros() {
 
 void OMAVControllerInterface::publish_trajectory(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const mppi::observation_t &x0_opt) {
+    const mppi::observation_t &x0_opt) const {
+  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg;
   omav_interaction::conversions::to_trajectory_msg(x_opt, u_opt, x0_opt,
-                                                   current_trajectory_msg_);
-  current_trajectory_msg_.header.stamp = ros::Time::now();
-  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);
+                                                   current_trajectory_msg);
+  current_trajectory_msg.header.stamp = ros::Time::now();
+  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg);
 }
 
 void OMAVControllerInterface::publish_all_trajectories() {
@@ -245,10 +245,12 @@ void OMAVControllerInterface::publish_all_trajectories() {
 void OMAVControllerInterface::publish_optimal_rollout() {
   get_controller()->get_optimal_rollout(optimal_rollout_states_,
                                         optimal_rollout_inputs_);
+  x0_ = get_controller()->get_current_observation();
   geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des,
-      optimal_inputs_lin_array, optimal_inputs_ang_array;
+      optimal_inputs_lin_array, optimal_inputs_ang_array,
+      optimal_rollout_lin_vel, optimal_rollout_ang_vel;
   geometry_msgs::Pose current_pose, current_pose_des, mppi_reference,
-      current_input_lin, current_input_ang;
+      current_input_lin, current_input_ang, current_lin_vel, current_ang_vel;
   visualization_msgs::Marker force_marker;
 
   omav_interaction::conversions::arrow_initialization(force_marker);
@@ -256,22 +258,33 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   visualization_msgs::MarkerArray force_marker_array;
   Eigen::Vector3d force;
   Eigen::Vector3d force_normalized;
+  ros::Time t_now = ros::Time::now();
   optimal_rollout_array.header.frame_id = "world";
-  optimal_rollout_array.header.stamp = ros::Time::now();
+  optimal_rollout_array.header.stamp = t_now;
   optimal_rollout_array_des.header.frame_id = "world";
-  optimal_rollout_array_des.header.stamp = ros::Time::now();
+  optimal_rollout_array_des.header.stamp = t_now;
   optimal_inputs_lin_array.header.frame_id = "world";
-  optimal_inputs_lin_array.header.stamp = ros::Time::now();
+  optimal_inputs_lin_array.header.stamp = t_now;
   optimal_inputs_ang_array.header.frame_id = "world";
-  optimal_inputs_ang_array.header.stamp = ros::Time::now();
+  optimal_inputs_ang_array.header.stamp = t_now;
+  optimal_rollout_lin_vel.header.frame_id = "world";
+  optimal_rollout_lin_vel.header.stamp = t_now;
+  optimal_rollout_ang_vel.header.frame_id = "world";
+  optimal_rollout_ang_vel.header.stamp = t_now;
 
-  velocity_cost_ = 0;
-  power_cost_ = 0;
-  object_cost_ = 0;
-  torque_cost_ = 0;
-  handle_hook_cost_ = 0;
-  pose_cost_ = 0;
-  overall_cost_ = 0;
+  float velocity_cost = 0.0f;
+  float power_cost = 0.0f;
+  float object_cost = 0.0f;
+  float torque_cost = 0.0f;
+  float handle_hook_cost = 0.0f;
+  float pose_cost = 0.0f;
+  float overall_cost = 0.0f;
+  omav_interaction::conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7),
+                                                              current_lin_vel);
+  omav_interaction::conversions::PoseMsgForVelocityFromVector(
+      x0_.segment<3>(10), current_ang_vel);
+  optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
+  optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
 
   for (int i = 0; i < optimal_rollout_states_.size(); i++) {
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
@@ -282,67 +295,73 @@ void OMAVControllerInterface::publish_optimal_rollout() {
         optimal_rollout_inputs_[i].segment<3>(0), current_input_lin);
     omav_interaction::conversions::PoseMsgForVelocityFromVector(
         optimal_rollout_inputs_[i].segment<3>(3), current_input_ang);
+    omav_interaction::conversions::PoseMsgForVelocityFromVector(
+        optimal_rollout_states_[i].segment<3>(7), current_lin_vel);
+    omav_interaction::conversions::PoseMsgForVelocityFromVector(
+        optimal_rollout_states_[i].segment<3>(10), current_ang_vel);
     optimal_rollout_array.poses.push_back(current_pose);
     optimal_rollout_array_des.poses.push_back(current_pose_des);
     optimal_inputs_lin_array.poses.push_back(current_input_lin);
     optimal_inputs_ang_array.poses.push_back(current_input_ang);
+    optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
+    optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
     if (detailed_publishing_) {
       // Cost publishing
       cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
       // Velocity Cost
-      velocity_cost_ += cost_->velocity_cost_;
+      velocity_cost += cost_->velocity_cost_;
       // Efficiency Cost
-      power_cost_ += cost_->efficiency_cost_;
+      power_cost += cost_->efficiency_cost_;
       // Object Cost
-      object_cost_ += cost_->object_cost_;
+      object_cost += cost_->object_cost_;
       // Torque Cost
-      torque_cost_ += cost_->torque_cost_;
+      torque_cost += cost_->torque_cost_;
       // Handle Hook Cost
-      handle_hook_cost_ += cost_->handle_hook_cost_;
+      handle_hook_cost += cost_->handle_hook_cost_;
       // Pose Cost
-      pose_cost_ += cost_->pose_cost_;
-      overall_cost_ += cost_->cost_;
+      pose_cost += cost_->pose_cost_;
+      overall_cost += cost_->cost_;
 
-      force_normed_ = optimal_rollout_states_[i].segment<3>(15).normalized();
+      Eigen::Vector3d force_normed = optimal_rollout_states_[i].segment<3>(15).normalized();
 
       force_marker.points[0].x = cost_->hook_pos_(0);
       force_marker.points[0].y = cost_->hook_pos_(1);
       force_marker.points[0].z = cost_->hook_pos_(2);
-      force_marker.points[1].x = cost_->hook_pos_(0) + force_normed_(0);
-      force_marker.points[1].y = cost_->hook_pos_(1) + force_normed_(1);
-      force_marker.points[1].z = cost_->hook_pos_(2) + force_normed_(2);
+      force_marker.points[1].x = cost_->hook_pos_(0) + force_normed(0);
+      force_marker.points[1].y = cost_->hook_pos_(1) + force_normed(1);
+      force_marker.points[1].z = cost_->hook_pos_(2) + force_normed(2);
       force_marker.id = i;
 
       force_marker_array.markers.push_back(force_marker);
     }
   }
   if (detailed_publishing_) {
-    mppi_ros::Array cost_array_message_;
-    cost_array_message_.array.push_back(velocity_cost_);
-    cost_array_message_.array.push_back(power_cost_);
-    cost_array_message_.array.push_back(object_cost_);
-    cost_array_message_.array.push_back(torque_cost_);
-    cost_array_message_.array.push_back(handle_hook_cost_);
-    cost_array_message_.array.push_back(optimal_rollout_states_[0](15));
-    cost_array_message_.array.push_back(optimal_rollout_states_[0](16));
-    cost_array_message_.array.push_back(optimal_rollout_states_[0](17));
-    cost_array_message_.array.push_back(
+    mppi_ros::Array cost_array_message;
+    cost_array_message.array.push_back(velocity_cost);
+    cost_array_message.array.push_back(power_cost);
+    cost_array_message.array.push_back(object_cost);
+    cost_array_message.array.push_back(torque_cost);
+    cost_array_message.array.push_back(handle_hook_cost);
+    cost_array_message.array.push_back(optimal_rollout_states_[0](15));
+    cost_array_message.array.push_back(optimal_rollout_states_[0](16));
+    cost_array_message.array.push_back(optimal_rollout_states_[0](17));
+    cost_array_message.array.push_back(
         optimal_rollout_states_[0].segment<3>(15).norm());
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
-    cost_array_message_.array.push_back(
+    cost_array_message.array.push_back(
         acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
             com_hook_.normalized())) *
         180.0 / M_PI);
-    cost_array_message_.array.push_back(pose_cost_);
-    cost_array_message_.array.push_back(overall_cost_);
-    cost_publisher_.publish(cost_array_message_);
+    cost_array_message.array.push_back(pose_cost);
+    cost_array_message.array.push_back(overall_cost);
+    cost_publisher_.publish(cost_array_message);
     normalized_force_publisher_.publish(force_marker_array);
   }
   mppi_reference.position.x = ref_.rr[0](0);
@@ -358,10 +377,17 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_linear_input_publisher_.publish(optimal_inputs_lin_array);
   optimal_angular_input_publisher_.publish(optimal_inputs_ang_array);
   mppi_reference_publisher_.publish(mppi_reference);
+  optimal_rollout_lin_vel_.publish(optimal_rollout_lin_vel);
+  optimal_rollout_ang_vel_.publish(optimal_rollout_ang_vel);
 }
 
-void OMAVControllerInterface::manually_shift_input() {
-  get_controller()->shift_inputs_ = true;
+void OMAVControllerInterface::manually_shift_input(const int i) {
+  if (i != 0) {
+    get_controller()->shift_input_ = true;
+  }
+  // Set the shift variable of the MPPI
+  get_controller()->shift_int_ = i;
+  get_controller()->first_mppi_iteration_ = false;
 }
 
 // namespace omav_interaction

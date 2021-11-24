@@ -105,6 +105,10 @@ private:
   raisim::World sim_;
 
   Eigen::VectorXd cmd_, cmdv_;
+  Eigen::Matrix<double, 6, 1> feedforward_force_;
+  Eigen::Matrix<double, 6, 1> feedforward_acceleration_;
+  Eigen::Matrix<double, 6, 1> feedforward_gravity_;
+  Eigen::Matrix<double, 6, 1> nonLinearities_;
   Eigen::VectorXd omav_pose_, omav_velocity_;
   Eigen::VectorXd object_pose_, object_velocity_;
   force_t contact_force_;

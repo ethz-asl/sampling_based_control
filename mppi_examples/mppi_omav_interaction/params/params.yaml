@@ -11,7 +11,7 @@ solver:
   cost_ratio: 0.2
   caching_factor: 0.3
   filtering: true
-  substeps: 1
+  substeps: 10
 
   filter_type: 1
   filter_order: 1
@@ -22,11 +22,11 @@ solver:
   filters_window: [ 10, 10, 10, 10, 10, 10 ]
 
   bound_input: true
-  u_min: [ -1.0, -1.0, -1.0, -3.0, -3.0, -3.0 ]
-  u_max: [ 1.0, 1.0, 1.0, 3.0, 3.0, 3.0 ]
+  u_min: [ -2.0, -2.0, -2.0, -3.0, -3.0, -3.0 ]
+  u_max: [ 2.0, 2.0, 2.0, 3.0, 3.0, 3.0 ]
 
   adaptive_sampling: false
-  input_variance: [0.25, 0.25, 0.25, 0.5, 0.5, 0.5]
+  input_variance: [0.25, 0.25, 0.25, 0.75, 0.75, 0.75]
 
   use_tree_search: false         # if true tree structure is used
   pruning_threshold: 0.01       # controls the structure of the tree
@@ -59,7 +59,7 @@ initial_configuration: [ 0.0, 0.0, 1.0,     # Position OMAV
                          0.0, 0.0, # Position & Velocity Object
                          0.0, 0.0, 0.0, # Force
                          0.0, # Contatc State
-                         0.0, 0.0, 0.0, # Position OMAV_des
+                         0.0, 0.0, 0.3, # Position OMAV_des
                          1.0, 0.0, 0.0, 0.0, # Orientation OMAV_des
                          0.0, 0.0, 0.0, # Linear Velocity OMAV_des
                          0.0, 0.0, 0.0] # Angular Velocity OMAV_des
