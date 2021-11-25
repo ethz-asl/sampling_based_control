@@ -13,11 +13,11 @@ template <class T>
 void getParam(const ros::NodeHandle &nh, const std::string &id, T &var,
               const T &val_def) {
   if (!nh.param<T>(id, var, val_def)) {
-    ROS_FATAL_STREAM("Could not find parameter " << id);
+    ROS_FATAL_STREAM("[mppi_omav_interaction] Could not find parameter " << id);
     ros::shutdown();
     exit(1);
   } else {
-    ROS_INFO_STREAM("Successfully read " << id);
+    ROS_INFO_STREAM("[mppi_omav_interaction] Successfully read " << id);
   }
 }
 
@@ -33,38 +33,41 @@ int main(int argc, char **argv) {
   // Check if running with omav interface
   bool running_rotors;
   std::string robot_description_raisim;
-  std::string robot_description_pinocchio;
   std::string object_description;
   std::vector<double> x0;
   bool sequential;
-
+  std::string object_name;
   getParam<bool>(nh, "running_rotors", running_rotors, false);
+  getParam<std::string>(nh, "object_name", object_name, "shelf");
+  
   getParam<std::string>(nh, "/robot_description_raisim",
                         robot_description_raisim, "");
-  getParam<std::string>(nh, "/robot_description_pinocchio",
-                        robot_description_pinocchio, "");
   getParam<std::string>(nh, "/object_description", object_description, "");
   getParam<std::vector<double>>(nh, "initial_configuration", x0, {});
   getParam<bool>(nh, "sequential", sequential, false);
 
-  ROS_INFO_STREAM("Robot & Object Description Raisim Loaded");
+  ROS_INFO_STREAM(
+      "[mppi_omav_interaction] Robot & Object Description Raisim Loaded");
 
   // ros interface
   std::shared_ptr<omav_interaction::OmavTrajectoryGenerator>
       omav_trajectory_node(
           new omav_interaction::OmavTrajectoryGenerator(nh_public, nh));
   auto controller = OMAVControllerInterface(nh, nh_public);
-  ROS_INFO_STREAM("Controller Created");
+  controller.setTask(object_name);
+
+  // ROS_INFO_STREAM("Controller Created");
   auto simulation = std::make_shared<OMAVVelocityDynamicsRos>(
       nh, robot_description_raisim, object_description, sim_dt);
-  ROS_INFO_STREAM("Simulation Created");
+  // ROS_INFO_STREAM("Simulation Created");
 
   // Set nominal state
-  observation_t state_nom = observation_t::Zero(simulation->get_state_dimension());
+  observation_t state_nom =
+      observation_t::Zero(simulation->get_state_dimension());
   // set initial state
   observation_t state = observation_t::Zero(simulation->get_state_dimension());
   for (size_t i = 0; i < x0.size(); i++) state(i) = x0[i];
-  ROS_INFO_STREAM("Resetting initial state to " << state.transpose());
+  // ROS_INFO_STREAM("Resetting initial state to " << state.transpose());
   simulation->reset(state);
 
   // init control input
@@ -76,11 +79,11 @@ int main(int argc, char **argv) {
   controller.set_observation(state, 0.0);
   if (running_rotors) {
     while (omav_trajectory_node->odometry_bool_) {
-      ROS_INFO_STREAM_ONCE("No Odometry received yet");
+      ROS_INFO_STREAM_ONCE("[mppi_omav_interaction] No Odometry received yet");
       ros::spinOnce();
     }
   }
-  ROS_INFO_STREAM("First Odometry received");
+  ROS_INFO_STREAM("[mppi_omav_interaction] First Odometry received");
 
   // Set first odometry value as reference
   if (running_rotors) {
@@ -100,19 +103,36 @@ int main(int argc, char **argv) {
   double elapsed;
   std::chrono::time_point<std::chrono::steady_clock> t_start, t_end;
   ros::Rate r_control(control_rate);
+
   while (ros::ok()) {
     t_start = std::chrono::steady_clock::now();
-    if (omav_trajectory_node->rqt_cost_bool_) {
-      omav_trajectory_node->rqt_cost_bool_ =
-          controller.update_cost_param(omav_trajectory_node->rqt_cost_);
-      ROS_INFO_STREAM("New Cost Param Set");
+
+    // Check if there are any parameter updates (from rqt)
+    if (controller.getTask() == InteractionTask::Shelf) {
+      if (omav_trajectory_node->rqt_cost_shelf_bool_) {
+        ROS_INFO("[mppi_omav_interaction] Setting new Cost Param");
+        omav_trajectory_node->rqt_cost_shelf_bool_ =
+            controller.update_cost_param_shelf(
+                omav_trajectory_node->rqt_cost_shelf_);
+        ROS_INFO("[mppi_omav_interaction] New Cost Param Set");
+      }
+    } else if (controller.getTask() == InteractionTask::Valve) {
+      if (omav_trajectory_node->rqt_cost_valve_bool_) {
+        omav_trajectory_node->rqt_cost_valve_bool_ =
+            controller.update_cost_param_valve(
+                omav_trajectory_node->rqt_cost_valve_);
+        ROS_INFO("[mppi_omav_interaction] New Cost Param Set");
+      }
     }
+
+    // Check if the object should be reset
     if (omav_trajectory_node->reset_object_) {
       state(13) = 0;
       simulation->reset(state);
       omav_trajectory_node->reset_object_ = false;
-      ROS_INFO_STREAM("Reset Object");
+      ROS_INFO("[mppi_omav_interaction] Reset Object");
     }
+
     if (sequential) {
       controller.update_reference();
       // controller.set_observation(state, sim_time);
@@ -143,6 +163,7 @@ int main(int argc, char **argv) {
               .count() /
           1000.0;
     }
+
     // After the first trajectory is sent input timing is started
     if (omav_trajectory_node->first_trajectory_sent_) {
       // Calculation of the index where we are in the last sent trajectory based
@@ -187,8 +208,9 @@ int main(int argc, char **argv) {
     } else if (sim_dt - elapsed > 0) {
       ros::Duration(sim_dt - elapsed).sleep();
     } else {
-      ROS_INFO_STREAM_THROTTLE(
-          3.0, "Slower than real-time: " << elapsed / sim_dt << "x slower.");
+      ROS_INFO_STREAM_THROTTLE(3.0,
+                               "[mppi_omav_interaction] Slower than real-time: "
+                                   << elapsed / sim_dt << "x slower.");
     }
     ros::spinOnce();
   }

@@ -1,7 +1,7 @@
 /*!
  * @file     cost.h
- * @author   Matthias Studiger
- * @date     10.04.2021
+ * @author   Maximilian Brunner
+ * @date     25.11.2021
  * @version  1.0
  * @brief    description
  */
@@ -19,7 +19,7 @@
 
 namespace omav_interaction {
 
-struct OMAVInteractionCostParam {
+struct OMAVInteractionCostValveParam {
   double Q_distance_x;  // Distance to reference Cost
   double Q_distance_y;
   double Q_distance_z;
@@ -66,19 +66,20 @@ struct OMAVInteractionCostParam {
   bool parse_from_ros(const ros::NodeHandle &nh);
 };
 
-class OMAVInteractionCost : public mppi::CostBase {
+class OMAVInteractionCostValve : public mppi::CostBase {
  public:
-  OMAVInteractionCost(const std::string &robot_description_pinocchio,
-                      const std::string &object_description,
-                      OMAVInteractionCostParam *param);
+  OMAVInteractionCostValve(const std::string &robot_description_pinocchio,
+                           const std::string &object_description,
+                           OMAVInteractionCostValveParam *param);
 
-  ~OMAVInteractionCost() = default;
+  ~OMAVInteractionCostValve() = default;
 
  private:
+  std::string robot_description_;
   std::string robot_description_pinocchio_;
   std::string object_description_;
-  OMAVInteractionCostParam *param_ptr_;
-  OMAVInteractionCostParam param_;
+  OMAVInteractionCostValveParam *param_ptr_;
+  OMAVInteractionCostValveParam param_;
 
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
@@ -118,12 +119,12 @@ class OMAVInteractionCost : public mppi::CostBase {
 
  private:
   cost_ptr create() override {
-    return std::make_shared<OMAVInteractionCost>(
+    return std::make_shared<OMAVInteractionCostValve>(
         robot_description_pinocchio_, object_description_, param_ptr_);
   }
 
   cost_ptr clone() const override {
-    return std::make_shared<OMAVInteractionCost>(*this);
+    return std::make_shared<OMAVInteractionCostValve>(*this);
   }
 
   double distance_from_obstacle_cost(const mppi::observation_t &x);
@@ -153,4 +154,5 @@ class OMAVInteractionCost : public mppi::CostBase {
 }  // namespace omav_interaction
 
 std::ostream &operator<<(
-    std::ostream &os, const omav_interaction::OMAVInteractionCostParam &param);
+    std::ostream &os,
+    const omav_interaction::OMAVInteractionCostValveParam &param);

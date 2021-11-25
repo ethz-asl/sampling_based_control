@@ -1,21 +1,20 @@
 /*!
  * @file     cost.cpp
- * @author   Matthias Studiger
- * @date     10.04.2020
+ * @author   Maximilian Brunner
+ * @date     25.11.2021
  * @version  1.0
  * @brief    description
  */
 
-#include "mppi_omav_interaction/cost.h"
+#include "mppi_omav_interaction/cost_valve.h"
 
 using namespace omav_interaction;
 
-OMAVInteractionCost::OMAVInteractionCost(
+OMAVInteractionCostValve::OMAVInteractionCostValve(
     const std::string &robot_description_pinocchio,
-    const std::string &object_description, OMAVInteractionCostParam *param)
+    const std::string &object_description, OMAVInteractionCostValveParam *param)
     : robot_description_pinocchio_(robot_description_pinocchio),
       object_description_(object_description) {
-
   param_ptr_ = param;
 
   // robot model
@@ -23,8 +22,8 @@ OMAVInteractionCost::OMAVInteractionCost(
   object_model_.init_from_xml(object_description_);
 }
 
-double
-OMAVInteractionCost::distance_from_obstacle_cost(const mppi::observation_t &x) {
+double OMAVInteractionCostValve::distance_from_obstacle_cost(
+    const mppi::observation_t &x) {
   distance = std::sqrt(std::pow(x(0) - param_ptr_->x_obstacle, 2) +
                        std::pow(x(1) - param_ptr_->y_obstacle, 2));
   distance_from_savezone = (distance - (2 + 1));
@@ -33,10 +32,9 @@ OMAVInteractionCost::distance_from_obstacle_cost(const mppi::observation_t &x) {
   return obstacle_cost;
 }
 
-mppi::CostBase::cost_t
-OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
-                                  const mppi::reference_t &ref,
-                                  const double t) {
+mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
+    const mppi::observation_t &x, const mppi::reference_t &ref,
+    const double t) {
   // Initialize Cost
   double cost = 0.0;
   floor_cost_ = 0.0;
@@ -106,14 +104,14 @@ OMAVInteractionCost::compute_cost(const mppi::observation_t &x,
   return cost;
 }
 
-void OMAVInteractionCost::compute_floor_cost(const double &omav_z) {
+void OMAVInteractionCostValve::compute_floor_cost(const double &omav_z) {
   if ((omav_z - param_ptr_->floor_thresh) < 0) {
     floor_cost_ = -param_ptr_->Q_floor / param_ptr_->floor_thresh * omav_z +
                   param_ptr_->Q_floor;
   }
 }
 
-void OMAVInteractionCost::compute_pose_cost(
+void OMAVInteractionCostValve::compute_pose_cost(
     const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
   mppi_pinocchio::Pose current_pose, reference_pose;
   current_pose.translation = omav_state.head<3>();
@@ -126,7 +124,7 @@ void OMAVInteractionCost::compute_pose_cost(
   pose_cost_ = delta_pose_.transpose() * param_ptr_->Q_pose * delta_pose_;
 }
 
-void OMAVInteractionCost::compute_handle_hook_cost() {
+void OMAVInteractionCostValve::compute_handle_hook_cost() {
   // Calculate distance between hook and handle
   distance_hook_handle_ =
       sqrt(hook_handle_vector_.transpose() * hook_handle_vector_);
@@ -136,13 +134,13 @@ void OMAVInteractionCost::compute_handle_hook_cost() {
                (distance_hook_handle_ - param_ptr_->handle_hook_thresh));
 }
 
-void OMAVInteractionCost::compute_object_cost(
+void OMAVInteractionCostValve::compute_object_cost(
     const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
   object_cost_ = param_ptr_->Q_object * (omav_state(13) - omav_reference(7)) *
                  (omav_state(13) - omav_reference(7));
 }
 
-void OMAVInteractionCost::compute_vectors() {
+void OMAVInteractionCostValve::compute_vectors() {
   // Vector from hook to handle
   hook_handle_vector_ = robot_model_.get_pose(hook_frame_).translation -
                         object_model_.get_pose(handle_frame_).translation;
@@ -157,7 +155,7 @@ void OMAVInteractionCost::compute_vectors() {
   hook_pos_ = robot_model_.get_pose(hook_frame_).translation;
 }
 
-void OMAVInteractionCost::compute_tip_velocity_cost(
+void OMAVInteractionCostValve::compute_tip_velocity_cost(
     const Eigen::VectorXd &omav_state) {
   // Tip velocity cost
   tip_lin_velocity_ = omav_state.segment<3>(7) +
@@ -168,7 +166,7 @@ void OMAVInteractionCost::compute_tip_velocity_cost(
       tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_;
 }
 
-void OMAVInteractionCost::compute_torque_cost(
+void OMAVInteractionCostValve::compute_torque_cost(
     const Eigen::VectorXd &omav_state) {
   torque_angle_ =
       handle_orthogonal_vector_.normalized().dot(com_hook_vector_.normalized());
@@ -177,7 +175,7 @@ void OMAVInteractionCost::compute_torque_cost(
                           param_ptr_->Q_torque * (1 - torque_angle_));
 }
 
-void OMAVInteractionCost::compute_efficiency_cost(
+void OMAVInteractionCostValve::compute_efficiency_cost(
     const Eigen::VectorXd &omav_state) {
   double power_normed = handle_orthogonal_vector_.normalized().dot(
       tip_lin_velocity_.normalized());
@@ -185,7 +183,7 @@ void OMAVInteractionCost::compute_efficiency_cost(
       std::min(param_ptr_->Q_power, param_ptr_->Q_power * (1 - power_normed));
 }
 
-void OMAVInteractionCost::compute_velocity_cost(
+void OMAVInteractionCostValve::compute_velocity_cost(
     const Eigen::Vector3d &linear_velocity,
     const Eigen::Vector3d &angular_velocity) {
   Eigen::Matrix<double, 6, 1> velocity_vector;
@@ -194,7 +192,7 @@ void OMAVInteractionCost::compute_velocity_cost(
       velocity_vector.transpose() * param_ptr_->Q_vel * velocity_vector;
 }
 
-bool OMAVInteractionCostParam::parse_from_ros(const ros::NodeHandle &nh) {
+bool OMAVInteractionCostValveParam::parse_from_ros(const ros::NodeHandle &nh) {
   if (!nh.getParam("x_distance_weight", Q_distance_x) || Q_distance_x < 0) {
     ROS_ERROR("Failed to parse x_distance_cost or invalid!");
     return false;
@@ -296,9 +294,9 @@ bool OMAVInteractionCostParam::parse_from_ros(const ros::NodeHandle &nh) {
   return true;
 }
 
-std::ostream &
-operator<<(std::ostream &os,
-           const omav_interaction::OMAVInteractionCostParam &param) {
+std::ostream &operator<<(
+    std::ostream &os,
+    const omav_interaction::OMAVInteractionCostValveParam &param) {
   // clang-format off
     os << "========================================" << std::endl;
     os << "         OMAV Cost Parameters           " << std::endl;

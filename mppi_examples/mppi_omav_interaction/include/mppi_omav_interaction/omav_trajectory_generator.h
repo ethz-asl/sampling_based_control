@@ -23,6 +23,7 @@
 
 #include <dynamic_reconfigure/server.h>
 #include <mppi_omav_interaction/MPPIOmavCostConfig.h>
+#include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>
 #include <mppi_omav_interaction/MPPIOmavReferenceConfig.h>
 
 namespace omav_interaction {
@@ -41,14 +42,16 @@ class OmavTrajectoryGenerator {
   void initialize_integrators(observation_t &x);
 
   bool odometry_bool_;
-  bool rqt_cost_bool_ = false;
+  bool rqt_cost_shelf_bool_ = false;
+  bool rqt_cost_valve_bool_ = false;
   bool reset_object_ = false;
   bool first_trajectory_sent_ = false;
   bool shift_lock_ = false;
   double target_state_time_ = 0.0;
   int shift_index_ = 0;
 
-  OMAVInteractionCostParam rqt_cost_;
+  OMAVInteractionCostParam rqt_cost_shelf_;
+  OMAVInteractionCostValveParam rqt_cost_valve_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_;
 
@@ -66,6 +69,8 @@ class OmavTrajectoryGenerator {
       mppi_omav_interaction::MPPIOmavReferenceConfig &config, uint32_t level);
   void CostParamCallback(mppi_omav_interaction::MPPIOmavCostConfig &config,
                          uint32_t level);
+  void CostValveParamCallback(
+      mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level);
 
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
@@ -89,6 +94,8 @@ class OmavTrajectoryGenerator {
       reference_param_server_;
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostConfig>
       cost_param_server_;
+  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostValveConfig>
+      cost_valve_param_server_;
 
   observation_t rqt_odometry;
 };

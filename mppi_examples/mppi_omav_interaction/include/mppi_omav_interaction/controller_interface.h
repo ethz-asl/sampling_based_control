@@ -9,6 +9,7 @@
 #pragma once
 
 #include <mppi_omav_interaction/cost.h>
+#include <mppi_omav_interaction/cost_valve.h>
 #include <mppi_omav_interaction/dynamics.h>
 #include <mppi_omav_interaction/ros_conversions.h>
 #include <mppi_ros/controller_interface.h>
@@ -27,13 +28,18 @@
 
 namespace omav_interaction {
 
+enum class InteractionTask { None, Shelf, Valve };
+
 class OMAVControllerInterface : public mppi_ros::ControllerRos {
  public:
   explicit OMAVControllerInterface(ros::NodeHandle &nh,
                                    ros::NodeHandle &nh_public)
-      : ControllerRos(nh, nh_public) {}
+      : ControllerRos(nh, nh_public), task_(InteractionTask::None) {}
 
   ~OMAVControllerInterface() = default;
+
+  void setTask(const std::string &str);
+  InteractionTask getTask() const { return task_; }
 
   bool init_ros() override;
 
@@ -45,7 +51,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   bool update_reference() override;
 
-  bool update_cost_param(const OMAVInteractionCostParam &cost_param);
+  bool update_cost_param_shelf(const OMAVInteractionCostParam &cost_param);
+  bool update_cost_param_valve(const OMAVInteractionCostValveParam &cost_param);
 
   bool set_initial_reference(const observation_t &x);
 
@@ -66,15 +73,19 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
  public:
   mppi::SolverConfig config_;
-  std::shared_ptr<OMAVInteractionCost> cost_;
+  std::shared_ptr<OMAVInteractionCost> cost_shelf_;
+  std::shared_ptr<OMAVInteractionCostValve> cost_valve_;
 
  private:
+  InteractionTask task_;
+
   bool reference_set_ = false;
   bool detailed_publishing_;
 
   // observation_t x_0_temp;
 
-  OMAVInteractionCostParam cost_param_;
+  OMAVInteractionCostParam cost_param_shelf_;
+  OMAVInteractionCostValveParam cost_param_valve_;
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
   ros::Publisher optimal_rollout_des_publisher_;

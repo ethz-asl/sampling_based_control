@@ -57,6 +57,21 @@ bool OMAVControllerInterface::init_ros() {
   return true;
 }
 
+void OMAVControllerInterface::setTask(const std::string &str) {
+  if (str.compare("shelf") == 0) {
+    ROS_INFO("[mppi_omav_interaction] Setting shelf as task.");
+    task_ = InteractionTask::Shelf;
+  } else if (str.compare("valve") == 0) {
+    ROS_INFO("[mppi_omav_interaction] Setting valve as task.");
+    task_ = InteractionTask::Valve;
+  } else {
+    ROS_ERROR(
+        "[mppi_omav_interaction] Could not identify interaction task. Shutting "
+        "down.");
+    ros::shutdown();
+  }
+}
+
 bool OMAVControllerInterface::set_controller(
     std::shared_ptr<mppi::PathIntegral> &controller) {
   // -------------------------------
@@ -68,14 +83,11 @@ bool OMAVControllerInterface::set_controller(
         "Could not parse config_file. Is the parameter set?");
   }
   if (!config_.init_from_file(config_file)) {
-    ROS_ERROR_STREAM("Failed to init solver options from " << config_file);
+    ROS_ERROR_STREAM(
+        "[mppi_omav_interaction] Failed to init solver options from "
+        << config_file);
     return false;
   }
-  // -------------------------------
-  // dynamics
-  // -------------------------------
-  mppi::DynamicsBase::dynamics_ptr dynamics;
-
   if (!nh_.param<std::string>("/robot_description_raisim",
                               robot_description_raisim_, "")) {
     throw std::runtime_error(
@@ -90,28 +102,43 @@ bool OMAVControllerInterface::set_controller(
     throw std::runtime_error(
         "Could not parse robot_description_pinocchio. Is the parameter set?");
   }
+
+  // -------------------------------
+  // dynamics
+  // -------------------------------
+  mppi::DynamicsBase::dynamics_ptr dynamics;
   dynamics = std::make_shared<OMAVVelocityDynamics>(
       robot_description_raisim_, object_description_, config_.step_size);
-
-  ROS_INFO_STREAM("Done.");
 
   // -------------------------------
   // cost
   // -------------------------------
-
-  if (!cost_param_.parse_from_ros(nh_)) {
-    ROS_ERROR("Failed to parse cost parameters.");
-    return false;
+  if (task_ == InteractionTask::Shelf) {
+    ROS_INFO("[mppi_omav_interaction] Using shelf as task.");
+    if (!cost_param_shelf_.parse_from_ros(nh_)) {
+      ROS_ERROR("[mppi_omav_interaction] Failed to parse cost parameters.");
+      return false;
+    }
+    ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_shelf_);
+    cost_shelf_ = std::make_shared<OMAVInteractionCost>(robot_description_pinocchio_,
+        object_description_, &cost_param_shelf_);
+    controller =
+        std::make_shared<mppi::PathIntegral>(dynamics, cost_shelf_, config_);
+  } else if (task_ == InteractionTask::Valve) {
+    ROS_INFO("[mppi_omav_interaction] Using valve as task.");
+    if (!cost_param_valve_.parse_from_ros(nh_)) {
+      ROS_ERROR("[mppi_omav_interaction] Failed to parse cost parameters.");
+      return false;
+    }
+    ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_valve_);
+    cost_valve_ = std::make_shared<OMAVInteractionCostValve>(robot_description_pinocchio_,
+        object_description_, &cost_param_valve_);
+    controller =
+        std::make_shared<mppi::PathIntegral>(dynamics, cost_valve_, config_);
+  } else {
+    ROS_ERROR("[mppi_omav_interaction] No task selected. Shutting down.");
+    ros::shutdown();
   }
-  ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_);
-  cost_ = std::make_shared<OMAVInteractionCost>(
-      robot_description_raisim_, robot_description_pinocchio_,
-      object_description_, &cost_param_);
-
-  // -------------------------------
-  // controller
-  // -------------------------------
-  controller = std::make_shared<mppi::PathIntegral>(dynamics, cost_, config_);
 
   // -------------------------------
   // initialize reference
@@ -178,9 +205,15 @@ bool OMAVControllerInterface::update_reference() {
   return true;
 }
 
-bool OMAVControllerInterface::update_cost_param(
+bool OMAVControllerInterface::update_cost_param_shelf(
     const OMAVInteractionCostParam &cost_param) {
-  cost_param_ = cost_param;
+  cost_param_shelf_ = cost_param;
+  return false;
+}
+
+bool OMAVControllerInterface::update_cost_param_valve(
+    const OMAVInteractionCostValveParam &cost_param) {
+  cost_param_valve_ = cost_param;
   return false;
 }
 
@@ -286,7 +319,7 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
   optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
 
-  for (int i = 0; i < optimal_rollout_states_.size(); i++) {
+  for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
     omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
                                                      current_pose);
     omav_interaction::conversions::PoseMsgFromVector(
@@ -306,33 +339,37 @@ void OMAVControllerInterface::publish_optimal_rollout() {
     optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
     optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
     if (detailed_publishing_) {
-      // Cost publishing
-      cost_->compute_cost(optimal_rollout_states_[i], ref_.rr[0], i * 0.015);
-      // Velocity Cost
-      velocity_cost += cost_->velocity_cost_;
-      // Efficiency Cost
-      power_cost += cost_->efficiency_cost_;
-      // Object Cost
-      object_cost += cost_->object_cost_;
-      // Torque Cost
-      torque_cost += cost_->torque_cost_;
-      // Handle Hook Cost
-      handle_hook_cost += cost_->handle_hook_cost_;
-      // Pose Cost
-      pose_cost += cost_->pose_cost_;
-      overall_cost += cost_->cost_;
+      if (task_ == InteractionTask::Shelf) {
+        // Cost publishing
+        cost_shelf_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
+                                  i * 0.015);
+        // Velocity Cost
+        velocity_cost += cost_shelf_->velocity_cost_;
+        // Efficiency Cost
+        power_cost += cost_shelf_->efficiency_cost_;
+        // Object Cost
+        object_cost += cost_shelf_->object_cost_;
+        // Torque Cost
+        torque_cost += cost_shelf_->torque_cost_;
+        // Handle Hook Cost
+        handle_hook_cost += cost_shelf_->handle_hook_cost_;
+        // Pose Cost
+        pose_cost += cost_shelf_->pose_cost_;
+        overall_cost += cost_shelf_->cost_;
 
-      Eigen::Vector3d force_normed = optimal_rollout_states_[i].segment<3>(15).normalized();
+        Eigen::Vector3d force_normed =
+            optimal_rollout_states_[i].segment<3>(15).normalized();
 
-      force_marker.points[0].x = cost_->hook_pos_(0);
-      force_marker.points[0].y = cost_->hook_pos_(1);
-      force_marker.points[0].z = cost_->hook_pos_(2);
-      force_marker.points[1].x = cost_->hook_pos_(0) + force_normed(0);
-      force_marker.points[1].y = cost_->hook_pos_(1) + force_normed(1);
-      force_marker.points[1].z = cost_->hook_pos_(2) + force_normed(2);
-      force_marker.id = i;
+        force_marker.points[0].x = cost_shelf_->hook_pos_(0);
+        force_marker.points[0].y = cost_shelf_->hook_pos_(1);
+        force_marker.points[0].z = cost_shelf_->hook_pos_(2);
+        force_marker.points[1].x = cost_shelf_->hook_pos_(0) + force_normed(0);
+        force_marker.points[1].y = cost_shelf_->hook_pos_(1) + force_normed(1);
+        force_marker.points[1].z = cost_shelf_->hook_pos_(2) + force_normed(2);
+        force_marker.id = i;
 
-      force_marker_array.markers.push_back(force_marker);
+        force_marker_array.markers.push_back(force_marker);
+      }
     }
   }
   if (detailed_publishing_) {

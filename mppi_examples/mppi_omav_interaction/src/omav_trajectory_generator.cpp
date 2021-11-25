@@ -8,7 +8,9 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
       private_nh_(private_nh),
       reference_param_server_(
           ros::NodeHandle(private_nh, "reference_parameters")),
-      cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")) {
+      cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")),
+      cost_valve_param_server_(
+          ros::NodeHandle(private_nh, "cost_valve_parameters")) {
   initializePublishers();
   initializeSubscribers();
   // Initialize data to prevent problems
@@ -19,11 +21,16 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
       mppi_omav_interaction::MPPIOmavReferenceConfig>::CallbackType f;
   dynamic_reconfigure::Server<
       mppi_omav_interaction::MPPIOmavCostConfig>::CallbackType g;
+  dynamic_reconfigure::Server<
+      mppi_omav_interaction::MPPIOmavCostValveConfig>::CallbackType h;
   f = boost::bind(&OmavTrajectoryGenerator::ReferenceParamCallback, this, _1,
                   _2);
   g = boost::bind(&OmavTrajectoryGenerator::CostParamCallback, this, _1, _2);
+  h = boost::bind(&OmavTrajectoryGenerator::CostValveParamCallback, this, _1,
+                  _2);
   reference_param_server_.setCallback(f);
   cost_param_server_.setCallback(g);
+  cost_valve_param_server_.setCallback(h);
 }
 
 OmavTrajectoryGenerator::~OmavTrajectoryGenerator() {}
@@ -35,7 +42,7 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
   position_target_sub_ = nh_.subscribe(
       "command/trajectory", 10, &OmavTrajectoryGenerator::TargetCallback, this,
       ros::TransportHints().tcpNoDelay());
-  object_state_sub_ = nh_.subscribe("/shelf/joint_states", 10,
+  object_state_sub_ = nh_.subscribe("object_joint_states", 10,
                                     &OmavTrajectoryGenerator::objectCallback,
                                     this, ros::TransportHints().tcpNoDelay());
   int i = 0;
@@ -128,31 +135,65 @@ void OmavTrajectoryGenerator::ReferenceParamCallback(
 void OmavTrajectoryGenerator::CostParamCallback(
     mppi_omav_interaction::MPPIOmavCostConfig &config, uint32_t level) {
   // Update OMAV pose cost
-  rqt_cost_.Q_distance_x = config.Q_x_omav;
-  rqt_cost_.Q_distance_y = config.Q_y_omav;
-  rqt_cost_.Q_distance_z = config.Q_z_omav;
-  rqt_cost_.Q_orientation = config.Q_orientation_omav;
-  rqt_cost_.pose_costs << rqt_cost_.Q_distance_x, rqt_cost_.Q_distance_y,
-      rqt_cost_.Q_distance_z, rqt_cost_.Q_orientation, rqt_cost_.Q_orientation,
-      rqt_cost_.Q_orientation;
-  rqt_cost_.Q_pose = rqt_cost_.pose_costs.asDiagonal();
+  rqt_cost_shelf_.Q_distance_x = config.Q_x_omav;
+  rqt_cost_shelf_.Q_distance_y = config.Q_y_omav;
+  rqt_cost_shelf_.Q_distance_z = config.Q_z_omav;
+  rqt_cost_shelf_.Q_orientation = config.Q_orientation_omav;
+  rqt_cost_shelf_.pose_costs << rqt_cost_shelf_.Q_distance_x,
+      rqt_cost_shelf_.Q_distance_y, rqt_cost_shelf_.Q_distance_z,
+      rqt_cost_shelf_.Q_orientation, rqt_cost_shelf_.Q_orientation,
+      rqt_cost_shelf_.Q_orientation;
+  rqt_cost_shelf_.Q_pose = rqt_cost_shelf_.pose_costs.asDiagonal();
   // Update Object cost
-  rqt_cost_.Q_object = config.Q_object;
+  rqt_cost_shelf_.Q_object = config.Q_object;
   // Update velocity cost
-  rqt_cost_.Q_lin_vel = config.Q_linear_velocity;
-  rqt_cost_.vel_costs << rqt_cost_.Q_lin_vel, rqt_cost_.Q_lin_vel,
-      rqt_cost_.Q_lin_vel, config.Q_roll, config.Q_pitch, config.Q_yaw;
-  rqt_cost_.Q_vel = rqt_cost_.vel_costs.asDiagonal();
+  rqt_cost_shelf_.Q_lin_vel = config.Q_linear_velocity;
+  rqt_cost_shelf_.vel_costs << rqt_cost_shelf_.Q_lin_vel,
+      rqt_cost_shelf_.Q_lin_vel, rqt_cost_shelf_.Q_lin_vel, config.Q_roll,
+      config.Q_pitch, config.Q_yaw;
+  rqt_cost_shelf_.Q_vel = rqt_cost_shelf_.vel_costs.asDiagonal();
   // Update Handle Hook cost components
-  rqt_cost_.handle_hook_thresh = config.Handle_Hook_Threshold;
-  rqt_cost_.Q_handle_hook = config.Handle_Hook_Cost;
+  rqt_cost_shelf_.handle_hook_thresh = config.Handle_Hook_Threshold;
+  rqt_cost_shelf_.Q_handle_hook = config.Handle_Hook_Cost;
   // Update floor cost components
-  rqt_cost_.floor_thresh = config.Floor_Threshold;
-  rqt_cost_.Q_floor = config.floor_cost;
-  rqt_cost_.Q_power = config.power_cost;
-  rqt_cost_.Q_torque = config.torque_cost;
-  rqt_cost_.contact_bool = config.contact_prohibitor;
-  rqt_cost_bool_ = true;
+  rqt_cost_shelf_.floor_thresh = config.Floor_Threshold;
+  rqt_cost_shelf_.Q_floor = config.floor_cost;
+  rqt_cost_shelf_.Q_power = config.power_cost;
+  rqt_cost_shelf_.Q_torque = config.torque_cost;
+  rqt_cost_shelf_.contact_bool = config.contact_prohibitor;
+  rqt_cost_shelf_bool_ = true;
+}
+
+void OmavTrajectoryGenerator::CostValveParamCallback(
+    mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level) {
+  // Update OMAV pose cost
+  rqt_cost_valve_.Q_distance_x = config.Q_x_omav;
+  rqt_cost_valve_.Q_distance_y = config.Q_y_omav;
+  rqt_cost_valve_.Q_distance_z = config.Q_z_omav;
+  rqt_cost_valve_.Q_orientation = config.Q_orientation_omav;
+  rqt_cost_valve_.pose_costs << rqt_cost_valve_.Q_distance_x,
+      rqt_cost_valve_.Q_distance_y, rqt_cost_valve_.Q_distance_z,
+      rqt_cost_valve_.Q_orientation, rqt_cost_valve_.Q_orientation,
+      rqt_cost_valve_.Q_orientation;
+  rqt_cost_valve_.Q_pose = rqt_cost_valve_.pose_costs.asDiagonal();
+  // Update Object cost
+  rqt_cost_valve_.Q_object = config.Q_object;
+  // Update velocity cost
+  rqt_cost_valve_.Q_lin_vel = config.Q_linear_velocity;
+  rqt_cost_valve_.vel_costs << rqt_cost_valve_.Q_lin_vel,
+      rqt_cost_valve_.Q_lin_vel, rqt_cost_valve_.Q_lin_vel, config.Q_roll,
+      config.Q_pitch, config.Q_yaw;
+  rqt_cost_valve_.Q_vel = rqt_cost_valve_.vel_costs.asDiagonal();
+  // Update Handle Hook cost components
+  rqt_cost_valve_.handle_hook_thresh = config.Handle_Hook_Threshold;
+  rqt_cost_valve_.Q_handle_hook = config.Handle_Hook_Cost;
+  // Update floor cost components
+  rqt_cost_valve_.floor_thresh = config.Floor_Threshold;
+  rqt_cost_valve_.Q_floor = config.floor_cost;
+  rqt_cost_valve_.Q_power = config.power_cost;
+  rqt_cost_valve_.Q_torque = config.torque_cost;
+  rqt_cost_valve_.contact_bool = config.contact_prohibitor;
+  rqt_cost_valve_bool_ = true;
 }
 
 void OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
