@@ -24,13 +24,15 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/>
+                <!-- <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/> -->
+                <mesh filename="file://$(arg resource_directory)/valve_visual.obj"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	    <geometry>
-                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/>
+                <!-- <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/> -->
+                <mesh  filename="file://$(arg resource_directory)/valve_collision.obj"/>
             </geometry>
         </collision>
     </link>
