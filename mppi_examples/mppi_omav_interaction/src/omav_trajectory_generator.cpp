@@ -38,7 +38,17 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
   object_state_sub_ = nh_.subscribe("/shelf/joint_states", 10,
                                     &OmavTrajectoryGenerator::objectCallback,
                                     this, ros::TransportHints().tcpNoDelay());
-  ROS_INFO_STREAM("Subscribers initialized");
+  int i = 0;
+  while (object_state_sub_.getNumPublishers() <= 0 && i < 10) {
+    ros::Duration(1.0).sleep();
+    ROS_WARN("[mppi_omav_interaction] Waiting for publisher of shelf state.");
+    i++;
+  }
+  if (i == 10) {
+    ROS_ERROR("[mppi_omav_interaction] Did not get shelf state publisher.");
+    ros::shutdown();
+  }
+  ROS_INFO("[mppi_omav_interaction] Subscribers initialized");
   odometry_bool_ = true;
 }
 
@@ -50,7 +60,7 @@ void OmavTrajectoryGenerator::initializePublishers() {
 void OmavTrajectoryGenerator::odometryCallback(
     const nav_msgs::OdometryConstPtr &odometry_msg) {
   mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
-  ROS_INFO_ONCE("MPPI got odometry message");
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got odometry message");
   odometry_bool_ = false;
 }
 
@@ -58,7 +68,7 @@ void OmavTrajectoryGenerator::objectCallback(
     const sensor_msgs::JointState &object_msg) {
   object_state_(0) = object_msg.position[0];
   object_state_(1) = object_msg.velocity[0];
-  ROS_INFO_ONCE("MPPI got first object state message");
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object state message");
 }
 
 void OmavTrajectoryGenerator::TargetCallback(
@@ -70,7 +80,7 @@ void OmavTrajectoryGenerator::TargetCallback(
   shift_lock_ = false;
 }
 
-void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
+void OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
   x.head<3>() = current_odometry_.position_W;
   x(3) = current_odometry_.orientation_W_B.w();
   x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
@@ -82,7 +92,7 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) {
   x.segment<3>(23) = target_state_.orientation_W_B.vec();
   x.segment<3>(26) = target_state_.velocity_W;
   x.segment<3>(29) = target_state_.angular_velocity_W;
-  ROS_INFO_ONCE("MPPI got first state message");
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
 }
 
 void OmavTrajectoryGenerator::ReferenceParamCallback(

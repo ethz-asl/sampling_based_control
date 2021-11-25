@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="valve" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+    <xacro:arg name="resource_prefix" default=""/>
+    <xacro:arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
+
+    <xacro:arg name="height" default="0.0"/>
+    <xacro:property name="height" default="$(arg height)"/>
+    <xacro:property name="base_length" default="0.2"/>
+    <xacro:property name="base_height" default="0.5"/>
+    <xacro:property name="base_width" default="0.2"/>
+
+    <xacro:macro name="box_inertia" params="m x y z">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="${m}"/>
+            <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
+                     ixy="0"
+                     ixz="0"
+                     iyy="${0.0833 * m * (x**2 + z**2)}"
+                     iyz="0"
+                     izz="${0.0833 * m * (x**2 + y**2)}"/>
+        </inertial>
+    </xacro:macro>
+
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/valve</robotNamespace>
+            <robotParam>urdf_object </robotParam>
+        </plugin>
+    </gazebo>
+
+    <link name="world"/>
+
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="valve_base"/>
+        <origin xyz="1.0 0.0 ${base_height/2.0}" rpy="0.0 0 0"/>
+    </joint>
+
+    <link name="valve_base">
+        <xacro:box_inertia m="100" x="${base_width}" y="${base_length}" z="${base_height}"/>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${base_width} ${base_length} ${base_height}"/>
+            </geometry>
+            <material name="base_material">
+                <color rgba="1.0 1.0 1.0 1"/>
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${base_width} ${base_length} ${base_height}"/>
+            </geometry>
+            <material name="">
+                <contact name="rubber"/>
+            </material>
+        </collision> -->
+    </link>
+
+    <link name="handle_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+	    <geometry>
+                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="articulation_joint" type="revolute">
+        <parent link="valve_base"/>
+        <child link="handle_link"/>
+        <origin xyz="0 0 ${base_height/2.0+0.1}" rpy="1.5708 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 1 0"/>
+        <limit upper="3.14" lower="-3.14" effort="100" velocity="1.0"/>
+    </joint>
+
+    <transmission name="hinge">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="articulation_joint">
+            <hardwareInterface>EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor1">
+            <hardwareInterface>EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+</robot>

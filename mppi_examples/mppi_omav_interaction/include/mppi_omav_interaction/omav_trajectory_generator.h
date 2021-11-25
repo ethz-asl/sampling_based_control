@@ -33,7 +33,7 @@ class OmavTrajectoryGenerator {
                           const ros::NodeHandle &private_nh);
   ~OmavTrajectoryGenerator();
 
-  void get_odometry(observation_t &x);
+  void get_odometry(observation_t &x) const;
 
   void set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
                       &trajectory_msg_point);
