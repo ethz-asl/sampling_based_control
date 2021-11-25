@@ -82,7 +82,7 @@ void EigenTrajectoryPointFromStates(
   trajectorypoint.time_from_start_ns = ros::Duration((i + 1) * dt).toNSec();
 }
 
-void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,
+void PoseStampedMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                               geometry_msgs::PoseStamped &pose_msg) {
   pose_msg.pose.position.x = pose(0);
   pose_msg.pose.position.y = pose(1);
@@ -94,7 +94,7 @@ void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,
   pose_msg.pose.orientation.z = pose(6);
 }
 
-void PoseMsgFromVector(const Eigen::VectorXd &pose,
+void PoseMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                        geometry_msgs::Pose &pose_msg) {
   pose_msg.position.x = pose(0);
   pose_msg.position.y = pose(1);

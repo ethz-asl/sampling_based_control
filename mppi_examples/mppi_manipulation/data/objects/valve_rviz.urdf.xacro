@@ -8,9 +8,19 @@
     <xacro:property name="base_length" default="0.2"/>
     <xacro:property name="base_height" default="0.5"/>
     <xacro:property name="base_width" default="0.2"/>
-    <!-- 
-    <xacro:arg name="height" default="0.0"/>
-    <xacro:property name="height" default="$(arg height)"/> -->
+
+    <xacro:macro name="box_inertia" params="m x y z">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="${m}"/>
+            <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
+                     ixy="0"
+                     ixz="0"
+                     iyy="${0.0833 * m * (x**2 + z**2)}"
+                     iyz="0"
+                     izz="${0.0833 * m * (x**2 + y**2)}"/>
+        </inertial>
+    </xacro:macro>
 
     <link name="world"/>
 
@@ -21,6 +31,22 @@
     </joint>
 
     <link name="valve_base">
+        <xacro:box_inertia m="100" x="${base_width}" y="${base_length}" z="${base_height}"/>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${base_width} ${base_length} ${base_height}"/>
+            </geometry>
+            <material name="base_material">
+                <color rgba="1.0 1.0 1.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${base_width} ${base_length} ${base_height-0.1}"/>
+            </geometry>
+        </collision>
     </link>
 
     <link name="handle_link">
@@ -32,13 +58,13 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/>
+                <mesh filename="file://$(arg resource_directory)/valve_visual.obj"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
-	    <geometry>
-                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/>
+        <geometry>
+                <mesh  filename="file://$(arg resource_directory)/valve_collision.obj"/>
             </geometry>
         </collision>
     </link>
@@ -51,4 +77,5 @@
         <axis xyz="0 1 0"/>
         <limit upper="300.14" lower="-300.14" effort="100" velocity="1.0"/>
     </joint>
+
 </robot>

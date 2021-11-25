@@ -27,9 +27,9 @@ void EigenTrajectoryPointFromState(
     const mppi::observation_t &state, const mppi::input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint);
 
-void PoseStampedMsgFromVector(const Eigen::VectorXd &pose,
+void PoseStampedMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                               geometry_msgs::PoseStamped &pose_msg);
-void PoseMsgFromVector(const Eigen::VectorXd &pose,
+void PoseMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                        geometry_msgs::Pose &pose_msg);
 void PoseMsgForVelocityFromVector(const Eigen::Vector3d &velocity,
                                   geometry_msgs::Pose &pose_msg);

@@ -19,6 +19,7 @@
 #include <mav_msgs/default_topics.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
+#include <std_msgs/Header.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -70,6 +71,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   void publish_trajectory(const mppi::observation_array_t &x_opt,
                           const mppi::input_array_t &u_opt,
                           const mppi::observation_t &x0_opt) const;
+
+  void publishShelfInfo(const std_msgs::Header &header) const;
 
  public:
   mppi::SolverConfig config_;

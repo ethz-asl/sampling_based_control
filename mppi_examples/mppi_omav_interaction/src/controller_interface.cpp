@@ -120,8 +120,8 @@ bool OMAVControllerInterface::set_controller(
       return false;
     }
     ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_shelf_);
-    cost_shelf_ = std::make_shared<OMAVInteractionCost>(robot_description_pinocchio_,
-        object_description_, &cost_param_shelf_);
+    cost_shelf_ = std::make_shared<OMAVInteractionCost>(
+        robot_description_pinocchio_, object_description_, &cost_param_shelf_);
     controller =
         std::make_shared<mppi::PathIntegral>(dynamics, cost_shelf_, config_);
   } else if (task_ == InteractionTask::Valve) {
@@ -131,8 +131,8 @@ bool OMAVControllerInterface::set_controller(
       return false;
     }
     ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_valve_);
-    cost_valve_ = std::make_shared<OMAVInteractionCostValve>(robot_description_pinocchio_,
-        object_description_, &cost_param_valve_);
+    cost_valve_ = std::make_shared<OMAVInteractionCostValve>(
+        robot_description_pinocchio_, object_description_, &cost_param_valve_);
     controller =
         std::make_shared<mppi::PathIntegral>(dynamics, cost_valve_, config_);
   } else {
@@ -267,7 +267,7 @@ void OMAVControllerInterface::publish_all_trajectories() {
     for (int j = 0; j < xx_current_trajectory.size(); j++) {
       if ((j % 10) == 0) {
         omav_interaction::conversions::PoseMsgFromVector(
-            xx_current_trajectory[j], current_trajectory_pose);
+            xx_current_trajectory[j].head<7>(), current_trajectory_pose);
         trajectory_array.poses.push_back(current_trajectory_pose);
       }
     }
@@ -284,34 +284,17 @@ void OMAVControllerInterface::publish_optimal_rollout() {
       optimal_rollout_lin_vel, optimal_rollout_ang_vel;
   geometry_msgs::Pose current_pose, current_pose_des, mppi_reference,
       current_input_lin, current_input_ang, current_lin_vel, current_ang_vel;
-  visualization_msgs::Marker force_marker;
 
-  omav_interaction::conversions::arrow_initialization(force_marker);
+  std_msgs::Header header;
+  header.frame_id = "world";
+  header.stamp = ros::Time::now();
+  optimal_rollout_array.header = header;
+  optimal_rollout_array_des.header = header;
+  optimal_inputs_lin_array.header = header;
+  optimal_inputs_ang_array.header = header;
+  optimal_rollout_lin_vel.header = header;
+  optimal_rollout_ang_vel.header = header;
 
-  visualization_msgs::MarkerArray force_marker_array;
-  Eigen::Vector3d force;
-  Eigen::Vector3d force_normalized;
-  ros::Time t_now = ros::Time::now();
-  optimal_rollout_array.header.frame_id = "world";
-  optimal_rollout_array.header.stamp = t_now;
-  optimal_rollout_array_des.header.frame_id = "world";
-  optimal_rollout_array_des.header.stamp = t_now;
-  optimal_inputs_lin_array.header.frame_id = "world";
-  optimal_inputs_lin_array.header.stamp = t_now;
-  optimal_inputs_ang_array.header.frame_id = "world";
-  optimal_inputs_ang_array.header.stamp = t_now;
-  optimal_rollout_lin_vel.header.frame_id = "world";
-  optimal_rollout_lin_vel.header.stamp = t_now;
-  optimal_rollout_ang_vel.header.frame_id = "world";
-  optimal_rollout_ang_vel.header.stamp = t_now;
-
-  float velocity_cost = 0.0f;
-  float power_cost = 0.0f;
-  float object_cost = 0.0f;
-  float torque_cost = 0.0f;
-  float handle_hook_cost = 0.0f;
-  float pose_cost = 0.0f;
-  float overall_cost = 0.0f;
   omav_interaction::conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7),
                                                               current_lin_vel);
   omav_interaction::conversions::PoseMsgForVelocityFromVector(
@@ -320,10 +303,10 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
 
   for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
-    omav_interaction::conversions::PoseMsgFromVector(optimal_rollout_states_[i],
-                                                     current_pose);
     omav_interaction::conversions::PoseMsgFromVector(
-        optimal_rollout_states_[i].segment<13>(19), current_pose_des);
+        optimal_rollout_states_[i].head<7>(), current_pose);
+    omav_interaction::conversions::PoseMsgFromVector(
+        optimal_rollout_states_[i].segment<7>(19), current_pose_des);
     omav_interaction::conversions::PoseMsgForVelocityFromVector(
         optimal_rollout_inputs_[i].segment<3>(0), current_input_lin);
     omav_interaction::conversions::PoseMsgForVelocityFromVector(
@@ -338,69 +321,14 @@ void OMAVControllerInterface::publish_optimal_rollout() {
     optimal_inputs_ang_array.poses.push_back(current_input_ang);
     optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
     optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
-    if (detailed_publishing_) {
-      if (task_ == InteractionTask::Shelf) {
-        // Cost publishing
-        cost_shelf_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
-                                  i * 0.015);
-        // Velocity Cost
-        velocity_cost += cost_shelf_->velocity_cost_;
-        // Efficiency Cost
-        power_cost += cost_shelf_->efficiency_cost_;
-        // Object Cost
-        object_cost += cost_shelf_->object_cost_;
-        // Torque Cost
-        torque_cost += cost_shelf_->torque_cost_;
-        // Handle Hook Cost
-        handle_hook_cost += cost_shelf_->handle_hook_cost_;
-        // Pose Cost
-        pose_cost += cost_shelf_->pose_cost_;
-        overall_cost += cost_shelf_->cost_;
-
-        Eigen::Vector3d force_normed =
-            optimal_rollout_states_[i].segment<3>(15).normalized();
-
-        force_marker.points[0].x = cost_shelf_->hook_pos_(0);
-        force_marker.points[0].y = cost_shelf_->hook_pos_(1);
-        force_marker.points[0].z = cost_shelf_->hook_pos_(2);
-        force_marker.points[1].x = cost_shelf_->hook_pos_(0) + force_normed(0);
-        force_marker.points[1].y = cost_shelf_->hook_pos_(1) + force_normed(1);
-        force_marker.points[1].z = cost_shelf_->hook_pos_(2) + force_normed(2);
-        force_marker.id = i;
-
-        force_marker_array.markers.push_back(force_marker);
-      }
-    }
   }
-  if (detailed_publishing_) {
-    mppi_ros::Array cost_array_message;
-    cost_array_message.array.push_back(velocity_cost);
-    cost_array_message.array.push_back(power_cost);
-    cost_array_message.array.push_back(object_cost);
-    cost_array_message.array.push_back(torque_cost);
-    cost_array_message.array.push_back(handle_hook_cost);
-    cost_array_message.array.push_back(optimal_rollout_states_[0](15));
-    cost_array_message.array.push_back(optimal_rollout_states_[0](16));
-    cost_array_message.array.push_back(optimal_rollout_states_[0](17));
-    cost_array_message.array.push_back(
-        optimal_rollout_states_[0].segment<3>(15).norm());
-    cost_array_message.array.push_back(
-        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
-    cost_array_message.array.push_back(
-        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
-    cost_array_message.array.push_back(
-        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
-    cost_array_message.array.push_back(
-        optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
-    cost_array_message.array.push_back(
-        acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
-            com_hook_.normalized())) *
-        180.0 / M_PI);
-    cost_array_message.array.push_back(pose_cost);
-    cost_array_message.array.push_back(overall_cost);
-    cost_publisher_.publish(cost_array_message);
-    normalized_force_publisher_.publish(force_marker_array);
-  }
+  optimal_rollout_publisher_.publish(optimal_rollout_array);
+  optimal_rollout_des_publisher_.publish(optimal_rollout_array_des);
+  optimal_linear_input_publisher_.publish(optimal_inputs_lin_array);
+  optimal_angular_input_publisher_.publish(optimal_inputs_ang_array);
+  optimal_rollout_lin_vel_.publish(optimal_rollout_lin_vel);
+  optimal_rollout_ang_vel_.publish(optimal_rollout_ang_vel);
+
   mppi_reference.position.x = ref_.rr[0](0);
   mppi_reference.position.y = ref_.rr[0](1);
   mppi_reference.position.z = ref_.rr[0](2);
@@ -408,14 +336,90 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   mppi_reference.orientation.x = ref_.rr[0](4);
   mppi_reference.orientation.y = ref_.rr[0](5);
   mppi_reference.orientation.z = ref_.rr[0](6);
-
-  optimal_rollout_publisher_.publish(optimal_rollout_array);
-  optimal_rollout_des_publisher_.publish(optimal_rollout_array_des);
-  optimal_linear_input_publisher_.publish(optimal_inputs_lin_array);
-  optimal_angular_input_publisher_.publish(optimal_inputs_ang_array);
   mppi_reference_publisher_.publish(mppi_reference);
-  optimal_rollout_lin_vel_.publish(optimal_rollout_lin_vel);
-  optimal_rollout_ang_vel_.publish(optimal_rollout_ang_vel);
+
+  if (task_ == InteractionTask::Shelf) {
+    publishShelfInfo(header);
+  }
+}
+
+void OMAVControllerInterface::publishShelfInfo(
+    const std_msgs::Header &header) const {
+  // Info about costs:
+  float velocity_cost = 0.0f;
+  float power_cost = 0.0f;
+  float object_cost = 0.0f;
+  float torque_cost = 0.0f;
+  float handle_hook_cost = 0.0f;
+  float pose_cost = 0.0f;
+  float overall_cost = 0.0f;
+
+  visualization_msgs::MarkerArray force_marker_array;
+
+  visualization_msgs::Marker force_marker;
+  omav_interaction::conversions::arrow_initialization(force_marker);
+  force_marker.header = header;
+
+  for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
+    // Cost publishing
+    cost_shelf_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
+                              i * 0.015);
+    // Velocity Cost
+    velocity_cost += cost_shelf_->velocity_cost_;
+    // Efficiency Cost
+    power_cost += cost_shelf_->efficiency_cost_;
+    // Object Cost
+    object_cost += cost_shelf_->object_cost_;
+    // Torque Cost
+    torque_cost += cost_shelf_->torque_cost_;
+    // Handle Hook Cost
+    handle_hook_cost += cost_shelf_->handle_hook_cost_;
+    // Pose Cost
+    pose_cost += cost_shelf_->pose_cost_;
+    overall_cost += cost_shelf_->cost_;
+
+    Eigen::Vector3d force_normed =
+        optimal_rollout_states_[i].segment<3>(15).normalized();
+
+    force_marker.points[0].x = cost_shelf_->hook_pos_(0);
+    force_marker.points[0].y = cost_shelf_->hook_pos_(1);
+    force_marker.points[0].z = cost_shelf_->hook_pos_(2);
+    force_marker.points[1].x = cost_shelf_->hook_pos_(0) + force_normed(0);
+    force_marker.points[1].y = cost_shelf_->hook_pos_(1) + force_normed(1);
+    force_marker.points[1].z = cost_shelf_->hook_pos_(2) + force_normed(2);
+    force_marker.id = i;
+
+    force_marker_array.markers.push_back(force_marker);
+  }
+  normalized_force_publisher_.publish(force_marker_array);
+
+  mppi_ros::Array cost_array_message;
+  cost_array_message.array.push_back(velocity_cost);
+  cost_array_message.array.push_back(power_cost);
+  cost_array_message.array.push_back(object_cost);
+  cost_array_message.array.push_back(torque_cost);
+  cost_array_message.array.push_back(handle_hook_cost);
+  cost_array_message.array.push_back(optimal_rollout_states_[0](15));
+  cost_array_message.array.push_back(optimal_rollout_states_[0](16));
+  cost_array_message.array.push_back(optimal_rollout_states_[0](17));
+  cost_array_message.array.push_back(
+      optimal_rollout_states_[0].segment<3>(15).norm());
+  cost_array_message.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
+  cost_array_message.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
+  cost_array_message.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
+  cost_array_message.array.push_back(
+      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
+  cost_array_message.array.push_back(
+      acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
+          com_hook_.normalized())) *
+      180.0 / M_PI);
+  cost_array_message.array.push_back(pose_cost);
+  cost_array_message.array.push_back(overall_cost);
+
+  cost_publisher_.publish(cost_array_message);
 }
 
 void OMAVControllerInterface::manually_shift_input(const int i) {

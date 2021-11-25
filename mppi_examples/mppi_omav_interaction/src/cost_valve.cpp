@@ -77,27 +77,38 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
     if (param_ptr_->contact_bool) {
       cost += 100 * x(18);
     }
+    ROS_INFO_STREAM_THROTTLE(
+        0.5, "Mode 0, floor cost: " << floor_cost_
+                                    << ", pose_cost : " << pose_cost_);
   }
+  ROS_INFO_STREAM_THROTTLE(0.5, "Pos handle link: " << object_model_.get_pose("handle_link").translation);
+  ROS_INFO_STREAM_THROTTLE(0.5, "Pos tip: " << robot_model_.get_pose("tip").translation);
 
   if (mode == 1) {
     // Calculate all the necessary vectors
-    compute_vectors();
+    // compute_vectors();
     // Handle Hook Cost
-    compute_handle_hook_cost();
-    cost += handle_hook_cost_;
+    // compute_handle_hook_cost();
+    // cost += handle_hook_cost_;
     // Object Cost
     compute_object_cost(x, ref);
     cost += object_cost_;
 
     // Torque Cost
-    compute_torque_cost(x);
-    cost += torque_cost_;
+    // compute_torque_cost(x);
+    // cost += torque_cost_;
     // Efficiency cost
     // compute_efficiency_cost(x);
     // cost += efficiency_cost_;
     // Minimize force
     double force = x.segment<3>(15).norm();
-    cost += param_ptr_->Q_power * force * force;
+    double force_cost = param_ptr_->Q_power * force * force;
+    cost += force_cost;
+    ROS_INFO_STREAM_THROTTLE(
+        0.5, "Mode 0, floor cost: " << floor_cost_
+                                    << ", pose_cost : " << pose_cost_
+                                    << ", object cost: " << object_cost_
+                                    << ", force cost: " << force_cost);
   }
   cost_ = cost;
 
@@ -138,6 +149,7 @@ void OMAVInteractionCostValve::compute_object_cost(
     const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
   object_cost_ = param_ptr_->Q_object * (omav_state(13) - omav_reference(7)) *
                  (omav_state(13) - omav_reference(7));
+  // ROS_INFO_STREAM(omav_state(13) << " - " << omav_reference(7));
 }
 
 void OMAVInteractionCostValve::compute_vectors() {
