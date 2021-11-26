@@ -7,7 +7,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
-#include <pybind11/iostream.h>
 #include <pybind11/stl.h>
 
 #include "mppi_manipulation/controller_interface_no_ros.h"

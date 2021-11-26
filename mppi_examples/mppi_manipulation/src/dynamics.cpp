@@ -58,7 +58,17 @@ void PandaRaisimDynamics::initialize_world(
 
   /// create raisim objects
   object_description_ = object_description;
-  object_ = sim_.addArticulatedSystem(object_description_, "/");
+  // make object
+  object_ = sim_.addArticulatedSystem(object_description_, params_.raisim_res_path);
+
+  if(params_.ignore_object_self_collision){
+    std::vector<int> objBodyIdxs;
+    for (const auto& bodyName : object_->getBodyNames())
+      objBodyIdxs.push_back(object_->getBodyIdx(bodyName));
+    for (const auto body_idx1 : objBodyIdxs)
+      for (const auto body_idx2 : objBodyIdxs)
+        object_->ignoreCollisionBetween(body_idx1, body_idx2);
+  }
 
   // robot dof
   robot_dof_ = BASE_ARM_GRIPPER_DIM;

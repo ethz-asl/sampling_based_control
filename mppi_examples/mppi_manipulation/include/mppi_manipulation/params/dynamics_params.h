@@ -12,6 +12,8 @@ struct DynamicsParams {
   double dt;
   std::string robot_description;
   std::string object_description;
+  std::string raisim_res_path = "/";
+  bool ignore_object_self_collision = false;
   PIDGains gains;
   Eigen::VectorXd initial_state;
 

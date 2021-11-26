@@ -12,6 +12,8 @@ bool DynamicsParams::init_from_config(const manipulation::Config& config) {
   object_description = config.object_description_raisim;
   gains = config.gains;
   initial_state = config.initial_state;
+  raisim_res_path = config.raisim_res_path;
+  ignore_object_self_collision = config.ignore_object_self_collision;
 
   articulation_joint = config.articulation_joint;
   object_handle_link = config.object_handle_link;

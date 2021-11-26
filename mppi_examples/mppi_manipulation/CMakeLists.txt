@@ -34,7 +34,7 @@ catkin_package(
         DEPENDS raisim)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} #STATIC
         src/params/gains.cpp
         src/params/dynamics_params.cpp
         src/params/cost_params.cpp
@@ -45,6 +45,7 @@ add_library(${PROJECT_NAME}
         src/reference_scheduler.cpp
         src/dynamics_ros.cpp
         src/config_no_ros.cpp)
+#set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp)
 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
@@ -72,8 +73,6 @@ endif()
 
 option(PYTHON_BINDINGS "Build the python bindings" ON)
 if (${PYTHON_BINDINGS})
-#  find_package(catkin)
-#  add_subdirectory(../../submodules/pybind11 ../../submodules/pybind11)
   pybind11_add_module(pymppi_manipulation python/python.cpp)
   target_link_libraries(pymppi_manipulation PUBLIC ${PROJECT_NAME})
   add_dependencies(pymppi_manipulation ${PROJECT_NAME})

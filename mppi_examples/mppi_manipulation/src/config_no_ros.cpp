@@ -44,6 +44,8 @@ bool Config::init_from_file(const std::string& file) {
   object_description = get_model(dynamics, "object_description");
   robot_description_raisim = get_model(dynamics, "robot_description_raisim");
   object_description_raisim = get_model(dynamics, "object_description_raisim");
+  raisim_res_path = parse_key<std::string>(dynamics, "raisim_res_path", sf).value_or("");
+  ignore_object_self_collision = parse_key<bool>(dynamics, "ignore_object_self_collision", sf).value_or(false);
 
   gains = PIDGains(); // initialize gains to default value, lets me skip another config parsing
   initial_state = parse_key<Eigen::VectorXd>(dynamics, "initial_state", sf).value_or(Eigen::VectorXd(0));
