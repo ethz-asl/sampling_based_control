@@ -26,6 +26,7 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   if (!init_interfaces(robot_hw)) return false;
   init_ros(controller_nh);
 
+
   man_interface_ = std::make_unique<PandaControllerInterface>(controller_nh);
   if (!man_interface_->init()) {
     ROS_ERROR("Failed to initialized manipulation interface");

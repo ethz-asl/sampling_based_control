@@ -53,7 +53,7 @@ add_library(${PROJECT_NAME}
         src/dynamics_ros.cpp
         src/real_controller.cpp)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} ${Franka_LIBRARIES} yaml-cpp)
 
 ## for simulation 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
@@ -66,10 +66,8 @@ add_dependencies(manipulation_raisim ${PROJECT_NAME})
 
 
 ## for REAL control test
-add_executable(manipulation_control_real src/nodes/panda_real_control.cpp)
-target_include_directories(manipulation_control_real PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
-target_link_libraries(manipulation_control_real ${PROJECT_NAME} ${catkin_LIBRARIES} ${Franka_LIBRARIES} )
-add_dependencies(manipulation_control_real ${PROJECT_NAME} )
+target_include_directories(${PROJECT_NAME} PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
+
 
 add_executable(reference_parsing_test src/tests/reference_parsing.cpp)
 target_link_libraries(reference_parsing_test ${PROJECT_NAME} ${catkin_LIBRARIES} )
