@@ -1,7 +1,7 @@
 /*!
  * @file     panda_control.cpp
- * @author   Boyang Sun
- * @date     15.10.2021
+ * @author   Giuseppe Rizzi
+ * @date     11.06.2020
  * @version  1.0
  * @brief    description
  */
@@ -13,6 +13,8 @@
 #include <sensor_msgs/JointState.h>
 #include <chrono>
 #include <signal_logger/signal_logger.hpp>
+
+#include "mppi_sliding/real_controller.h"
 
 using namespace std::chrono;
 using namespace manipulation;
@@ -31,6 +33,10 @@ int main(int argc, char** argv) {
 
   // ros interface
   auto controller = PandaControllerInterface(nh);  // constructors are empty 
+
+  // real test interface
+  auto controller_t = manipulation_panda::ManipulationController();
+
 
   bool is_sim = true;
   DynamicsParams dynamics_params;     // init params (dynamics_param.cpp)

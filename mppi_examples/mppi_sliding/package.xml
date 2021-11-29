@@ -22,7 +22,19 @@
   <depend>tf2_ros</depend>
   <depend>plotjuggler</depend>
   <depend>signal_logger</depend>>
+  
+  <depend>controller_interface</depend>
+  <depend>franka_hw</depend>
+  <depend>hardware_interface</depend>
+  <depend>controller_manager</depend>
+  <depend>pluginlib</depend>
+  <depend>realtime_tools</depend>
+  <depend>franka</depend>
+  <depend>kdl_parser</depend>
+  <depend>eigen_conversions</depend>
+
   <buildtool_depend>catkin</buildtool_depend>
+
 
   <export>
     <!-- Other tools can request additional information be placed here -->
