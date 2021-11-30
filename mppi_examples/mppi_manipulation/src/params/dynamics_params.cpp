@@ -14,6 +14,7 @@ bool DynamicsParams::init_from_config(const manipulation::Config& config) {
   initial_state = config.initial_state;
   raisim_res_path = config.raisim_res_path;
   ignore_object_self_collision = config.ignore_object_self_collision;
+  debug_prints = config.debug_prints;
 
   articulation_joint = config.articulation_joint;
   object_handle_link = config.object_handle_link;
@@ -91,14 +92,18 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
 
 std::ostream& operator<<(std::ostream& os,
                          const manipulation::DynamicsParams& params) {
-  // clang-format off
-  os << "Dynamics params" << std::endl;
-  os << "dt=" << params.dt << std::endl;
-  os << "dynamics gains: " << std::endl;
-  os << params.gains;
-  os << "object handle link = " << params.object_handle_link << std::endl;
-  os << "object handle joint = " << params.object_handle_joint << std::endl;
-  os << "articulation joint = " << params.articulation_joint << std::endl;
+  if (params.debug_prints) {
+    // clang-format off
+    os << "Dynamics params" << std::endl;
+    os << "dt=" << params.dt << std::endl;
+    os << "dynamics gains: " << std::endl;
+    os << params.gains;
+    os << "object handle link = " << params.object_handle_link << std::endl;
+    os << "object handle joint = " << params.object_handle_joint << std::endl;
+    os << "articulation joint = " << params.articulation_joint << std::endl;
+  }else{
+    os << "";
+  }
   return os;
   // clang-format on
 }

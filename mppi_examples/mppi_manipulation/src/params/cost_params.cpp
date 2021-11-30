@@ -33,6 +33,7 @@ bool CostParams::init_from_config(const manipulation::Config& config){
   Eigen::Vector3d t(trans[0], trans[1], trans[2]);
   Eigen::Quaterniond q(rot[3], rot[0], rot[1], rot[2]);
   grasp_offset = mppi_pinocchio::Pose(t, q);
+  debug_prints = config.parse_key<bool>(cost, "debug_prints", sf).value_or(true);
   
   Q_joint_limit = config.parse_key<double>(cost, "joint_limit_cost", sf).value_or(0.0);;
   Q_joint_limit_slope = config.parse_key<double>(cost, "joint_limit_slope", sf).value_or(0.0);;
@@ -239,35 +240,39 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
 
 std::ostream& operator<<(std::ostream& os,
                          const manipulation::CostParams& param) {
-  // clang-format off
-  os << "========================================" << std::endl;
-  os << "        Panda Cost Parameters           " << std::endl;
-  os << "========================================" << std::endl;
-  os << " regularization weight: "   << param.Qreg << std::endl;
-  os << " obstacle_weight: "         << param.Qo << std::endl;
-  os << " obstacle_radius: "         << param.ro << std::endl;
-  os << " obstacle_weight_slope: "   << param.Qos << std::endl;
-  os << " linear_weight: "           << param.Qt << std::endl;
-  os << " linear_weight_opening: "   << param.Qt2 << std::endl;
-  os << " angular_weight: "          << param.Qr << std::endl;
-  os << " angular_weight_opening: "  << param.Qr2 << std::endl;
-  os << " contact_weight: "          << param.Qc << std::endl;
-  os << " reach weight: "            << param.Q_reach << std::endl;
-  os << " reach weight slope: "      << param.Q_reachs << std::endl;
-  os << " object_weight: "           << param.Q_obj << std::endl;
-  os << " object_weight_tolerance: " << param.Q_tol << std::endl;
-  os << " grasp offset: "            << std::endl;
-  os << " >> translation = "         << param.grasp_offset.translation.transpose() << std::endl;
-  os << " >> rotation = "            << param.grasp_offset.rotation.coeffs().transpose() << std::endl;
-  os << " joint limit weight: "      << param.Q_joint_limit << std::endl;
-  os << " joint limit slope: "       << param.Q_joint_limit_slope << std::endl;
-  os << " upper joint limits: ";
-  for (size_t i=0; i<7; i++) os << param.upper_joint_limits[i] << " ";
-  os << std::endl;
-  os << " lower joint limits: ";
-  for (size_t i=0; i<7; i++) os << param.lower_joint_limits[i] << " ";
-  os << std::endl;
-  os << "========================================" << std::endl;
+  if (param.debug_prints) {
+    // clang-format off
+    os << "========================================" << std::endl;
+    os << "        Panda Cost Parameters           " << std::endl;
+    os << "========================================" << std::endl;
+    os << " regularization weight: "   << param.Qreg << std::endl;
+    os << " obstacle_weight: "         << param.Qo << std::endl;
+    os << " obstacle_radius: "         << param.ro << std::endl;
+    os << " obstacle_weight_slope: "   << param.Qos << std::endl;
+    os << " linear_weight: "           << param.Qt << std::endl;
+    os << " linear_weight_opening: "   << param.Qt2 << std::endl;
+    os << " angular_weight: "          << param.Qr << std::endl;
+    os << " angular_weight_opening: "  << param.Qr2 << std::endl;
+    os << " contact_weight: "          << param.Qc << std::endl;
+    os << " reach weight: "            << param.Q_reach << std::endl;
+    os << " reach weight slope: "      << param.Q_reachs << std::endl;
+    os << " object_weight: "           << param.Q_obj << std::endl;
+    os << " object_weight_tolerance: " << param.Q_tol << std::endl;
+    os << " grasp offset: "            << std::endl;
+    os << " >> translation = "         << param.grasp_offset.translation.transpose() << std::endl;
+    os << " >> rotation = "            << param.grasp_offset.rotation.coeffs().transpose() << std::endl;
+    os << " joint limit weight: "      << param.Q_joint_limit << std::endl;
+    os << " joint limit slope: "       << param.Q_joint_limit_slope << std::endl;
+    os << " upper joint limits: ";
+    for (size_t i=0; i<7; i++) os << param.upper_joint_limits[i] << " ";
+    os << std::endl;
+    os << " lower joint limits: ";
+    for (size_t i=0; i<7; i++) os << param.lower_joint_limits[i] << " ";
+    os << std::endl;
+    os << "========================================" << std::endl;
+  }else{
+    os << "";
+  }
   // clang-format on
 
   return os;

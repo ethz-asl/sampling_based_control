@@ -30,6 +30,7 @@ bool Config::init_from_file(const std::string& file) {
   references_file = parse_key<std::string>(options, "references_file", sf).value_or("");
   solver_config_file = parse_key<std::string>(options, "solver_config_file", sf).value_or("");
   gaussian_policy = parse_key<bool>(options, "gaussian_policy", sf).value_or(false);
+  debug_prints = parse_key<bool>(options, "debug_prints", sf).value_or(true);
 
   // dynamics
   YAML::Node dynamics = data["dynamics"];

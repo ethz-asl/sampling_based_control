@@ -25,6 +25,7 @@ struct Config {
   std::string references_file;
   std::string solver_config_file;
   bool gaussian_policy;
+  bool debug_prints;
 
   // dynamics
   double dt;

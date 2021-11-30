@@ -16,6 +16,7 @@ struct DynamicsParams {
   bool ignore_object_self_collision = false;
   PIDGains gains;
   Eigen::VectorXd initial_state;
+  bool debug_prints;
 
   std::string articulation_joint;
   std::string object_handle_link;

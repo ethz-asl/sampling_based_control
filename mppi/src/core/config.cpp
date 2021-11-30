@@ -63,8 +63,10 @@ bool Config::init_from_file(const std::string& file) {
   //clang-format on
 
   if (parsing_error) return false;
-  std::cout << "Solver options correctly parsed from: " << file << std::endl;
-  std::cout << *this << std::endl;
+  if (logging){
+    std::cout << "Solver options correctly parsed from: " << file << std::endl;
+    std::cout << *this << std::endl;
+  }
   return true;
 }
 

@@ -20,7 +20,9 @@ using namespace manipulation;
 
 PandaControllerInterfaceNoRos::PandaControllerInterfaceNoRos(const std::string& config_path){
   if(manipulation_config_.init_from_file(config_path)){
-    ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
+    if (manipulation_config_.debug_prints) {
+      ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
+    }
   }else{
     ROS_ERROR("Failed to parse manipulation config");
   }
@@ -40,7 +42,6 @@ bool PandaControllerInterfaceNoRos::init() {
     ok = false;
   }
   if (controller_ == nullptr || !ok) return false;
-  ROS_INFO("Controller interface initialized.");
   return true;
 }
 
@@ -80,7 +81,9 @@ void PandaControllerInterfaceNoRos::init_model(
     const std::string& object_description) {
   robot_model_.init_from_xml(robot_description);
   object_model_.init_from_xml(object_description);
-  ROS_INFO("[PandaControllerInterface::init_model] ok!");
+  if (manipulation_config_.debug_prints) {
+    ROS_INFO("[PandaControllerInterface::init_model] ok!");
+  }
 }
 
 bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller) {
@@ -94,9 +97,7 @@ bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller)
   // -------------------------------
   mppi::dynamics_ptr dynamics;
   dynamics_params_.init_from_config(manipulation_config_);
-  ROS_INFO_STREAM("Successfully parsed controller dynamics parameters: " << dynamics_params_);
   dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_);
-  ROS_INFO_STREAM("Successfully initialized RAISIM dynamics");
 
   // -------------------------------
   // config
@@ -105,7 +106,6 @@ bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller)
     ROS_ERROR_STREAM("Failed to init solver options from " << manipulation_config_.solver_config_file);
     return false;
   }
-  ROS_INFO_STREAM("Successfully parsed standard config");
 
   // -------------------------------
   // cost
@@ -115,7 +115,6 @@ bool PandaControllerInterfaceNoRos::set_controller(mppi::solver_ptr& controller)
     ROS_ERROR("Failed to parse cost parameters.");
     return false;
   }
-  ROS_INFO_STREAM("Successfully parsed cost parameters");
 
   auto cost = std::make_shared<PandaCost>(cost_params);
   local_cost_ = std::make_unique<manipulation::PandaCost>(cost_params);

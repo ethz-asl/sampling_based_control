@@ -33,6 +33,7 @@ struct CostParams {
   double Q_joint_limit_slope;
   std::vector<double> upper_joint_limits;
   std::vector<double> lower_joint_limits;
+  bool debug_prints;
 
   // power cost
   double max_power = 0.0;
