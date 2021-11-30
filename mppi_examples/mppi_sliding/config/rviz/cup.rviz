@@ -291,21 +291,21 @@ Visualization Manager:
       Value: false
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
-      Enabled: true
+      Enabled: false
       Name: Interactive obstacle
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
       Update Topic: /obstacle_marker_server/update
-      Value: true
+      Value: false
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /obstacle_marker
       Name: Obstacle Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -823,7 +823,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.687114238739014
+      Distance: 3.105523109436035
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -839,9 +839,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.699797511100769
+      Pitch: 0.6797975301742554
       Target Frame: <Fixed Frame>
-      Yaw: 5.363739490509033
+      Yaw: 5.2287373542785645
     Saved: ~
 Window Geometry:
   Displays:

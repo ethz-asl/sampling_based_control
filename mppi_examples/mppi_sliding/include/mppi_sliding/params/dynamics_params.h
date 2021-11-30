@@ -28,6 +28,9 @@ struct DynamicsParams {
   std::vector<double> table_position;
   double friction;
 
+  // controller config
+  bool fixed_base;
+
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };
 

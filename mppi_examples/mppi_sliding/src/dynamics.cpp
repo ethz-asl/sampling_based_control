@@ -37,7 +37,7 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
 
   t_ = 0.0;
   ee_force_applied_ = false;
-  
+
 };
 
 void PandaRaisimDynamics::initialize_world(
@@ -94,10 +94,22 @@ void PandaRaisimDynamics::initialize_world(
   table_->setName("Table");
   
   // state size init, according to DOF
-  robot_dof_ = BASE_ARM_GRIPPER_DIM;
-  state_dimension_ = STATE_DIMENSION;
-  input_dimension_ = INPUT_DIMENSION;
-  x_ = mppi::observation_t::Zero(STATE_DIMENSION);
+  if(params_.fixed_base)
+  {    
+    robot_dof_ = BASE_ARM_GRIPPER_DIM - BASE_DIMENSION;
+    state_dimension_ = STATE_DIMENSION - BASE_DIMENSION * 2;
+    input_dimension_ = INPUT_DIMENSION - BASE_DIMENSION * 2;
+    x_ = mppi::observation_t::Zero(state_dimension_);
+
+  }
+  else
+  {
+    robot_dof_ = BASE_ARM_GRIPPER_DIM;
+    state_dimension_ = STATE_DIMENSION;
+    input_dimension_ = INPUT_DIMENSION;
+    x_ = mppi::observation_t::Zero(state_dimension_);
+  }
+
 
   // init state setup
   reset(params_.initial_state, t_);
@@ -122,12 +134,23 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_v_desired_.setZero(robot_dof_);
 
   // clang-format off
-  joint_p_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
-  joint_d_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
-  joint_p_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kp;
-  joint_d_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kd;
-  joint_p_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
-  joint_d_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
+  if(!params_.fixed_base)
+  {
+    joint_p_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
+    joint_d_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
+    joint_p_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kp;
+    joint_d_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kd;
+    joint_p_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
+    joint_d_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
+  }
+  else
+  {
+    joint_p_gain_.head(ARM_DIMENSION) = params_.gains.arm_gains.Kp;
+    joint_d_gain_.head(ARM_DIMENSION) = params_.gains.arm_gains.Kd;
+    joint_p_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
+    joint_d_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
+  }
+
   // clang-format on
 
   panda_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
@@ -139,8 +162,6 @@ void PandaRaisimDynamics::initialize_pd() {
   // object_->setPdGains(Eigen::VectorXd::Zero(1), Eigen::VectorXd::Zero(1));
   // object_->setGeneralizedForce({0.0});
 
-  // cylinder_->setExternalForce(0, {0,0,0});
-  // cylinder_->setExternalTorque(0, {0,0,0});
 }
 
 void PandaRaisimDynamics::set_collision() {
@@ -154,16 +175,27 @@ void PandaRaisimDynamics::set_collision() {
 
 void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
   // keep the gripper in the current position
-  cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
-      << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
+  if (params_.fixed_base)
+  {
+    cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
+        << x_.head<ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
+    // arm
+    cmdv_.head(ARM_DIMENSION) = u.head(ARM_DIMENSION);
 
-  // base
-  cmdv_(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
-  cmdv_(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
-  cmdv_(2) = u(2);
+  }
+  else{
+    cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
+        << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
 
-  // arm
-  cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);;
+    // base
+    cmdv_(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
+    cmdv_(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
+    cmdv_(2) = u(2);
+
+    // arm
+    cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);
+
+  }
 
   // gripper
   cmdv_.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
@@ -260,11 +292,14 @@ void PandaRaisimDynamics::advance() {
   }
 
   x_.head<BASE_ARM_GRIPPER_DIM>() = joint_p_;
-  x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v_;
-  x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM) = object_p_;
-  x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) = object_v_;
-  x_(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) = in_contact;  // contact flag
-  x_.tail<TORQUE_DIMENSION>() = tau_ext_;
+  //x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM) = joint_v_;
+  x_.segment(robot_dof_, robot_dof_) = joint_v_;
+  //x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM) = object_p_;
+  x_.segment(2 * robot_dof_, OBJECT_DIMENSION) = object_p_;
+  //x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION) = object_v_;
+  x_.segment(2 * robot_dof_ + OBJECT_DIMENSION, OBJECT_DIMENSION) = object_v_;
+  x_(2 * robot_dof_ + 2 * OBJECT_DIMENSION) = in_contact;  // contact flag
+  //x_.tail<TORQUE_DIMENSION>() = tau_ext_;
 
 
   //display_state();
@@ -329,8 +364,11 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
   t_ = t;
   x_ = x;
 
-  panda_->setState(x_.head<BASE_ARM_GRIPPER_DIM>(),
-                   x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
+  // panda_->setState(x_.head<BASE_ARM_GRIPPER_DIM>(),
+  //                  x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
+  panda_->setState(x_.head(robot_dof_),
+                   x_.segment(robot_dof_,robot_dof_));
+
   // object_->setState(x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM),
   //                   x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM + 1));
   //cylinder_->setPosition(Eigen::Vector3d(x_(2* robot_dof_),x_(2* robot_dof_+1),params_.cylinder_z));
@@ -361,8 +399,6 @@ void PandaRaisimDynamics::get_end_effector_pose(
   position = pos.e();
   orientation = Eigen::Quaterniond(rot.e());
 }
-
-
 
 
 // void PandaRaisimDynamics::get_handle_pose(Eigen::Vector3d& position,
@@ -487,7 +523,8 @@ void PandaRaisimDynamics::set_external_ee_force(const Eigen::Vector3d& f) {
 }
 
 double PandaRaisimDynamics::get_object_displacement() const {
-  return x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
+  // return x_.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM)(0);
+  return x_.segment(2 * robot_dof_, OBJECT_DIMENSION)(0);
 }
 
 // void PandaRaisimDynamics::fix_object() {

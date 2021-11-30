@@ -6,6 +6,9 @@ geometry:
   table_position: [2.4,2.4,0.9]
   friction: 0.15  
 
+setup_config:
+  fixed_base: false
+
 dynamics:
   dt: 0.015
   object_handle_link: handle_link
@@ -15,8 +18,7 @@ dynamics:
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 12
                    1.0, 1.0, 1.05, -0.707, 0.0, 0, -0.707,                                  # object joint pose 3 [x,y,fi] in 2D
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                                         # object joint velocity 3
-                   0,                                                                      # contact flag 1
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques 12
+                   0]            # contact flag
   gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
@@ -43,8 +45,7 @@ sim_dynamics:
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    1.0, 1.0, 1.05, -0.707, 0.0, 0, -0.707,                                       # object joint position
                    0.0, 0.0, 0.0, 0.0,0.0,0.0,0.0,                                                      # object joint velocity
-                   0,                                                                      # contact flag
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]             # external torques
+                   0]             # contact flag
   gains:
     base_gains:
       kp: [ 0.0, 0.0, 0.0 ]
@@ -89,7 +90,6 @@ cost:
 
   #upper_joint_limits: [ 5, 5, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
   #lower_joint_limits: [ -5, -5, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
-
 
   upper_joint_limits: [ 1.15, 1.15, 180, 180, 180, 180, 180, 180, 180, 180 ]
   lower_joint_limits: [ -0.8, -0.8, -180, -180, -180, -180, -180, -180, -180, -180 ]

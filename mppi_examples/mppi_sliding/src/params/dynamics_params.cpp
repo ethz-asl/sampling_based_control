@@ -125,6 +125,13 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  //parse control config params
+  if (!nh.getParam("setup_config/fixed_base",fixed_base))
+  {
+    ROS_ERROR_STREAM("config params parsing: failed to parse setup_config/fixed_base or invalid!");
+    return false;
+  }
+
   // parse gains
   if (!gains.init_from_ros(nh, prefix + "dynamics/")) {
     ROS_ERROR("Failed to parse simulation gains.");
