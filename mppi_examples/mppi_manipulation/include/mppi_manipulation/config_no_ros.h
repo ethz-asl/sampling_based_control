@@ -36,8 +36,10 @@ struct Config {
   std::string articulation_joint;
   std::string object_handle_link;
   std::string object_handle_joint;
-  std::string raisim_res_path;
+  std::string raisim_object_res_path;
+  std::string raisim_robot_res_path;
   bool ignore_object_self_collision;
+  bool ignore_panda_self_collision;
 
   PIDGains gains;
   Eigen::VectorXd initial_state;

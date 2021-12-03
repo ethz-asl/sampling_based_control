@@ -51,7 +51,7 @@ void PandaRaisimDynamics::initialize_world(
   sim_.setMaterialPairProp("steel", "steel", 0.01, 0.15, 0.001);
 
   robot_description_ = robot_description;
-  panda_ = sim_.addArticulatedSystem(robot_description_, "/");
+  panda_ = sim_.addArticulatedSystem(robot_description_, params_.raisim_robot_res_path);
 
   tau_ext_ = Eigen::VectorXd::Zero(panda_->getDOF());
   J_contact_.setZero(3, panda_->getDOF());
@@ -59,7 +59,7 @@ void PandaRaisimDynamics::initialize_world(
   /// create raisim objects
   object_description_ = object_description;
   // make object
-  object_ = sim_.addArticulatedSystem(object_description_, params_.raisim_res_path);
+  object_ = sim_.addArticulatedSystem(object_description_, params_.raisim_object_res_path);
 
   if(params_.ignore_object_self_collision){
     std::vector<int> objBodyIdxs;
@@ -109,12 +109,14 @@ void PandaRaisimDynamics::initialize_pd() {
 }
 
 void PandaRaisimDynamics::set_collision() {
-  std::vector<int> pandaBodyIdxs;
-  for (const auto& bodyName : panda_->getBodyNames())
-    pandaBodyIdxs.push_back(panda_->getBodyIdx(bodyName));
-  for (const auto body_idx1 : pandaBodyIdxs)
-    for (const auto body_idx2 : pandaBodyIdxs)
-      panda_->ignoreCollisionBetween(body_idx1, body_idx2);
+  if (params_.ignore_panda_self_collision) {
+    std::vector<int> pandaBodyIdxs;
+    for (const auto& bodyName : panda_->getBodyNames())
+      pandaBodyIdxs.push_back(panda_->getBodyIdx(bodyName));
+    for (const auto body_idx1 : pandaBodyIdxs)
+      for (const auto body_idx2 : pandaBodyIdxs)
+        panda_->ignoreCollisionBetween(body_idx1, body_idx2);
+  }
 }
 
 void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
