@@ -421,15 +421,15 @@ void PandaControllerInterface::publish_ros() {
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
 
-  optimal_base_path_.header.stamp = ros::Time::now();
-  optimal_base_path_.poses.clear();
+  // optimal_base_path_.header.stamp = ros::Time::now();
+  // optimal_base_path_.poses.clear();
 
   mppi_pinocchio::Pose pose_temp;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
 
   for (const auto& x : x_opt_) {
     optimal_path_.poses.push_back(get_pose_end_effector_ros(x));
-    optimal_base_path_.poses.push_back(get_pose_base(x));
+    //optimal_base_path_.poses.push_back(get_pose_base(x));
   }
 
   obj_state.setZero(7);
@@ -438,28 +438,28 @@ void PandaControllerInterface::publish_ros() {
   publish_ros_obj(x_opt_);
 
   optimal_trajectory_publisher_.publish(optimal_path_);
-  optimal_base_trajectory_publisher_.publish(optimal_base_path_);
+  // optimal_base_trajectory_publisher_.publish(optimal_base_path_);
 
   // extrapolate base twist from optimal base path
-  if (optimal_base_path_.poses.size() > 2) {
-    geometry_msgs::TwistStamped base_twist_from_path;
-    base_twist_from_path.header.frame_id = "world";
-    base_twist_from_path.twist.linear.x =
-        (optimal_base_path_.poses[1].pose.position.x -
-         optimal_base_path_.poses[0].pose.position.x) /
-        config_.step_size;
-    base_twist_from_path.twist.linear.y =
-        (optimal_base_path_.poses[1].pose.position.y -
-         optimal_base_path_.poses[0].pose.position.y) /
-        config_.step_size;
-    base_twist_from_path.twist.linear.z = 0.0;
+  // if (optimal_base_path_.poses.size() > 2) {
+  //   geometry_msgs::TwistStamped base_twist_from_path;
+  //   base_twist_from_path.header.frame_id = "world";
+  //   base_twist_from_path.twist.linear.x =
+  //       (optimal_base_path_.poses[1].pose.position.x -
+  //        optimal_base_path_.poses[0].pose.position.x) /
+  //       config_.step_size;
+  //   base_twist_from_path.twist.linear.y =
+  //       (optimal_base_path_.poses[1].pose.position.y -
+  //        optimal_base_path_.poses[0].pose.position.y) /
+  //       config_.step_size;
+  //   base_twist_from_path.twist.linear.z = 0.0;
 
-    base_twist_from_path.twist.angular.x = 0.0;
-    base_twist_from_path.twist.angular.y = 0.0;
-    base_twist_from_path.twist.angular.z =
-        (x_opt_[1](3) - x_opt_[0](3)) / config_.step_size;
-    base_twist_from_path_publisher_.publish(base_twist_from_path);
-  }
+  //   base_twist_from_path.twist.angular.x = 0.0;
+  //   base_twist_from_path.twist.angular.y = 0.0;
+  //   base_twist_from_path.twist.angular.z =
+  //       (x_opt_[1](3) - x_opt_[0](3)) / config_.step_size;
+  //   base_twist_from_path_publisher_.publish(base_twist_from_path);
+  // }
 
   // for debug
   pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));

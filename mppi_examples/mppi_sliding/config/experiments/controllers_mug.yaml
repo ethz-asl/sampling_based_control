@@ -3,18 +3,18 @@ joint_publisher:
   publish_rate: 50
 
 mppi_sliding:
-  type: manipulation_royalpanda/ManipulationController
-  references_file: $(find mppi_manipulation_royalpanda)/config/experiments/references.yaml
+  type: manipulation_panda/ManipulationController
+  references_file: $(find mppi_sliding)/config/experiments/references.yaml
   default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
   object_tolerance: 0.09 # ~5 deg
 
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
-  base_joint_names: [world_x, world_y, theta]
+  #base_joint_names: [world_x, world_y, theta]
 
-  state_topic: /observer/state
+  state_topic: /observer/state    # modify into the topic of kp tracker
   nominal_state_topic: /x_nom
-  base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+  #base_twist_topic: /ridgeback_velocity_controller/cmd_vel
 
   sequential: false
   max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
@@ -32,6 +32,7 @@ mppi_sliding:
   
   # Cost parameters used by the controller
   rollouts: $(arg rollouts)
+
   cost:
     regularization: 0.0
     linear_weight: 100.0
@@ -87,13 +88,12 @@ mppi_sliding:
     collision_threshold: 0.35
     collision_weight: 1000
 
-
   controller_gains:
     base_gains:
-      kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 0.0, 0.0, 0.0 ]
-      ki: [ 1.0, 1.0, 1.0 ]
-      i_max: [ 0.0, 0.0, 0.0 ]
+      kp: []
+      kd: []
+      ki: []
+      i_max: []
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
       kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
@@ -116,20 +116,17 @@ mppi_sliding:
 
     has_filter: false
     apply_filter: false
-    initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
-                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
-                     0.0,                                                                    # object joint position
-                     0.0,                                                                    # object joint velocity
-                     0,                                                                      # contact flag
-                     100,                                                                    # tank energy
-                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]            # external torques
-
+    initial_state: [ 0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003, 0.0, 0.0,   # robot position 9
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
+                   0.3, 0.3, 0.05, -0.707, 0.0, 0, -0.707,                  # object joint pose  3+4
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                       # object joint velocity 3+4
+                   0]            # contact flag
     gains:
       base_gains:
-        kp: [ 0.0, 0.0, 0.0 ]
-        kd: [ 1000.0, 1000.0, 1000.0 ]
-        ki: [ 0.0, 0.0, 0.0 ]
-        i_max: [ 0.0, 0.0, 0.0 ]
+        kp: []
+        kd: []
+        ki: []
+        i_max: []
       arm_gains:
         kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
         kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]

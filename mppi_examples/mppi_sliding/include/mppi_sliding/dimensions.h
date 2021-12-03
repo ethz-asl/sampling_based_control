@@ -11,7 +11,7 @@ enum PandaDim : char {
   
     GRIPPER_DIMENSION = 2,  // position of the gripper fingers (2)
     ARM_DIMENSION = 7,      // arm only joints
-    BASE_DIMENSION = 3,
+    BASE_DIMENSION = 0,
     //OBJECT_DIMENSION = 1,
     OBJECT_DIMENSION = 7,  
     CONTACT_STATE = 1,

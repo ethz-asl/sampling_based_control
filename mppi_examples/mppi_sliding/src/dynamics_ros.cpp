@@ -14,7 +14,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
                                                const DynamicsParams& params)
     : nh_(nh), PandaRaisimDynamics(params, true) {  
 
-  std::cout << "In dynamic ros constructor, dynamic.cpp finished, params set up " << std::endl;
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
   object_state_publisher_ =
@@ -56,7 +55,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
 
 
   joint_state_.name = {
-      "x_base_joint", "y_base_joint",        "pivot_joint",
       "panda_joint1", "panda_joint2",        "panda_joint3",
       "panda_joint4", "panda_joint5",        "panda_joint6",
       "panda_joint7", "panda_finger_joint1", "panda_finger_joint2"};
@@ -86,14 +84,11 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
 
   signal_logger::add(tau_ext_, "ground_truth_external_torque");
   signal_logger::logger->updateLogger();
-
-  std::cout << " End of  dynamic ros constructor, dynamic.cpp finished, params set up " << std::endl;
-
 }
 
 void ManipulatorDynamicsRos::reset_to_default() {
   x_.setZero();
-  x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785,
+  x_.head<BASE_ARM_GRIPPER_DIM>() << 0.0, -0.52, 0.0, -1.785,
       0.0, 1.10, 0.69, 0.04, 0.04;
   reset(x_, 0.0);
   ROS_INFO_STREAM("Reset simulation ot default value: " << x_.transpose());
@@ -101,7 +96,6 @@ void ManipulatorDynamicsRos::reset_to_default() {
 
 void ManipulatorDynamicsRos::publish_ros() {
   tweak = tweak + 1;
-
   // update robot state visualization
   joint_state_.header.stamp = ros::Time::now();
   for (size_t j = 0; j < robot_dof_; j++) {
@@ -114,7 +108,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   object_state_.header.stamp = ros::Time::now();
   object_state_.position[0] = x_(2 * robot_dof_);
   object_state_publisher_.publish(object_state_);
-
   // update cylinder state and its visulization
   cylinder_state_.header.stamp = ros::Time::now();
   cylinder_trans.header.stamp = ros::Time::now();
@@ -127,7 +120,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_trans.transform.rotation.y = q_cylinder.y();
   cylinder_trans.transform.rotation.z = q_cylinder.z();
   cylinder_trans.transform.rotation.w = q_cylinder.w();
-
   // update cylinder target state and its visulization
   cylinder_target_.header.stamp = ros::Time::now();
   cylinder_target_trans.header.stamp = ros::Time::now();
@@ -140,7 +132,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_target_trans.transform.rotation.y = q_cylinder_t.y();
   cylinder_target_trans.transform.rotation.z = q_cylinder_t.z();
   cylinder_target_trans.transform.rotation.w = q_cylinder_t.w();
-  
   // update mug state and its visulization
   mug_state_.header.stamp = ros::Time::now();
   mug_state_trans.header.stamp = ros::Time::now();
@@ -153,7 +144,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   mug_state_trans.transform.rotation.y = x_(2* robot_dof_+5);
   mug_state_trans.transform.rotation.z = x_(2* robot_dof_+6);
   mug_state_trans.transform.rotation.w = x_(2* robot_dof_+3);
-
   // update table state and its visulization
   table_state_.header.stamp = ros::Time::now();
   table_trans.header.stamp = ros::Time::now();
@@ -166,7 +156,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   table_trans.transform.rotation.y = q_table.y();
   table_trans.transform.rotation.z = q_table.z();
   table_trans.transform.rotation.w = q_table.w();
-
   //send the joint state and transform
   // cylinder_state_publisher_.publish(cylinder_state_);
   // broadcaster.sendTransform(cylinder_trans);
@@ -194,7 +183,6 @@ void ManipulatorDynamicsRos::publish_ros() {
     force_markers.markers.push_back(force_marker_);
   }
   contact_forces_publisher_.publish(force_markers);
-
 
   // publish external torques
   get_external_torque(tau_ext_);

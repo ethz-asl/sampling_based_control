@@ -128,13 +128,13 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
   }
 
   if (!nh.getParam("cost/upper_joint_limits", upper_joint_limits) ||
-      upper_joint_limits.size() != 10) {
+      upper_joint_limits.size() != 8) {
     ROS_ERROR("Failed to parse cost/upper_joint_limits or invalid!");
     return false;
   }
 
   if (!nh.getParam("cost/lower_joint_limits", lower_joint_limits) ||
-      lower_joint_limits.size() != 10) {
+      lower_joint_limits.size() != 8) {
     ROS_ERROR("Failed to parse cost/lower_joint_limits or invalid!");
     return false;
   }

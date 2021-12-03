@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /TF1
         - /TF1/Frames1
         - /World1
         - /World1/Object Model1/Links1
@@ -65,25 +66,13 @@ Visualization Manager:
         All Enabled: false
         axis_link:
           Value: false
-        axle_link:
-          Value: false
         base_inertia:
           Value: true
-        base_link:
-          Value: false
-        chassis_link:
-          Value: false
         cylinder_t_frame:
           Value: true
         door:
           Value: false
         door_hinge:
-          Value: false
-        franka_mount_link:
-          Value: false
-        front_cover_link:
-          Value: false
-        front_lights_link:
           Value: false
         handle_link:
           Value: false
@@ -91,22 +80,16 @@ Visualization Manager:
           Value: false
         handle_support_right:
           Value: false
-        imu_link:
-          Value: false
-        left_side_cover_link:
-          Value: false
         measured_joint_link:
           Value: false
         measured_joint_link_test:
-          Value: false
-        mid_mount:
           Value: false
         mug_frame:
           Value: true
         obstacle:
           Value: false
-        omni_base_root_link:
-          Value: true
+        odom:
+          Value: false
         panda_grasp:
           Value: false
         panda_hand:
@@ -114,7 +97,7 @@ Visualization Manager:
         panda_leftfinger:
           Value: true
         panda_link0:
-          Value: false
+          Value: true
         panda_link1:
           Value: true
         panda_link2:
@@ -134,16 +117,6 @@ Visualization Manager:
         panda_rightfinger:
           Value: true
         pivot:
-          Value: true
-        rear_cover_link:
-          Value: false
-        rear_lights_link:
-          Value: false
-        reference_link:
-          Value: false
-        ridgeback_sensor_mount_link:
-          Value: false
-        right_side_cover_link:
           Value: false
         shelf:
           Value: false
@@ -167,14 +140,12 @@ Visualization Manager:
           Value: false
         table_frame:
           Value: true
-        top_link:
-          Value: false
         world:
-          Value: false
+          Value: true
         x_slider:
-          Value: true
+          Value: false
         y_slider:
-          Value: true
+          Value: false
       Marker Alpha: 1
       Marker Scale: 0.20000000298023224
       Name: TF
@@ -190,52 +161,26 @@ Visualization Manager:
               {}
           obstacle:
             {}
-          omni_base_root_link:
+          odom:
             x_slider:
               y_slider:
                 pivot:
-                  base_link:
-                    chassis_link:
-                      axle_link:
-                        {}
-                      front_cover_link:
-                        {}
-                      front_lights_link:
-                        {}
-                      imu_link:
-                        {}
-                      left_side_cover_link:
-                        {}
-                      rear_cover_link:
-                        {}
-                      rear_lights_link:
-                        {}
-                      right_side_cover_link:
-                        {}
-                      top_link:
-                        {}
-                    mid_mount:
-                      franka_mount_link:
-                        panda_link0:
-                          panda_link1:
-                            panda_link2:
-                              panda_link3:
-                                panda_link4:
-                                  panda_link5:
-                                    panda_link6:
-                                      panda_link7:
-                                        panda_link8:
-                                          panda_hand:
-                                            panda_grasp:
-                                              {}
-                                            panda_leftfinger:
-                                              {}
-                                            panda_rightfinger:
-                                              {}
-                      reference_link:
-                        {}
-                      ridgeback_sensor_mount_link:
-                        {}
+                  panda_link0:
+                    panda_link1:
+                      panda_link2:
+                        panda_link3:
+                          panda_link4:
+                            panda_link5:
+                              panda_link6:
+                                panda_link7:
+                                  panda_link8:
+                                    panda_hand:
+                                      panda_grasp:
+                                        {}
+                                      panda_leftfinger:
+                                        {}
+                                      panda_rightfinger:
+                                        {}
           shelf:
             door_hinge:
               axis_link:
@@ -340,7 +285,7 @@ Visualization Manager:
           Update Interval: 0
           Value: false
           Visual Enabled: true
-        - Alpha: 1
+        - Alpha: 0.5
           Class: rviz/RobotModel
           Collision Enabled: false
           Enabled: true
@@ -350,49 +295,7 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            axle_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            base_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            chassis_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            franka_mount_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            front_cover_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            front_lights_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            imu_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            left_side_cover_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            mid_mount:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            omni_base_root_link:
+            odom:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -462,34 +365,6 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-            rear_cover_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            rear_lights_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            reference_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            ridgeback_sensor_mount_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            right_side_cover_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             world:
               Alpha: 1
               Show Axes: false
@@ -567,23 +442,18 @@ Visualization Manager:
         - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: true
+          Enabled: false
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            table_frame:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
           Name: table
           Robot Description: table_description
           TF Prefix: ""
           Update Interval: 0
-          Value: true
+          Value: false
           Visual Enabled: true
         - Alpha: 0.5
           Class: rviz/RobotModel
@@ -823,7 +693,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.105523109436035
+      Distance: 1.6661194562911987
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -831,17 +701,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.7081576585769653
-        Y: 1.9191086292266846
-        Z: 0.2288559526205063
+        X: -0.07204793393611908
+        Y: 0.0559399239718914
+        Z: 0.8034365773200989
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6797975301742554
+      Pitch: 0.5097982287406921
       Target Frame: <Fixed Frame>
-      Yaw: 5.2287373542785645
+      Yaw: 5.403750419616699
     Saved: ~
 Window Geometry:
   Displays:

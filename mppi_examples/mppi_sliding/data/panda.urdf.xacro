@@ -55,7 +55,7 @@
             </inertial>
         </link>
 
-        <joint name="x_base_joint" type="prismatic">
+        <joint name="x_base_joint" type="fixed">
             <parent link="odom"/>
             <child link="x_slider"/>
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -65,7 +65,7 @@
         </joint>
         <xacro:add_transmission joint_name="x_base_joint"/>
 
-        <joint name="y_base_joint" type="prismatic">
+        <joint name="y_base_joint" type="fixed">
             <parent link="x_slider"/>
             <child link="y_slider"/>
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -75,7 +75,7 @@
         </joint>
         <xacro:add_transmission joint_name="y_base_joint"/>
 
-        <joint name="pivot_joint" type="revolute">
+        <joint name="pivot_joint" type="fixed">
             <parent link="y_slider"/>
             <child link="pivot"/>
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>

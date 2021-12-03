@@ -30,7 +30,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   cylinder_position_  <<  x(2*BASE_ARM_GRIPPER_DIM),
                           x(2*BASE_ARM_GRIPPER_DIM+1),
                           x(2*BASE_ARM_GRIPPER_DIM+2);
-  //ROS_INFO_STREAM("EE in world frame: " << robot_model_.get_pose(params_.tracked_frame).translation);
+  // ROS_INFO_STREAM("EE in world frame: " << robot_model_.get_pose(params_.tracked_frame).translation);
 
   // regularization cost
   cost += params_.Qreg *
@@ -39,16 +39,20 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // end effector reaching cost
   if (mode == 0) {
 
-    //ROS_INFO_STREAM("cylinder pose " << cylinder_position_);
+    auto temp_pose = robot_model_.get_pose(params_.tracked_frame);
+    //ROS_INFO_STREAM( "temp pose: " << temp_pose.translation.transpose() );
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
+    //ROS_INFO_STREAM( "ref q  pose: " << ref_t.transpose() );
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
+    //ROS_INFO_STREAM( "error is: " << error_.head<3>().transpose() );
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
 
-    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) cost += params_.Qc;
+    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) 
+      cost += params_.Qc;
   }
 
   // handle reaching cost
@@ -151,7 +155,6 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
               params_.Q_joint_limit_slope *
                   std::pow(x(i) - params_.upper_joint_limits[i], 2);
   }
-
   return cost;
 
 }

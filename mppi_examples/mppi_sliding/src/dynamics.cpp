@@ -94,21 +94,11 @@ void PandaRaisimDynamics::initialize_world(
   table_->setName("Table");
   
   // state size init, according to DOF
-  if(params_.fixed_base)
-  {    
-    robot_dof_ = BASE_ARM_GRIPPER_DIM - BASE_DIMENSION;
-    state_dimension_ = STATE_DIMENSION - BASE_DIMENSION * 2;
-    input_dimension_ = INPUT_DIMENSION - BASE_DIMENSION * 2;
-    x_ = mppi::observation_t::Zero(state_dimension_);
-
-  }
-  else
-  {
-    robot_dof_ = BASE_ARM_GRIPPER_DIM;
-    state_dimension_ = STATE_DIMENSION;
-    input_dimension_ = INPUT_DIMENSION;
-    x_ = mppi::observation_t::Zero(state_dimension_);
-  }
+  robot_dof_ = BASE_ARM_GRIPPER_DIM;
+  state_dimension_ = STATE_DIMENSION;
+  input_dimension_ = INPUT_DIMENSION;
+  x_ = mppi::observation_t::Zero(state_dimension_);
+  
 
 
   // init state setup
@@ -119,7 +109,7 @@ void PandaRaisimDynamics::initialize_world(
     std::cout << "mug inited at: " << mug_->getGeneralizedCoordinate() << std::endl; 
   if (!if_sim_)
     std::cout << "cylinder inited at: " << cylinder_->getPosition() << std::endl; 
-
+  
 }
 
 void PandaRaisimDynamics::initialize_pd() {
@@ -134,26 +124,17 @@ void PandaRaisimDynamics::initialize_pd() {
   joint_v_desired_.setZero(robot_dof_);
 
   // clang-format off
-  if(!params_.fixed_base)
-  {
-    joint_p_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
-    joint_d_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
-    joint_p_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kp;
-    joint_d_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kd;
-    joint_p_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
-    joint_d_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
-  }
-  else
-  {
-    joint_p_gain_.head(ARM_DIMENSION) = params_.gains.arm_gains.Kp;
-    joint_d_gain_.head(ARM_DIMENSION) = params_.gains.arm_gains.Kd;
-    joint_p_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
-    joint_d_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
-  }
+  joint_p_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kp;
+  joint_d_gain_.head(BASE_DIMENSION) = params_.gains.base_gains.Kd;
+  joint_p_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kp;
+  joint_d_gain_.segment(BASE_DIMENSION, ARM_DIMENSION) = params_.gains.arm_gains.Kd;
+  joint_p_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kp;
+  joint_d_gain_.tail(GRIPPER_DIMENSION) = params_.gains.gripper_gains.Kd;
 
   // clang-format on
 
-  panda_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
+  panda_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);\
+  std::cout << "panda dof: " << panda_->getDOF() << std::endl;
   panda_->setPdGains(joint_p_gain_, joint_d_gain_);
   panda_->setGeneralizedForce(Eigen::VectorXd::Zero(panda_->getDOF()));
 
@@ -175,27 +156,39 @@ void PandaRaisimDynamics::set_collision() {
 
 void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
   // keep the gripper in the current position
-  if (params_.fixed_base)
+
+  cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
+      << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
+
+  // base
+  // cmdv_(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
+  // cmdv_(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
+  // cmdv_(2) = u(2);
+
+  // arm
+  cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);
+
+  if(if_sim_)
   {
-    cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
-        << x_.head<ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
-    // arm
-    cmdv_.head(ARM_DIMENSION) = u.head(ARM_DIMENSION);
+      //ROS_INFO_STREAM("real input: " << u.transpose());  
+      cmdv_(0) = ((double) rand() / (RAND_MAX)) + 1;
+      // cmdv_(2) = ((double) rand() / (RAND_MAX)) - 0.5;
+      // cmdv_(3) = ((double) rand() / (RAND_MAX)) - 0.5 ;
+      // cmdv_(4) = ((double) rand() / (RAND_MAX)) - 0.5 ;
+      // cmdv_(5) = ((double) rand() / (RAND_MAX)) - 0.5 ;
+      // cmdv_(6) = ((double) rand() / (RAND_MAX)) -0.5 ;
+      // cmdv_(7) = ((double) rand() / (RAND_MAX)) -0.5 ;
+      // cmdv_(0) = ((double) rand() / (RAND_MAX)) -0.5 ;
 
+      cmdv_(0) = 2*(cmdv_(0));
   }
-  else{
-    cmd_.tail<PandaDim::GRIPPER_DIMENSION>()
-        << x_.head<BASE_ARM_GRIPPER_DIM>().tail<GRIPPER_DIMENSION>();
 
-    // base
-    cmdv_(0) = u(0) * std::cos(x_(2)) - u(1) * std::sin(x_(2));
-    cmdv_(1) = u(0) * std::sin(x_(2)) + u(1) * std::cos(x_(2));
-    cmdv_(2) = u(2);
 
-    // arm
-    cmdv_.segment<ARM_DIMENSION>(BASE_DIMENSION) = u.segment<ARM_DIMENSION>(BASE_DIMENSION);
-
+  if(!if_sim_)
+  {
+      //ROS_INFO_STREAM("primitive input: " << u.transpose());  
   }
+
 
   // gripper
   cmdv_.tail<PandaDim::GRIPPER_DIMENSION>().setZero();
@@ -231,6 +224,7 @@ void PandaRaisimDynamics::advance() {
 
     // update state x
     panda_->getState(joint_p_, joint_v_);
+
     //object_->getState(object_p_, object_v_);
     object_p_.resize(OBJECT_DIMENSION);
     object_p_(0) = mug_->getGeneralizedCoordinate().e()[0];
@@ -353,7 +347,7 @@ void PandaRaisimDynamics::display_state()
 }
 
 mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
-                                              const double dt) {                                             
+                                              const double dt) {                                                                                  
   set_control(u);
   advance();
   return x_;

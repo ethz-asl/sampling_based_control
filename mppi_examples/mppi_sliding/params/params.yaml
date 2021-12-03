@@ -3,7 +3,7 @@ geometry:
   cylinder_radius: 0.05
   cylinder_mass: 1    # ideally equal to the object
   cylinder_z: 0.98 # table_z + 1/2(table_height+cylinder_height)
-  table_position: [2.4,2.4,0.9]
+  table_position: [1.4,1.4,-0.1]
   friction: 0.15  
 
 setup_config:
@@ -14,21 +14,21 @@ dynamics:
   object_handle_link: handle_link
   object_handle_joint: handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position 12
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 12
-                   1.0, 1.0, 1.05, -0.707, 0.0, 0, -0.707,                                  # object joint pose 3 [x,y,fi] in 2D
+  initial_state: [ 0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003, 0.0, 0.0,    # robot position 9
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 12
+                   0.3, 0.3, 0.05, -0.707, 0.0, 0, -0.707,                                  # object joint pose 3 [x,y,fi] in 2D
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                                         # object joint velocity 3
                    0]            # contact flag
   gains:
     base_gains:
-      kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 1000.0, 1000.0, 1000.0 ]
-      ki: [ 0.0, 0.0, 0.0 ]
-      i_max: [ 0.0, 0.0, 0.0 ]
+      kp: []
+      kd: []
+      ki: []
+      i_max: []
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
-      ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
@@ -41,21 +41,21 @@ sim_dynamics:
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
-                   1.0, 1.0, 1.05, -0.707, 0.0, 0, -0.707,                                       # object joint position
+  initial_state: [ -3.0, -3.0, -3.0, 0.0, 0.0, 0.0, -3.0, 0.0, 0.0,         # robot position
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
+                   0.3, 0.3, 0.05, -0.707, 0.0, 0, -0.707,                                       # object joint position
                    0.0, 0.0, 0.0, 0.0,0.0,0.0,0.0,                                                      # object joint velocity
                    0]             # contact flag
   gains:
     base_gains:
-      kp: [ 0.0, 0.0, 0.0 ]
-      kd: [ 1000.0, 1000.0, 1000.0 ]
-      ki: [ 0.0, 0.0, 0.0 ]
-      i_max: [ 0.0, 0.0, 0.0 ]
+      kp: []
+      kd: []
+      ki: []
+      i_max: []
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
-      ki: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
@@ -88,11 +88,11 @@ cost:
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
   grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
 
-  #upper_joint_limits: [ 5, 5, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
-  #lower_joint_limits: [ -5, -5, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+  #upper_joint_limits: [ 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+  #lower_joint_limits: [ -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
-  upper_joint_limits: [ 1.15, 1.15, 180, 180, 180, 180, 180, 180, 180, 180 ]
-  lower_joint_limits: [ -0.8, -0.8, -180, -180, -180, -180, -180, -180, -180, -180 ]
+  upper_joint_limits: [1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800 ]
+  lower_joint_limits: [ -1800, -1800, -1800, -1800, -1800, -1800, -1800, -1800 ]
 
   joint_limit_cost: 1000 #1000
   joint_limit_slope: 1000000 #100

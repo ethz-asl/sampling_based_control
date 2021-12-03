@@ -32,6 +32,17 @@ void msgToEigen(const manipulation_msgs::State &stateRos,
   }
 }
 
+void msgToEigen_panda(const manipulation_msgs::State& stateRos,
+                Eigen::VectorXd& state, double& time){
+  time = stateRos.header.stamp.toSec();
+  state.resize(manipulation_msgs::State::SIZE);
+  
+  for (size_t i = 0; i < 9; i++) {
+    state(i) = stateRos.arm_state.position[i];
+    state(9 + i) = stateRos.arm_state.velocity[i];
+  }
+}
+
 void eigenToMsg(const Eigen::VectorXd &state, const double &time,
                 manipulation_msgs::State &stateRos) {
   stateRos.header.stamp = ros::Time().fromSec(time);
@@ -58,6 +69,17 @@ void eigenToMsg(const Eigen::VectorXd &state, const double &time,
     stateRos.arm_state.velocity[i] = state(15 + i);
     stateRos.arm_state.effort[i] = state(31 + i);  // indeed tau ext
   }
+}
+
+void eigenToMsg_panda(const Eigen::VectorXd &state, const double &time,
+                manipulation_msgs::State &stateRos) {
+  stateRos.header.stamp = ros::Time().fromSec(time);
+  stateRos.arm_state.position.resize(9);
+  stateRos.arm_state.velocity.resize(9);
+  for (size_t i = 0; i < 9; i++) {
+    stateRos.arm_state.position[i] = state(i);
+    stateRos.arm_state.velocity[i] = state(9+i);
+  }              
 }
 
 void msgToEigen(const manipulation_msgs::Input &inputRos,

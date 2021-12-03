@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
     controller.update_reference(x, sim_time);
+
     if (sequential) {
       controller.set_observation(x, sim_time);
       controller.update_policy();
@@ -103,7 +104,8 @@ int main(int argc, char** argv) {
       controller.set_observation(x, sim_time);
       controller.get_input(x, u, sim_time);
     }
-    //ROS_INFO_STREAM( "controller update ");
+
+    //ROS_INFO_STREAM( "controller update , input is: "<< u.transpose());
 
     x = simulation->step(u, simulation->get_dt());
     sim_time += simulation->get_dt();
@@ -113,7 +115,7 @@ int main(int argc, char** argv) {
     manipulation::conversions::eigenToMsg(x_nom, sim_time, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
     //ROS_INFO_STREAM( "contoller state published ") ;
-    
+
     end = steady_clock::now();
     elapsed = duration_cast<milliseconds>(end - start).count() / 1000.0;
     if (simulation->get_dt() - elapsed > 0)

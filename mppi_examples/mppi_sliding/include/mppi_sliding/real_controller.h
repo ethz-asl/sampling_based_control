@@ -34,7 +34,6 @@
 #include <franka_hw/trigger_rate.h>
 
 #include <geometry_msgs/TwistStamped.h>
-#include <manipulation_msgs/State.h>
 #include <mppi_ros/Rollout.h>
 #include <mppi_ros/conversions.h>
 #include <rosbag/bag.h>  
@@ -59,11 +58,12 @@ class ManipulationController
 
   ManipulationController() : BASE(true){};
 
-  bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& root_nh,
+  bool init(hardware_interface::RobotHW* robot_hw,
             ros::NodeHandle& controller_nh) override;
   void starting(const ros::Time&) override;
   void update(const ros::Time&, const ros::Duration& period) override;
   void stopping(const ros::Time& time) override;
+
 
  private:
   bool init_parameters(ros::NodeHandle& node_handle);
@@ -71,7 +71,7 @@ class ManipulationController
   void init_ros(ros::NodeHandle& node_handle);
 
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
-
+  
   // Apply the safety filter to the optimized velocity
   void enforce_constraints(const ros::Duration& period);
 
@@ -102,8 +102,6 @@ class ManipulationController
   std::vector<hardware_interface::JointHandle> joint_handles_;
 
   bool has_base_handles_;
-  std::vector<std::string> base_joint_names_;
-  std::vector<hardware_interface::JointHandle> base_joint_handles_;
 
   manipulation::PIDGains gains_;
 
@@ -117,7 +115,6 @@ class ManipulationController
   std::vector<std::string> joint_names_;
 
   ros::Subscriber state_subscriber_;
-  RTPublisher<geometry_msgs::Twist> base_twist_publisher_;
   RTPublisher<geometry_msgs::Twist> world_twist_publisher_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
 
@@ -134,7 +131,6 @@ class ManipulationController
   Eigen::VectorXd position_desired_;
   Eigen::VectorXd velocity_measured_;
   Eigen::VectorXd velocity_filtered_;
-  Eigen::Matrix3d R_world_base;
   Eigen::VectorXd max_position_error_;
   franka::RobotState robot_state_;
 
@@ -146,7 +142,6 @@ class ManipulationController
   // safety filter
   bool apply_filter_;
   bool apply_filter_to_rollouts_;
-  Eigen::VectorXd u_filter_;
   //manipulation::EnergyTank energy_tank_;
   //manipulation::FilterParams safety_filter_params_;
   //std::unique_ptr<manipulation::PandaMobileSafetyFilter> safety_filter_;

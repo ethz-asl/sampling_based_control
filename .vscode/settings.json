@@ -72,7 +72,8 @@
         "valarray": "cpp",
         "variant": "cpp",
         "bit": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "*.txx": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/home/boyang/catkin_ws/devel/lib/python3/dist-packages",

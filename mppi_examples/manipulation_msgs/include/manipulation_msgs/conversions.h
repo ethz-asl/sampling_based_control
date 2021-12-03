@@ -15,7 +15,13 @@ namespace manipulation::conversions {
 void msgToEigen(const manipulation_msgs::State& stateRos,
                 Eigen::VectorXd& state, double& time);
 
+void msgToEigen_panda(const manipulation_msgs::State& stateRos,
+                Eigen::VectorXd& state, double& time);
+
 void eigenToMsg(const Eigen::VectorXd& state, const double& time,
+                manipulation_msgs::State&);
+
+void eigenToMsg_panda(const Eigen::VectorXd& state, const double& time,
                 manipulation_msgs::State&);
 
 void msgToEigen(const manipulation_msgs::Input& inputRos,

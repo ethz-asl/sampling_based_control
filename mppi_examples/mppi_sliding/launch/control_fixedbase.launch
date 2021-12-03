@@ -75,7 +75,7 @@
     <!--       ..............         -->>
 
 
-    <!--node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="object_description_raisim"/>
         <remap from="joint_states" to="/object/joint_state"/>
@@ -90,16 +90,16 @@
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="obstacle_description"/>
         <remap from="joint_states" to="/fake_joint_state"/>
-    </node-->
+    </node>
 
-    <param name="/config_file" value="$(find mppi_sliding)/params/controller.yaml"/>
+    <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
 
     <node name="manipulation_control" type="manipulation_control" pkg="mppi_sliding" output="screen" launch-prefix="$(arg launch_prefix)">
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
         <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
-        <rosparam command="load" file="$(find mppi_sliding)/params/controller.yaml"/>
+        <rosparam command="load" file="$(find mppi_sliding)/params/controller_panda.yaml"/>
         <param name="experiment_name" value="$(arg experiment_name)"/>
     </node>
 
