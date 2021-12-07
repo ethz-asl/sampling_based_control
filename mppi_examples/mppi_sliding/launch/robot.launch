@@ -20,7 +20,7 @@
     </node-->
 
     <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
-    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="mppi_sliding">
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="mppi_sliding"> 
         <!--rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/-->
         <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
         <param name="experiment_name" value="$(arg experiment_name)"/>

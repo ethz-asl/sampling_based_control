@@ -24,5 +24,5 @@ Current task: add a control interface for real panda manipulation test.
     - Not sure if **franka_gripper.launch** is needed.
     - Use torque control, or velociry control? (for now is torque control)
         -If use vel control, need to modify trasmission definition? 
-    - In **manipulation_msgs**, base-related data is defined, necessray to remove them?  
+    - In the controller_mug.yaml, what should be the correct namespace for PID controller of Panda?  
 

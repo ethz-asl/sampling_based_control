@@ -224,7 +224,11 @@ void ManipulationController::starting(const ros::Time& time) {
   for (size_t i = 0; i < 7; i++) {
     position_desired_[i] = joint_handles_[i].getPosition();
     position_initial_[i] = joint_handles_[i].getPosition();
+
+    // init man_interface state
+    x_[i] = joint_handles_[i].getPosition();
   }
+  
   position_measured_ = position_desired_;
 
   // metrics
@@ -244,10 +248,10 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::add(position_measured_, "position_measured");
     signal_logger::add(position_desired_, "position_desired");
     signal_logger::add(stage_cost_, "stage_cost");
-    signal_logger::add(power_channels_, "power_channels");
-    signal_logger::add(power_from_error_, "power_from_error");
-    signal_logger::add(power_from_interaction_, "power_from_interaction");
-    signal_logger::add(total_power_exchange_, "total_power_exchange");
+    // signal_logger::add(power_channels_, "power_channels");
+    // signal_logger::add(power_from_error_, "power_from_error");
+    // signal_logger::add(power_from_interaction_, "power_from_interaction");
+    // signal_logger::add(total_power_exchange_, "total_power_exchange");
     signal_logger::add(external_torque_, "external_torque");
     signal_logger::logger->startLogger(true);
   }
@@ -323,6 +327,7 @@ void ManipulationController::update(const ros::Time& time,
 
   // samilar as before, modify the eigenToMsg to adapt to panda
   manipulation::conversions::eigenToMsg_panda(x_nom_, time.toSec(), x_nom_ros_);
+  // get state from pandaHW
   robot_state_ = state_handle_->getRobotState();
 
   if (record_bag_){
@@ -345,10 +350,13 @@ void ManipulationController::update(const ros::Time& time,
     position_measured_[i] = robot_state_.q[i];
     velocity_measured_[i] = robot_state_.dq[i];
     velocity_filtered_[i] =
-        (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
+        (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
   }
 
   //enforce_constraints(period);
+  {
+    u_opt_ = u_.head<7>();
+  }
   update_position_reference(period);
   send_command_arm(period);
   //send_command_base(period);
