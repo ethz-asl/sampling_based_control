@@ -14,16 +14,15 @@
         <arg name="robot_ip" value="$(arg robot_ip)" />
     </include>
 
-    <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
+    <!--node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
         <param name="robot_ip" value="$(arg robot_ip)" />   
         <rosparam command="load" file="$(find mppi_sliding)/config/experiments/franka_control_node.yaml" />
-    </node>
+    </node-->
 
     <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
-    <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ManipulationController">
-        <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="mppi_sliding">
+        <!--rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/-->
         <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
-        <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
         <param name="experiment_name" value="$(arg experiment_name)"/>
     </node>
 
