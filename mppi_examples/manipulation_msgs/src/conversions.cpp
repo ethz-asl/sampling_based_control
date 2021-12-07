@@ -228,4 +228,16 @@ std::string eigenToString(const Eigen::VectorXd &x) {
   return ss.str();
 }
 
+std::string eigenToString_panda(const Eigen::VectorXd &x) {
+  std::stringstream ss;
+  ss << "arm position  =" << x.segment<7>(0).transpose() << std::endl;
+  ss << "arm velocity  =" << x.segment<7>(9).transpose() << std::endl;
+  ss << "fing position =" << x.segment<2>(7).transpose() << std::endl;
+  ss << "fing velocity =" << x.segment<2>(16).transpose() << std::endl;
+  ss << "object pos  =" << x.segment<7>(18).transpose() << std::endl;
+  ss << "object vel  =" << x.segment<7>(25).transpose() << std::endl;
+  ss << "contact state =" << x.segment<1>(32).transpose() << std::endl;
+  return ss.str();
+}
+
 }  // namespace manipulation::conversions

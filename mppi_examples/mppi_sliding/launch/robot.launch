@@ -2,7 +2,7 @@
 <launch>
     <arg name="robot_ip" default="$(env FRANKA_IP)"/>
     <arg name="object" default="shelf"/>
-    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
+    <arg name="experiment_name" default="panda_manipulation"/>
 
     <include file="$(find mppi_sliding)/launch/load.launch">
         <arg name="debug" value="false"/>
@@ -14,19 +14,17 @@
         <arg name="robot_ip" value="$(arg robot_ip)" />
     </include>
 
-    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
-    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/franka_control_node.yaml" />
-    <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
-
     <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
-        <param name="robot_ip" value="$(arg robot_ip)" />
-        <param name="object_reference_position" value="$(arg object_reference_position)"/>
+        <param name="robot_ip" value="$(arg robot_ip)" />   
+        <rosparam command="load" file="$(find mppi_sliding)/config/experiments/franka_control_node.yaml" />
+    </node>
+
+    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
+    <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ManipulationController">
+        <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
         <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
         <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
         <param name="experiment_name" value="$(arg experiment_name)"/>
     </node>
-
-    <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ManipulationController"/>
-
 
 </launch>

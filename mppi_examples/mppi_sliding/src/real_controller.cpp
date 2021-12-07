@@ -43,6 +43,9 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
 
 
 bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
+
+  std::string pkg_name = "mppi_sliding";
+
   if (!node_handle.getParam("arm_id", arm_id_)) {
     ROS_ERROR("Could not read parameter arm_id");
     return false;
@@ -60,14 +63,14 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   }
 
 
-  if (!node_handle.getParam("sequential", sequential_)) {
+  if (!node_handle.getParam( pkg_name + "/sequential", sequential_)) {
     ROS_ERROR("Failed to get sequential parameter");
     return false;
   }
 
   max_position_error_.setZero(7);
   std::vector<double> max_position_error;
-  if (!node_handle.getParam("max_position_error", max_position_error) ||
+  if (!node_handle.getParam( pkg_name + "/max_position_error", max_position_error) ||
       max_position_error.size() != 7) {
     ROS_ERROR("Failed to get max_position_error parameter");
     return false;
@@ -79,29 +82,23 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
-  if (!node_handle.getParam("state_topic", state_topic_)) {
+  if (!node_handle.getParam( pkg_name + "state_topic", state_topic_)) {
     ROS_ERROR("state_topic not found");
     return false;
   }
 
-  if (!node_handle.getParam("nominal_state_topic", nominal_state_topic_)) {
+  if (!node_handle.getParam( pkg_name + "nominal_state_topic", nominal_state_topic_)) {
     ROS_ERROR("nominal_state_topic not found");
     return false;
   }
 
-  if (!node_handle.getParam("record_bag", record_bag_)) {
+  if (!node_handle.getParam( pkg_name + "record_bag", record_bag_)) {
     ROS_ERROR("record_bag not found");
     return false;
   }
 
-  if (!node_handle.getParam("bag_path", bag_path_)) {
+  if (!node_handle.getParam( pkg_name + "bag_path", bag_path_)) {
     ROS_ERROR("bag_path not found");
-    return false;
-  }
-  
-  if (!node_handle.getParam("apply_filter_to_rollouts",
-                            apply_filter_to_rollouts_)) {
-    ROS_ERROR("apply_filter_to_rollouts not found");
     return false;
   }
 
@@ -148,7 +145,7 @@ bool ManipulationController::init_interfaces(
   }
   try {
     state_handle_ = std::make_unique<franka_hw::FrankaStateHandle>(
-        state_interface->getHandle(arm_id_ + "_robot"));
+        state_interface->getHandle(arm_id_ + "_robot"));   // this is the default state interface handle name, for details check  https://frankaemika.github.io/docs/franka_ros.html#writing-your-own-controller
   } catch (hardware_interface::HardwareInterfaceException& ex) {
     ROS_ERROR("Failed to get state handle from interface: ", ex.what());
     return false;
@@ -258,43 +255,6 @@ void ManipulationController::starting(const ros::Time& time) {
   ROS_INFO("Controller started!");
 }
 
-void ManipulationController::enforce_constraints(const ros::Duration& period) {
-  // compute the total power exchange with the tank
-  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
-  power_channels_ = u_opt_.cwiseProduct(external_torque_);
-  power_from_interaction_ = power_channels_.sum();
-
-  // Only the arm has integral control
-  power_from_error_ = 0.0;
-  //(u_opt_ - velocity_filtered_).tail<7>().transpose() *
-  //gains_.arm_gains.Ki.asDiagonal() *
-  //                    (position_desired_ - position_initial_).tail<7>();
-  // total_power_exchange_ = power_from_error_ + power_from_interaction_;
-  // energy_tank_.step(total_power_exchange_, period.toSec());
-
-  // {
-  //   std::unique_lock<std::mutex> lock(observation_mutex_);
-  //   safety_filter_->update(x_, u_, ros::Time::now().toSec());
-
-  //   // this is required for computing some metrics
-  //   // we provide only the joints position (no gripper) since the implementation
-  //   // of the joint limits in the safety_filter package assumes that the state
-  //   // vector is eventually only the joint state
-  //   // TODO(giuseppe) each problem shuould have its implementation (maybe
-  //   // inherithed)
-  //   //   as this is not working anymore if another constraint requires the full
-  //   //   state instead.
-  //   safety_filter_->update_violation(x_.head<10>());
-  // }
-
-  // compute new optimal input
-  auto start = std::chrono::steady_clock::now();
-  //bool filter_ok = safety_filter_->apply(u_filter_);
-  auto end = std::chrono::steady_clock::now();
-  opt_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9;
-
-}
-
 void ManipulationController::update_position_reference(
     const ros::Duration& period) {
   position_desired_.head<7>() += u_opt_.tail<7>() * period.toSec();
@@ -350,7 +310,7 @@ void ManipulationController::update(const ros::Time& time,
   ROS_DEBUG_STREAM("Ctl state:"
                    << std::endl
                    << std::setprecision(2)
-                   << manipulation::conversions::eigenToString(x_));
+                   << manipulation::conversions::eigenToString_panda(x_));
 
   if (sequential_) {
     man_interface_->update_policy();
@@ -376,7 +336,12 @@ void ManipulationController::update(const ros::Time& time,
 
   static const double alpha = 0.1;
 
+  // update state x_
   for (int i = 0; i < 7; i++) {
+
+    x_[i] = robot_state_.q[i];
+    x_[i+BASE_ARM_GRIPPER_DIM] = robot_state_.dq[i];
+
     position_measured_[i] = robot_state_.q[i];
     velocity_measured_[i] = robot_state_.dq[i];
     velocity_filtered_[i] =
@@ -442,6 +407,44 @@ void ManipulationController::getRotationMatrix(Eigen::Matrix3d& R,
        0.0, 0.0, 1.0;
   // clang-format on
 }
+
+void ManipulationController::enforce_constraints(const ros::Duration& period) {
+  // compute the total power exchange with the tank
+  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
+  power_channels_ = u_opt_.cwiseProduct(external_torque_);
+  power_from_interaction_ = power_channels_.sum();
+
+  // Only the arm has integral control
+  power_from_error_ = 0.0;
+  //(u_opt_ - velocity_filtered_).tail<7>().transpose() *
+  //gains_.arm_gains.Ki.asDiagonal() *
+  //                    (position_desired_ - position_initial_).tail<7>();
+  // total_power_exchange_ = power_from_error_ + power_from_interaction_;
+  // energy_tank_.step(total_power_exchange_, period.toSec());
+
+  // {
+  //   std::unique_lock<std::mutex> lock(observation_mutex_);
+  //   safety_filter_->update(x_, u_, ros::Time::now().toSec());
+
+  //   // this is required for computing some metrics
+  //   // we provide only the joints position (no gripper) since the implementation
+  //   // of the joint limits in the safety_filter package assumes that the state
+  //   // vector is eventually only the joint state
+  //   // TODO(giuseppe) each problem shuould have its implementation (maybe
+  //   // inherithed)
+  //   //   as this is not working anymore if another constraint requires the full
+  //   //   state instead.
+  //   safety_filter_->update_violation(x_.head<10>());
+  // }
+
+  // compute new optimal input
+  auto start = std::chrono::steady_clock::now();
+  //bool filter_ok = safety_filter_->apply(u_filter_);
+  auto end = std::chrono::steady_clock::now();
+  opt_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9;
+
+}
+
 
 PLUGINLIB_EXPORT_CLASS(manipulation_panda::ManipulationController,
                        controller_interface::ControllerBase)

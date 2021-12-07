@@ -67,6 +67,7 @@ void toMsg(const double& time,
            manipulation_msgs::State&);
 
 std::string eigenToString(const Eigen::VectorXd& x);
+std::string eigenToString_panda(const Eigen::VectorXd& x);
 
 
 //clang-format on
