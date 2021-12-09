@@ -119,6 +119,12 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  if (!nh.getParam("geometry/target_pos",target_pos))
+  {
+    ROS_ERROR_STREAM("geometry params parsing: failed to parse geometry/target_pos or invalid!");
+    return false;
+  }
+
   if (!nh.getParam("geometry/friction",friction))
   {
     ROS_ERROR_STREAM("geometry params parsing: failed to parse geometry/friction or invalid!");

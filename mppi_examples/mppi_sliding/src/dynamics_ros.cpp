@@ -123,9 +123,9 @@ void ManipulatorDynamicsRos::publish_ros() {
   // update cylinder target state and its visulization
   cylinder_target_.header.stamp = ros::Time::now();
   cylinder_target_trans.header.stamp = ros::Time::now();
-  cylinder_target_trans.transform.translation.x = 1.5;
-  cylinder_target_trans.transform.translation.y = 1.25;
-  cylinder_target_trans.transform.translation.z = 1.05;
+  cylinder_target_trans.transform.translation.x = params_.target_pos[0];
+  cylinder_target_trans.transform.translation.y = params_.target_pos[1];
+  cylinder_target_trans.transform.translation.z = params_.target_pos[2];
   tf2::Quaternion q_cylinder_t;
   q_cylinder_t.setRPY(0, 0, 0);
   cylinder_target_trans.transform.rotation.x = q_cylinder_t.x();

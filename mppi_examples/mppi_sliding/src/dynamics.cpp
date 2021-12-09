@@ -171,7 +171,7 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
   if(if_sim_)
   {
       //ROS_INFO_STREAM("real input: " << u.transpose());  
-      cmdv_(0) = ((double) rand() / (RAND_MAX)) + 1;
+      // cmdv_(0) = ((double) rand() / (RAND_MAX)) + 1;
       // cmdv_(2) = ((double) rand() / (RAND_MAX)) - 0.5;
       // cmdv_(3) = ((double) rand() / (RAND_MAX)) - 0.5 ;
       // cmdv_(4) = ((double) rand() / (RAND_MAX)) - 0.5 ;
@@ -180,7 +180,7 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
       // cmdv_(7) = ((double) rand() / (RAND_MAX)) -0.5 ;
       // cmdv_(0) = ((double) rand() / (RAND_MAX)) -0.5 ;
 
-      cmdv_(0) = 2*(cmdv_(0));
+      //cmdv_(0) = 2*(cmdv_(0));
   }
 
 

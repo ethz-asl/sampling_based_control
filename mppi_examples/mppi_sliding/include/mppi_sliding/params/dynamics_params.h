@@ -24,6 +24,7 @@ struct DynamicsParams {
   double cylinder_height;
   double cylinder_radius;
   double cylinder_z;
+  std::vector<double> target_pos;
   double cylinder_mass;
   std::vector<double> table_position;
   double friction;

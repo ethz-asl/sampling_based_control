@@ -24,7 +24,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   double cost = 0.0;
   
   int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
-
+  //ROS_INFO_STREAM("mode: " << mode);
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   //object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
   cylinder_position_  <<  x(2*BASE_ARM_GRIPPER_DIM),
@@ -40,12 +40,12 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   if (mode == 0) {
 
     auto temp_pose = robot_model_.get_pose(params_.tracked_frame);
-    //ROS_INFO_STREAM( "temp pose: " << temp_pose.translation.transpose() );
+    //ROS_INFO_STREAM( "robot EE pose: " << temp_pose.translation.transpose() );
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
-    //ROS_INFO_STREAM( "ref q  pose: " << ref_t.transpose() );
+    //ROS_INFO_STREAM( "ref EE  pose: " << ref_t.transpose() );
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
-    //ROS_INFO_STREAM( "error is: " << error_.head<3>().transpose() );
+    //ROS_INFO_STREAM( "error is: " << error_.transpose() );
     cost +=
         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     cost +=
@@ -116,19 +116,19 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += object_error * object_error * params_.Q_obj;
   }
   
-  // power cost
+  // // power cost
   cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
   
-  // self collision cost
+  // // self collision cost
   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
                           collision_vector_);
   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
   
-  // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
-  robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
-  cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
+  // // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
+  // robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
+  // cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
 
-  // arm reach cost
+  // // arm reach cost
   double reach;
   robot_model_.get_offset(params_.arm_base_frame, params_.tracked_frame,
                           distance_vector_);
@@ -144,7 +144,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
   
   // joint limits cost
-  for (size_t i = 0; i < 10; i++) {
+  for (size_t i = 0; i < 8; i++) {
     if (x(i) < params_.lower_joint_limits[i])
       cost += params_.Q_joint_limit +
               params_.Q_joint_limit_slope *
@@ -155,6 +155,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
               params_.Q_joint_limit_slope *
                   std::pow(x(i) - params_.upper_joint_limits[i], 2);
   }
+
+  //ROS_INFO_STREAM("cost is: " << cost);
   return cost;
 
 }

@@ -19,10 +19,11 @@
         <rosparam command="load" file="$(find mppi_sliding)/config/experiments/franka_control_node.yaml" />
     </node-->
 
-    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
+    <param name="/config_file" value="$$(find mppi_sliding)/config/experiments/controllers_mug.yaml"/>
     <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="mppi_sliding"> 
         <!--rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/-->
         <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
+        <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
         <param name="experiment_name" value="$(arg experiment_name)"/>
     </node>
 
