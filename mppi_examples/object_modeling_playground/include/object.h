@@ -1,3 +1,4 @@
+#pragma once
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <chrono>
@@ -15,35 +16,38 @@
 
 class Object
 {
-
 public:
-
     Object(const ros::NodeHandle& nh);
-    void update_obj_TF();
-    void pub_state();
-    void update_kp_markers();
-    void fit_primitive();
-    void vis_primitive();
-    void pose_estimate();
+    ~Object() = default;
+    virtual void update_obj_TF(){};
+    virtual void pub_state(){};
+    virtual void update_kp_markers(){};
+    virtual void fit_primitive(){};
+    virtual void vis_primitive(){};
+    virtual void pose_estimate(){};
 
-private:
+    geometry_msgs::TransformStamped obj_trans;
+    geometry_msgs::TransformStamped kp_trans;
+
+protected:
     bool init_param();
     void kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg);
     void init_kp_TF(); // init keypoints frame TF
 
-private:
-    int kp_num;
-    std::vector<int> set_nums;
-    int bottom_ind;
+    // obj config vars
     std::string ref_frame;
-
-    // params of approx primitive
+    std::string object_name;
+    std::vector<double> obj_scale_;
+    std::vector<double> obj_pos_;
+    std::vector<double> obj_rot_;
     int primitive_num = 0 ;
-    std::vector<double> height;
-    std::vector<double> radius;
 
-    ros::NodeHandle nh_;
+    // kp vars
+    int kp_num;
+    std::vector<double> keypoints_;
+    std::vector<double> keypoints_past_;
 
+    // ros vars
     ros::Subscriber kp_int_subscriber_;
 
     ros::Publisher state_publisher_;
@@ -57,13 +61,14 @@ private:
     visualization_msgs::MarkerArray primitive_markers_;
     visualization_msgs::Marker primitive_marker_;
 
-    std::vector<double> obj_scale_;
-    std::vector<double> obj_pos_;
-    std::vector<double> obj_rot_;
-    std::vector<double> keypoints_;
-    std::vector<double> keypoints_past_;
 
-public:
-    geometry_msgs::TransformStamped obj_trans;
-    geometry_msgs::TransformStamped kp_trans;
+
+    int bottom_ind;
+    std::vector<double> height;
+    std::vector<double> radius;
+
+private:
+    // params of approx primitive
+    ros::NodeHandle nh_;
+
 };

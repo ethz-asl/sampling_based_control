@@ -109,16 +109,3 @@ cost:
   collision_link_1: panda_link7
   collision_threshold: 0.35
   collision_weight: 1000
-
-# For valve
-# grasp_translation_offset: [0.0, 0.01, 0.07]
-# grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x
-# For microwave
-# grasp_translation_offset: [0.0, 0.0, 0.0]
-# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
-# For drawer
-# grasp_translation_offset: [0.0, 0.0, 0.0]
-# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
-# For door
-# grasp_translation_offset: [0.0, 0.0, 0.0]
-# grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y

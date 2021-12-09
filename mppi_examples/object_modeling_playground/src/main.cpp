@@ -1,5 +1,5 @@
-#include "object.cpp"
-
+#pragma once
+#include "mug.h"
 
 void processFeedback(
     const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
     tf2_ros::TransformBroadcaster broadcaster;
     
 
-    // mug
-    auto mug = Object(nh);
+    // init one specific objects 
+    auto mug = Mug(nh);
     //mug.init_param();
 
         // keypoints gt

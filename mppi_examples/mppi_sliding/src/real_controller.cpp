@@ -259,33 +259,6 @@ void ManipulationController::starting(const ros::Time& time) {
   ROS_INFO("Controller started!");
 }
 
-void ManipulationController::update_position_reference(
-    const ros::Duration& period) {
-  position_desired_.head<7>() += u_opt_.tail<7>() * period.toSec();
-  position_desired_ =
-      position_measured_ + (position_desired_ - position_measured_)
-                               .cwiseMax(-max_position_error_)
-                               .cwiseMin(max_position_error_);
-}
-
-
-void ManipulationController::send_command_arm(const ros::Duration& period) {
-  // clang-format off
-  std::array<double, 7> tau_d_calculated{};
-  for (int i = 0; i < 7; ++i) {
-    tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[i] - robot_state_.q[i])
-        - gains_.arm_gains.Kd[i] * velocity_filtered_[i];
-  }
-
-  // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
-  saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
-
-  for (size_t i = 0; i < 7; ++i) {
-    joint_handles_[i].setCommand(arm_torque_command_[i]);
-  }
-  // clang-format on
-}
-
 void ManipulationController::update(const ros::Time& time,
                                     const ros::Duration& period) {
   if (!started_) {
@@ -380,12 +353,38 @@ void ManipulationController::update(const ros::Time& time,
   // tracking_error.head<3>() << std::endl; std::cout << "ang err: " <<
   // tracking_error.tail<3>().transpose() * tracking_error.tail<3>() <<
   // std::endl;
-
   if (log_counter_ == log_every_steps_){
     signal_logger::logger->collectLoggerData();
     log_counter_ = 0;
   }
   log_counter_++;
+}
+
+void ManipulationController::update_position_reference(
+    const ros::Duration& period) {
+  position_desired_.head<7>() += u_opt_.head<7>() * period.toSec();
+  position_desired_ =
+      position_measured_ + (position_desired_ - position_measured_)
+                               .cwiseMax(-max_position_error_)
+                               .cwiseMin(max_position_error_);
+}
+
+
+void ManipulationController::send_command_arm(const ros::Duration& period) {
+  // clang-format off
+  std::array<double, 7> tau_d_calculated{};
+  for (int i = 0; i < 7; ++i) {
+    tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[i] - robot_state_.q[i])
+        - gains_.arm_gains.Kd[i] * velocity_filtered_[i];
+  }
+
+  // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
+  saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
+
+  for (size_t i = 0; i < 7; ++i) {
+    joint_handles_[i].setCommand(arm_torque_command_[i]);
+  }
+  // clang-format on
 }
 
 void ManipulationController::stopping(const ros::Time& time) {
