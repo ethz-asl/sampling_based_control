@@ -192,6 +192,7 @@ mppi_sliding:
 
     verbose: false
 
+# only for simulation 
 panda_position_controller:
   type: effort_controllers/JointGroupPositionController
   joints: ["panda_joint1",
