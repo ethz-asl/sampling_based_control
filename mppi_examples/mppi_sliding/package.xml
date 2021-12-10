@@ -32,6 +32,10 @@
   <depend>franka</depend>
   <depend>kdl_parser</depend>
   <depend>eigen_conversions</depend>
+  <depend>message_filters</depend>
+  <depend>filters</depend>
+
+  <depend>rosbag</depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 

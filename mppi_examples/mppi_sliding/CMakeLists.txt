@@ -31,6 +31,8 @@ set(PACKAGE_DEPENDENCIES
         tf2_ros
         kdl_parser
         signal_logger
+        message_filters
+        eigen_conversions
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -42,6 +44,7 @@ catkin_package(
         DEPENDS Franka orocos_kdl)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
 add_library(${PROJECT_NAME}
         src/params/gains.cpp
         src/params/dynamics_params.cpp
@@ -72,6 +75,17 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${catkin_INCLUDE_DIRS} ${Frank
 add_executable(reference_parsing_test src/tests/reference_parsing.cpp)
 target_link_libraries(reference_parsing_test ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(reference_parsing_test ${PROJECT_NAME})
+
+
+#### State observer node
+add_executable(state_observer_node src/state_observer.cpp src/nodes/state_observer_node.cpp)
+target_include_directories(state_observer_node PUBLIC include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})
+target_link_libraries(state_observer_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRARY_DIRS})
+
+### Utils
+add_executable(joint_state_aggregator src/nodes/joint_state_aggregator.cpp)
+target_include_directories(joint_state_aggregator PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(joint_state_aggregator ${catkin_LIBRARIES})
 
 
 if (BUILD_WITH_OGRE)

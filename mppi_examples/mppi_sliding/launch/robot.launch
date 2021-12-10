@@ -14,11 +14,7 @@
         <arg name="robot_ip" value="$(arg robot_ip)" />
     </include>
 
-    <!--node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
-        <param name="robot_ip" value="$(arg robot_ip)" />   
-        <rosparam command="load" file="$(find mppi_sliding)/config/experiments/franka_control_node.yaml" />
-    </node-->
-
+    <!-- controller manager-->
     <param name="/config_file" value="$$(find mppi_sliding)/config/experiments/controllers_mug.yaml"/>
     <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="mppi_sliding"> 
         <!--rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/-->

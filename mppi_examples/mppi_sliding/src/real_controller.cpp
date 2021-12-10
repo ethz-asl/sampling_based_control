@@ -51,17 +51,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
-  // if (!node_handle.getParam("log_every_steps", log_every_steps_)) {
-  //   ROS_ERROR("log_every_steps not found");
-  //   return false;
-  // }
-
   if (!node_handle.getParam("joint_names", joint_names_) ||
       joint_names_.size() != 7) {
     ROS_ERROR("Invalid or no joint_names parameters provided");
     return false;
   }
-
 
   if (!node_handle.getParam( pkg_name + "/sequential", sequential_)) {
     ROS_ERROR("Failed to get sequential parameter");
@@ -201,12 +195,10 @@ void ManipulationController::starting(const ros::Time& time) {
 
   // with sequential execution the optimization needs to be explicitly called
   // in the update function of the controller (not real-time safe)
-  if (!sequential_) {
-    started_ = man_interface_->start();
-    if (!started_) {
-      ROS_ERROR("Failed  to start controller");
-      return;
-    }
+  started_ = man_interface_->start();
+  if (!started_) {
+    ROS_ERROR("Failed  to start controller");
+    return;
   }
 
   // we do not actively control the gripper
@@ -289,15 +281,8 @@ void ManipulationController::update(const ros::Time& time,
                    << std::setprecision(2)
                    << manipulation::conversions::eigenToString_panda(x_));
 
-  if (sequential_) {
-    man_interface_->update_policy();
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
-    man_interface_->publish_ros_default();
-    man_interface_->publish_ros();
-  } else {
-    man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
-  }
-
+  man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
+  
   // samilar as before, modify the eigenToMsg to adapt to panda
   manipulation::conversions::eigenToMsg_panda(x_nom_, time.toSec(), x_nom_ros_);
   // get state from pandaHW
@@ -316,7 +301,6 @@ void ManipulationController::update(const ros::Time& time,
 
   // update state x_
   for (int i = 0; i < 7; i++) {
-
     x_[i] = robot_state_.q[i];
     x_[i+BASE_ARM_GRIPPER_DIM] = robot_state_.dq[i];
 
@@ -353,11 +337,11 @@ void ManipulationController::update(const ros::Time& time,
   // tracking_error.head<3>() << std::endl; std::cout << "ang err: " <<
   // tracking_error.tail<3>().transpose() * tracking_error.tail<3>() <<
   // std::endl;
-  if (log_counter_ == log_every_steps_){
-    signal_logger::logger->collectLoggerData();
-    log_counter_ = 0;
-  }
-  log_counter_++;
+  // if (log_counter_ == log_every_steps_){
+  //   signal_logger::logger->collectLoggerData();
+  //   log_counter_ = 0;
+  // }
+  // log_counter_++;
 }
 
 void ManipulationController::update_position_reference(
@@ -451,7 +435,6 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
   opt_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9;
 
 }
-
 
 PLUGINLIB_EXPORT_CLASS(manipulation_panda::ManipulationController,
                        controller_interface::ControllerBase)

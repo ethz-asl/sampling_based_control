@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!-- joins gripper and arm state -->
+    <node name="joint_state_aggregator" type="joint_state_aggregator" pkg="mppi_manipulation_royalpanda" output="screen">
+        <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
+        <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
+        <param name="output_topic" value="/panda/joint_states"/>
+        <param name="exact_sync" value="false"/>
+    </node>
+
+    <!--node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value=""/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/observer/joint_states"/>
+    </node!-->
+
+    <!--TODO: an extra object state observer here-->
+    
+
+    <!--    State observer node-->
+    <node pkg="mppi_sliding" name="state_observer_node" type="state_observer_node" output="screen">
+        <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
+        <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="observer_update_frequency" value="200"/>
+    </node>
+
+</launch>

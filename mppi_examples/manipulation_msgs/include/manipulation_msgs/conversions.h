@@ -6,28 +6,35 @@
 #include "manipulation_msgs/Input.h"
 #include "manipulation_msgs/InputState.h"
 #include "manipulation_msgs/State.h"
+#include <sensor_msgs/JointState.h>
 
 #include <Eigen/Core>
 
 namespace manipulation::conversions {
 
 // clang-format off
-void msgToEigen(const manipulation_msgs::State& stateRos,
-                Eigen::VectorXd& state, double& time);
+// void msgToEigen(const manipulation_msgs::State& stateRos,
+//                 Eigen::VectorXd& state, double& time){};
 
 void msgToEigen_panda(const manipulation_msgs::State& stateRos,
                 Eigen::VectorXd& state, double& time);
 
-void eigenToMsg(const Eigen::VectorXd& state, const double& time,
-                manipulation_msgs::State&);
+// void eigenToMsg(const Eigen::VectorXd& state, const double& time,
+//                 manipulation_msgs::State&){};
 
 void eigenToMsg_panda(const Eigen::VectorXd& state, const double& time,
                 manipulation_msgs::State&);
 
-void msgToEigen(const manipulation_msgs::Input& inputRos,
+// void msgToEigen(const manipulation_msgs::Input& inputRos,
+//                 Eigen::VectorXd& input){};
+
+void msgToEigen_panda(const manipulation_msgs::Input& inputRos,
                 Eigen::VectorXd& input);
 
-void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input&);
+// void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input&){};
+
+void eigenToMsg_panda(const Eigen::VectorXd& input, manipulation_msgs::Input&);
+
 
 void toEigenState(const Eigen::Vector3d& base_pose,
                   const Eigen::Vector3d& base_twist,
@@ -39,6 +46,13 @@ void toEigenState(const Eigen::Vector3d& base_pose,
                   const double& object_velocity,
                   const bool& contact_state,
                   const double tank_state,
+                  Eigen::VectorXd& x);
+
+void toEigenState_panda(const Eigen::VectorXd& arm_position,
+                  const Eigen::VectorXd& arm_velocity,
+                  const Eigen::VectorXd& object_position,
+                  const Eigen::VectorXd& object_velocity,
+                  const bool& contact_state,
                   Eigen::VectorXd& x);
 
 void fromEigenState(Eigen::Vector3d& base_pose,
@@ -53,6 +67,14 @@ void fromEigenState(Eigen::Vector3d& base_pose,
                     double& tank_state,
                     const Eigen::VectorXd& x);
 
+void fromEigenState_panda(Eigen::VectorXd& arm_position,
+                    Eigen::VectorXd& arm_velocity,
+                    Eigen::VectorXd& object_position,
+                    Eigen::VectorXd& object_velocity,
+                    bool& contact_state,
+                    const Eigen::VectorXd& x);
+
+
 void toMsg(const double& time,
            const Eigen::Vector3d& base_pose,
            const Eigen::Vector3d& base_twist,
@@ -64,9 +86,16 @@ void toMsg(const double& time,
            const double& object_velocity,
            const bool& contact_state,
            const double& tank_state,
+           manipulation_msgs::State&){};
+
+void toMsg_panda(const double& time,
+           const Eigen::VectorXd& arm_position,
+           const Eigen::VectorXd& arm_velocity,
+           const sensor_msgs::JointState& object_state,
+           const bool& contact_state,
            manipulation_msgs::State&);
 
-std::string eigenToString(const Eigen::VectorXd& x);
+//std::string eigenToString(const Eigen::VectorXd& x);
 std::string eigenToString_panda(const Eigen::VectorXd& x);
 
 
