@@ -22,7 +22,10 @@
   <depend>tf2_ros</depend>
   <depend>plotjuggler</depend>
   <depend>signal_logger</depend>>
-  
+
+  <build_depend>interactive_markers</build_depend>
+  <exec_depend>interactive_markers</exec_depend>
+
   <depend>controller_interface</depend>
   <depend>franka_hw</depend>
   <depend>hardware_interface</depend>

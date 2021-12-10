@@ -138,11 +138,11 @@ bool StateObserver::initialize() {
 
   //if (!simulation_) 
   {
-    KDL::Tree object_kinematics;
-    if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
-      ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
-      return false;
-    }
+    // KDL::Tree object_kinematics;
+    // if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
+    //   ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
+    //   return false;
+    // }
 
     // KDL::Chain chain;
     // object_kinematics.getChain("shelf", "handle_link", chain);
