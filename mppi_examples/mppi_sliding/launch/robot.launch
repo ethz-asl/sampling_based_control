@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <launch>
-    <arg name="robot_ip" default="$(env FRANKA_IP)"/>
+    <arg name="robot_ip" default="panda"/>
     <arg name="object" default="shelf"/>
     <arg name="experiment_name" default="panda_manipulation"/>
 
@@ -11,9 +11,9 @@
         <arg name="description_file" value="$(find mppi_sliding)/data/panda.urdf.xacro"/>
     </include>
 
-    <include file="$(find franka_gripper)/launch/franka_gripper.launch">
+    <!-- <include file="$(find franka_gripper)/launch/franka_gripper.launch">
         <arg name="robot_ip" value="$(arg robot_ip)" />
-    </include>
+    </include> -->
 
     <!-- controller manager-->
     <param name="/config_file" value="$$(find mppi_sliding)/config/experiments/controllers_mug.yaml"/>

@@ -41,8 +41,14 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
     auto temp_pose = robot_model_.get_pose(params_.tracked_frame);
     //ROS_INFO_STREAM( "robot EE pose: " << temp_pose.translation.transpose() );
+
+    // for original EE pose tracking
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
+
+    // for test dynamic EE pose tracking (object state serves as desired EE state)
+    //ref_t.head<3>() = x.segment<3>(2*BASE_ARM_GRIPPER_DIM);
+
     //ROS_INFO_STREAM( "ref EE  pose: " << ref_t.transpose() );
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
     //ROS_INFO_STREAM( "error is: " << error_.transpose() );

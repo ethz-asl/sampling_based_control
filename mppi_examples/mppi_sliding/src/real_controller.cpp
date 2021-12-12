@@ -299,19 +299,16 @@ void ManipulationController::update(const ros::Time& time,
   static const double alpha = 0.1;
 
   // update state x_
-  // for (int i = 0; i < 7; i++) {
-  //   x_[i] = robot_state_.q[i];
-  //   x_[i+BASE_ARM_GRIPPER_DIM] = robot_state_.dq[i];
-
-  //   position_measured_[i] = robot_state_.q[i];
-  //   velocity_measured_[i] = robot_state_.dq[i];
-  //   velocity_filtered_[i] =
-  //       (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
-  // }
+  for (int i = 0; i < 7; i++) {
+    position_measured_[i] = robot_state_.q[i];
+    velocity_measured_[i] = robot_state_.dq[i];
+    velocity_filtered_[i] =
+        (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
+  }
 
   //enforce_constraints(period);
   {
-    u_opt_ = u_.head<7>();
+    u_opt_.head<7>()  =  u_.head<7>();
   }
   update_position_reference(period);
   send_command_arm(period);

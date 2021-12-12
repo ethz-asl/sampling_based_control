@@ -31,7 +31,7 @@ void eigenToMsg_panda(const Eigen::VectorXd& state, const double& time,
 void msgToEigen_panda(const manipulation_msgs::Input& inputRos,
                 Eigen::VectorXd& input);
 
-// void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input&){};
+void eigenToMsg(const Eigen::VectorXd& input, manipulation_msgs::Input&);
 
 void eigenToMsg_panda(const Eigen::VectorXd& input, manipulation_msgs::Input&);
 

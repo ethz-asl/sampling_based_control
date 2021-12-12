@@ -237,17 +237,17 @@ void StateObserver::message_filter_cb(
 
 void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
-  // if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
-  //                (int)msg->velocity.size())) {
-  //   ROS_WARN_STREAM_THROTTLE(
-  //       2.0, "Joint state fields have the wrong size." << msg->name.size());
-  //   return;
-  // }
+  if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
+                 (int)msg->velocity.size())) {
+    ROS_WARN_STREAM_THROTTLE(
+        2.0, "Joint state fields have the wrong size." << msg->name.size());
+    return;
+  }
   time_ = msg->header.stamp.toSec();
   for (size_t i = 0; i < 9; i++) {
     q_(i) = msg->position[i];
-    //dq_(i) = msg->velocity[i];
-    dq_(i) = 0 ;
+    dq_(i) = msg->velocity[i];
+    //dq_(i) = 0 ;
   }
   previous_publishing_time_ = time_;
 }
