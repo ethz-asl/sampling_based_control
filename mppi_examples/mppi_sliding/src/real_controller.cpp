@@ -44,8 +44,6 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
 
 bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
 
-  std::string pkg_name = "mppi_sliding";
-
   if (!node_handle.getParam("arm_id", arm_id_)) {
     ROS_ERROR("Could not read parameter arm_id");
     return false;
@@ -57,41 +55,42 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
-  if (!node_handle.getParam( pkg_name + "/sequential", sequential_)) {
+  if (!node_handle.getParam( "sequential", sequential_)) {
     ROS_ERROR("Failed to get sequential parameter");
     return false;
   }
 
   max_position_error_.setZero(7);
   std::vector<double> max_position_error;
-  if (!node_handle.getParam( pkg_name + "/max_position_error", max_position_error) ||
+  if (!node_handle.getParam( "max_position_error", max_position_error) ||
       max_position_error.size() != 7) {
     ROS_ERROR("Failed to get max_position_error parameter");
     return false;
   }
-  for (int i = 0; i < 10; i++) max_position_error_[i] = max_position_error[i];
+  for (int i = 0; i < 7; i++) 
+    max_position_error_[i] = max_position_error[i];
 
   if (!gains_.init_from_ros(node_handle, "controller_")) {
     ROS_ERROR("Failed to parse gains.");
     return false;
   }
 
-  if (!node_handle.getParam( pkg_name + "state_topic", state_topic_)) {
+  if (!node_handle.getParam("state_topic", state_topic_)) {
     ROS_ERROR("state_topic not found");
     return false;
   }
 
-  if (!node_handle.getParam( pkg_name + "nominal_state_topic", nominal_state_topic_)) {
+  if (!node_handle.getParam( "nominal_state_topic", nominal_state_topic_)) {
     ROS_ERROR("nominal_state_topic not found");
     return false;
   }
 
-  if (!node_handle.getParam( pkg_name + "record_bag", record_bag_)) {
+  if (!node_handle.getParam("record_bag", record_bag_)) {
     ROS_ERROR("record_bag not found");
     return false;
   }
 
-  if (!node_handle.getParam( pkg_name + "bag_path", bag_path_)) {
+  if (!node_handle.getParam( "bag_path", bag_path_)) {
     ROS_ERROR("bag_path not found");
     return false;
   }
@@ -171,10 +170,6 @@ void ManipulationController::state_callback(
     manipulation::conversions::msgToEigen_panda(*state_msg, x_, observation_time_);
     
     if (!state_received_) {
-      // position_desired_[0] = state_msg->base_pose.x;
-      // position_desired_[1] = state_msg->base_pose.y;
-      // position_desired_[2] = state_msg->base_pose.z;
-      // position_initial_.head<3>() = position_desired_.head<3>();
       if (!man_interface_->init_reference_to_current_pose(x_,
                                                           observation_time_)) {
         ROS_WARN("Failed to set the controller reference to current state.");
@@ -206,6 +201,10 @@ void ManipulationController::starting(const ros::Time& time) {
   x_nom_.setZero(PandaDim::STATE_DIMENSION);
   u_.setZero(PandaDim::INPUT_DIMENSION);
   u_opt_.setZero(PandaDim::INPUT_DIMENSION);
+  x_nom_ros_.arm_state.position.resize(9);
+  x_nom_ros_.arm_state.velocity.resize(9);
+  x_nom_ros_.object_state.position.resize(7);
+  x_nom_ros_.object_state.velocity.resize(7);
 
   velocity_measured_.setZero(PandaDim::INPUT_DIMENSION);
   velocity_filtered_.setZero(PandaDim::INPUT_DIMENSION);
@@ -300,15 +299,15 @@ void ManipulationController::update(const ros::Time& time,
   static const double alpha = 0.1;
 
   // update state x_
-  for (int i = 0; i < 7; i++) {
-    x_[i] = robot_state_.q[i];
-    x_[i+BASE_ARM_GRIPPER_DIM] = robot_state_.dq[i];
+  // for (int i = 0; i < 7; i++) {
+  //   x_[i] = robot_state_.q[i];
+  //   x_[i+BASE_ARM_GRIPPER_DIM] = robot_state_.dq[i];
 
-    position_measured_[i] = robot_state_.q[i];
-    velocity_measured_[i] = robot_state_.dq[i];
-    velocity_filtered_[i] =
-        (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
-  }
+  //   position_measured_[i] = robot_state_.q[i];
+  //   velocity_measured_[i] = robot_state_.dq[i];
+  //   velocity_filtered_[i] =
+  //       (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
+  // }
 
   //enforce_constraints(period);
   {

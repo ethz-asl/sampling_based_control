@@ -41,6 +41,11 @@ void msgToEigen_panda(const manipulation_msgs::State& stateRos,
     state(i) = stateRos.arm_state.position[i];
     state(9 + i) = stateRos.arm_state.velocity[i];
   }
+  for (size_t i = 0 ; i < 7; i ++){
+    state(18 + i ) = stateRos.object_state.position[i];
+    state(25 + i ) = stateRos.object_state.velocity[i]; 
+  }
+  state(32) = stateRos.in_contact;
 }
 
 // void eigenToMsg(const Eigen::VectorXd &state, const double &time,
@@ -74,12 +79,15 @@ void msgToEigen_panda(const manipulation_msgs::State& stateRos,
 void eigenToMsg_panda(const Eigen::VectorXd &state, const double &time,
                 manipulation_msgs::State &stateRos) {
   stateRos.header.stamp = ros::Time().fromSec(time);
-  stateRos.arm_state.position.resize(9);
-  stateRos.arm_state.velocity.resize(9);
   for (size_t i = 0; i < 9; i++) {
     stateRos.arm_state.position[i] = state(i);
-    stateRos.arm_state.velocity[i] = state(9+i);
-  }              
+    stateRos.arm_state.velocity.push_back(state(9+i));
+  } 
+  for (size_t i = 0 ; i < 7 ; i ++){
+    stateRos.object_state.position[i] = state(18 +i);
+    stateRos.object_state.velocity[i] = state(25 +i);
+  }           
+  stateRos.in_contact = state(32);  
 }
 
 // void msgToEigen(const manipulation_msgs::Input &inputRos,
@@ -274,7 +282,8 @@ void toMsg_panda(const double& time,
 
   stateRos.arm_state.position.resize(9);
   stateRos.arm_state.velocity.resize(9);
-
+  stateRos.object_state.position.resize(7);
+  stateRos.object_state.velocity.resize(7);
   for (int i = 0; i < 9; i++) {
     stateRos.arm_state.position[i] = arm_position(i);
     stateRos.arm_state.velocity[i] = arm_velocity(i);
@@ -282,8 +291,8 @@ void toMsg_panda(const double& time,
 
   for (int i  = 0; i < 7; i++)
   {
-    stateRos.object_position[i] = object_state.position[i];
-    stateRos.object_velocity[i] = object_state.velocity[i];
+    stateRos.object_state.position[i] = object_state.position[i];
+    stateRos.object_state.velocity[i] = object_state.velocity[i];
   }
   stateRos.in_contact = contact_state;
 }

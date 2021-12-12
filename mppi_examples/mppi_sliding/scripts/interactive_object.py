@@ -12,6 +12,20 @@ from interactive_markers.menu_handler import *
 from visualization_msgs.msg import *
 from sensor_msgs.msg import JointState
 
+def talker():
+    pub = rospy.Publisher('/object/state', JointState, queue_size=10)
+    rospy.init_node('talker', anonymous=True)
+    rate = rospy.Rate(10) # 10hz\
+    obj_msg = JointState()
+    for i in range(7):
+        obj_msg.position.append(0)
+        obj_msg.velocity.append(0)
+    obj_msg.position[4] = 1
+    while not rospy.is_shutdown():
+        obj_msg.header.stamp = rospy.Time.now()
+        pub.publish(obj_msg)
+        rate.sleep()
+
 class SingleMarkerBroadcaster:
     def __init__(self):
         server_name = rospy.get_param("~marker_server_name",
@@ -54,7 +68,8 @@ class SingleMarkerBroadcaster:
                                         queue_size=1)
 
     def pub_kp(self):
-        #self.pub.publish(self.msg)
+        #self.pub.publish(self.msg)\
+        self.obj_msg.header.stamp = rospy.Time.now()
         self.obj_pub.publish(self.obj_msg)
 
     def init_pose(self):
@@ -188,24 +203,25 @@ class SingleMarkerBroadcaster:
         self.pose.header.frame_id = self.frame_id
         self.pose.header.stamp = rospy.Time.now()
         # print(int(feedback.marker_name))
-        print(feedback.pose)
+        #print(feedback.pose)
         #idx = int(feedback.marker_name)
-
         #self.msg.poses[idx] = feedback.pose
-        print("1")
         self.obj_msg.position[0] = feedback.pose.position.x
         self.obj_msg.position[1] = feedback.pose.position.y
         self.obj_msg.position[2] = feedback.pose.position.z
-        self.pub_kp()
+        #self.pub_kp()
 
 if __name__ == '__main__':
     rospy.init_node('interactive_marker_node')
-
     try:
         interactiveTargetPose = SingleMarkerBroadcaster()
         interactiveTargetPose.create_marker()
         interactiveTargetPose.apply_changes()
-        # interactiveTargetPose.pub_kp()
-        rospy.spin()
+        #interactiveTargetPose.pub_kp()
+        #rospy.spin()
     except rospy.ROSInterruptException:
         pass
+    rate = rospy.Rate(10) # 10hz\
+    while not rospy.is_shutdown():
+        interactiveTargetPose.pub_kp()
+        rate.sleep()

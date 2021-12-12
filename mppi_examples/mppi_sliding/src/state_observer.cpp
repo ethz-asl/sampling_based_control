@@ -45,7 +45,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 
   // subscribers for message filter
   arm_sub_.subscribe(nh_, arm_state_topic, 10);
-  object_sub_.subscribe(nh_, object_pose_topic, 10);
+  //object_sub_.subscribe(nh_, object_pose_topic, 10);
   obj_state_sub_.subscribe(nh_, object_state_topic, 10);
 
   // message filter with sync policy (timestamps must be the same -> only
@@ -73,7 +73,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
     {
       approx_message_filter_ =
           std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
-              ApproximatePolicy(10), arm_sub_, object_sub_);
+              ApproximatePolicy(10), arm_sub_, obj_state_sub_);
       approx_message_filter_->registerCallback(boost::bind(
           &StateObserver::message_filter_cb, this, _1, _2));
     }
@@ -109,8 +109,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   // robot_state_publisher_ =
   //     nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
 
-  object_state_.name.push_back("articulation_joint");
-
+  object_state_.name.push_back("object");
   for(int i = 0 ; i < 7; i ++)
   {
     object_state_.position.push_back(0.0);
@@ -125,8 +124,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   // robot_state_.header.frame_id = "world";
 
   //base_twist_ros_.header.frame_id = "world";
-
-  ext_tau_.setZero();
+  ROS_INFO("State observer inited");
+  //ext_tau_.setZero();
 }
 
 bool StateObserver::initialize() {
@@ -217,8 +216,11 @@ bool StateObserver::initialize() {
 void StateObserver::message_filter_cb(
     const sensor_msgs::JointStateConstPtr& arm_state,
     const sensor_msgs::JointStateConstPtr& object_state) {
-  if (arm_state->header.stamp.toSec() <= previous_publishing_time_) return;
-
+  
+  if (arm_state->header.stamp.toSec() <= previous_publishing_time_) 
+  {
+    return;
+  }
   arm_state_callback(arm_state);
   object_state_callback(object_state);
   // base_pose_callback(base_pose);
@@ -226,25 +228,26 @@ void StateObserver::message_filter_cb(
   //object_pose_callback(object_odom);
   // this must be executed last as it requires computation from previous cb
   //wrench_callback(wrench);
+
   manipulation::conversions::toMsg_panda(
       time_,  q_, dq_, object_state_, false, state_ros_);
-
   state_publisher_.publish(state_ros_);
 }
 
 
 void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
-  if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
-                 (int)msg->velocity.size())) {
-    ROS_WARN_STREAM_THROTTLE(
-        2.0, "Joint state fields have the wrong size." << msg->name.size());
-    return;
-  }
+  // if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
+  //                (int)msg->velocity.size())) {
+  //   ROS_WARN_STREAM_THROTTLE(
+  //       2.0, "Joint state fields have the wrong size." << msg->name.size());
+  //   return;
+  // }
   time_ = msg->header.stamp.toSec();
   for (size_t i = 0; i < 9; i++) {
     q_(i) = msg->position[i];
-    dq_(i) = msg->velocity[i];
+    //dq_(i) = msg->velocity[i];
+    dq_(i) = 0 ;
   }
   previous_publishing_time_ = time_;
 }
