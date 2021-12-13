@@ -41,6 +41,12 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   nh_.param<std::string>("object_state_topic", object_state_topic,
                          "/object_state");
 
+  std::string table_state_topic;
+  nh_.param<std::string>("table_state_topic",table_state_topic,
+                        "/table/joint_state");
+
+
+  
   nh_.param<bool>("exact_sync", exact_sync_, false);
 
   // subscribers for message filter
@@ -128,12 +134,24 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   //ext_tau_.setZero();
 }
 
+bool StateObserver::init_ros()
+{ 
+  //table 
+  table_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/table/joint_state", 10);
+  table_trans.header.frame_id = "world";
+  table_trans.child_frame_id = "table_frame";
+
+  object_state_trans.header.frame_id = "world";
+  object_state_trans.child_frame_id = "mug_frame";
+
+  return true;
+}
 bool StateObserver::initialize() {
-  // if (!nh_.getParam("base_alpha", base_alpha_) || base_alpha_ < 0 ||
-  //     base_alpha_ > 1) {
-  //   ROS_ERROR("Failed to parse base_alpha param or invalid.");
-  //   return false;
-  // }
+  if(!init_ros()){
+    ROS_INFO("Failed to init ros in state observer");
+    return false;
+  }
 
   //if (!simulation_) 
   {
@@ -231,23 +249,50 @@ void StateObserver::message_filter_cb(
 
   manipulation::conversions::toMsg_panda(
       time_,  q_, dq_, object_state_, false, state_ros_);
+
+  table_state_.header.stamp = ros::Time::now();
+  table_trans.header.stamp = ros::Time::now();
+  table_trans.transform.translation.x = 0;  //TODO (boyang): table state is hardcoded, good for now
+  table_trans.transform.translation.y = 0;
+  table_trans.transform.translation.z = -0.45;
+  tf2::Quaternion q_table;
+  q_table.setRPY(0, 0, 0);
+  table_trans.transform.rotation.x = q_table.x();
+  table_trans.transform.rotation.y = q_table.y();
+  table_trans.transform.rotation.z = q_table.z();
+  table_trans.transform.rotation.w = q_table.w();
+
+  object_state_trans.header.stamp = ros::Time::now();
+  object_state_trans.transform.translation.x = object_state_.position[0];
+  object_state_trans.transform.translation.y = object_state_.position[1];
+  object_state_trans.transform.translation.z = object_state_.position[2];
+  object_state_trans.transform.rotation.x = object_state_.position[4];
+  object_state_trans.transform.rotation.y = object_state_.position[5];
+  object_state_trans.transform.rotation.z = object_state_.position[6];
+  object_state_trans.transform.rotation.w = object_state_.position[3];
+
+
+  table_state_publisher_.publish(table_state_);
+  broadcaster.sendTransform(table_trans);
+  broadcaster.sendTransform(object_state_trans);
   state_publisher_.publish(state_ros_);
+
 }
 
 
 void StateObserver::arm_state_callback(
     const sensor_msgs::JointStateConstPtr& msg) {
-  if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
-                 (int)msg->velocity.size())) {
-    ROS_WARN_STREAM_THROTTLE(
-        2.0, "Joint state fields have the wrong size." << msg->name.size());
-    return;
-  }
+  // if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
+  //                (int)msg->velocity.size())) {
+  //   ROS_WARN_STREAM_THROTTLE(
+  //       2.0, "Joint state fields have the wrong size." << msg->name.size());
+  //   return;
+  // }
   time_ = msg->header.stamp.toSec();
   for (size_t i = 0; i < 9; i++) {
     q_(i) = msg->position[i];
-    dq_(i) = msg->velocity[i];
-    //dq_(i) = 0 ;
+    //dq_(i) = msg->velocity[i];
+    dq_(i) = 0 ;
   }
   previous_publishing_time_ = time_;
 }

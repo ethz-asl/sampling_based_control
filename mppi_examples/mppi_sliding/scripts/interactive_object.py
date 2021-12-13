@@ -12,20 +12,6 @@ from interactive_markers.menu_handler import *
 from visualization_msgs.msg import *
 from sensor_msgs.msg import JointState
 
-def talker():
-    pub = rospy.Publisher('/object/state', JointState, queue_size=10)
-    rospy.init_node('talker', anonymous=True)
-    rate = rospy.Rate(10) # 10hz\
-    obj_msg = JointState()
-    for i in range(7):
-        obj_msg.position.append(0)
-        obj_msg.velocity.append(0)
-    obj_msg.position[4] = 1
-    while not rospy.is_shutdown():
-        obj_msg.header.stamp = rospy.Time.now()
-        pub.publish(obj_msg)
-        rate.sleep()
-
 class SingleMarkerBroadcaster:
     def __init__(self):
         server_name = rospy.get_param("~marker_server_name",
@@ -68,7 +54,6 @@ class SingleMarkerBroadcaster:
                                         queue_size=1)
 
     def pub_kp(self):
-        #self.pub.publish(self.msg)\
         self.obj_msg.header.stamp = rospy.Time.now()
         self.obj_pub.publish(self.obj_msg)
 
@@ -77,16 +62,18 @@ class SingleMarkerBroadcaster:
         for i in range(self.kp_num):
             self.initial_pose = PoseStamped()
             self.initial_pose.header.frame_id = self.frame_id
-            #print(self.initial_pose.header.frame_id)
             self.initial_pose.pose.position.x = self.points[i*4+1]
             self.initial_pose.pose.position.y = self.points[i*4+2]
             self.initial_pose.pose.position.z = self.points[i*4+3]
             self.init_pose_list.append(self.initial_pose)
             self.msg.poses.append(self.initial_pose.pose)
         for i in range(7):
-            self.obj_msg.position.append(self.points[i])
+            self.obj_msg.position.append(0)
             self.obj_msg.velocity.append(0)
-
+        for i in range(7):
+            print(i)
+            self.obj_msg.position[i] = self.points[i]
+        print("msg inited as ", self.obj_msg)
         self.initialized = True
 
     def init_pose_from_ros(self, frame_id):

@@ -69,11 +69,8 @@ class ManipulationController
   bool init_parameters(ros::NodeHandle& node_handle);
   bool init_interfaces(hardware_interface::RobotHW* robot_hw);
   void init_ros(ros::NodeHandle& node_handle);
-
+  void init_env();
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
-  
-  // Apply the safety filter to the optimized velocity
-  void enforce_constraints(const ros::Duration& period);
 
   // Update the desired position reference
   void update_position_reference(const ros::Duration& period);
@@ -111,12 +108,12 @@ class ManipulationController
   std::string arm_id_;
   std::string state_topic_;
   std::string nominal_state_topic_;
-  std::string base_twist_topic_;
+  std::string table_state_topic_;
   std::vector<std::string> joint_names_;
 
   ros::Subscriber state_subscriber_;
-  RTPublisher<geometry_msgs::Twist> world_twist_publisher_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
+  RTPublisher<sensor_msgs::JointState> table_state_publisher_;
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
@@ -139,22 +136,8 @@ class ManipulationController
 
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
 
-  // safety filter
-  bool apply_filter_;
-  bool apply_filter_to_rollouts_;
-  //manipulation::EnergyTank energy_tank_;
-  //manipulation::FilterParams safety_filter_params_;
-  //std::unique_ptr<manipulation::PandaMobileSafetyFilter> safety_filter_;
-
   // metrics
   double stage_cost_;
-
-  // power variables
-  Eigen::Matrix<double, 10, 1> external_torque_;
-  Eigen::Matrix<double, 10, 1> power_channels_;
-  double power_from_error_;
-  double power_from_interaction_;
-  double total_power_exchange_;
 
   // optimal rollout info
   bool publish_rollout_;

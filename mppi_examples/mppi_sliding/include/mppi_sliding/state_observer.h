@@ -26,6 +26,7 @@
 #include <manipulation_msgs/State.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 namespace manipulation_panda {
 
@@ -42,6 +43,7 @@ class StateObserver {
   bool initialize();
 
  private:
+  bool init_ros();
   // void base_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   // void base_twist_callback(const nav_msgs::OdometryConstPtr& msg);
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
@@ -96,10 +98,15 @@ class StateObserver {
   sensor_msgs::JointState robot_state_;
   ros::Publisher robot_state_publisher_;
 
-  // vicon/simulation subscribers
+  ros::Publisher table_state_publisher_;
+  sensor_msgs::JointState table_state_;
+
+  geometry_msgs::TransformStamped table_trans;
+  geometry_msgs::TransformStamped object_state_trans;
+  tf2_ros::TransformBroadcaster broadcaster;
+
   ros::Subscriber object_pose_subscriber_;
-  // ros::Subscriber base_pose_subscriber_;
-  // ros::Subscriber base_twist_subscriber_;
+
   ros::Subscriber arm_state_subscriber_;
   ros::Subscriber wrench_subscriber_;
 

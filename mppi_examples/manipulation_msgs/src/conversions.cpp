@@ -79,6 +79,10 @@ void msgToEigen_panda(const manipulation_msgs::State& stateRos,
 void eigenToMsg_panda(const Eigen::VectorXd &state, const double &time,
                 manipulation_msgs::State &stateRos) {
   stateRos.header.stamp = ros::Time().fromSec(time);
+  stateRos.arm_state.position.resize(9);
+  stateRos.arm_state.velocity.resize(9);
+  stateRos.object_state.position.resize(7);
+  stateRos.object_state.velocity.resize(7);
   for (size_t i = 0; i < 9; i++) {
     stateRos.arm_state.position[i] = state(i);
     stateRos.arm_state.velocity.push_back(state(9+i));

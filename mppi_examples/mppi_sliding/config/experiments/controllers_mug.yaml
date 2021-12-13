@@ -10,11 +10,10 @@ mppi_sliding:
 
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
-  #base_joint_names: [world_x, world_y, theta]
 
   state_topic: /observer/state    # modify into the topic of kp tracker
   nominal_state_topic: /x_nom
-  #base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+  table_state_topic: /table/joint_state
 
   sequential: false
   max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
@@ -60,13 +59,6 @@ mppi_sliding:
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
     grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
-
-    # For valve
-    # grasp_translation_offset: [0.0, 0.01, 0.07]
-    # grasp_orientation_offset: [0.7071068, 0, 0, 0.7071068]  # -90 deg x
-
-    #upper_joint_limits: [ 2.0, 2.0, 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
-    #lower_joint_limits: [ -2.0, -2.0, -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
     # Safer joint limits (+10 deg safety margin ~0.17)
     upper_joint_limits: [6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
@@ -138,59 +130,6 @@ mppi_sliding:
         ki: [ 0.0, 0.0 ]
         i_max: [ 0.0, 0.0 ]
 
-  # Safety filter parameters
-  # It processes the output of the sampled control action and enforces constraints
-  apply_filter: $(arg filter_out)
-  apply_filter_to_rollouts: $(arg filter_in)
-  safety_filter:
-    input_limits: 
-      active: true
-      soft: false
-      slack_multiplier: 0.0
-      u_min: [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 ]
-      u_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-
-    joint_limits: 
-      active: true
-      soft: true
-      slack_multiplier: 10.0
-      q_max: [ 0.543, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-      q_min: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
-
-    cartesian_limits: 
-      active: true
-      soft: true
-      slack_multiplier: 10000.0
-      max_reach: 0.65
-      min_distance: 0.35
-
-    object_avoidance:
-      active: false
-      soft: true
-      slack_multiplier: 1.0
-      min_distance: 0.9
-      object_frame_id: shelf
-  
-    passivity_constraint:
-      active: true
-      soft: true
-      slack_multiplier: 100.0
-      initial_tank_energy: 10.0
-      min_tank_energy: 2.0
-
-    first_derivative_limits: 
-      active: false
-      ud_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
-      ud_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
-
-    second_derivative_limits: 
-      active: false
-      udd_min: [ -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5 ]
-      udd_max: [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ]
-    # udd_min: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-    # udd_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-
-    verbose: false
 
 # only for simulation 
 panda_position_controller:

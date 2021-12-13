@@ -41,7 +41,6 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   return true;  
 }
 
-
 bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
 
   if (!node_handle.getParam("arm_id", arm_id_)) {
@@ -80,6 +79,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam( "table_state_topic", table_state_topic_)) {
+    ROS_ERROR("table_state_topic not found");
+    return false;
+  }
+   
   if (!node_handle.getParam( "nominal_state_topic", nominal_state_topic_)) {
     ROS_ERROR("nominal_state_topic not found");
     return false;
@@ -239,11 +243,6 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::add(position_measured_, "position_measured");
     signal_logger::add(position_desired_, "position_desired");
     signal_logger::add(stage_cost_, "stage_cost");
-    // signal_logger::add(power_channels_, "power_channels");
-    // signal_logger::add(power_from_error_, "power_from_error");
-    // signal_logger::add(power_from_interaction_, "power_from_interaction");
-    // signal_logger::add(total_power_exchange_, "total_power_exchange");
-    signal_logger::add(external_torque_, "external_torque");
     signal_logger::logger->startLogger(true);
   }
   started_ = true;
@@ -306,15 +305,12 @@ void ManipulationController::update(const ros::Time& time,
         (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
   }
 
-  //enforce_constraints(period);
   {
     u_opt_.head<7>()  =  u_.head<7>();
   }
   update_position_reference(period);
   send_command_arm(period);
-  //send_command_base(period);
 
-  // what is this for?
   if (nominal_state_publisher_.trylock()) {
     nominal_state_publisher_.msg_ = x_nom_ros_;
     nominal_state_publisher_.unlockAndPublish();
@@ -324,20 +320,6 @@ void ManipulationController::update(const ros::Time& time,
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
   }
-
-  // TODO(Boyang): this I understand as a debug print out, for me I don't have it
-  //  but could write one
-  // Eigen::Matrix<double, 6, 1> tracking_error =
-  //     man_interface_->get_tracking_error();
-  // std::cout << "lin err: " << tracking_error.head<3>().transpose() *
-  // tracking_error.head<3>() << std::endl; std::cout << "ang err: " <<
-  // tracking_error.tail<3>().transpose() * tracking_error.tail<3>() <<
-  // std::endl;
-  // if (log_counter_ == log_every_steps_){
-  //   signal_logger::logger->collectLoggerData();
-  //   log_counter_ = 0;
-  // }
-  // log_counter_++;
 }
 
 void ManipulationController::update_position_reference(
@@ -393,43 +375,6 @@ void ManipulationController::getRotationMatrix(Eigen::Matrix3d& R,
        std::sin(theta), std::cos(theta), 0.0,
        0.0, 0.0, 1.0;
   // clang-format on
-}
-
-void ManipulationController::enforce_constraints(const ros::Duration& period) {
-  // compute the total power exchange with the tank
-  external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
-  power_channels_ = u_opt_.cwiseProduct(external_torque_);
-  power_from_interaction_ = power_channels_.sum();
-
-  // Only the arm has integral control
-  power_from_error_ = 0.0;
-  //(u_opt_ - velocity_filtered_).tail<7>().transpose() *
-  //gains_.arm_gains.Ki.asDiagonal() *
-  //                    (position_desired_ - position_initial_).tail<7>();
-  // total_power_exchange_ = power_from_error_ + power_from_interaction_;
-  // energy_tank_.step(total_power_exchange_, period.toSec());
-
-  // {
-  //   std::unique_lock<std::mutex> lock(observation_mutex_);
-  //   safety_filter_->update(x_, u_, ros::Time::now().toSec());
-
-  //   // this is required for computing some metrics
-  //   // we provide only the joints position (no gripper) since the implementation
-  //   // of the joint limits in the safety_filter package assumes that the state
-  //   // vector is eventually only the joint state
-  //   // TODO(giuseppe) each problem shuould have its implementation (maybe
-  //   // inherithed)
-  //   //   as this is not working anymore if another constraint requires the full
-  //   //   state instead.
-  //   safety_filter_->update_violation(x_.head<10>());
-  // }
-
-  // compute new optimal input
-  auto start = std::chrono::steady_clock::now();
-  //bool filter_ok = safety_filter_->apply(u_filter_);
-  auto end = std::chrono::steady_clock::now();
-  opt_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() / 1.0e9;
-
 }
 
 PLUGINLIB_EXPORT_CLASS(manipulation_panda::ManipulationController,
