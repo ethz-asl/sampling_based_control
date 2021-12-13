@@ -21,7 +21,7 @@ using namespace manipulation;
 PandaControllerInterfaceNoRos::PandaControllerInterfaceNoRos(const std::string& config_path){
   if(manipulation_config_.init_from_file(config_path)){
     if (manipulation_config_.debug_prints) {
-      ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
+//      ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
     }
   }else{
     ROS_ERROR("Failed to parse manipulation config");

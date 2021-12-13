@@ -78,8 +78,8 @@ void Solver::init_filter() {}
 
 void Solver::init_threading() {
   if (config_.threads > 1) {
-    std::cout << "Using multithreading. Number of threads: " << config_.threads
-              << std::endl;
+//    std::cout << "Using multithreading. Number of threads: " << config_.threads
+//              << std::endl;
     pool_ = std::make_unique<ThreadPool>(config_.threads);
     futures_.resize(config_.threads);
 

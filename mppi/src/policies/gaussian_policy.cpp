@@ -36,7 +36,7 @@ GaussianPolicy::GaussianPolicy(int nu, const Config& config)
   beta_1_ = config_.alpha;
   beta_2_ = config_.beta;
   if (config_.alpha < 1) adam_ = true;
-  std::cout << "Using adam? " << adam_ << std::endl;
+//  std::cout << "Using adam? " << adam_ << std::endl;
 
   L_.setIdentity(nt_);
 

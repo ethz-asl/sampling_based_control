@@ -24,7 +24,7 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params)
 PandaRaisimDynamics::PandaRaisimDynamics(const std::string& config_path){
   manipulation::Config manipulation_config_;
   if(manipulation_config_.init_from_file(config_path)){
-    ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
+//    ROS_INFO_STREAM("Successfully loaded config file at " << config_path);
   }else{
     ROS_ERROR("Failed to parse manipulation config");
   }
