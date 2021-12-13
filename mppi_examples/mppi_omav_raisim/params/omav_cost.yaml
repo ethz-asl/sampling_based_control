@@ -4,8 +4,8 @@
   z_distance_weight: 100.0
   # Weight for the deviation from the reference orientation
   orientation_weight: 100.0
-  # Cost for leafing the field
-  leafing_field_cost: 10000.0
+  # Cost for leaving the field
+  leaving_field_cost: 10000.0
   # Negative and positive limits of the field
   field_limit_x: 30.0
   field_limit_y: 30.0

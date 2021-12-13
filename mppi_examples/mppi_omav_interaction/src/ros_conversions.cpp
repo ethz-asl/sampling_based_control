@@ -5,17 +5,21 @@
 #include "mppi_omav_interaction/ros_conversions.h"
 
 namespace omav_interaction::conversions {
+
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     const mppi::observation_t &x0_opt,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
-  double dt = 0.015;
+  const double dt = 0.015;
   mav_msgs::EigenTrajectoryPoint current_trajectory_point;
-  mav_msgs::EigenTrajectoryPointVector current_trajectory;
+
+  // TODO: WHY 5*VELOCITY?? REMOVE IF WRONG!
   EigenTrajectoryPointFromState(x0_opt, u_opt[0] - 5 * x0_opt.segment<6>(26),
                                 current_trajectory_point);
+
+  mav_msgs::EigenTrajectoryPointVector current_trajectory;
   current_trajectory.push_back(current_trajectory_point);
-  for (int i = 0; i < (x_opt.size() - 6); i++) {
+  for (size_t i = 0; i < (x_opt.size() - 6); i++) {
     EigenTrajectoryPointFromStates(x_opt, u_opt, i, current_trajectory_point,
                                    dt);
     current_trajectory.push_back(current_trajectory_point);
@@ -25,8 +29,9 @@ void to_trajectory_msg(
 }
 
 void EigenTrajectoryPointFromStates(
-    const observation_array_t &states, const input_array_t &inputs, int i,
-    mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt) {
+    const observation_array_t &states, const input_array_t &inputs,
+    const size_t &i, mav_msgs::EigenTrajectoryPoint &trajectorypoint,
+    const double &dt) {
   bool use_input = true;
 
   trajectorypoint.position_W = states[i].segment<3>(19);
@@ -59,18 +64,18 @@ void EigenTrajectoryPointFromStates(
     OptimalRollouttoVelocityVector(i, 30, states, ang_vel_y);
     OptimalRollouttoVelocityVector(i, 31, states, ang_vel_z);
 
-    double lin_acc_x = filter.filter(lin_vel_x);
-    double lin_acc_y = filter.filter(lin_vel_y);
-    double lin_acc_z = filter.filter(lin_vel_z);
-    double ang_acc_x = filter.filter(ang_vel_x);
-    double ang_acc_y = filter.filter(ang_vel_y);
-    double ang_acc_z = filter.filter(ang_vel_z);
+    double lin_acc_x = filter.filter(lin_vel_x) / dt;
+    double lin_acc_y = filter.filter(lin_vel_y) / dt;
+    double lin_acc_z = filter.filter(lin_vel_z) / dt;
+    double ang_acc_x = filter.filter(ang_vel_x) / dt;
+    double ang_acc_y = filter.filter(ang_vel_y) / dt;
+    double ang_acc_z = filter.filter(ang_vel_z) / dt;
 
     Eigen::Matrix<double, 3, 1> linear_acceleration;
-    linear_acceleration << lin_acc_x / dt, lin_acc_y / dt, lin_acc_z / dt;
+    linear_acceleration << lin_acc_x, lin_acc_y, lin_acc_z;
 
     Eigen::Matrix<double, 3, 1> angular_acceleration_W;
-    angular_acceleration_W << ang_acc_x / dt, ang_acc_y / dt, ang_acc_z / dt;
+    angular_acceleration_W << ang_acc_x, ang_acc_y, ang_acc_z;
     trajectorypoint.acceleration_W = linear_acceleration;
     trajectorypoint.angular_acceleration_W = angular_acceleration_W;
   } else {
@@ -107,7 +112,6 @@ void PoseMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
 }
 
 void arrow_initialization(visualization_msgs::Marker &arrow_marker) {
-
   arrow_marker.type = visualization_msgs::Marker::ARROW;
   arrow_marker.header.frame_id = "world";
   arrow_marker.action = visualization_msgs::Marker::ADD;
@@ -123,8 +127,8 @@ void arrow_initialization(visualization_msgs::Marker &arrow_marker) {
   arrow_marker.points.resize(2);
 }
 
-void RPYtoQuaterniond(double roll, double pitch, double yaw,
-                      Eigen::Quaterniond &q) {
+void RPYtoQuaterniond(const double &roll, const double &pitch,
+                      const double &yaw, Eigen::Quaterniond &q) {
   // convert deg to rad
   double roll_rad = roll * 2 * M_PI / 360;
   double pitch_rad = pitch * 2 * M_PI / 360;
@@ -217,6 +221,14 @@ void InterpolateTrajectoryPoints(
       (angular_acceleration_2 - angular_acceleration_1) * t;
 }
 
+/**
+ * @brief      Transforms state and input to trajectory point. Input containts
+ *             accelerations, state containts pose and velocities.
+ *
+ * @param[in]  state            The state
+ * @param[in]  input            The input
+ * @param      trajectorypoint  The trajectorypoint
+ */
 void EigenTrajectoryPointFromState(
     const observation_t &state, const input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
@@ -237,4 +249,4 @@ void PoseMsgForVelocityFromVector(const Eigen::Vector3d &velocity,
   pose_msg.position.z = velocity(2);
 }
 
-} // namespace omav_velocity::conversions
+}  // namespace omav_interaction::conversions

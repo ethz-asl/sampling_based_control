@@ -110,6 +110,7 @@ bool ControllerRos::start() {
 
 bool ControllerRos::update_policy() {
   if (!observation_set_) return true;
+  // ROS_INFO("Observation set.");
   controller_->update_policy();
 
   if (controller_->config_.logging) {
@@ -121,6 +122,7 @@ bool ControllerRos::update_policy() {
 
 bool ControllerRos::update_policy_thread(
     const mppi::threading::WorkerEvent &event) {
+  // ROS_INFO("Updating policy.");
   if (!observation_set_) return true;
   controller_->update_policy();
 

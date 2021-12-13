@@ -9,8 +9,8 @@ object_weight: 150.0
 # Velocity costs
 lin_vel_weight: 0.0
 ang_vel_weight: 0.0
-# Cost for leafing the field
-leafing_field_cost: 10000.0
+# Cost for leaving the field
+leaving_field_cost: 10000.0
 # Negative and positive limits of the field
 field_limit_x_min: -5.0
 field_limit_x_max: 5.0

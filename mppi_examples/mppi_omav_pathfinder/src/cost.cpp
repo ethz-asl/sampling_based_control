@@ -24,7 +24,7 @@ mppi::CostBase::cost_t OMAV_PathfinderCost::compute_cost(const mppi::observation
     double omav_position[3] = {x(16), x(17), x(18)};
     double obstacle_cost = distance_from_obstacle_cost(omav_position, obstacle_1);
     if (x(0) > x_fieldlimitpositive || x(0) < x_fieldlimitnegative || x(1) > y_fieldlimit || x(1) < -y_fieldlimit)
-      cost += c_leafing_field;
+      cost += c_leaving_field;
     cost += obstacle_cost;
 
     //double theta = std::fmod(x(1), 2 * M_PI);

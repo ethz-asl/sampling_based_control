@@ -58,13 +58,13 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="file://$(arg resource_directory)/valve_visual.obj"/>
+                <mesh filename="file://$(arg resource_directory)/valve_visual.obj" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-                <mesh  filename="file://$(arg resource_directory)/valve_collision.obj"/>
+                <mesh  filename="file://$(arg resource_directory)/valve_collision.obj" scale="1 1 1"/>
             </geometry>
         </collision>
     </link>

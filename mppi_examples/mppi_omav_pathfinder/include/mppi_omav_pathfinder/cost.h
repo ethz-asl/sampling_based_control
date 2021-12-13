@@ -23,7 +23,7 @@ class OMAV_PathfinderCost : public mppi::CostBase {
   double w_y = 10;
   double w_z = 10;
   double w_theta = 0;
-  double c_leafing_field = 0;
+  double c_leaving_field = 0;
   double x_fieldlimitpositive = 25.0;
   double x_fieldlimitnegative = -5.0;
   double y_fieldlimit = 10;

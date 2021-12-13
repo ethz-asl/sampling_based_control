@@ -6,10 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TF1
-        - /RobotModel1
-        - /RobotModel2
         - /PoseArray1
+        - /ReferencePoses1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -77,6 +75,8 @@ Visualization Manager:
           Value: false
         rod:
           Value: false
+        state:
+          Value: true
         tip:
           Value: false
         valve_base:
@@ -100,6 +100,8 @@ Visualization Manager:
                     hook:
                       {}
           ouzel/odometry_sensor1:
+            {}
+          state:
             {}
           valve_base:
             handle_link:
@@ -140,7 +142,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-      Name: RobotModel
+      Name: OMAV
       Robot Description: robot_visualization
       TF Prefix: ""
       Update Interval: 0
@@ -165,11 +167,12 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         world:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-      Name: RobotModel
+      Name: Object
       Robot Description: object_description_rviz
       TF Prefix: ""
       Update Interval: 0
@@ -190,6 +193,30 @@ Visualization Manager:
       Shape: Axes
       Topic: /optimal_rollout
       Unreliable: false
+      Value: true
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz/PoseArray
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
+      Name: ReferencePoses
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Axes
+      Topic: /ouzel/reference_trajectory_poses
+      Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /ouzel/omav_mppi_interaction/debug/hook_pos
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -219,25 +246,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.0492401123046875
+      Distance: 2.0790271759033203
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.5944140553474426
-        Y: -0.020487863570451736
-        Z: 0.21046090126037598
+        X: 0.05201690271496773
+        Y: -0.5409061312675476
+        Z: 0.007839888334274292
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7203981876373291
+      Pitch: 0.42539843916893005
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.740398108959198
+      Yaw: 0.9453980326652527
     Saved: ~
 Window Geometry:
   Displays:

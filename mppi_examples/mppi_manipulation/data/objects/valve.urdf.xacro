@@ -32,13 +32,13 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/>
+                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
-	    <geometry>
-                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/>
+	       <geometry>
+                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj" scale="1 1 1"/>
             </geometry>
         </collision>
     </link>
@@ -47,7 +47,7 @@
         <parent link="valve_base"/>
         <child link="handle_link"/>
         <origin xyz="0 0 ${base_height/2.0+0.1}" rpy="1.5708 0 0"/>
-        <dynamics damping="0.0" friction="0.0"/>
+        <dynamics damping="0.0" friction="0.002"/>
         <axis xyz="0 1 0"/>
         <limit upper="300.14" lower="-300.14" effort="100" velocity="1.0"/>
     </joint>

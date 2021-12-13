@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     rospy.sleep(10.0)
     object_pose.header.frame_id = "world"
-    object_pose.pose.position.x = 1.5708
+    object_pose.pose.position.x = 0.5  # Use this parameter to set the ref position or velocity of the valve.
     object_pose.pose.position.y = 0
     object_pose.pose.position.z = 0
     object_pose.pose.orientation.w = 1.0

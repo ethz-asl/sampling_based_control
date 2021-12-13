@@ -13,33 +13,42 @@ using namespace omav_interaction;
 bool OMAVControllerInterface::init_ros() {
   // Initialize publisher
   optimal_rollout_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout", 1);
+      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_rollout", 1);
   optimal_rollout_des_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_rollout_desired", 1);
+      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_rollout_desired", 1);
   optimal_linear_input_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_linear", 1);
+      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_input_linear", 1);
   optimal_angular_input_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_input_angular", 1);
+      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_input_angular", 1);
   optimal_rollout_ang_vel_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_ang_vel", 1);
+      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_ang_vel", 1);
   optimal_rollout_lin_vel_ =
-      nh_.advertise<geometry_msgs::PoseArray>("/optimal_lin_vel", 1);
+      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_lin_vel", 1);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
+  // Publish current pose reference used by mppi
   mppi_reference_publisher_ =
-      nh_.advertise<geometry_msgs::Pose>("/mppi_reference", 1);
+      nh_.advertise<geometry_msgs::Pose>("debug/mppi_reference", 1);
+  // Publish current object state used by mppi
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+
   detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
   if (detailed_publishing_) {
+    ROS_INFO("[mppi_omav_interaction] Detailed publishing enabled.");
     trajectory_publisher_ =
-        nh_.advertise<geometry_msgs::PoseArray>("/trajectory", 1);
+        nh_.advertise<geometry_msgs::PoseArray>("debug/all_rollouts", 1);
 
-    cost_publisher_ = nh_.advertise<mppi_ros::Array>("/cost_parts", 10);
+    cost_publisher_ =
+        nh_.advertise<mppi_ros::Array>("debug/cost_components", 10);
     normalized_force_publisher_ =
-        nh_.advertise<visualization_msgs::MarkerArray>("/normalized_forces",
-                                                       10);
+        nh_.advertise<visualization_msgs::MarkerArray>(
+            "debug/normalized_forces", 10);
+    pub_marker_hook_ =
+        nh_.advertise<visualization_msgs::Marker>("debug/hook_pos", 10);
+  } else {
+    ROS_WARN("[mppi_omav_interaction] Detailed publishing disabled.");
   }
 
   // Initialize subscriber
@@ -184,6 +193,12 @@ void OMAVControllerInterface::desired_pose_callback(
   get_controller()->set_reference_trajectory(ref_);
 }
 
+void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
+  ref_.rr[0](7) = ref_angle;
+  get_controller()->set_reference_trajectory(ref_);
+  ROS_INFO_STREAM_THROTTLE(0.5, "Setting valve ref to " << ref_angle);
+}
+
 void OMAVControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr &msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
@@ -232,20 +247,31 @@ bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
 void OMAVControllerInterface::publish_ros() {
   get_controller()->get_optimal_rollout(xx_opt_, uu_opt_);
   x0_ = get_controller()->get_current_observation();
-  OMAVControllerInterface::publish_trajectory(xx_opt_, uu_opt_, x0_);
-  OMAVControllerInterface::publish_optimal_rollout();
+
+  publish_trajectory(xx_opt_, uu_opt_, x0_);
+  publish_optimal_rollout();
+  publish_all_trajectories();
+
   static tf::TransformBroadcaster odom_broadcaster;
   tf::Transform omav_odom;
   omav_odom.setOrigin(tf::Vector3(x0_(0), x0_(1), x0_(2)));
   omav_odom.setRotation(tf::Quaternion(x0_(4), x0_(5), x0_(6), x0_(3)));
   odom_broadcaster.sendTransform(
       tf::StampedTransform(omav_odom, ros::Time::now(), "world", "odom_omav"));
+
   // update object state visualization
   object_state_.header.stamp = ros::Time::now();
   object_state_.position[0] = xx_opt_[0](13);
   object_state_publisher_.publish(object_state_);
 }
 
+/**
+ * @brief      Publish optimal trajectory
+ *
+ * @param[in]  x_opt   Optimal states
+ * @param[in]  u_opt   Optimal inputs
+ * @param[in]  x0_opt  The x 0 option
+ */
 void OMAVControllerInterface::publish_trajectory(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     const mppi::observation_t &x0_opt) const {
@@ -256,23 +282,30 @@ void OMAVControllerInterface::publish_trajectory(
   cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg);
 }
 
+/**
+ * @brief      Publish all rollouts
+ */
 void OMAVControllerInterface::publish_all_trajectories() {
-  get_controller()->get_rollout_trajectories(current_trajectories);
-  geometry_msgs::PoseArray trajectory_array;
-  geometry_msgs::Pose current_trajectory_pose;
-  trajectory_array.header.frame_id = "world";
-  trajectory_array.header.stamp = ros::Time::now();
-  for (int i = 0; i < current_trajectories.size(); i++) {
-    xx_current_trajectory = current_trajectories[i].xx;
-    for (int j = 0; j < xx_current_trajectory.size(); j++) {
-      if ((j % 10) == 0) {
-        omav_interaction::conversions::PoseMsgFromVector(
-            xx_current_trajectory[j].head<7>(), current_trajectory_pose);
-        trajectory_array.poses.push_back(current_trajectory_pose);
+  if (detailed_publishing_ &&
+      get_controller()->get_rollout_trajectories(current_trajectories)) {
+    geometry_msgs::PoseArray trajectory_array;
+    geometry_msgs::Pose current_trajectory_pose;
+    trajectory_array.header.frame_id = "world";
+    trajectory_array.header.stamp = ros::Time::now();
+    // Iterate through rollouts:
+    for (size_t i = 0; i < current_trajectories.size(); i++) {
+      xx_current_trajectory = current_trajectories[i].xx;
+      for (size_t j = 0; j < xx_current_trajectory.size(); j++) {
+        // In each rollout take each 10th point to publish.
+        if ((j % 10) == 0) {
+          omav_interaction::conversions::PoseMsgFromVector(
+              xx_current_trajectory[j].head<7>(), current_trajectory_pose);
+          trajectory_array.poses.push_back(current_trajectory_pose);
+        }
       }
     }
+    trajectory_publisher_.publish(trajectory_array);
   }
-  trajectory_publisher_.publish(trajectory_array);
 }
 
 void OMAVControllerInterface::publish_optimal_rollout() {
@@ -338,9 +371,50 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   mppi_reference.orientation.z = ref_.rr[0](6);
   mppi_reference_publisher_.publish(mppi_reference);
 
-  if (task_ == InteractionTask::Shelf) {
+  if (task_ == InteractionTask::Shelf && detailed_publishing_) {
     publishShelfInfo(header);
+  } else {
+    publishHookPos(header);
   }
+}
+
+void OMAVControllerInterface::publishHookPos(
+    const std_msgs::Header &header) const {
+  visualization_msgs::Marker marker_hook;
+  marker_hook.header = header;
+  marker_hook.header.frame_id = "world";
+  marker_hook.type = visualization_msgs::Marker::POINTS;
+  marker_hook.pose.orientation.x = 0;
+  marker_hook.pose.orientation.y = 0;
+  marker_hook.pose.orientation.z = 0;
+  marker_hook.pose.orientation.w = 1;
+  marker_hook.pose.position.x = 0;
+  marker_hook.pose.position.y = 0;
+  marker_hook.pose.position.z = 0;
+  marker_hook.scale.x = 0.02;
+  marker_hook.scale.y = 0.02;
+  marker_hook.scale.z = 0.02;
+  marker_hook.color.a = 1.0;
+  marker_hook.color.r = 0.0;
+  marker_hook.color.g = 1.0;
+  marker_hook.color.b = 0.0;
+  geometry_msgs::Point point;
+  std_msgs::ColorRGBA color;
+  color.a = 1.0;
+  color.b = 0.0;
+  for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
+    cost_valve_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
+                              i * 0.015);
+    point.x = cost_valve_->hook_pos_(0);
+    point.y = cost_valve_->hook_pos_(1);
+    point.z = cost_valve_->hook_pos_(2);
+    color.r = static_cast<float>(i)/optimal_rollout_states_.size();
+    color.g = 1.0f-static_cast<float>(i)/optimal_rollout_states_.size();
+
+    marker_hook.points.push_back(point);
+    marker_hook.colors.push_back(color);
+  }
+  pub_marker_hook_.publish(marker_hook);
 }
 
 void OMAVControllerInterface::publishShelfInfo(
@@ -365,17 +439,17 @@ void OMAVControllerInterface::publishShelfInfo(
     cost_shelf_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
                               i * 0.015);
     // Velocity Cost
-    velocity_cost += cost_shelf_->velocity_cost_;
+    velocity_cost += cost_shelf_->cost_vector_(CostIdx::velocity);
     // Efficiency Cost
-    power_cost += cost_shelf_->efficiency_cost_;
+    power_cost += cost_shelf_->cost_vector_(CostIdx::efficiency);
     // Object Cost
-    object_cost += cost_shelf_->object_cost_;
+    object_cost += cost_shelf_->cost_vector_(CostIdx::object);
     // Torque Cost
-    torque_cost += cost_shelf_->torque_cost_;
+    torque_cost += cost_shelf_->cost_vector_(CostIdx::torque);
     // Handle Hook Cost
-    handle_hook_cost += cost_shelf_->handle_hook_cost_;
+    handle_hook_cost += cost_shelf_->cost_vector_(CostIdx::handle_hook);
     // Pose Cost
-    pose_cost += cost_shelf_->pose_cost_;
+    pose_cost += cost_shelf_->cost_vector_(CostIdx::pose);
     overall_cost += cost_shelf_->cost_;
 
     Eigen::Vector3d force_normed =

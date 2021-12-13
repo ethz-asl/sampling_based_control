@@ -30,10 +30,10 @@ OMAVRaisimCost::compute_cost(const mppi::observation_t &x,
                              const mppi::reference_t &ref, const double t) {
   double cost = 0.0;
 
-  // Leafing Field Cost
+  // leaving Field Cost
   if (abs(x(16)) > param_.x_limit || abs(x(17)) > param_.y_limit ||
       abs(x(18)) > param_.z_limit) {
-    cost += param_.Q_leafing_field;
+    cost += param_.Q_leaving_field;
   }
   // Pose Cost
   mppi_pinocchio::Pose current_pose, reference_pose;
@@ -78,9 +78,9 @@ bool OMAVRaisimCostParam::parse_from_ros(const ros::NodeHandle &nh) {
     return false;
   }
 
-  if (!nh.getParam("leafing_field_cost", Q_leafing_field) ||
-      Q_leafing_field < 0) {
-    ROS_ERROR("Failed to parse leafing_field_cost or invalid!");
+  if (!nh.getParam("leaving_field_cost", Q_leaving_field) ||
+      Q_leaving_field < 0) {
+    ROS_ERROR("Failed to parse leaving_field_cost or invalid!");
     return false;
   }
   if (!nh.getParam("field_limit_x", x_limit) || x_limit < 0) {
@@ -147,7 +147,7 @@ std::ostream &operator<<(std::ostream &os,
     os << " x_distance_weight: " << param.Q_distance_x << std::endl;
     os << " y_distance_weight: " << param.Q_distance_y << std::endl;
     os << " z_distance_weight: " << param.Q_distance_z << std::endl;
-    os << " leafing_field_cost: " << param.Q_leafing_field << std::endl;
+    os << " leaving_field_cost: " << param.Q_leaving_field << std::endl;
     os << " field_limit_x: " << param.x_limit << std::endl;
     os << " field_limit_y: " << param.y_limit << std::endl;
     os << " field_limit_z: " << param.z_limit << std::endl;

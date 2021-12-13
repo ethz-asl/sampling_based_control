@@ -36,7 +36,7 @@ class OmavTrajectoryGenerator {
 
   void get_odometry(observation_t &x) const;
 
-  void set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
+  bool set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
                       &trajectory_msg_point);
 
   void initialize_integrators(observation_t &x);

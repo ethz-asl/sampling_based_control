@@ -33,10 +33,19 @@ void OMAVVelocityDynamics::initialize_world(
   sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
   robot_dof_ = omav_->getDOF();
   // Set dimensions
-  state_dimension_ = 32; // I_position(3), orientation(4), I_velocity(3),
-  // B_omega(3), position_object(1), velocity_object(1), forces(3),
-  // contact_state(1), I_position_desired(3), orientation_desired(4),
-  // I_velocity_desired(3), B_omega_desired(3)
+  state_dimension_ = 32; 
+  // I_position(3),
+  // orientation(4),
+  // I_velocity(3),
+  // B_omega(3),
+  // position_object(1),
+  // velocity_object(1),
+  // forces(3),
+  // contact_state(1),
+  // I_position_desired(3),
+  // orientation_desired(4),
+  // I_velocity_desired(3),
+  // B_omega_desired(3)
   input_dimension_ = 6; // linear_acceleration_(3) angular_acceleration(3)
   derrivative_dimension_ = 12;
 
@@ -50,6 +59,7 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
 
   Eigen::VectorXd pGain(robot_dof_), dGain(robot_dof_);
+  // TODO: Set gains according to real values.
   pGain << 20.0, 20.0, 20.0, 35.0, 35.0, 35.0;
   dGain << 5.0, 5.0, 5.0, 12.0, 12.0, 12.0;
 
@@ -68,6 +78,7 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   omav_->setPdTarget(cmd_, cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
   nonLinearities_ = omav_->getNonlinearities().e();
+  // TODO: Set mass according to real values.
   feedforward_force_ = feedforward_acceleration_ * 4.337 + nonLinearities_;
   omav_->setGeneralizedForce(feedforward_force_);
   sim_.integrate();

@@ -48,11 +48,11 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
   int i = 0;
   while (object_state_sub_.getNumPublishers() <= 0 && i < 10) {
     ros::Duration(1.0).sleep();
-    ROS_WARN("[mppi_omav_interaction] Waiting for publisher of shelf state.");
+    ROS_WARN("[mppi_omav_interaction] Waiting for publisher of object state.");
     i++;
   }
   if (i == 10) {
-    ROS_ERROR("[mppi_omav_interaction] Did not get shelf state publisher.");
+    ROS_ERROR("[mppi_omav_interaction] Did not get object state publisher.");
     ros::shutdown();
   }
   ROS_INFO("[mppi_omav_interaction] Subscribers initialized");
@@ -78,13 +78,19 @@ void OmavTrajectoryGenerator::objectCallback(
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object state message");
 }
 
+/**
+ * @brief      Callback for a position target message
+ *
+ * @param[in]  position_target_msg  The position target message
+ */
 void OmavTrajectoryGenerator::TargetCallback(
     const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg) {
-  target_state_time_ = 0.0;
-  first_trajectory_sent_ = true;
-  set_target(position_target_msg.points[0]);
-  current_trajectory_ = position_target_msg;
-  shift_lock_ = false;
+  if (set_target(position_target_msg.points[0])) {
+    target_state_time_ = 0.0;
+    first_trajectory_sent_ = true;
+    current_trajectory_ = position_target_msg;
+    shift_lock_ = false;
+  }
 }
 
 void OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
@@ -204,29 +210,31 @@ void OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
   x.segment<3>(29) = current_odometry_.angular_velocity_B;
 
   target_state_.position_W = current_odometry_.position_W;
-  target_state_.orientation_W_B.w() = current_odometry_.orientation_W_B.w();
-  target_state_.orientation_W_B.vec() = current_odometry_.orientation_W_B.vec();
+  target_state_.orientation_W_B = current_odometry_.orientation_W_B;
   target_state_.velocity_W = current_odometry_.getVelocityWorld();
   target_state_.angular_velocity_W = current_odometry_.angular_velocity_B;
 }
 
-void OmavTrajectoryGenerator::set_target(
+/**
+ * @brief      Sets a position target.
+ *
+ * @param[in]  trajectory_msg_point  The trajectory message point
+ *
+ * @return     true if successful, false otherwise.
+ */
+bool OmavTrajectoryGenerator::set_target(
     const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point) {
-  Eigen::Vector3d position =
+  if (trajectory_msg_point.transforms.size() <= 0) {
+    ROS_ERROR("[mppi_omav_interaction] Target does not contain any reference.");
+    return false;
+  }
+  target_state_.orientation_W_B =
+      mav_msgs::quaternionFromMsg(trajectory_msg_point.transforms[0].rotation);
+  target_state_.position_W =
       mav_msgs::vector3FromMsg(trajectory_msg_point.transforms[0].translation);
-  target_state_.position_W = position;
-  target_state_.orientation_W_B.w() =
-      trajectory_msg_point.transforms[0].rotation.w;
-  target_state_.orientation_W_B.x() =
-      trajectory_msg_point.transforms[0].rotation.x;
-  target_state_.orientation_W_B.y() =
-      trajectory_msg_point.transforms[0].rotation.y;
-  target_state_.orientation_W_B.z() =
-      trajectory_msg_point.transforms[0].rotation.z;
-  Eigen::Vector3d velocity_lin =
+  target_state_.velocity_W =
       mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].linear);
-  target_state_.velocity_W = velocity_lin;
-  Eigen::Vector3d velocity_ang =
+  target_state_.angular_velocity_W =
       mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].angular);
-  target_state_.angular_velocity_W = velocity_ang;
+  return true;
 }

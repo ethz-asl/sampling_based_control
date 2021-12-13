@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <mppi_omav_interaction/cost_common.h>
+
 #include <mppi/cost/cost_base.h>
 #include <ros/ros.h>
 #include <cmath>
@@ -39,7 +41,7 @@ struct OMAVInteractionCostValveParam {
   Eigen::Matrix<double, 6, 1> vel_costs;
   Eigen::Matrix<double, 6, 6> Q_vel;
 
-  double Q_leafing_field;  // Leafing Field Costs
+  double Q_leaving_field;  // leaving Field Costs
 
   double x_limit_min;  // Field Limits
   double x_limit_max;
@@ -64,6 +66,9 @@ struct OMAVInteractionCostValveParam {
   bool contact_bool;
 
   bool parse_from_ros(const ros::NodeHandle &nh);
+  template <class A>
+  bool getParameter(const ros::NodeHandle &nh, const std::string &id, A &val,
+                    const bool &checkPositive);
 };
 
 class OMAVInteractionCostValve : public mppi::CostBase {
@@ -83,8 +88,9 @@ class OMAVInteractionCostValve : public mppi::CostBase {
 
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
-  std::string hook_frame_ = "hook";
-  std::string handle_frame_ = "handle_ref";
+  Frames frames_;
+  // std::string hook_frame_ = "hook";
+  // std::string handle_frame_ = "handle_link";
 
   Eigen::Matrix<double, 6, 1> delta_pose_;
   Eigen::Matrix<double, 6, 1> delta_pose_object;
@@ -103,14 +109,7 @@ class OMAVInteractionCostValve : public mppi::CostBase {
   double distance_hook_handle_;
 
  public:
-  double floor_cost_;
-  double pose_cost_;
-  double object_cost_;
-  double handle_hook_cost_;
-  double tip_velocity_cost_;
-  double torque_cost_;
-  double efficiency_cost_;
-  double velocity_cost_;
+  Eigen::Matrix<double, kN_costs, 1> cost_vector_;
   double cost_;
   Eigen::Vector3d hook_pos_;
 

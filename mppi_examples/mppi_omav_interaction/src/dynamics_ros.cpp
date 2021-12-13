@@ -16,17 +16,17 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
   detailed_publishing_ = true;
   if (detailed_publishing_) {
     vis_publisher_ =
-        nh_.advertise<visualization_msgs::Marker>("visualization_marker", 0);
+        nh_.advertise<visualization_msgs::Marker>("debug/marker_visualization", 0);
     goal_publisher_ =
-        nh_.advertise<visualization_msgs::Marker>("goal_marker", 0);
+        nh_.advertise<visualization_msgs::Marker>("debug/marker_goal", 0);
     obstacle_publisher_ =
-        nh_.advertise<visualization_msgs::Marker>("obstacle_marker", 0);
+        nh_.advertise<visualization_msgs::Marker>("debug/marker_obstacle", 0);
     object_state_publisher_ =
-        nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+        nh_.advertise<sensor_msgs::JointState>("debug/object/joint_state", 10);
     contact_forces_publisher_ =
-        nh_.advertise<visualization_msgs::Marker>("/contact_force", 10);
-    force_dot_ = nh_.advertise<visualization_msgs::Marker>("/dot_force", 10);
-    vel_dot_ = nh_.advertise<visualization_msgs::Marker>("/dot_vel", 10);
+        nh_.advertise<visualization_msgs::Marker>("debug/contact_force", 10);
+    force_dot_ = nh_.advertise<visualization_msgs::Marker>("debug/dot_force", 10);
+    vel_dot_ = nh_.advertise<visualization_msgs::Marker>("debug/dot_vel", 10);
 
     omav_marker_.header.frame_id = "world";
     omav_marker_.id = 0;

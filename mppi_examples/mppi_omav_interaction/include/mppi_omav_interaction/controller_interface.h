@@ -20,6 +20,7 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
 #include <std_msgs/Header.h>
+#include <std_msgs/ColorRGBA.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -59,6 +60,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   void manually_shift_input(const int i);
 
+  void updateValveReference(const double &ref_angle);
+
  private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 
@@ -73,6 +76,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
                           const mppi::observation_t &x0_opt) const;
 
   void publishShelfInfo(const std_msgs::Header &header) const;
+  void publishHookPos(const std_msgs::Header &header) const;
 
  public:
   mppi::SolverConfig config_;
@@ -100,6 +104,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   ros::Publisher optimal_angular_input_publisher_;
   ros::Publisher optimal_rollout_lin_vel_;
   ros::Publisher optimal_rollout_ang_vel_;
+  ros::Publisher pub_marker_hook_;
 
   ros::Subscriber reference_subscriber_;
   ros::Subscriber mode_subscriber_;

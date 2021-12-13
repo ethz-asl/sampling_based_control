@@ -39,7 +39,6 @@ int main(int argc, char **argv) {
   std::string object_name;
   getParam<bool>(nh, "running_rotors", running_rotors, false);
   getParam<std::string>(nh, "object_name", object_name, "shelf");
-  
   getParam<std::string>(nh, "/robot_description_raisim",
                         robot_description_raisim, "");
   getParam<std::string>(nh, "/object_description", object_description, "");
@@ -100,12 +99,14 @@ int main(int argc, char **argv) {
   int index_temp = 0;
 
   // do some timing
-  double elapsed;
-  std::chrono::time_point<std::chrono::steady_clock> t_start, t_end;
+  double t_elapsed;
+  ros::WallTime t_start, t_end;
   ros::Rate r_control(control_rate);
 
   while (ros::ok()) {
-    t_start = std::chrono::steady_clock::now();
+    // t_start = std::chrono::steady_clock::now();
+    t_start = ros::WallTime::now();
+    // ROS_INFO_STREAM("New iteration.");
 
     // Check if there are any parameter updates (from rqt)
     if (controller.getTask() == InteractionTask::Shelf) {
@@ -146,6 +147,7 @@ int main(int argc, char **argv) {
       controller.publish_optimal_rollout();
       controller.publish_all_trajectories();
     } else if (running_rotors) {
+      // Get odometry and target state
       omav_trajectory_node->get_odometry(state);
       sim_time += 1.0 / control_rate;
       omav_trajectory_node->target_state_time_ += 1.0 / control_rate;
@@ -157,11 +159,8 @@ int main(int argc, char **argv) {
       sim_time += sim_dt;
       omav_trajectory_node->target_state_time_ += sim_dt;
 
-      t_end = std::chrono::steady_clock::now();
-      elapsed =
-          std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start)
-              .count() /
-          1000.0;
+      t_end = ros::WallTime::now();
+      t_elapsed = (t_end - t_start).toSec();
     }
 
     // After the first trajectory is sent input timing is started
@@ -170,6 +169,8 @@ int main(int argc, char **argv) {
       // on the time the last trajectory that was sent
       omav_trajectory_node->shift_index_ =
           std::ceil(omav_trajectory_node->target_state_time_ / sim_dt);
+      // ROS_INFO_STREAM("Target state time = " << omav_trajectory_node->target_state_time_);
+      // ROS_INFO_STREAM("Shift index = " << omav_trajectory_node->shift_index_);
       // Input does only have to be shifted if the trajectory index changed and
       // exception is made when we are close to 0.1s when its crucial the
       // trajectory optimized is continuous
@@ -179,8 +180,14 @@ int main(int argc, char **argv) {
         // Input is shifted in the MPPI as well as the initial values of the
         // desired trajectories of the integrators
         controller.manually_shift_input(index_temp);
-        omav_trajectory_node->set_target(
-            omav_trajectory_node->current_trajectory_.points[index_temp]);
+        if (index_temp <
+            omav_trajectory_node->current_trajectory_.points.size()) {
+          omav_trajectory_node->set_target(
+              omav_trajectory_node->current_trajectory_.points[index_temp]);
+        } else {
+          ROS_WARN_THROTTLE(
+              1.0, "[mppi_omav_interaction] Wrong size of current trajectory.");
+        }
       } else if (omav_trajectory_node->shift_index_ != index_temp &&
                  !omav_trajectory_node->shift_lock_) {
         // To ensure the trajectories are continuous even if the controller
@@ -201,17 +208,22 @@ int main(int argc, char **argv) {
 
     // Set new observation
     controller.set_observation(state, sim_time);
-    controller.get_input_state(state, state_nom, input, sim_time);
+    // Set valve reference value to current angle
+    controller.updateValveReference(state(13)+0.5);
+    // This seems to do nothing (i.e. state_nom and input are not used)
+    // controller.get_input_state(state, state_nom, input, sim_time);
+
     // Timing Tasks
     if (running_rotors) {
       r_control.sleep();
-    } else if (sim_dt - elapsed > 0) {
-      ros::Duration(sim_dt - elapsed).sleep();
+    } else if (sim_dt - t_elapsed > 0) {
+      ros::Duration(sim_dt - t_elapsed).sleep();
     } else {
       ROS_INFO_STREAM_THROTTLE(3.0,
                                "[mppi_omav_interaction] Slower than real-time: "
-                                   << elapsed / sim_dt << "x slower.");
+                                   << t_elapsed / sim_dt << "x slower.");
     }
+    ROS_INFO_STREAM_THROTTLE(1.0, "[mppi_omav_interaction] Sim time: " << sim_time);
     ros::spinOnce();
   }
 }

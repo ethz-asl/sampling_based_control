@@ -14,6 +14,15 @@
 #include <visualization_msgs/Marker.h>
 
 namespace omav_interaction::conversions {
+
+/**
+ * @brief      Transform optimal rollout to trajectory message
+ *
+ * @param[in]  x_opt           States of optimal rollout
+ * @param[in]  u_opt           Inputs of optimal rollout
+ * @param[in]  x0_opt          Initial state
+ * @param      trajectory_msg  The trajectory message
+ */
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     const mppi::observation_t &x0_opt,
@@ -21,8 +30,16 @@ void to_trajectory_msg(
 
 void EigenTrajectoryPointFromStates(
     const mppi::observation_array_t &state, const mppi::input_array_t &input,
-    int i, mav_msgs::EigenTrajectoryPoint &trajectorypoint, double dt);
+    const size_t &i, mav_msgs::EigenTrajectoryPoint &trajectorypoint,
+    const double &dt);
 
+/**
+ * @brief      Transforms omav_interaction state to reference point
+ *
+ * @param[in]  state            The state
+ * @param[in]  input            The input
+ * @param      trajectorypoint  The trajectorypoint
+ */
 void EigenTrajectoryPointFromState(
     const mppi::observation_t &state, const mppi::input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint);
@@ -36,8 +53,8 @@ void PoseMsgForVelocityFromVector(const Eigen::Vector3d &velocity,
 
 void arrow_initialization(visualization_msgs::Marker &arrow_marker);
 // Roll, Pitch and Yaw in deg
-void RPYtoQuaterniond(double roll, double pitch, double yaw,
-                      Eigen::Quaterniond &q);
+void RPYtoQuaterniond(const double &roll, const double &pitch,
+                      const double &yaw, Eigen::Quaterniond &q);
 // Velocity Vector from optimal rollout
 void OptimalRollouttoVelocityVector(const int trajectory_point_index,
                                     const int velocity_index,
@@ -49,4 +66,4 @@ void InterpolateTrajectoryPoints(
     const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point_2,
     mav_msgs::EigenTrajectoryPoint *trajectory_point);
 
-} // namespace omav_velocity::conversions
+}  // namespace omav_interaction::conversions
