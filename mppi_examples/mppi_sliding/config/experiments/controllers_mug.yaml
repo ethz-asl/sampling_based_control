@@ -17,7 +17,8 @@ mppi_sliding:
   #base_twist_topic: /ridgeback_velocity_controller/cmd_vel
 
   sequential: false
-  max_position_error: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  max_position_error: [10, 10, 10, 10, 10, 10, 10]
+  #max_position_error: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
   log_every_steps: 15
 
@@ -32,6 +33,9 @@ mppi_sliding:
   
   # Cost parameters used by the controller
   rollouts: $(arg rollouts)
+
+  setup_config:
+    fixed_base: true
 
   cost:
     regularization: 0.0
@@ -96,7 +100,8 @@ mppi_sliding:
       i_max: []
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      # kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      kd: [ 50.0, 50.0, 50.0, 50.0, 50.0, 30.0, 5.0 ]
       ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
@@ -108,6 +113,16 @@ mppi_sliding:
   object_reference_position: 1.57
 
   # Parameters of the dynamics internal to the controller
+
+  geometry:
+    cylinder_height: 0.1
+    cylinder_radius: 0.05
+    cylinder_mass: 1    # ideally equal to the object
+    cylinder_z: 0.98 # table_z + 1/2(table_height+cylinder_height)
+    table_position: [2.4,2.4,0.9]
+    target_pos: [0.58, 0.65, 0.28]
+    friction: 0.15  
+
   dynamics:
     dt: 0.015
     object_handle_link: handle_link

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-    <arg name="debug" default="false"/>
-    <!-- joins gripper and arm state  for simulation ?? -->
+
     <node name="joint_state_aggregator" type="joint_state_aggregator" pkg="mppi_sliding" output="screen">
         <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
         <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
@@ -9,45 +8,14 @@
         <param name="exact_sync" value="false"/>
     </node>
 
-    <include file="$(find mppi_sliding)/launch/load.launch">
-        <arg name="debug" value="false"/>
-        <arg name="description_file" value="$(find mppi_sliding)/data/panda.urdf.xacro"/>
-        <arg name="load_simulation_object" value="false"/>
-    </include>
-
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
-            <remap from="robot_description" to="robot_description"/>
-            <remap from="joint_states" to="/panda/joint_states"/>
-    </node>
-
-    <group if="$(arg debug)">
-
-        <node name="interactive_reference" pkg="mppi_sliding" type="interactive_object.py" output="screen">
-            <rosparam command="load" file="$(find object_modeling_playground)/params/fake_obj.yaml"/>
-            <param name="marker_server_name" value="reference_marker_server"/>
-            <param name="subscribe_initial_pose" value="true"/>
-            <param name="object_state_topic" value="/object/state"/>
-            <param name="frame_id" value="world"/>
-        </node>
-<!-- 
-        <node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
-                <remap from="robot_description" to="robot_description"/>
-                <remap from="joint_states" to="/panda/joint_states"/>
-        </node>
-        
-        <node name="rviz" pkg="rviz" type="rviz" output="screen"
-                args="-d $(find mppi_sliding)/config/rviz/observer.rviz"/>
-        
-        <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui"/> -->
-
-    </group>
-    
     <!--    State observer node-->
     <node pkg="mppi_sliding" name="state_observer_node" type="state_observer_node" output="screen">
-        <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="object_state_topic" value="/object/state"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
         <param name="observer_update_frequency" value="200"/>
+    </node>
+
+    <node pkg="mppi_sliding" name="object_state_publisher_node" type="object_state_publisher_node" output="screen">
     </node>
 
 </launch>

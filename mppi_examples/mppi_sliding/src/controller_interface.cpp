@@ -232,6 +232,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   ROS_INFO("setting controller, init reference ");
   ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
   // init obstacle fare away
+  
   ref_.rr[0](7) = 100;
   ref_.rr[0](8) = 100;
   ref_.rr[0](9) = 100;

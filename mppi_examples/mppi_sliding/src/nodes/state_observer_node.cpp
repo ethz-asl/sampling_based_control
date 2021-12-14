@@ -2,8 +2,8 @@
 // Created by giuseppe on 29.01.21.
 //
 
-#include <ros/ros.h>
 #include <mppi_sliding/state_observer.h>
+#include <ros/ros.h>
 
 using namespace manipulation_panda;
 

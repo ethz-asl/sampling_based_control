@@ -9,6 +9,6 @@
 	    <arg name="enable_obstacle" default="$(arg enable_obstacle)"/>
 	</include>
 
-	<!-- <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/> -->
+	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 
 </launch>
