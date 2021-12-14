@@ -77,7 +77,16 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   }
   ROS_INFO_STREAM("sub state topic from: " << state_topic_);
 
+<<<<<<< HEAD
   if (!node_handle.getParam("nominal_state_topic", nominal_state_topic_)) {
+=======
+  if (!node_handle.getParam( "table_state_topic", table_state_topic_)) {
+    ROS_ERROR("table_state_topic not found");
+    return false;
+  }
+   
+  if (!node_handle.getParam( "nominal_state_topic", nominal_state_topic_)) {
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
     ROS_ERROR("nominal_state_topic not found");
     return false;
   }
@@ -239,11 +248,6 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::add(position_measured_, "position_measured");
     signal_logger::add(position_desired_, "position_desired");
     signal_logger::add(stage_cost_, "stage_cost");
-    // signal_logger::add(power_channels_, "power_channels");
-    // signal_logger::add(power_from_error_, "power_from_error");
-    // signal_logger::add(power_from_interaction_, "power_from_interaction");
-    // signal_logger::add(total_power_exchange_, "total_power_exchange");
-    signal_logger::add(external_torque_, "external_torque");
     signal_logger::logger->startLogger(true);
   }
   started_ = true;
@@ -308,14 +312,21 @@ void ManipulationController::update(const ros::Time& time,
         (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
   }
 
+<<<<<<< HEAD
   // enforce_constraints(period);
   { u_opt_.head<7>() = u_.head<7>(); }
 
   update_position_reference(period);
   send_command_arm(period);
   // send_command_base(period);
+=======
+  {
+    u_opt_.head<7>()  =  u_.head<7>();
+  }
+  update_position_reference(period);
+  send_command_arm(period);
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
 
-  // what is this for?
   if (nominal_state_publisher_.trylock()) {
     nominal_state_publisher_.msg_ = x_nom_ros_;
     nominal_state_publisher_.unlockAndPublish();
@@ -325,6 +336,7 @@ void ManipulationController::update(const ros::Time& time,
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
   }
+<<<<<<< HEAD
 
   // TODO(Boyang): this I understand as a debug print out, for me I don't have
   // it
@@ -340,6 +352,8 @@ void ManipulationController::update(const ros::Time& time,
   //   log_counter_ = 0;
   // }
   // log_counter_++;
+=======
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
 }
 
 void ManipulationController::update_position_reference(
@@ -400,6 +414,7 @@ void ManipulationController::getRotationMatrix(Eigen::Matrix3d& R,
   // clang-format on
 }
 
+<<<<<<< HEAD
 void ManipulationController::enforce_constraints(const ros::Duration& period) {
   // compute the total power exchange with the tank
   external_torque_ = x_.tail<TORQUE_DIMENSION>().head<10>();
@@ -441,5 +456,7 @@ void ManipulationController::enforce_constraints(const ros::Duration& period) {
               1.0e9;
 }
 
+=======
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
 PLUGINLIB_EXPORT_CLASS(manipulation_panda::ManipulationController,
                        controller_interface::ControllerBase)

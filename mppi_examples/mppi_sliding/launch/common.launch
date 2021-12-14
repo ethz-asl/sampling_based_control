@@ -17,12 +17,12 @@
     </group>
 
     <!--        Interactive marker to command the end effector-->
-    <node name="interactive_reference" pkg="mppi_panda" type="interactive_marker.py" output="screen">
+    <!-- <node name="interactive_reference" pkg="mppi_panda" type="interactive_marker.py" output="screen">
         <param name="marker_server_name" value="reference_marker_server"/>
         <param name="target_frame" value="panda_grasp"/>
         <param name="frame_id" value="world"/>
         <param name="target_pose_topic" value="/end_effector_pose_desired"/>
-    </node>
+    </node> -->
 
     <!--    Interactive marker for the end effector obstacle -->
     <group if="$(arg enable_obstacle)">

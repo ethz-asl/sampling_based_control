@@ -92,7 +92,6 @@ int main(int argc, char** argv) {
   while (ros::ok()) {
     start = std::chrono::steady_clock::now();
     controller.update_reference(x, sim_time);
-
     if (sequential) {
       controller.set_observation(x, sim_time);
       controller.update_policy();
@@ -114,7 +113,7 @@ int main(int argc, char** argv) {
     controller.get_input_state(x, x_nom, u, sim_time);
     manipulation::conversions::eigenToMsg_panda(x_nom, sim_time, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
-    //ROS_INFO_STREAM( "contoller state published ") ;
+    // ROS_INFO_STREAM( "contoller state published ") ;
 
     end = steady_clock::now();
     elapsed = duration_cast<milliseconds>(end - start).count() / 1000.0;

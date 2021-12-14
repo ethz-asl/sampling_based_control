@@ -22,15 +22,22 @@
         <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_control_node.yaml" />
         <param name="robot_ip" value="$(arg robot_ip)" />
     </node>
-
+    
+    <!-- controller manager-->
     <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
     <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>
 
     <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
+<<<<<<< HEAD
     <param name="experiment_name" value="$(arg experiment_name)"/>
 
     <!-- controller manager-->
     <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
     <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
 
+=======
+    <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
+
+    
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
 </launch>
