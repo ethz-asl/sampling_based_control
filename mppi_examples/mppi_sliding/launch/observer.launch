@@ -7,7 +7,11 @@
         <param name="output_topic" value="/panda/joint_states"/>
         <param name="exact_sync" value="false"/>
     </node>
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
     <!--    State observer node-->
     <node pkg="mppi_sliding" name="state_observer_node" type="state_observer_node" output="screen">
         <param name="object_state_topic" value="/object/state"/>

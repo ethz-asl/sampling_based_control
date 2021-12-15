@@ -84,10 +84,6 @@ target_link_libraries(state_observer_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRA
 catkin_install_python(PROGRAMS scripts/interactive_object.py 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION} )
 
-add_executable(object_state_publisher_node src/nodes/object_state_publisher.cpp)
-target_include_directories(object_state_publisher_node PUBLIC include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})
-target_link_libraries(object_state_publisher_node ${catkin_LIBRARIES} ${orocos_kdl_LIBRARY_DIRS})
-
 
 ### Utils
 add_executable(joint_state_aggregator src/nodes/joint_state_aggregator.cpp)

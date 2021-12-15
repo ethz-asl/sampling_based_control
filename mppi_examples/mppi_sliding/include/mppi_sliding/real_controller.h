@@ -36,7 +36,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <mppi_ros/Rollout.h>
 #include <mppi_ros/conversions.h>
-#include <rosbag/bag.h>  
+#include <rosbag/bag.h>
 #include <std_msgs/Float64MultiArray.h>
 
 namespace manipulation_panda {
@@ -64,13 +64,18 @@ class ManipulationController
   void update(const ros::Time&, const ros::Duration& period) override;
   void stopping(const ros::Time& time) override;
 
-
  private:
   bool init_parameters(ros::NodeHandle& node_handle);
   bool init_interfaces(hardware_interface::RobotHW* robot_hw);
   void init_ros(ros::NodeHandle& node_handle);
   void init_env();
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
+<<<<<<< HEAD
+
+  // Apply the safety filter to the optimized velocity
+  void enforce_constraints(const ros::Duration& period);
+=======
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
 
   // Update the desired position reference
   void update_position_reference(const ros::Duration& period);
@@ -102,7 +107,7 @@ class ManipulationController
 
   manipulation::PIDGains gains_;
 
-  static constexpr double delta_tau_max_{1.0};
+  static constexpr double delta_tau_max_{10.0};
   franka_hw::TriggerRate base_trigger_{50.0};
 
   std::string arm_id_;
@@ -136,6 +141,16 @@ class ManipulationController
 
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
 
+<<<<<<< HEAD
+  // safety filter
+  bool apply_filter_;
+  bool apply_filter_to_rollouts_;
+  // manipulation::EnergyTank energy_tank_;
+  // manipulation::FilterParams safety_filter_params_;
+  // std::unique_ptr<manipulation::PandaMobileSafetyFilter> safety_filter_;
+
+=======
+>>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
   // metrics
   double stage_cost_;
 
