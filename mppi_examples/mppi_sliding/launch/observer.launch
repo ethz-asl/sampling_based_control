@@ -15,4 +15,7 @@
         <param name="observer_update_frequency" value="200"/>
     </node>
 
+    <node pkg="mppi_sliding" name="object_state_publisher_node" type="object_state_publisher_node" output="screen">
+    </node>
+
 </launch>

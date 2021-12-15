@@ -27,6 +27,13 @@
         <remap from="joint_states" to="/table/joint_state"/>
     </node>
 
+    <!-- <node name="interactive_object" pkg="mppi_sliding" type="interactive_object.py" output="screen">
+        <rosparam command="load" file="$(find object_modeling_playground)/params/fake_obj.yaml"/>
+        <param name="marker_server_name" value="reference_marker_server"/>
+        <param name="subscribe_initial_pose" value="true"/>
+        <param name="object_state_topic" value="/object/state"/>
+        <param name="frame_id" value="world"/>
+    </node> -->
 
 	<group if="$(arg debug)">
 	
@@ -34,14 +41,6 @@
             <remap from="robot_description" to="robot_description"/>
             <remap from="joint_states" to="/panda/joint_states"/>
         </node>
-
-		<node name="interactive_object" pkg="mppi_sliding" type="interactive_object.py" output="screen">
-			<rosparam command="load" file="$(find object_modeling_playground)/params/fake_obj.yaml"/>
-			<param name="marker_server_name" value="reference_marker_server"/>
-			<param name="subscribe_initial_pose" value="true"/>
-			<param name="object_state_topic" value="/object/state"/>
-			<param name="frame_id" value="world"/>
-		</node>
     </group>
 
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
