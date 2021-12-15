@@ -10,8 +10,6 @@
 	    <arg name="enable_obstacle" default="$(arg enable_obstacle)"/>
 	</include>
 
-<<<<<<< HEAD
-=======
     <include file="$(find mppi_sliding)/launch/load.launch">
         <arg name="debug" value="false"/>
         <arg name="description_file" value="$(find mppi_sliding)/data/panda.urdf.xacro"/>
@@ -38,14 +36,12 @@
     </node> -->
 
 	<group if="$(arg debug)">
-	
 		<node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
             <remap from="robot_description" to="robot_description"/>
             <remap from="joint_states" to="/panda/joint_states"/>
         </node>
     </group>
 
->>>>>>> d8de59e28d867005f93ea195df8a82ff10706baf
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 
 </launch>
