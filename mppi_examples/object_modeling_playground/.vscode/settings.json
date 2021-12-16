@@ -79,6 +79,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "forward_list": "cpp",
+        "regex": "cpp"
     }
 }

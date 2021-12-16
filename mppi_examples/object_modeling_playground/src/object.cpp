@@ -1,15 +1,22 @@
 
 #include <cmath>
-#include "../include/object.h"
+#include "object_modeling_playground/object.h"
 
 
 void Object::kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg)
 {   
     // save the current kp for state estiamtion
     keypoints_past_ = keypoints_;
+    kp_num = msg->poses.size();
+    keypoints_.resize(kp_num*4);
+    
+    keypoints_xd.resize(kp_num*4);
 
     for (int i = 0 ; i < kp_num; i++)
-    {
+    { 
+        keypoints_xd.segment(i*4,3) << 
+        msg->poses[i].position.x,msg->poses[i].position.y,msg->poses[i].position.z;
+        keypoints_xd(i*4 + 3) = 0 ;
         keypoints_[i*4+1] = msg->poses[i].position.x;
         keypoints_[i*4+2] = msg->poses[i].position.y;
         keypoints_[i*4+3] = msg->poses[i].position.z;
@@ -23,20 +30,22 @@ Object::Object(const ros::NodeHandle& nh):nh_(nh)
     init_param();
 
     state_publisher_=nh_.advertise<sensor_msgs::JointState>("/"+object_name+"/joint_states",10);   
-    kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/keypoints_marker_array",10);
+    if(sim)
+    {
+      ROS_INFO("loading simulated gt object");
+      kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/keypoints_marker_array",10);
+      this->kp_trans.header.frame_id = "world";
+      this->kp_trans.child_frame_id = "kp_frame";
+      init_kp_TF();
+    }
     primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/primitives_marker_array",1000);
     
     kp_int_subscriber_ = 
-        nh_.subscribe("/keypoints_state",100, &Object::kp_int_callback, this);
-    
+        nh_.subscribe(kp_3d_topic, 100, &Object::kp_int_callback, this);
+    ROS_INFO_STREAM(" subscribe keypoints 3d poses" << kp_3d_topic);
     this->obj_trans.header.frame_id = "world";
     this->obj_trans.child_frame_id = ref_frame;
 
-    this->kp_trans.header.frame_id = "world";
-    this->kp_trans.child_frame_id = "kp_frame";
-
-    // TODO: when simulating use this, in real test this should be modified
-    init_kp_TF();
 }
 
 bool Object::init_param()
@@ -81,14 +90,28 @@ bool Object::init_param()
     ROS_ERROR("Failed to parse approx_params/bottom_ind or invalid!");
     return false;
   }  
+
+  if (!nh_.getParam("kp_3d_topic", kp_3d_topic)) {
+    ROS_ERROR("Failed to parse kp_3d_topic or invalid!");
+    return false;
+  }  
+
+    if (!nh_.getParam("sim", sim)) {
+    ROS_ERROR("Failed to parse /sim or invalid!");
+    return false;
+  }  
     obj_scale_ = obj_scale;
     obj_pos_ = obj_pos;
     obj_rot_ = obj_rot;
-    keypoints_ = keypoints;
-    kp_num = keypoints_.size()/4;
+    
+    if(sim)
+    {
+      keypoints_ = keypoints;
+      kp_num = keypoints_.size()/4;
+      height.resize(primitive_num);
+      radius.resize(primitive_num);
+    }
 
-    height.resize(primitive_num);
-    radius.resize(primitive_num);
     ROS_INFO_STREAM("Object Params [" << object_name << "] passed successfully ");
     return true;
 }

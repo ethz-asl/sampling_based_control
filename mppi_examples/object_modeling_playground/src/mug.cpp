@@ -1,12 +1,12 @@
 #include <cmath>
-#include "../include/mug.h"
-
+#include "object_modeling_playground/mug.h"
 
 
 void Mug::pose_estimate() 
 {
     // estimate T for TX = Y,  X is the kp of last frame and Y is kp of this frame
-    std::cout << "I need to be updated! " << std::endl;
+    ROS_INFO("pose estimation");
+    ROS_INFO_STREAM(keypoints_xd.transpose());
 }
 
 
@@ -14,7 +14,6 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
 {
     ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
 }
-
 
 
 void Mug::update_obj_TF()

@@ -1,3 +1,5 @@
+sim: false
+kp_3d_topic: /kp_3d_poses
 object:
   object_name: "mug"
   object_frame: "mug_frame"

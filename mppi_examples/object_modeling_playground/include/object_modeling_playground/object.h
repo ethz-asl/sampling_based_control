@@ -28,11 +28,14 @@ public:
 
     geometry_msgs::TransformStamped obj_trans;
     geometry_msgs::TransformStamped kp_trans;
-
+    
 protected:
     bool init_param();
     void kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg);
     void init_kp_TF(); // init keypoints frame TF
+
+    bool sim;
+    std::string kp_3d_topic;
 
     // obj config vars
     std::string ref_frame;
@@ -44,6 +47,7 @@ protected:
 
     // kp vars
     int kp_num;
+    Eigen::VectorXd keypoints_xd;
     std::vector<double> keypoints_;
     std::vector<double> keypoints_past_;
 
