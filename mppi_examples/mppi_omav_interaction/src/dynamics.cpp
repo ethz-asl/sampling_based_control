@@ -163,24 +163,29 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   return force;
 }
 
-void OMAVVelocityDynamics::integrate_quaternion(
-    const Eigen::Vector3d omega_B, const Eigen::Quaterniond q_WB_n,
-    Eigen::Quaterniond &q_WB_n_plus_one) {
-  if (omega_B.norm() == 0) {
+inline void OMAVVelocityDynamics::integrate_quaternion(
+    const Eigen::Vector3d &omega_B, const Eigen::Quaterniond &q_WB_n,
+    Eigen::Quaterniond &q_WB_n_plus_one, const double &dt) const {
+  const double angVelNorm = omega_B.norm();
+  if (angVelNorm == 0) {
     q_WB_n_plus_one = q_WB_n;
   } else {
     Eigen::Vector3d omega_W = q_WB_n * omega_B;
     Eigen::Quaterniond q_tilde;
-    q_tilde.w() = std::cos(omega_W.norm() * dt_ / 2);
+    q_tilde.w() = std::cos(angVelNorm * dt / 2.0);
     q_tilde.vec() =
-        std::sin(omega_W.norm() * dt_ / 2) * omega_W / omega_W.norm();
+        std::sin(angVelNorm * dt / 2.0) * omega_W / angVelNorm;
     q_WB_n_plus_one = q_tilde * q_WB_n;
   }
 }
 
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
+  // xd_ contains the derivatives of the reference trajectory, i.e. reference velocities and accelerations
+  // The input u contains the accelerations of the reference trajectory
   xd_.head<6>() = x_.segment<6>(26);
+  // TODO: Time derivative of the reference velocity is the input acceleration - 5*reference velocity?
+  // It seems like this is done to damp the input commands.
   xd_.segment<6>(6) = u - 5 * x_.segment<6>(26);
 }
 

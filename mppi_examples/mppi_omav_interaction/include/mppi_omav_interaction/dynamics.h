@@ -42,9 +42,10 @@ private:
 
   void initialize_pd();
 
-  void integrate_quaternion(const Eigen::Vector3d omega,
-                            const Eigen::Quaterniond q_n,
-                            Eigen::Quaterniond &q_n_plus_one);
+  inline void integrate_quaternion(const Eigen::Vector3d &omega_B,
+                                   const Eigen::Quaterniond &q_WB_n,
+                                   Eigen::Quaterniond &q_WB_n_plus_one,
+                                   const double &dt) const;
   void compute_velocities(const input_t &u);
   void integrate_internal(const input_t &u, double dt);
 
