@@ -13,6 +13,7 @@ namespace mppi {
 
 struct Rollout {
   Rollout();
+  Rollout(const Rollout &r);
   explicit Rollout(size_t steps, size_t input_dim, size_t state_dim);
 
   size_t steps_;
