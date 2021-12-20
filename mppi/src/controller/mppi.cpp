@@ -590,10 +590,14 @@ bool PathIntegral::get_optimal_rollout(observation_array_t& xx,
   return true;
 }
 
-bool PathIntegral::get_rollout_trajectories(std::vector<mppi::Rollout>& rollouts) {
-    // rollouts = rollouts_;
-    // return true;
+bool PathIntegral::get_rollout_trajectories(std::vector<mppi::Rollout>& rollouts) const {
+  if (rollouts_.size() > 0) {
+    rollouts = rollouts_;
+    return true;
+  } else {
     return false;
+  }
+  return false;
 };
 
 void PathIntegral::update_experts() { expert_.update_expert(1, opt_roll_.uu); };

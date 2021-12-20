@@ -135,9 +135,6 @@ private:
    mppi::observation_array_t optimal_rollout_states_;
    mppi::input_array_t optimal_rollout_inputs_;
 
-   std::vector<mppi::Rollout> current_trajectories;
-   std::vector<Eigen::VectorXd> xx_current_trajectory;
-
    // logging
    mppi_ros::Data data_ros_;
    ros::Publisher data_publisher_;

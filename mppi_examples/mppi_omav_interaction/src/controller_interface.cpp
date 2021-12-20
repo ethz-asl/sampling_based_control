@@ -286,12 +286,14 @@ void OMAVControllerInterface::publish_trajectory(
  * @brief      Publish all rollouts
  */
 void OMAVControllerInterface::publish_all_trajectories() {
+  std::vector<mppi::Rollout> current_trajectories;
   if (detailed_publishing_ &&
       get_controller()->get_rollout_trajectories(current_trajectories)) {
     geometry_msgs::PoseArray trajectory_array;
     geometry_msgs::Pose current_trajectory_pose;
     trajectory_array.header.frame_id = "world";
     trajectory_array.header.stamp = ros::Time::now();
+    std::vector<Eigen::VectorXd> xx_current_trajectory;
     // Iterate through rollouts:
     for (size_t i = 0; i < current_trajectories.size(); i++) {
       xx_current_trajectory = current_trajectories[i].xx;
@@ -373,7 +375,7 @@ void OMAVControllerInterface::publish_optimal_rollout() {
 
   if (task_ == InteractionTask::Shelf && detailed_publishing_) {
     publishShelfInfo(header);
-  } else {
+  } else if (task_ == InteractionTask::Valve && detailed_publishing_) {
     publishHookPos(header);
   }
 }

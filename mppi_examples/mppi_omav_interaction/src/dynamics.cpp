@@ -34,18 +34,18 @@ void OMAVVelocityDynamics::initialize_world(
   robot_dof_ = omav_->getDOF();
   // Set dimensions
   state_dimension_ = 32; 
-  // I_position(3),
-  // orientation(4),
-  // I_velocity(3),
-  // B_omega(3),
-  // position_object(1),
-  // velocity_object(1),
-  // forces(3),
-  // contact_state(1),
-  // I_position_desired(3),
-  // orientation_desired(4),
-  // I_velocity_desired(3),
-  // B_omega_desired(3)
+  // I_position(3), 0
+  // orientation(4), 3
+  // I_velocity(3), 7
+  // B_omega(3), 10
+  // position_object(1), 11
+  // velocity_object(1), 12
+  // forces(3), 13
+  // contact_state(1), 16
+  // I_position_desired(3), 19
+  // orientation_desired(4), 23
+  // I_velocity_desired(3), 26
+  // B_omega_desired(3) 29
   input_dimension_ = 6; // linear_acceleration_(3) angular_acceleration(3)
   derrivative_dimension_ = 12;
 
@@ -202,7 +202,7 @@ void OMAVVelocityDynamics::integrate_internal(
   // Integrate position and Quaternion
   x_.segment<3>(19) += xd_.head<3>() * dt;
   Eigen::Quaterniond quat_n(x_(22), x_(23), x_(24), x_(25)), quat_n_plus_one;
-  integrate_quaternion(xd_.segment<3>(3), quat_n, quat_n_plus_one);
+  integrate_quaternion(xd_.segment<3>(3), quat_n, quat_n_plus_one, dt);
   x_.segment<4>(22) << quat_n_plus_one.w(), quat_n_plus_one.vec();
   // Integrate velocities
   x_.segment<6>(26) += xd_.segment<6>(6) * dt;

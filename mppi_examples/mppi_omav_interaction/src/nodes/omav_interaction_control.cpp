@@ -209,7 +209,10 @@ int main(int argc, char **argv) {
     // Set new observation
     controller.set_observation(state, sim_time);
     // Set valve reference value to current angle
-    controller.updateValveReference(state(13)+0.5);
+    if (controller.getTask() == InteractionTask::Valve) {
+      controller.updateValveReference(state(13)+0.5);
+    }
+    
     // This seems to do nothing (i.e. state_nom and input are not used)
     // controller.get_input_state(state, state_nom, input, sim_time);
 

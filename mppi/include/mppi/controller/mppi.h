@@ -234,7 +234,7 @@ class PathIntegral {
    * @param rollouts vector with all the rollout trajectories
    * @return -
    */
-  bool get_rollout_trajectories(std::vector<Rollout>& rollouts);
+  bool get_rollout_trajectories(std::vector<Rollout>& rollouts) const;
 
   /**
    * @brief Get only the diagonal of the sampler's covariance matrix
