@@ -42,7 +42,6 @@ bool PandaControllerInterface::init_ros() {
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaControllerInterface::ee_pose_desired_callback, this);
 
-  
   std::vector<double> default_pose;
   if (!nh_.param<std::vector<double>>("default_pose", default_pose, {}) ||
       default_pose.size() != 7) {
@@ -60,17 +59,17 @@ bool PandaControllerInterface::init_ros() {
     return false;
   }
 
-  // initialize obstacle
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-  geometry_msgs::TransformStamped transformStamped;
-  try {
-    transformStamped = tfBuffer.lookupTransform(
-        "world", "obstacle", ros::Time(0), ros::Duration(3.0));
-  } catch (tf2::TransformException& ex) {
-    ROS_WARN("%s", ex.what());
-    return false;
-  }
+  // // initialize obstacle
+  // tf2_ros::Buffer tfBuffer;
+  // tf2_ros::TransformListener tfListener(tfBuffer);
+  // geometry_msgs::TransformStamped transformStamped;
+  // try {
+  //   transformStamped = tfBuffer.lookupTransform(
+  //       "world", "obstacle", ros::Time(0), ros::Duration(3.0));
+  // } catch (tf2::TransformException& ex) {
+  //   ROS_WARN("%s", ex.what());
+  //   return false;
+  // }
 
   obstacle_marker_.header.frame_id = "world";
   {
@@ -82,13 +81,20 @@ bool PandaControllerInterface::init_ros() {
     obstacle_marker_.scale.x = 2.0 * 0.01;
     obstacle_marker_.scale.y = 2.0 * 0.01;
     obstacle_marker_.scale.z = 0.01;
-    obstacle_marker_.pose.orientation.x = transformStamped.transform.rotation.x;
-    obstacle_marker_.pose.orientation.y = transformStamped.transform.rotation.y;
-    obstacle_marker_.pose.orientation.z = transformStamped.transform.rotation.z;
-    obstacle_marker_.pose.orientation.w = transformStamped.transform.rotation.w;
-    obstacle_marker_.pose.position.x = transformStamped.transform.translation.x;
-    obstacle_marker_.pose.position.y = transformStamped.transform.translation.y;
-    obstacle_marker_.pose.position.z = transformStamped.transform.translation.z;
+    obstacle_marker_.pose.orientation.x =
+        0;  // transformStamped.transform.rotation.x;
+    obstacle_marker_.pose.orientation.y =
+        0;  // transformStamped.transform.rotation.y;
+    obstacle_marker_.pose.orientation.z =
+        0;  // transformStamped.transform.rotation.z;
+    obstacle_marker_.pose.orientation.w =
+        1.0;  // transformStamped.transform.rotation.w;
+    obstacle_marker_.pose.position.x =
+        100;  // transformStamped.transform.translation.x;
+    obstacle_marker_.pose.position.y =
+        100;  // transformStamped.transform.translation.y;
+    obstacle_marker_.pose.position.z =
+        100;  // transformStamped.transform.translation.z;
   }
 
   std::string references_file;
@@ -111,8 +117,8 @@ bool PandaControllerInterface::init_ros() {
   cylinder_trans.header.frame_id = "world";
   cylinder_trans.child_frame_id = "cylinder_frame";
 
-  object_predict_publisher_ =  
-    nh_.advertise<visualization_msgs::MarkerArray>("/predicted_objects", 10);
+  object_predict_publisher_ =
+      nh_.advertise<visualization_msgs::MarkerArray>("/predicted_objects", 10);
   object_predict_marker_.type = visualization_msgs::Marker::CYLINDER;
   object_predict_marker_.header.frame_id = "world";
   object_predict_marker_.action = visualization_msgs::Marker::ADD;
@@ -121,14 +127,12 @@ bool PandaControllerInterface::init_ros() {
   object_predict_marker_.color.g = 0.0;
   object_predict_marker_.color.a = 1.0;
 
-
   ROS_INFO("[PandaControllerInterface::init_ros] ok!");
   return true;
 }
 
 void PandaControllerInterface::init_model(
-    const std::string& robot_description,
-    const std::string& object_description,
+    const std::string& robot_description, const std::string& object_description,
     const std::string& cylinder_description) {
   robot_model_.init_from_xml(robot_description);
   object_model_.init_from_xml(object_description);
@@ -152,7 +156,8 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
         "Could not parse object description. Is the parameter set?");
   }
 
-  if (!nh_.param<std::string>("/cylinder_description", cylinder_description, "")) {
+  if (!nh_.param<std::string>("/cylinder_description", cylinder_description,
+                              "")) {
     throw std::runtime_error(
         "Could not parse object description. Is the parameter set?");
   }
@@ -170,7 +175,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   };
   ROS_INFO_STREAM("Successfully parsed controller dynamics parameters: "
                   << dynamics_params_);
-  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_,false);
+  dynamics = std::make_shared<PandaRaisimDynamics>(dynamics_params_, false);
 
   // -------------------------------
   // config
@@ -186,7 +191,7 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   }
 
   double rollouts;
-  if (nh_.param<double>("rollouts", rollouts, 0.0)){
+  if (nh_.param<double>("rollouts", rollouts, 0.0)) {
     ROS_INFO_STREAM("Overriding default rollouts to " << rollouts);
     config_.rollouts = rollouts;
   }
@@ -225,25 +230,23 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   ROS_INFO("setting controller solver");
   controller = std::make_shared<mppi::Solver>(dynamics, cost, policy, config_);
 
-
   // -------------------------------
   // initialize reference
   // -------------------------------
   ROS_INFO("setting controller, init reference ");
   ref_.rr.resize(1, mppi::observation_t::Zero(PandaDim::REFERENCE_DIMENSION));
   // init obstacle fare away
-  
+
   ref_.rr[0](7) = 100;
   ref_.rr[0](8) = 100;
   ref_.rr[0](9) = 100;
   ref_.rr[0].tail<1>()(0) = 0.0;
   ref_.tt.resize(1, 0.0);
   std::cout << "ref rr size: " << ref_.rr[0].size() << std::endl;
-  for(int i = 0 ; i < ref_.rr[0].size(); i ++)
-  {
+  for (int i = 0; i < ref_.rr[0].size(); i++) {
     std::cout << ref_.rr[0](i) << ",";
   }
-  
+
   std::cout << "ref tt size: " << ref_.tt.size() << std::endl;
   ROS_INFO(" -----------------controller set done-------------------");
   return true;
@@ -315,6 +318,9 @@ void PandaControllerInterface::update_reference(const mppi::observation_t& x,
     reference_scheduler_.set_reference(t, ref_);
 
     std::unique_lock<std::mutex> lock(reference_mutex_);
+    // for (int i = 0; i < ref_.rr.size(); i++) {
+    //   ROS_INFO_STREAM("ref is: " << ref_.rr[i]);
+    // }
     get_controller()->set_reference_trajectory(ref_);
     local_cost_->set_reference_trajectory(ref_);
     reference_set_ = true;
@@ -323,7 +329,7 @@ void PandaControllerInterface::update_reference(const mppi::observation_t& x,
 
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
-    robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+  robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   return robot_model_.get_pose("panda_grasp");
 }
 
@@ -369,9 +375,8 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(
   return pose_ros;
 }
 
- void PandaControllerInterface::publish_ros_obj(const Eigen::VectorXd& state)
- {
-  //ROS_INFO_STREAM("estimated:  " << state );
+void PandaControllerInterface::publish_ros_obj(const Eigen::VectorXd& state) {
+  // ROS_INFO_STREAM("estimated:  " << state );
   cylinder_state_.header.stamp = ros::Time::now();
   cylinder_trans.header.stamp = ros::Time::now();
   cylinder_trans.transform.translation.x = state[0];
@@ -385,11 +390,11 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(
 
   cylinder_state_publisher_.publish(cylinder_state_);
   broadcaster.sendTransform(cylinder_trans);
- }
+}
 
-void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& x_opt_)
-{
-  int step_num = (x_opt_.size()>50) ? 50 : x_opt_.size();
+void PandaControllerInterface::publish_ros_obj(
+    const mppi::observation_array_t& x_opt_) {
+  int step_num = (x_opt_.size() > 50) ? 50 : x_opt_.size();
 
   object_predict_marker_.scale.x = 0.1;
   object_predict_marker_.scale.y = 0.1;
@@ -397,9 +402,8 @@ void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& 
 
   obj_state.setZero(OBJECT_DIMENSION);
   object_predict_markers.markers.clear();
-  for (int i=0;i<step_num;i++)
-  { 
-    obj_state = x_opt_[i].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
+  for (int i = 0; i < step_num; i++) {
+    obj_state = x_opt_[i].segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM);
     object_predict_marker_.pose.position.x = obj_state[0];
     object_predict_marker_.pose.position.y = obj_state[1];
     object_predict_marker_.pose.position.z = obj_state[2];
@@ -408,12 +412,11 @@ void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& 
     object_predict_marker_.pose.orientation.z = obj_state[6];
     object_predict_marker_.pose.orientation.w = obj_state[3];
     object_predict_marker_.id = i;
-    object_predict_marker_.color.a = 1.0 - (i/step_num);
+    object_predict_marker_.color.a = 1.0 - (i / step_num);
     object_predict_markers.markers.push_back(object_predict_marker_);
   }
 
   object_predict_publisher_.publish(object_predict_markers);
-
 }
 
 void PandaControllerInterface::publish_ros() {
@@ -430,13 +433,20 @@ void PandaControllerInterface::publish_ros() {
 
   for (const auto& x : x_opt_) {
     optimal_path_.poses.push_back(get_pose_end_effector_ros(x));
-    //optimal_base_path_.poses.push_back(get_pose_base(x));
+    // optimal_base_path_.poses.push_back(get_pose_base(x));
   }
 
   obj_state.setZero(7);
-  obj_state = x_opt_[0].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
-  //publish_ros_obj(obj_state);
+  obj_state = x_opt_[0].segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM);
+  // publish_ros_obj(obj_state);
   publish_ros_obj(x_opt_);
+  // ROS_INFO("-------------------------------------------");
+  // for(int i = 0; i < optimal_path_.poses.size(); i ++)
+  // {
+  //   ROS_INFO_STREAM(" the " << i << "opt pose is:" <<
+  //   optimal_path_.poses[i].pose);
+  // }
+  // ROS_INFO(" <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  ");
 
   optimal_trajectory_publisher_.publish(optimal_path_);
   // optimal_base_trajectory_publisher_.publish(optimal_base_path_);

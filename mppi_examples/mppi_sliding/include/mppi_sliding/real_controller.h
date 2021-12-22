@@ -72,7 +72,7 @@ class ManipulationController
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
 
   // Apply the safety filter to the optimized velocity
-  //void enforce_constraints(const ros::Duration& period);
+  // void enforce_constraints(const ros::Duration& period);
 
   // Update the desired position reference
   void update_position_reference(const ros::Duration& period);
@@ -95,6 +95,9 @@ class ManipulationController
   bool sequential_;
   bool state_ok_;
   bool state_received_;
+
+  ros::Time start_time;
+  ros::Time run_time;
 
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;

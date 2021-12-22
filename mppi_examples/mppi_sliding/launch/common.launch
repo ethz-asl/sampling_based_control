@@ -10,10 +10,8 @@
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot)">
-        <arg name="plotjuggler_layout" default="$(find mppi_manipulation)/config/pj/layout_mobile.xml"/>
-        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
-              args="--layout $(arg plotjuggler_layout)"
-              output="screen"/>
+        <arg name="plotjuggler_layout" default="$(find mppi_sliding)/config/pj/layout.xml"/>
+        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler" args="--layout $(arg plotjuggler_layout)" output="screen"/>
     </group>
 
     <!--        Interactive marker to command the end effector-->
