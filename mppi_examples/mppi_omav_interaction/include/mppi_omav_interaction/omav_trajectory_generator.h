@@ -33,22 +33,21 @@ class OmavTrajectoryGenerator {
   OmavTrajectoryGenerator(const ros::NodeHandle &nh,
                           const ros::NodeHandle &private_nh);
   ~OmavTrajectoryGenerator();
-
+  
   void get_odometry(observation_t &x) const;
+  void get_odometry(observation_t &x, double &timestamp) const;
 
   bool set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
                       &trajectory_msg_point);
 
   void initialize_integrators(observation_t &x);
 
-  bool odometry_bool_;
   bool rqt_cost_shelf_bool_ = false;
   bool rqt_cost_valve_bool_ = false;
   bool reset_object_ = false;
   bool first_trajectory_sent_ = false;
   bool shift_lock_ = false;
   double target_state_time_ = 0.0;
-  int shift_index_ = 0;
 
   OMAVInteractionCostParam rqt_cost_shelf_;
   OMAVInteractionCostValveParam rqt_cost_valve_;

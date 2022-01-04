@@ -56,7 +56,6 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
     ros::shutdown();
   }
   ROS_INFO("[mppi_omav_interaction] Subscribers initialized");
-  odometry_bool_ = true;
 }
 
 void OmavTrajectoryGenerator::initializePublishers() {
@@ -68,7 +67,6 @@ void OmavTrajectoryGenerator::odometryCallback(
     const nav_msgs::OdometryConstPtr &odometry_msg) {
   mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got odometry message");
-  odometry_bool_ = false;
 }
 
 void OmavTrajectoryGenerator::objectCallback(
@@ -106,6 +104,12 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
   x.segment<3>(26) = target_state_.velocity_W;
   x.segment<3>(29) = target_state_.angular_velocity_W;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
+}
+
+void OmavTrajectoryGenerator::get_odometry(observation_t &x,
+                                           double &timestamp) const {
+  get_odometry(x);
+  timestamp = static_cast<double>(current_odometry_.timestamp_ns) / 1.e9;
 }
 
 void OmavTrajectoryGenerator::ReferenceParamCallback(

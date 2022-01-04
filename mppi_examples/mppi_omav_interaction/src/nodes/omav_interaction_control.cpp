@@ -76,12 +76,6 @@ int main(int argc, char **argv) {
   bool ok = controller.init();
   if (!ok) throw std::runtime_error("Failed to initialize controller");
   controller.set_observation(state, 0.0);
-  if (running_rotors) {
-    while (omav_trajectory_node->odometry_bool_) {
-      ROS_INFO_STREAM_ONCE("[mppi_omav_interaction] No Odometry received yet");
-      ros::spinOnce();
-    }
-  }
   ROS_INFO_STREAM("[mppi_omav_interaction] First Odometry received");
 
   // Set first odometry value as reference
@@ -167,16 +161,16 @@ int main(int argc, char **argv) {
     if (omav_trajectory_node->first_trajectory_sent_) {
       // Calculation of the index where we are in the last sent trajectory based
       // on the time the last trajectory that was sent
-      omav_trajectory_node->shift_index_ =
+      const int shift_index =
           std::ceil(omav_trajectory_node->target_state_time_ / sim_dt);
-      // ROS_INFO_STREAM("Target state time = " << omav_trajectory_node->target_state_time_);
-      // ROS_INFO_STREAM("Shift index = " << omav_trajectory_node->shift_index_);
-      // Input does only have to be shifted if the trajectory index changed and
-      // exception is made when we are close to 0.1s when its crucial the
-      // trajectory optimized is continuous
-      if (omav_trajectory_node->shift_index_ != index_temp &&
-          omav_trajectory_node->shift_index_ < 4) {
-        index_temp = omav_trajectory_node->shift_index_;
+      // ROS_INFO_STREAM("Target state time = " <<
+      // omav_trajectory_node->target_state_time_); ROS_INFO_STREAM("Shift index
+      // = " << omav_trajectory_node->shift_index_); Input does only have to be
+      // shifted if the trajectory index changed and exception is made when we
+      // are close to 0.1s when its crucial the trajectory optimized is
+      // continuous
+      if (shift_index != index_temp && shift_index < 4) {
+        index_temp = shift_index;
         // Input is shifted in the MPPI as well as the initial values of the
         // desired trajectories of the integrators
         controller.manually_shift_input(index_temp);
@@ -188,7 +182,7 @@ int main(int argc, char **argv) {
           ROS_WARN_THROTTLE(
               1.0, "[mppi_omav_interaction] Wrong size of current trajectory.");
         }
-      } else if (omav_trajectory_node->shift_index_ != index_temp &&
+      } else if (shift_index != index_temp &&
                  !omav_trajectory_node->shift_lock_) {
         // To ensure the trajectories are continuous even if the controller
         // takes longer than 0.015 to run the "final state" is set earlier
@@ -210,9 +204,9 @@ int main(int argc, char **argv) {
     controller.set_observation(state, sim_time);
     // Set valve reference value to current angle
     if (controller.getTask() == InteractionTask::Valve) {
-      controller.updateValveReference(state(13)+0.5);
+      controller.updateValveReference(state(13) + 0.5);
     }
-    
+
     // This seems to do nothing (i.e. state_nom and input are not used)
     // controller.get_input_state(state, state_nom, input, sim_time);
 
@@ -226,7 +220,8 @@ int main(int argc, char **argv) {
                                "[mppi_omav_interaction] Slower than real-time: "
                                    << t_elapsed / sim_dt << "x slower.");
     }
-    ROS_INFO_STREAM_THROTTLE(1.0, "[mppi_omav_interaction] Sim time: " << sim_time);
+    ROS_INFO_STREAM_THROTTLE(1.0,
+                             "[mppi_omav_interaction] Sim time: " << sim_time);
     ros::spinOnce();
   }
 }

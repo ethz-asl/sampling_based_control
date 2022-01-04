@@ -299,11 +299,11 @@ void OMAVControllerInterface::publish_all_trajectories() {
       xx_current_trajectory = current_trajectories[i].xx;
       for (size_t j = 0; j < xx_current_trajectory.size(); j++) {
         // In each rollout take each 10th point to publish.
-        if ((j % 10) == 0) {
+        // if ((j % 10) == 0) {
           omav_interaction::conversions::PoseMsgFromVector(
               xx_current_trajectory[j].head<7>(), current_trajectory_pose);
           trajectory_array.poses.push_back(current_trajectory_pose);
-        }
+        // }
       }
     }
     trajectory_publisher_.publish(trajectory_array);

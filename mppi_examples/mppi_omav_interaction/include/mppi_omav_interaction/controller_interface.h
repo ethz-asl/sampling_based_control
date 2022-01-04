@@ -6,7 +6,8 @@
  * @brief    description
  */
 
-#pragma once
+#ifndef OMAV_MPPI_CONTROLLER_INTERFACE_H
+#define OMAV_MPPI_CONTROLLER_INTERFACE_H
 
 #include <mppi_omav_interaction/cost.h>
 #include <mppi_omav_interaction/cost_valve.h>
@@ -125,3 +126,5 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   sensor_msgs::JointState object_state_;
 };
 }  // namespace omav_interaction
+
+#endif

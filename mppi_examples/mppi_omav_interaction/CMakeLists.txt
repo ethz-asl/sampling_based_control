@@ -49,7 +49,9 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
 
 add_executable(omav_interaction_control src/nodes/omav_interaction_control.cpp)
+add_executable(omav_interaction_control_node src/nodes/omav_interaction_control_node.cpp)
 target_link_libraries(omav_interaction_control ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(omav_interaction_control_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(omav_interaction_control ${PROJECT_NAME})
 add_dependencies(omav_interaction_control ${PROJECT_NAME}_gencfg)
 

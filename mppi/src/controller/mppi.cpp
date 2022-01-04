@@ -249,7 +249,7 @@ void PathIntegral::initialize_rollouts() {
 
 void PathIntegral::prepare_rollouts() {
   // find trim index
-  size_t offset;
+  size_t offset = 0;
   {
     // Wasn't sure if I can remove this here but thick I can..
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
@@ -265,10 +265,7 @@ void PathIntegral::prepare_rollouts() {
     // trajectory is sent.
     offset = 4;
     shift_input_ = false;
-  } else {
-    offset = 0;
   }
-
 
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
