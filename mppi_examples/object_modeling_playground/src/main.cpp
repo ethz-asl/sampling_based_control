@@ -5,9 +5,12 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh("~");
     ros::Rate loop_rate(10);
 
-    tf2_ros::TransformBroadcaster broadcaster;
-    
     // init one specific objects 
     auto mug = std::make_unique<Mug>(nh);
-    ros::spin();
+    while (ros::ok())
+    {
+        mug->update();
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <arg name="debug" default="false"/>
-    <arg name="launch_prefix" value="" unless="$(arg debug)"/>
-    <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
     <arg name="interactive" default="false"/>
+    <arg name="sim" default="false"/>
+
     <!-- mug -->
     <param name="mug_description"
            textfile="$(find object_modeling_playground)/data/objects/mug.urdf"/>
@@ -15,6 +15,7 @@
     <!--     .....................    -->
 
     <node name="primitive_modeling" type="primitive_modeling" pkg="object_modeling_playground" output="screen">
+        <param name="sim" value="$(arg sim)"/>
         <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
     </node>
 
@@ -29,6 +30,8 @@
     </group>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
+    <group if="$(arg sim)">
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
+    </group>
 
 </launch>

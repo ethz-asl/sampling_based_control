@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 set(PACKAGE_DEPENDENCIES
         sensor_msgs
         std_msgs
+        manipulation_msgs
         roscpp
         roslib
         roscpp

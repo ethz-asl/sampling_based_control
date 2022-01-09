@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="sim"  default="false"/>
+    <node name="primitive_modeling" type="primitive_modeling" pkg="object_modeling_playground" output="screen">
+        <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
+        <param name="sim" value="$(arg sim)"/>
+    </node>
+</launch>
