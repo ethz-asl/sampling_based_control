@@ -9,9 +9,10 @@ void Object::kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg)
     // save the current kp for state estiamtion
 
     kp_num = msg->poses.size();
+    
     keypoints_xd.resize(kp_num*4);
     ros_time = msg->header.stamp;
-    ros_time = ros::Time::now();
+    // ros_time = ros::Time::now();
     
     for (int i = 0 ; i < kp_num; i++)
     { 
@@ -20,6 +21,7 @@ void Object::kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg)
         keypoints_xd(i*4 + 3) = 0 ;
     }
     kp_msg_received = true;
+    ROS_INFO_STREAM("kp num: "<< kp_num);
 }
 
 
@@ -31,8 +33,9 @@ Object::Object(const ros::NodeHandle& nh):nh_(nh)
 
     kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/keypoints_marker_array",10);
     kp_markers_.markers.clear();
-    kp_markers_.markers.resize(kp_num);
-    for(int i = 0 ; i<kp_num; i++)
+    kp_markers_.markers.resize(gt_kp_num);
+
+    for(int i = 0 ; i<gt_kp_num; i++)
     {   
         kp_marker_.type = visualization_msgs::Marker::SPHERE;
         kp_marker_.id = i;
@@ -59,17 +62,19 @@ Object::Object(const ros::NodeHandle& nh):nh_(nh)
     }
     ROS_INFO("[keypoints marker inited");
     
-
     primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/primitives_marker_array",1000);
     kp_int_subscriber_ = 
         nh_.subscribe(kp_3d_topic, 100, &Object::kp_int_callback, this);
     ROS_INFO_STREAM(" subscribe keypoints 3d poses" << kp_3d_topic);
     obj_trans.header.frame_id = ref_frame;
     obj_trans.child_frame_id = obj_frame;
+
     if(!sim)
       prim_trans.header.frame_id = ref_frame; // TODO: make it also in ref_frame
     else if(sim)
+    {
       prim_trans.header.frame_id = obj_frame;
+    }
 
     prim_trans.child_frame_id = prim_frame;
 
@@ -138,20 +143,20 @@ bool Object::init_param()
     obj_pos_ = obj_pos;
     obj_rot_ = obj_rot;
     
-    kp_num = 4;
+    gt_kp_num = int(keypoints.size()/4); //TODO: make this read from keypoint.json
+
     if(sim)
     { 
       ROS_INFO("In simulation mode, use gt object");
       keypoints_sim_xd.resize(keypoints.size());
       for(int i=0; i<keypoints.size(); i ++)
       keypoints_sim_xd[i] = keypoints[i];
-      kp_num = int(keypoints.size()/4);
-
+      
       // in simulation, TODO: use the gt kp and transform into the point in ref_frame
       keypoints_xd = keypoints_sim_xd;
+      ROS_INFO_STREAM("keypoinys of [" << object_name << "] init successfully, # of points = " << gt_kp_num);
     }
 
-    ROS_INFO_STREAM("keypoinys of [" << object_name << "] init successfully, # of points = " << kp_num);
-
+  
     return true;
 }

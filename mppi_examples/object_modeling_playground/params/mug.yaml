@@ -1,7 +1,7 @@
 kp_3d_topic: /kp_3d_poses
 object:
   object_name: "mug"
-  ref_frame: "camera_link"
+  ref_frame: "camera_color_optical_frame"
   object_frame: "mug_frame"
   primitive_frame: "primitive_frame"
   scale: [0.1,0.1,0.1]
@@ -9,10 +9,10 @@ object:
   orientation: [0,0,0,1]
 
 
-keypoints: [0,-0.060,0.055, 0,     # handle hole
+keypoints: [0,-0.120,0.11, 0,     # handle hole
             0, 0,  0.01, 0,     #bottom center   
-            0, 0, 0.10, 0,      #top center 
-            0,-0.075,0.055, 0]     # handle edge
+            0, 0, 0.20, 0,      #top center 
+            0,-0.15,0.11, 0]     # handle edge
 
 # keypoints: [-0.219,-0.111, 0.3223, 0,     # handle hole
 #             -0.232,  -0.116, 0.341, 0,    #bottom center   

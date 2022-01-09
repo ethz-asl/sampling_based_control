@@ -52,6 +52,7 @@ protected:
 
     // kp vars
     int kp_num;
+    int gt_kp_num;
     Eigen::VectorXd keypoints_xd;
     Eigen::VectorXd keypoints_sim_xd;
     std::vector<double> keypoints_;

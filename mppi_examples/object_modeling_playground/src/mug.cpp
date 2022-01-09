@@ -114,6 +114,12 @@ void Mug::update()
     }
     if(sim)
         ros_time = ros::Time::now();
+
+    if(kp_num!=gt_kp_num)
+    {
+        ROS_INFO("kp msg incomplete, holding...");
+        return;
+    }
     primitive_estimate();  
     update_kp_markers();
     update_TF();
@@ -138,9 +144,9 @@ void Mug::update_TF()
     if(sim)
     {
         obj_trans.header.stamp = ros_time;
-        obj_trans.transform.translation.x = 1;
-        obj_trans.transform.translation.y = 1;
-        obj_trans.transform.translation.z = 1;
+        obj_trans.transform.translation.x = 0.4;
+        obj_trans.transform.translation.y = -0.4;
+        obj_trans.transform.translation.z = 0.2;
         tf2::Quaternion q_;
         q_.setEuler(1.7,0,0.5);
         obj_trans.transform.rotation.x = q_.x();
@@ -215,8 +221,7 @@ void Mug::primitive_visualize()
 
 void Mug::pub_state()
 {
-    state_publisher_.publish(state_);
-
+    //state_publisher_.publish(state_);
     kp_publisher_.publish(kp_markers_);
     primitive_publisher_.publish(primitive_markers_);
 }
