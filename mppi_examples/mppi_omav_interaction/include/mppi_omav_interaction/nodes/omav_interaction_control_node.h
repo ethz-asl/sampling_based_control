@@ -31,7 +31,7 @@ class InteractionControlNode {
  private:
   bool InitializeNodeParams();
   bool InitializeControllerParams();
-  bool computeCommand();
+  bool computeCommand(const ros::Time &t_now);
   void TimedCommandCallback(const ros::TimerEvent& e);
   template <class T>
   void getParam(const ros::NodeHandle& nh, const std::string& id, T& var,
@@ -44,8 +44,6 @@ class InteractionControlNode {
   bool running_rotors_ = true;
   bool sequential_ = false;
   double sim_time_ = 0.0;
-  int index_temp_ = 0;
-  // double t_elapsed_;
 
   bool controller_running_ = false;
 

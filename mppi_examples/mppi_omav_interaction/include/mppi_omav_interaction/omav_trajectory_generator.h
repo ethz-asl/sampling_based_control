@@ -33,14 +33,15 @@ class OmavTrajectoryGenerator {
   OmavTrajectoryGenerator(const ros::NodeHandle &nh,
                           const ros::NodeHandle &private_nh);
   ~OmavTrajectoryGenerator();
-  
-  void get_odometry(observation_t &x) const;
-  void get_odometry(observation_t &x, double &timestamp) const;
+
+  bool get_odometry(observation_t &x) const;
+  bool get_odometry(observation_t &x, double &timestamp) const;
 
   bool set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
                       &trajectory_msg_point);
+  bool set_target(const mav_msgs::EigenTrajectoryPoint &target_state);
 
-  void initialize_integrators(observation_t &x);
+  bool initialize_integrators(observation_t &x);
 
   bool rqt_cost_shelf_bool_ = false;
   bool rqt_cost_valve_bool_ = false;
@@ -48,14 +49,12 @@ class OmavTrajectoryGenerator {
   bool first_trajectory_sent_ = false;
   bool shift_lock_ = false;
   double target_state_time_ = 0.0;
+  ros::Time last_target_received_;
 
   OMAVInteractionCostParam rqt_cost_shelf_;
   OMAVInteractionCostValveParam rqt_cost_valve_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_;
-
-  // Target Variables
-  mav_msgs::EigenTrajectoryPoint target_state_;
 
  private:
   void initializeSubscribers();
@@ -96,7 +95,13 @@ class OmavTrajectoryGenerator {
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostValveConfig>
       cost_valve_param_server_;
 
+  // Target Variables
+  mav_msgs::EigenTrajectoryPoint target_state_;
+
   observation_t rqt_odometry;
+
+  bool object_valid_ = false;
+  bool odometry_valid_ = false;
 };
 }  // namespace omav_interaction
 

@@ -186,10 +186,12 @@ int main(int argc, char **argv) {
                  !omav_trajectory_node->shift_lock_) {
         // To ensure the trajectories are continuous even if the controller
         // takes longer than 0.015 to run the "final state" is set earlier
+        mav_msgs::EigenTrajectoryPoint target_state;
         omav_interaction::conversions::InterpolateTrajectoryPoints(
             omav_trajectory_node->current_trajectory_.points[6],
             omav_trajectory_node->current_trajectory_.points[7],
-            &omav_trajectory_node->target_state_);
+            &target_state);
+        omav_trajectory_node->set_target(target_state);
         controller.manually_shift_input(7);
         omav_trajectory_node->shift_lock_ = true;
       } else if (omav_trajectory_node->target_state_time_ > 0.09) {

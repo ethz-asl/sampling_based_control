@@ -14,8 +14,8 @@ bool OMAVControllerInterface::init_ros() {
   // Initialize publisher
   optimal_rollout_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_rollout", 1);
-  optimal_rollout_des_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_rollout_desired", 1);
+  optimal_rollout_des_publisher_ = nh_.advertise<geometry_msgs::PoseArray>(
+      "debug/optimal_rollout_desired", 1);
   optimal_linear_input_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_input_linear", 1);
   optimal_angular_input_publisher_ =
@@ -300,9 +300,9 @@ void OMAVControllerInterface::publish_all_trajectories() {
       for (size_t j = 0; j < xx_current_trajectory.size(); j++) {
         // In each rollout take each 10th point to publish.
         // if ((j % 10) == 0) {
-          omav_interaction::conversions::PoseMsgFromVector(
-              xx_current_trajectory[j].head<7>(), current_trajectory_pose);
-          trajectory_array.poses.push_back(current_trajectory_pose);
+        omav_interaction::conversions::PoseMsgFromVector(
+            xx_current_trajectory[j].head<7>(), current_trajectory_pose);
+        trajectory_array.poses.push_back(current_trajectory_pose);
         // }
       }
     }
@@ -410,8 +410,8 @@ void OMAVControllerInterface::publishHookPos(
     point.x = cost_valve_->hook_pos_(0);
     point.y = cost_valve_->hook_pos_(1);
     point.z = cost_valve_->hook_pos_(2);
-    color.r = static_cast<float>(i)/optimal_rollout_states_.size();
-    color.g = 1.0f-static_cast<float>(i)/optimal_rollout_states_.size();
+    color.r = static_cast<float>(i) / optimal_rollout_states_.size();
+    color.g = 1.0f - static_cast<float>(i) / optimal_rollout_states_.size();
 
     marker_hook.points.push_back(point);
     marker_hook.colors.push_back(color);
@@ -498,12 +498,12 @@ void OMAVControllerInterface::publishShelfInfo(
   cost_publisher_.publish(cost_array_message);
 }
 
-void OMAVControllerInterface::manually_shift_input(const int i) {
-  if (i != 0) {
+void OMAVControllerInterface::manually_shift_input(const int &index) {
+  if (index != 0) {
     get_controller()->shift_input_ = true;
   }
   // Set the shift variable of the MPPI
-  get_controller()->shift_int_ = i;
+  get_controller()->shift_int_ = index;
   get_controller()->first_mppi_iteration_ = false;
 }
 

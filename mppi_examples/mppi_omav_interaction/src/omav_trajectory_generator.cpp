@@ -66,6 +66,7 @@ void OmavTrajectoryGenerator::initializePublishers() {
 void OmavTrajectoryGenerator::odometryCallback(
     const nav_msgs::OdometryConstPtr &odometry_msg) {
   mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
+  odometry_valid_ = true;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got odometry message");
 }
 
@@ -73,6 +74,7 @@ void OmavTrajectoryGenerator::objectCallback(
     const sensor_msgs::JointState &object_msg) {
   object_state_(0) = object_msg.position[0];
   object_state_(1) = object_msg.velocity[0];
+  object_valid_ = true;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object state message");
 }
 
@@ -84,6 +86,7 @@ void OmavTrajectoryGenerator::objectCallback(
 void OmavTrajectoryGenerator::TargetCallback(
     const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg) {
   if (set_target(position_target_msg.points[0])) {
+    last_target_received_ = position_target_msg.header.stamp;
     target_state_time_ = 0.0;
     first_trajectory_sent_ = true;
     current_trajectory_ = position_target_msg;
@@ -91,7 +94,10 @@ void OmavTrajectoryGenerator::TargetCallback(
   }
 }
 
-void OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
+bool OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
+  if (!odometry_valid_ || !object_valid_) {
+    return false;
+  }
   x.head<3>() = current_odometry_.position_W;
   x(3) = current_odometry_.orientation_W_B.w();
   x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
@@ -104,12 +110,17 @@ void OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
   x.segment<3>(26) = target_state_.velocity_W;
   x.segment<3>(29) = target_state_.angular_velocity_W;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
+  return true;
 }
 
-void OmavTrajectoryGenerator::get_odometry(observation_t &x,
+bool OmavTrajectoryGenerator::get_odometry(observation_t &x,
                                            double &timestamp) const {
-  get_odometry(x);
-  timestamp = static_cast<double>(current_odometry_.timestamp_ns) / 1.e9;
+  if(get_odometry(x)) {
+    timestamp = static_cast<double>(current_odometry_.timestamp_ns) / 1.e9;
+  } else {
+    return false;
+  }
+  return true;
 }
 
 void OmavTrajectoryGenerator::ReferenceParamCallback(
@@ -206,7 +217,10 @@ void OmavTrajectoryGenerator::CostValveParamCallback(
   rqt_cost_valve_bool_ = true;
 }
 
-void OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
+bool OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
+  if(!odometry_valid_) {
+    return false;
+  }
   x.segment<3>(19) = current_odometry_.position_W;
   x(22) = current_odometry_.orientation_W_B.w();
   x.segment<3>(23) = current_odometry_.orientation_W_B.vec();
@@ -217,6 +231,7 @@ void OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
   target_state_.orientation_W_B = current_odometry_.orientation_W_B;
   target_state_.velocity_W = current_odometry_.getVelocityWorld();
   target_state_.angular_velocity_W = current_odometry_.angular_velocity_B;
+  return true;
 }
 
 /**
@@ -240,5 +255,11 @@ bool OmavTrajectoryGenerator::set_target(
       mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].linear);
   target_state_.angular_velocity_W =
       mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].angular);
+  return true;
+}
+
+bool OmavTrajectoryGenerator::set_target(
+    const mav_msgs::EigenTrajectoryPoint &target_state) {
+  target_state_ = target_state;
   return true;
 }

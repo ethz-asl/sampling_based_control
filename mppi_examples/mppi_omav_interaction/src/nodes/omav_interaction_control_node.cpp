@@ -73,7 +73,6 @@ bool InteractionControlNode::InitializeNodeParams() {
 
   // Initialize values for the manual timing
   sim_time_ = 0.0;
-  index_temp_ = 0;
 
   return true;
 }
@@ -81,10 +80,10 @@ bool InteractionControlNode::InitializeNodeParams() {
 bool InteractionControlNode::InitializeControllerParams() { return true; }
 
 void InteractionControlNode::TimedCommandCallback(const ros::TimerEvent& e) {
-  computeCommand();
+  computeCommand(e.current_real);
 }
 
-bool InteractionControlNode::computeCommand() {
+bool InteractionControlNode::computeCommand(const ros::Time& t_now) {
   // Check if there are any parameter updates (from rqt)
   if (controller_.getTask() == InteractionTask::Shelf) {
     if (omav_trajectory_node_->rqt_cost_shelf_bool_) {
@@ -126,21 +125,24 @@ bool InteractionControlNode::computeCommand() {
     controller_.start();
     controller_running_ = true;
   }
+
   omav_trajectory_node_->target_state_time_ += 1.0 / kControl_rate;
+  const double t_since_last_target =
+      (t_now - omav_trajectory_node_->last_target_received_).toSec();
 
   // After the first trajectory is sent input timing is started
   if (omav_trajectory_node_->first_trajectory_sent_) {
     // Calculation of the index where we are in the last sent trajectory based
     // on the time the last trajectory that was sent
-    const int shift_index =
-        std::ceil(omav_trajectory_node_->target_state_time_ / kSim_dt);
+    const int shift_index = std::ceil(t_since_last_target / kSim_dt);
     std::cout << "t_odom: " << t_odom
               << ", tst: " << omav_trajectory_node_->target_state_time_
+              << ", tslt: " << t_since_last_target
               << ", shift_index: " << shift_index << std::endl;
     // omav_trajectory_node_->shift_index_ =
-    //     std::ceil(omav_trajectory_node_->target_state_time_ / kSim_dt);
+    //     std::ceil(t_since_last_target / kSim_dt);
     // ROS_INFO_STREAM(
-    //     "Target state time = " << omav_trajectory_node_->target_state_time_);
+    //     "Target state time = " << t_since_last_target);
     // ROS_INFO_STREAM("Shift index
     // = " << omav_trajectory_node_->shift_index_);
     // Input does only have to be shifted if the trajectory index changed and
@@ -148,28 +150,32 @@ bool InteractionControlNode::computeCommand() {
     // trajectory optimized is continuous
     if (shift_index != index_temp_ && shift_index < 4) {
       index_temp_ = shift_index;
+    static int index_temp = 0;
+    if (shift_index != index_temp && shift_index < 4) {
+      index_temp = shift_index;
       // Input is shifted in the MPPI as well as the initial values of the
       // desired trajectories of the integrators
-      controller_.manually_shift_input(index_temp_);
-      if (index_temp_ <
+      controller_.manually_shift_input(index_temp);
+      if (index_temp <
           omav_trajectory_node_->current_trajectory_.points.size()) {
         omav_trajectory_node_->set_target(
-            omav_trajectory_node_->current_trajectory_.points[index_temp_]);
+            omav_trajectory_node_->current_trajectory_.points[index_temp]);
       } else {
         ROS_WARN_THROTTLE(
             1.0, "[mppi_omav_interaction] Wrong size of current trajectory.");
       }
-    } else if (shift_index != index_temp_ &&
+    } else if (shift_index != index_temp &&
                !omav_trajectory_node_->shift_lock_) {
       // To ensure the trajectories are continuous even if the controller
       // takes longer than 0.015 to run the "final state" is set earlier
+      mav_msgs::EigenTrajectoryPoint target_state;
       omav_interaction::conversions::InterpolateTrajectoryPoints(
           omav_trajectory_node_->current_trajectory_.points[6],
-          omav_trajectory_node_->current_trajectory_.points[7],
-          &omav_trajectory_node_->target_state_);
+          omav_trajectory_node_->current_trajectory_.points[7], &target_state);
+      omav_trajectory_node_->set_target(target_state);
       controller_.manually_shift_input(7);
       omav_trajectory_node_->shift_lock_ = true;
-    } else if (omav_trajectory_node_->target_state_time_ > 0.09) {
+    } else if (t_since_last_target > 0.09) {
       // Experienced some problems where I ran into problems due to
       // multithreading, so to ensure no funny business happening added this
       // safeguard
@@ -179,7 +185,7 @@ bool InteractionControlNode::computeCommand() {
 
   sim_time_ += 1.0 / kControl_rate;
   ROS_INFO_STREAM("Sim time: " << sim_time_ << ", odom time: " << t_odom
-                               << ", ros time: " << ros::Time::now().toSec());
+                               << ", ros time: " << t_now.toSec());
 
   // Set new observation
   controller_.set_observation(state_, t_odom);
