@@ -16,15 +16,15 @@ void Mug::primitive_estimate()
         // height and radius
 
     // center line (from bottow point to top)
-    center_line << keypoints_xd.segment(2*4,3) - keypoints_xd.segment(1*4, 3);
+    center_line << keypoints_xd.segment(top_idx*4,3) - keypoints_xd.segment(bottom_idx*4, 3);
 
     // height  (= norm of the center line)
     mug_primitive.body_height = center_line.norm();
 
     // radius  ( = the dist between handle cirle point to the center line)
-    mug_primitive.body_radius = point_to_line(keypoints_xd.segment(1*4,3),
-                                              keypoints_xd.segment(2*4,3),
-                                              keypoints_xd.segment(0*4,3) );
+    mug_primitive.body_radius = point_to_line(keypoints_xd.segment(bottom_idx*4,3),
+                                              keypoints_xd.segment(top_idx*4,3),
+                                              keypoints_xd.segment(avg_idx*4,3) );
 
     // POSE 
         // estimate the center point's pose(s) of the objects, will be used as the pose 
@@ -66,13 +66,13 @@ double Mug::point_to_line(const Eigen::Vector3d& pos_1,
     return (sqrt_nom/sqrt_denom);
 }
 
-double Mug::angle_of_two_vector(const Eigen::Vector3d& vec_1,
-                            const Eigen::Vector3d& vec_2){
+Eigen::Matrix3d Mug::rot_of_two_frame(const Eigen::Matrix3d& rot_1,
+                            const Eigen::Matrix3d& rot_2){
     // calculate the angle between two given vectors
-    double cos_angle = vec_1.dot(vec_2) / ( vec_1.norm() * vec_2.norm() );
-    double angle = std::acos(cos_angle);
-    ROS_INFO_STREAM("angle is: " << angle);
-    return angle;
+    // double cos_angle = vec_1.dot(vec_2) / ( vec_1.norm() * vec_2.norm() );
+    // double angle = std::acos(cos_angle);
+    // ROS_INFO_STREAM("angle is: " << angle);
+    return rot_1*rot_2;
 }
 
 
@@ -82,7 +82,7 @@ bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
     // calculate a single primitve's center position & orientation
 
     // position
-    pos << center_line/2 + keypoints_xd.segment(1*4, 3);
+    pos << center_line/2 + keypoints_xd.segment(bottom_idx*4, 3);
     
     // orientation
         // roll  (= 0)
@@ -92,15 +92,35 @@ bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
         // yaw  (= angle between center line and the camera_world_frame) 
     // TODO: figure out the frame of the camera_world_frame
     // for now, set this frame ideantical to ref_frame
+    Eigen::Vector3d ref_x_axis = {1,0,0};
+    Eigen::Vector3d ref_y_axis = {0,1,0};
     Eigen::Vector3d ref_z_axis = {0,0,1};
-    center_yaw = angle_of_two_vector(center_line, ref_z_axis);
+    Eigen::Matrix3d ref_rot; 
+    ref_rot << 1,0,0, 
+               0,1,0, 
+               0,0,1;
+    Eigen::Vector3d pri_x_axis,pri_y_axis,pri_z_axis;
+    pri_z_axis = center_line.normalized();
+    pri_x_axis = (keypoints_xd.segment(handle_idx*4, 3) - pos).normalized();
+    pri_y_axis = pri_z_axis.cross(pri_x_axis);
+    Eigen::Matrix3d pri_rot; 
+    pri_rot.col(0) = pri_x_axis;
+    pri_rot.col(1) = pri_y_axis;
+    pri_rot.col(2) = pri_z_axis;
+
+    // center_yaw = rot_of_two_frame(ref_rot, pri_rot);
+    
+    Eigen::Matrix3d rot = rot_of_two_frame(ref_rot, pri_rot);
+    Eigen::Quaterniond q(rot);
     tf2::Quaternion q_;
+
     // q_.setRPY(center_roll,center_pitch,center_yaw);
-    q_.setEuler(center_yaw,center_pitch,center_roll);
-    orien[0] = q_.x();
-    orien[1] = q_.y();
-    orien[2] = q_.z();
-    orien[3] = q_.w();
+    // q_.setEuler(center_yaw,center_pitch,center_roll);
+    
+    orien[0] = q.x();
+    orien[1] = q.y();
+    orien[2] = q.z();
+    orien[3] = q.w();
 
     return true;
 } 
@@ -133,6 +153,11 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
     if(sim)
     {  
     }
+
+    this->avg_idx = 0;
+    this->handle_idx = 1;
+    this->bottom_idx = 2;
+    this->top_idx = 3;
 
     ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
 }
@@ -186,6 +211,9 @@ void Mug::update_kp_markers()
         }
         if((!sim) && kp_msg_received)
         {   
+            kp_markers_.markers[i].scale.x = 0.012 + i*0.004;
+            kp_markers_.markers[i].scale.y = 0.012 + i*0.004;
+            kp_markers_.markers[i].scale.z = 0.012 + i*0.004;
             kp_markers_.markers[i].pose.position.z = keypoints_xd[i*4+2];
             kp_markers_.markers[i].pose.position.y = keypoints_xd[i*4+1];
             kp_markers_.markers[i].pose.position.x = keypoints_xd[i*4+0];

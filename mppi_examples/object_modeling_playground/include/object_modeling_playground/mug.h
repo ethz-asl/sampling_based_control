@@ -29,8 +29,8 @@ class Mug: public Object
                         const Eigen::Vector3d& pos_2,
                         const Eigen::Vector3d& pos_3);
 
-    double angle_of_two_vector(const Eigen::Vector3d& vec_1,
-                            const Eigen::Vector3d& vec_2);
+    Eigen::Matrix3d rot_of_two_frame(const Eigen::Matrix3d& ref_rot,
+                            const Eigen::Matrix3d& rel_rot);
 
     ros::NodeHandle nh_;
 
@@ -41,5 +41,10 @@ class Mug: public Object
     Eigen::Vector3d center_line;
     std::vector<double> height;
     std::vector<double> radius;
+
+    int bottom_idx;
+    int top_idx;
+    int handle_idx;
+    int avg_idx;
 
 };
