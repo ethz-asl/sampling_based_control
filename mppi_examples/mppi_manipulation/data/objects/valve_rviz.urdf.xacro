@@ -8,6 +8,7 @@
     <xacro:property name="base_length" default="0.2"/>
     <xacro:property name="base_height" default="0.5"/>
     <xacro:property name="base_width" default="0.2"/>
+    <xacro:property name="valve_type" default="lee_"/>
 
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
@@ -58,13 +59,13 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="file://$(arg resource_directory)/valve_visual.obj" scale="1 1 1"/>
+                <mesh filename="file://$(arg resource_directory)/valve_${valve_type}visual.obj" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-                <mesh  filename="file://$(arg resource_directory)/valve_collision.obj" scale="1 1 1"/>
+                <mesh  filename="file://$(arg resource_directory)/valve_${valve_type}collision.obj" scale="1 1 1"/>
             </geometry>
         </collision>
     </link>
@@ -72,7 +73,7 @@
     <joint name="articulation_joint" type="revolute">
         <parent link="valve_base"/>
         <child link="handle_link"/>
-        <origin xyz="0 0 ${base_height/2.0+0.1}" rpy="1.5708 0 0"/>
+        <origin xyz="0 0 ${base_height/2.0+0.2}" rpy="0 0 0"/> <!-- 1.5708 0 0 -->
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 1 0"/>
         <limit upper="300.14" lower="-300.14" effort="100" velocity="1.0"/>
