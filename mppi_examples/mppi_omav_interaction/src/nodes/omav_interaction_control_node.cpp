@@ -3,27 +3,28 @@
 
 namespace omav_interaction {
 
-InteractionControlNode::InteractionControlNode(ros::NodeHandle& nh,
-                                               ros::NodeHandle& private_nh)
-    : nh_(nh), private_nh_(private_nh), controller_(private_nh, nh) {
-  timed_command_ = nh_.createTimer(
-      ros::Duration(1. / kControl_rate),
-      &InteractionControlNode::TimedCommandCallback, this, false, true);
+InteractionControlNode::InteractionControlNode(ros::NodeHandle &nh,
+                                               ros::NodeHandle &private_nh)
+    : nh_(nh),
+      private_nh_(private_nh),
+      controller_(private_nh, nh),
+      reference_param_server_(
+          ros::NodeHandle(private_nh, "reference_parameters")),
+      cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")),
+      cost_valve_param_server_(
+          ros::NodeHandle(private_nh, "cost_valve_parameters")) {
+  // timed_command_ = nh_.createTimer(
+  //     ros::Duration(1. / kControl_rate),
+  //     &InteractionControlNode::TimedCommandCallback, this, false, true);
 
   // load parameters
-  // InitializeControllerParams();
   InitializeNodeParams();
 }
 
 InteractionControlNode::~InteractionControlNode() {}
 
 bool InteractionControlNode::InitializeNodeParams() {
-  // ros interface
-  omav_trajectory_node_ =
-      std::make_shared<OmavTrajectoryGenerator>(nh_, private_nh_);
-
   // Load ROS parameters
-  // Check if running with omav interface
   std::string robot_description_raisim;
   std::string object_description;
   std::vector<double> x0;
@@ -35,7 +36,7 @@ bool InteractionControlNode::InitializeNodeParams() {
   getParam<std::string>(private_nh_, "/object_description", object_description,
                         "");
   getParam<std::vector<double>>(private_nh_, "initial_configuration", x0, {});
-  getParam<bool>(private_nh_, "sequential", sequential_, false);
+  // getParam<bool>(private_nh_, "sequential", sequential_, false);
 
   ROS_INFO_STREAM(
       "[mppi_omav_interaction] Robot & Object Description Raisim Loaded");
@@ -43,79 +44,116 @@ bool InteractionControlNode::InitializeNodeParams() {
   controller_.setTask(object_name);
 
   // ROS_INFO_STREAM("Controller Created");
-  simulation_ = std::make_shared<OMAVVelocityDynamicsRos>(
-      private_nh_, robot_description_raisim, object_description, kSim_dt);
+  // simulation_ = std::make_shared<OMAVVelocityDynamicsRos>(
+  //     private_nh_, robot_description_raisim, object_description, kSim_dt);
   // ROS_INFO_STREAM("Simulation Created");
 
-  // Set nominal state
-  state_nom_ = observation_t::Zero(simulation_->get_state_dimension());
   // set initial state
-  state_ = observation_t::Zero(simulation_->get_state_dimension());
+  // state_ = observation_t::Zero(simulation_->get_state_dimension());
+  state_ = observation_t::Zero(32);
   for (size_t i = 0; i < x0.size(); i++) state_(i) = x0[i];
-  // ROS_INFO_STREAM("Resetting initial state to " << state.transpose());
-  simulation_->reset(state_);
-
-  // init control input
-  input_ = input_t::Zero(6);
+  // simulation_->reset(state_);
 
   // init the controller
   if (!controller_.init())
     throw std::runtime_error("Failed to initialize controller");
   controller_.set_observation(state_, 0.0);
-  ROS_INFO_STREAM("[mppi_omav_interaction] First Odometry received");
+  ROS_INFO_STREAM("[InteractionControlNode] First Odometry received");
 
   // Set first odometry value as reference
   if (running_rotors_) {
-    omav_trajectory_node_->get_odometry(state_);
+    getState(state_);
     controller_.set_initial_reference(state_);
-    omav_trajectory_node_->initialize_integrators(state_);
+    initialize_integrators(state_);
   }
 
   // Initialize values for the manual timing
-  sim_time_ = 0.0;
+  initializeSubscribers();
+  initializePublishers();
+
+  // setup dynamic reconfigure
+  dynamic_reconfigure::Server<
+      mppi_omav_interaction::MPPIOmavReferenceConfig>::CallbackType f;
+  dynamic_reconfigure::Server<
+      mppi_omav_interaction::MPPIOmavCostConfig>::CallbackType g;
+  dynamic_reconfigure::Server<
+      mppi_omav_interaction::MPPIOmavCostValveConfig>::CallbackType h;
+  f = boost::bind(&InteractionControlNode::referenceParamCallback, this, _1,
+                  _2);
+  g = boost::bind(&InteractionControlNode::costParamCallback, this, _1, _2);
+  h = boost::bind(&InteractionControlNode::costValveParamCallback, this, _1,
+                  _2);
+  reference_param_server_.setCallback(f);
+  cost_param_server_.setCallback(g);
+  cost_valve_param_server_.setCallback(h);
 
   return true;
 }
 
-bool InteractionControlNode::InitializeControllerParams() { return true; }
-
-void InteractionControlNode::TimedCommandCallback(const ros::TimerEvent& e) {
-  computeCommand(e.current_real);
+void InteractionControlNode::initializeSubscribers() {
+  odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
+                                &InteractionControlNode::odometryCallback, this,
+                                ros::TransportHints().tcpNoDelay());
+  object_state_sub_ = nh_.subscribe("object_joint_states", 1,
+                                    &InteractionControlNode::objectCallback,
+                                    this, ros::TransportHints().tcpNoDelay());
+  int i = 0;
+  while (object_state_sub_.getNumPublishers() <= 0 && i < 10) {
+    ros::Duration(1.0).sleep();
+    ROS_WARN("[mppi_omav_interaction] Waiting for publisher of object state.");
+    i++;
+  }
+  if (i == 10) {
+    ROS_ERROR("[mppi_omav_interaction] Did not get object state publisher.");
+    ros::shutdown();
+  }
+  ROS_INFO("[mppi_omav_interaction] Subscribers initialized");
 }
 
-bool InteractionControlNode::computeCommand(const ros::Time& t_now) {
-  // Check if there are any parameter updates (from rqt)
-  if (controller_.getTask() == InteractionTask::Shelf) {
-    if (omav_trajectory_node_->rqt_cost_shelf_bool_) {
-      ROS_INFO("[mppi_omav_interaction] Setting new Cost Param");
-      omav_trajectory_node_->rqt_cost_shelf_bool_ =
-          controller_.update_cost_param_shelf(
-              omav_trajectory_node_->rqt_cost_shelf_);
-      ROS_INFO("[mppi_omav_interaction] New Cost Param Set");
-    }
-  } else if (controller_.getTask() == InteractionTask::Valve) {
+void InteractionControlNode::initializePublishers() {
+  reference_publisher_ =
+      nh_.advertise<geometry_msgs::PoseStamped>("/mppi_pose_desired", 1);
+}
+
+void InteractionControlNode::odometryCallback(
+    const nav_msgs::OdometryConstPtr &odometry_msg) {
+  mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
+  odometry_valid_ = true;
+  computeCommand(odometry_msg->header.stamp);
+
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got odometry message");
+}
+
+void InteractionControlNode::objectCallback(
+    const sensor_msgs::JointState &object_msg) {
+  object_state_(0) = object_msg.position[0];
+  object_state_(1) = object_msg.velocity[0];
+  object_valid_ = true;
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object state message");
+}
+
+// void InteractionControlNode::TimedCommandCallback(const ros::TimerEvent &e) {
+//   computeCommand(e.current_real);
+// }
+
+bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
+  if (controller_.getTask() == InteractionTask::Valve) {
     // Set valve reference value to current angle
     controller_.updateValveReference(state_(13) + 0.5);
-    if (omav_trajectory_node_->rqt_cost_valve_bool_) {
-      omav_trajectory_node_->rqt_cost_valve_bool_ =
-          controller_.update_cost_param_valve(
-              omav_trajectory_node_->rqt_cost_valve_);
-      ROS_INFO("[mppi_omav_interaction] New Cost Param Set");
-    }
   }
 
-  // Check if the object should be reset
-  if (omav_trajectory_node_->reset_object_) {
-    state_(13) = 0;
-    simulation_->reset(state_);
-    omav_trajectory_node_->reset_object_ = false;
-    ROS_INFO("[mppi_omav_interaction] Reset Object");
+  // Load most recently published trajectory
+  if (controller_.get_current_trajectory(&current_trajectory_)) {
+    trajectory_available_ = true;
   }
 
   // Get odometry and target state
-  double t_odom;
-  // Time the last odometry was received:
-  omav_trajectory_node_->get_odometry(state_, t_odom);
+  ros::Time t_odom_t;
+  t_odom_t = t_odom_t.fromNSec(current_odometry_.timestamp_ns);
+  const double t_odom = t_odom_t.toSec();
+  getState(state_);
+
+  controller_.set_observation(state_, t_odom);
   if (t_odom < 0) {
     ROS_WARN_THROTTLE(
         1.0, "[mppi_omav_interaction] Bad odom time. Is odometry available?");
@@ -125,78 +163,214 @@ bool InteractionControlNode::computeCommand(const ros::Time& t_now) {
     controller_.start();
     controller_running_ = true;
   }
-
-  omav_trajectory_node_->target_state_time_ += 1.0 / kControl_rate;
-  const double t_since_last_target =
-      (t_now - omav_trajectory_node_->last_target_received_).toSec();
-
-  // After the first trajectory is sent input timing is started
-  if (omav_trajectory_node_->first_trajectory_sent_) {
-    // Calculation of the index where we are in the last sent trajectory based
-    // on the time the last trajectory that was sent
-    const int shift_index = std::ceil(t_since_last_target / kSim_dt);
-    std::cout << "t_odom: " << t_odom
-              << ", tst: " << omav_trajectory_node_->target_state_time_
-              << ", tslt: " << t_since_last_target
-              << ", shift_index: " << shift_index << std::endl;
-    // omav_trajectory_node_->shift_index_ =
-    //     std::ceil(t_since_last_target / kSim_dt);
-    // ROS_INFO_STREAM(
-    //     "Target state time = " << t_since_last_target);
-    // ROS_INFO_STREAM("Shift index
-    // = " << omav_trajectory_node_->shift_index_);
-    // Input does only have to be shifted if the trajectory index changed and
-    // exception is made when we are close to 0.1s when its crucial the
-    // trajectory optimized is continuous
-    if (shift_index != index_temp_ && shift_index < 4) {
-      index_temp_ = shift_index;
-    static int index_temp = 0;
-    if (shift_index != index_temp && shift_index < 4) {
-      index_temp = shift_index;
-      // Input is shifted in the MPPI as well as the initial values of the
-      // desired trajectories of the integrators
-      controller_.manually_shift_input(index_temp);
-      if (index_temp <
-          omav_trajectory_node_->current_trajectory_.points.size()) {
-        omav_trajectory_node_->set_target(
-            omav_trajectory_node_->current_trajectory_.points[index_temp]);
-      } else {
-        ROS_WARN_THROTTLE(
-            1.0, "[mppi_omav_interaction] Wrong size of current trajectory.");
-      }
-    } else if (shift_index != index_temp &&
-               !omav_trajectory_node_->shift_lock_) {
-      // To ensure the trajectories are continuous even if the controller
-      // takes longer than 0.015 to run the "final state" is set earlier
-      mav_msgs::EigenTrajectoryPoint target_state;
-      omav_interaction::conversions::InterpolateTrajectoryPoints(
-          omav_trajectory_node_->current_trajectory_.points[6],
-          omav_trajectory_node_->current_trajectory_.points[7], &target_state);
-      omav_trajectory_node_->set_target(target_state);
-      controller_.manually_shift_input(7);
-      omav_trajectory_node_->shift_lock_ = true;
-    } else if (t_since_last_target > 0.09) {
-      // Experienced some problems where I ran into problems due to
-      // multithreading, so to ensure no funny business happening added this
-      // safeguard
-      controller_.manually_shift_input(0);
-    }
-  }
-
-  sim_time_ += 1.0 / kControl_rate;
-  ROS_INFO_STREAM("Sim time: " << sim_time_ << ", odom time: " << t_odom
-                               << ", ros time: " << t_now.toSec());
-
-  // Set new observation
-  controller_.set_observation(state_, t_odom);
-
   return true;
 }
 
+bool InteractionControlNode::getState(observation_t &x) {
+  if (!odometry_valid_ || !object_valid_) {
+    return false;
+  }
+  // Synchronize current target with recent odometry
+  getTargetStateFromTrajectory();
+
+  x.head<3>() = current_odometry_.position_W;
+  x(3) = current_odometry_.orientation_W_B.w();
+  x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
+  x.segment<3>(7) = current_odometry_.getVelocityWorld();
+  x.segment<3>(10) = current_odometry_.angular_velocity_B;
+  x.segment<2>(13) = object_state_;
+  x.segment<3>(19) = target_state_.position_W;
+  x(22) = target_state_.orientation_W_B.w();
+  x.segment<3>(23) = target_state_.orientation_W_B.vec();
+  x.segment<3>(26) = target_state_.velocity_W;
+  x.segment<3>(29) = target_state_.angular_velocity_W;
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
+  return true;
+}
+
+bool InteractionControlNode::getTargetStateFromTrajectory() {
+  // Compute target state according to odometry timestamp:
+  if (trajectory_available_ && current_trajectory_.points.size() > 0) {
+    const int64_t t_stamp = current_trajectory_.header.stamp.toNSec();
+    const int64_t t_odom_s = current_odometry_.timestamp_ns;
+    int64_t t_ref = t_stamp;
+    size_t i = 0;
+    while (t_ref < t_odom_s && i < current_trajectory_.points.size()) {
+      t_ref = t_stamp + current_trajectory_.points[i].time_from_start.toNSec();
+      i++;
+    }
+    if (i == current_trajectory_.points.size()) {
+      ROS_ERROR(
+          "Target exceeded trajectory length, t_odom_s = %i, last traj t = %i",
+          t_odom_s, t_ref);
+      i = 0;
+    }
+    if (i > 1 && i < current_trajectory_.points.size()) {
+      double t = static_cast<double>((t_odom_s - (t_ref - kSim_dt_ns)) / 1e9) /
+                 kSim_dt;
+      mav_msgs::EigenTrajectoryPoint target_state;
+      omav_interaction::conversions::InterpolateTrajectoryPoints(
+          current_trajectory_.points[i - 2], current_trajectory_.points[i - 1],
+          t, &target_state);
+      setTarget(target_state);
+    } else {
+      setTarget(current_trajectory_.points[i]);
+      ROS_WARN("Was not able to interpolate trajectory points.");
+    }
+    return true;
+  }
+  ROS_ERROR("No trajectory available.");
+  return false;
+}
+
+bool InteractionControlNode::setTarget(
+    const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point) {
+  if (trajectory_msg_point.transforms.size() <= 0) {
+    ROS_ERROR("[mppi_omav_interaction] Target does not contain any reference.");
+    return false;
+  }
+  target_state_.orientation_W_B =
+      mav_msgs::quaternionFromMsg(trajectory_msg_point.transforms[0].rotation);
+  target_state_.position_W =
+      mav_msgs::vector3FromMsg(trajectory_msg_point.transforms[0].translation);
+  target_state_.velocity_W =
+      mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].linear);
+  target_state_.angular_velocity_W =
+      mav_msgs::vector3FromMsg(trajectory_msg_point.velocities[0].angular);
+  return true;
+}
+
+bool InteractionControlNode::setTarget(
+    const mav_msgs::EigenTrajectoryPoint &target_state) {
+  target_state_ = target_state;
+  return true;
+}
+
+bool InteractionControlNode::initialize_integrators(observation_t &x) {
+  if (!odometry_valid_) {
+    return false;
+  }
+  x.segment<3>(19) = current_odometry_.position_W;
+  x(22) = current_odometry_.orientation_W_B.w();
+  x.segment<3>(23) = current_odometry_.orientation_W_B.vec();
+  x.segment<3>(26) = current_odometry_.getVelocityWorld();
+  x.segment<3>(29) = current_odometry_.angular_velocity_B;
+
+  target_state_.position_W = current_odometry_.position_W;
+  target_state_.orientation_W_B = current_odometry_.orientation_W_B;
+  target_state_.velocity_W = current_odometry_.getVelocityWorld();
+  target_state_.angular_velocity_W = current_odometry_.angular_velocity_B;
+  return true;
+}
+
+void InteractionControlNode::referenceParamCallback(
+    mppi_omav_interaction::MPPIOmavReferenceConfig &config, uint32_t level) {
+  if (config.reset) {
+    config.reset = false;
+    config.ref_pos_x = current_odometry_.position_W.x();
+    config.ref_pos_y = current_odometry_.position_W.y();
+    config.ref_pos_z = current_odometry_.position_W.z();
+    Eigen::Vector3d euler_angles;
+    current_odometry_.getEulerAngles(&euler_angles);
+    config.ref_roll = euler_angles(0) * 360 / (2 * M_PI);
+    config.ref_pitch = euler_angles(1) * 360 / (2 * M_PI);
+    config.ref_yaw = euler_angles(2) * 360 / (2 * M_PI);
+  }
+  geometry_msgs::PoseStamped rqt_pose_msg;
+  Eigen::VectorXd rqt_pose(7);
+  Eigen::Quaterniond q;
+  omav_interaction::conversions::RPYtoQuaterniond(
+      config.ref_roll, config.ref_pitch, config.ref_yaw, q);
+  rqt_pose << config.ref_pos_x, config.ref_pos_y, config.ref_pos_z, q.w(),
+      q.x(), q.y(), q.z();
+  omav_interaction::conversions::PoseStampedMsgFromVector(rqt_pose,
+                                                          rqt_pose_msg);
+  reference_publisher_.publish(rqt_pose_msg);
+
+  if (config.reset_object) {
+    config.reset_object = false;
+    state_(13) = 0;
+    // simulation_->reset(state_);
+    ROS_INFO("[mppi_omav_interaction] Reset Object");
+  }
+}
+
+void InteractionControlNode::costParamCallback(
+    mppi_omav_interaction::MPPIOmavCostConfig &config, uint32_t level) {
+  if (controller_.getTask() == InteractionTask::Shelf) {
+    // Update OMAV pose cost
+    rqt_cost_shelf_.Q_distance_x = config.Q_x_omav;
+    rqt_cost_shelf_.Q_distance_y = config.Q_y_omav;
+    rqt_cost_shelf_.Q_distance_z = config.Q_z_omav;
+    rqt_cost_shelf_.Q_orientation = config.Q_orientation_omav;
+    rqt_cost_shelf_.pose_costs << rqt_cost_shelf_.Q_distance_x,
+        rqt_cost_shelf_.Q_distance_y, rqt_cost_shelf_.Q_distance_z,
+        rqt_cost_shelf_.Q_orientation, rqt_cost_shelf_.Q_orientation,
+        rqt_cost_shelf_.Q_orientation;
+    rqt_cost_shelf_.Q_pose = rqt_cost_shelf_.pose_costs.asDiagonal();
+    // Update Object cost
+    rqt_cost_shelf_.Q_object = config.Q_object;
+    // Update velocity cost
+    rqt_cost_shelf_.Q_lin_vel = config.Q_linear_velocity;
+    rqt_cost_shelf_.vel_costs << rqt_cost_shelf_.Q_lin_vel,
+        rqt_cost_shelf_.Q_lin_vel, rqt_cost_shelf_.Q_lin_vel, config.Q_roll,
+        config.Q_pitch, config.Q_yaw;
+    rqt_cost_shelf_.Q_vel = rqt_cost_shelf_.vel_costs.asDiagonal();
+    // Update Handle Hook cost components
+    rqt_cost_shelf_.handle_hook_thresh = config.Handle_Hook_Threshold;
+    rqt_cost_shelf_.Q_handle_hook = config.Handle_Hook_Cost;
+    // Update floor cost components
+    rqt_cost_shelf_.floor_thresh = config.Floor_Threshold;
+    rqt_cost_shelf_.Q_floor = config.floor_cost;
+    rqt_cost_shelf_.Q_power = config.power_cost;
+    rqt_cost_shelf_.Q_torque = config.torque_cost;
+    rqt_cost_shelf_.contact_bool = config.contact_prohibitor;
+    controller_.update_cost_param_shelf(rqt_cost_shelf_);
+  } else {
+    ROS_ERROR("Wrong scenario chosen. Cannot set cost.");
+  }
+}
+
+void InteractionControlNode::costValveParamCallback(
+    mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level) {
+  if (controller_.getTask() == InteractionTask::Valve) {
+    // Update OMAV pose cost
+    rqt_cost_valve_.Q_distance_x = config.Q_x_omav;
+    rqt_cost_valve_.Q_distance_y = config.Q_y_omav;
+    rqt_cost_valve_.Q_distance_z = config.Q_z_omav;
+    rqt_cost_valve_.Q_orientation = config.Q_orientation_omav;
+    rqt_cost_valve_.pose_costs << rqt_cost_valve_.Q_distance_x,
+        rqt_cost_valve_.Q_distance_y, rqt_cost_valve_.Q_distance_z,
+        rqt_cost_valve_.Q_orientation, rqt_cost_valve_.Q_orientation,
+        rqt_cost_valve_.Q_orientation;
+    rqt_cost_valve_.Q_pose = rqt_cost_valve_.pose_costs.asDiagonal();
+    // Update Object cost
+    rqt_cost_valve_.Q_object = config.Q_object;
+    // Update velocity cost
+    rqt_cost_valve_.Q_lin_vel = config.Q_linear_velocity;
+    rqt_cost_valve_.vel_costs << rqt_cost_valve_.Q_lin_vel,
+        rqt_cost_valve_.Q_lin_vel, rqt_cost_valve_.Q_lin_vel, config.Q_roll,
+        config.Q_pitch, config.Q_yaw;
+    rqt_cost_valve_.Q_vel = rqt_cost_valve_.vel_costs.asDiagonal();
+    // Update Handle Hook cost components
+    rqt_cost_valve_.handle_hook_thresh = config.Handle_Hook_Threshold;
+    rqt_cost_valve_.Q_handle_hook = config.Handle_Hook_Cost;
+    // Update floor cost components
+    rqt_cost_valve_.floor_thresh = config.Floor_Threshold;
+    rqt_cost_valve_.Q_floor = config.floor_cost;
+    rqt_cost_valve_.Q_power = config.power_cost;
+    rqt_cost_valve_.Q_torque = config.torque_cost;
+    rqt_cost_valve_.contact_bool = config.contact_prohibitor;
+    controller_.update_cost_param_valve(rqt_cost_valve_);
+  } else {
+    ROS_ERROR("Wrong scenario chosen. Cannot set cost.");
+  }
+}
+
 template <class T>
-void InteractionControlNode::getParam(const ros::NodeHandle& nh,
-                                      const std::string& id, T& var,
-                                      const T& val_def) const {
+void InteractionControlNode::getParam(const ros::NodeHandle &nh,
+                                      const std::string &id, T &var,
+                                      const T &val_def) const {
   if (!nh.param<T>(id, var, val_def)) {
     ROS_FATAL_STREAM("[mppi_omav_interaction] Could not find parameter " << id);
     ros::shutdown();
@@ -208,7 +382,7 @@ void InteractionControlNode::getParam(const ros::NodeHandle& nh,
 
 }  // namespace omav_interaction
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   ros::init(argc, argv, "interaction_controller_node");
 
   ros::NodeHandle nh, private_nh("~");

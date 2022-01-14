@@ -19,9 +19,9 @@
 #include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
 #include <sensor_msgs/JointState.h>
-#include <std_msgs/Int64.h>
-#include <std_msgs/Header.h>
 #include <std_msgs/ColorRGBA.h>
+#include <std_msgs/Header.h>
+#include <std_msgs/Int64.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -59,9 +59,12 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   bool set_initial_reference(const observation_t &x);
 
-  void manually_shift_input(const int i);
+  void manually_shift_input(const int &index);
 
   void updateValveReference(const double &ref_angle);
+
+  bool get_current_trajectory(
+    trajectory_msgs::MultiDOFJointTrajectory *current_trajectory_msg) const;
 
  private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
@@ -74,7 +77,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   void publish_trajectory(const mppi::observation_array_t &x_opt,
                           const mppi::input_array_t &u_opt,
-                          const mppi::observation_t &x0_opt) const;
+                          const mppi::observation_t &x0_opt,
+                          const std::vector<double> &tt);
 
   void publishShelfInfo(const std_msgs::Header &header) const;
   void publishHookPos(const std_msgs::Header &header) const;
@@ -120,10 +124,14 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   observation_array_t xx_opt_;
   input_array_t uu_opt_;
+  std::vector<double> tt_opt_;
   observation_t x0_;
   Eigen::Vector3d com_hook_;
 
   sensor_msgs::JointState object_state_;
+
+   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
+   bool published_trajectory_ = false;
 };
 }  // namespace omav_interaction
 

@@ -229,12 +229,16 @@ class PathIntegral {
    * rollout
    */
   bool get_optimal_rollout(observation_array_t& x, input_array_t& u);
+  bool get_optimal_rollout_for_trajectory(observation_array_t& x,
+                                          input_array_t& u,
+                                          std::vector<double>& tt,
+                                          const double &t_now);
   /**
    * @brief Returns all trajectories of the current rollout
    * @param rollouts vector with all the rollout trajectories
    * @return -
    */
-  bool get_rollout_trajectories(std::vector<Rollout>& rollouts) const;
+  bool get_rollout_trajectories(std::vector<Rollout>& rollouts);
 
   /**
    * @brief Get only the diagonal of the sampler's covariance matrix
@@ -271,13 +275,13 @@ class PathIntegral {
   void update_reference();
 
   // Generic getters
-  inline const Eigen::ArrayXd& get_weights() const { return omega; }
+  inline const Eigen::ArrayXd& get_weights() const { return omega_; }
   inline double get_stage_cost() { return stage_cost_; }
   inline double get_rollout_cost() { return rollouts_cost_.minCoeff(); }
   inline double get_rollout_min_cost() { return rollouts_cost_.minCoeff(); }
   inline double get_rollout_max_cost() { return rollouts_cost_.maxCoeff(); }
-  inline double get_weight_min_cost() { return omega.minCoeff(); }
-  inline double get_weight_max_cost() { return omega.maxCoeff(); }
+  inline double get_weight_min_cost() { return omega_.minCoeff(); }
+  inline double get_weight_max_cost() { return omega_.maxCoeff(); }
   inline const Rollout& get_optimal_rollout() { return opt_roll_; }
   inline const Rollout& get_optimal_rollout_cache() { return opt_roll_cache_; }
   inline observation_t get_current_observation() { return x0_internal_; }
@@ -296,7 +300,7 @@ public:
   // TODO clean this up: everything public...
  public:
   bool verbose_;
-  Eigen::ArrayXd omega;
+  Eigen::ArrayXd omega_;
   Eigen::ArrayXd rollouts_cost_;
   Eigen::ArrayXd exponential_cost_;
 
@@ -309,6 +313,7 @@ public:
   size_t cached_rollouts_;
 
   std::vector<Rollout> rollouts_;
+  std::vector<Rollout> all_rollouts_cached_;
   int steps_;
 
   bool first_step_ = true;
@@ -370,6 +375,9 @@ protected:
   size_t step_count_;  // total amount of solver optimization steps
   std::vector<input_t> momentum_;
   Timer timer_;
+
+  double hold_time_end_ = 0;
+  double hold_time_end_internal_ = 0;
 };
 
 }  // namespace mppi

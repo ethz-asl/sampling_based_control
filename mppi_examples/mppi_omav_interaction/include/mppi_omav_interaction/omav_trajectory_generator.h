@@ -34,14 +34,18 @@ class OmavTrajectoryGenerator {
                           const ros::NodeHandle &private_nh);
   ~OmavTrajectoryGenerator();
 
-  bool get_odometry(observation_t &x) const;
-  bool get_odometry(observation_t &x, double &timestamp) const;
+  bool get_state(observation_t &x);
+  bool get_state(observation_t &x, double &timestamp, bool &is_new);
 
   bool set_target(const trajectory_msgs::MultiDOFJointTrajectoryPoint
                       &trajectory_msg_point);
   bool set_target(const mav_msgs::EigenTrajectoryPoint &target_state);
+  void setCurrentTrajectory(
+    const trajectory_msgs::MultiDOFJointTrajectory &current_trajectory);
 
   bool initialize_integrators(observation_t &x);
+
+  bool getTargetStateFromTrajectory();
 
   bool rqt_cost_shelf_bool_ = false;
   bool rqt_cost_valve_bool_ = false;
@@ -102,6 +106,8 @@ class OmavTrajectoryGenerator {
 
   bool object_valid_ = false;
   bool odometry_valid_ = false;
+  bool is_new_odom_ = false;
+  bool trajectory_available_ = false;
 };
 }  // namespace omav_interaction
 

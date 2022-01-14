@@ -11,7 +11,7 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
       cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")),
       cost_valve_param_server_(
           ros::NodeHandle(private_nh, "cost_valve_parameters")) {
-  initializePublishers();
+  // initializePublishers();
   initializeSubscribers();
   // Initialize data to prevent problems
   object_state_.setZero();
@@ -36,11 +36,11 @@ OmavTrajectoryGenerator::OmavTrajectoryGenerator(
 OmavTrajectoryGenerator::~OmavTrajectoryGenerator() {}
 
 void OmavTrajectoryGenerator::initializeSubscribers() {
-  odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 10,
+  odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
                                 &OmavTrajectoryGenerator::odometryCallback,
                                 this, ros::TransportHints().tcpNoDelay());
   position_target_sub_ = nh_.subscribe(
-      "command/trajectory", 10, &OmavTrajectoryGenerator::TargetCallback, this,
+      "command/trajectory", 1, &OmavTrajectoryGenerator::TargetCallback, this,
       ros::TransportHints().tcpNoDelay());
   object_state_sub_ = nh_.subscribe("object_joint_states", 10,
                                     &OmavTrajectoryGenerator::objectCallback,
@@ -60,12 +60,13 @@ void OmavTrajectoryGenerator::initializeSubscribers() {
 
 void OmavTrajectoryGenerator::initializePublishers() {
   reference_publisher_ =
-      nh_.advertise<geometry_msgs::PoseStamped>("/mppi_pose_desired", 10);
+      nh_.advertise<geometry_msgs::PoseStamped>("/mppi_pose_desired", 1);
 }
 
 void OmavTrajectoryGenerator::odometryCallback(
     const nav_msgs::OdometryConstPtr &odometry_msg) {
   mav_msgs::eigenOdometryFromMsg(*odometry_msg, &current_odometry_);
+  is_new_odom_ = true;
   odometry_valid_ = true;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got odometry message");
 }
@@ -94,10 +95,12 @@ void OmavTrajectoryGenerator::TargetCallback(
   }
 }
 
-bool OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
+bool OmavTrajectoryGenerator::get_state(observation_t &x) {
   if (!odometry_valid_ || !object_valid_) {
     return false;
   }
+  getTargetStateFromTrajectory();
+
   x.head<3>() = current_odometry_.position_W;
   x(3) = current_odometry_.orientation_W_B.w();
   x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
@@ -113,9 +116,46 @@ bool OmavTrajectoryGenerator::get_odometry(observation_t &x) const {
   return true;
 }
 
-bool OmavTrajectoryGenerator::get_odometry(observation_t &x,
-                                           double &timestamp) const {
-  if(get_odometry(x)) {
+bool OmavTrajectoryGenerator::getTargetStateFromTrajectory() {
+  // Compute target state according to odometry timestamp:
+  if (trajectory_available_ && current_trajectory_.points.size() > 0) {
+    int64_t t_ref = current_trajectory_.header.stamp.toNSec();
+    const int64_t t_odom_s = current_odometry_.timestamp_ns;
+    size_t i = 0;
+    while (t_ref < t_odom_s && i < current_trajectory_.points.size()) {
+      t_ref = (current_trajectory_.header.stamp +
+               current_trajectory_.points[i].time_from_start)
+                  .toNSec();
+      i++;
+    }
+    if (i == current_trajectory_.points.size()) {
+      ROS_ERROR(
+          "Target exceeded trajectory length, t_odom_s = %i, last traj t = %i",
+          t_odom_s, t_ref);
+      i = 0;
+    }
+    if (i > 1 && i < current_trajectory_.points.size()) {
+      double t = static_cast<double>((t_odom_s - (t_ref - 15e6)) / 1e9) / 0.015;
+      mav_msgs::EigenTrajectoryPoint target_state;
+      omav_interaction::conversions::InterpolateTrajectoryPoints(
+          current_trajectory_.points[i - 2], current_trajectory_.points[i-1], t,
+          &target_state);
+      set_target(target_state);
+    } else {
+      set_target(current_trajectory_.points[i]);
+      ROS_WARN("Was not able to interpolate trajectory points.");
+    }
+    return true;
+  }
+  ROS_ERROR("No trajectory available.");
+  return false;
+}
+
+bool OmavTrajectoryGenerator::get_state(observation_t &x, double &timestamp,
+                                        bool &is_new) {
+  if (get_state(x)) {
+    is_new = is_new_odom_;
+    is_new_odom_ = false;
     timestamp = static_cast<double>(current_odometry_.timestamp_ns) / 1.e9;
   } else {
     return false;
@@ -218,7 +258,7 @@ void OmavTrajectoryGenerator::CostValveParamCallback(
 }
 
 bool OmavTrajectoryGenerator::initialize_integrators(observation_t &x) {
-  if(!odometry_valid_) {
+  if (!odometry_valid_) {
     return false;
   }
   x.segment<3>(19) = current_odometry_.position_W;
@@ -262,4 +302,10 @@ bool OmavTrajectoryGenerator::set_target(
     const mav_msgs::EigenTrajectoryPoint &target_state) {
   target_state_ = target_state;
   return true;
+}
+
+void OmavTrajectoryGenerator::setCurrentTrajectory(
+    const trajectory_msgs::MultiDOFJointTrajectory &current_trajectory) {
+  current_trajectory_ = current_trajectory;
+  trajectory_available_ = true;
 }

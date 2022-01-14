@@ -114,19 +114,19 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
   // ROS_INFO_STREAM_THROTTLE(0.5, "Pos tip: " <<
   // robot_model_.get_pose("tip").translation);
 
-  ROS_INFO_STREAM_THROTTLE(
-      0.5, "Costs:\n"
-               << kCost_descr[0] << ": " << cost_vector_(0) << "\n"
-               << kCost_descr[1] << ": " << cost_vector_(1) << "\n"
-               << kCost_descr[2] << ": " << cost_vector_(2) << "\n"
-               << kCost_descr[3] << ": " << cost_vector_(3) << "\n"
-               << kCost_descr[4] << ": " << cost_vector_(4) << "\n"
-               << kCost_descr[5] << ": " << cost_vector_(5) << "\n"
-               << kCost_descr[6] << ": " << cost_vector_(6) << "\n"
-               << kCost_descr[7] << ": " << cost_vector_(7) << "\n"
-               << kCost_descr[8] << ": " << cost_vector_(8) << "\n"
-               << kCost_descr[9] << ": " << cost_vector_(9) << "\n"
-               << kCost_descr[10] << ": " << cost_vector_(10) << "\n");
+  // ROS_INFO_STREAM_THROTTLE(
+  //     0.5, "Costs:\n"
+  //              << kCost_descr[0] << ": " << cost_vector_(0) << "\n"
+  //              << kCost_descr[1] << ": " << cost_vector_(1) << "\n"
+  //              << kCost_descr[2] << ": " << cost_vector_(2) << "\n"
+  //              << kCost_descr[3] << ": " << cost_vector_(3) << "\n"
+  //              << kCost_descr[4] << ": " << cost_vector_(4) << "\n"
+  //              << kCost_descr[5] << ": " << cost_vector_(5) << "\n"
+  //              << kCost_descr[6] << ": " << cost_vector_(6) << "\n"
+  //              << kCost_descr[7] << ": " << cost_vector_(7) << "\n"
+  //              << kCost_descr[8] << ": " << cost_vector_(8) << "\n"
+  //              << kCost_descr[9] << ": " << cost_vector_(9) << "\n"
+  //              << kCost_descr[10] << ": " << cost_vector_(10) << "\n");
   return cost;
 }
 
@@ -164,9 +164,9 @@ void OMAVInteractionCostValve::compute_handle_hook_cost() {
 
 void OMAVInteractionCostValve::compute_object_cost(
     const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
-  ROS_INFO_STREAM_THROTTLE(0.5, "state: " << omav_state(13)
-                                          << ", vel: " << omav_state(14)
-                                          << ", ref: " << omav_reference(7));
+  // ROS_INFO_STREAM_THROTTLE(0.5, "state: " << omav_state(13)
+  //                                         << ", vel: " << omav_state(14)
+  //                                         << ", ref: " << omav_reference(7));
   cost_vector_(CostIdx::object) = param_ptr_->Q_object *
                                   (omav_state(13) - omav_reference(7)) *
                                   (omav_state(13) - omav_reference(7));

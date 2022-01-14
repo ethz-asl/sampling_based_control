@@ -5,7 +5,7 @@ solver:
   step_size: 0.015
   horizon: 1.0
 
-  gradient_step_size: 1.0
+  gradient_step_size: 1.0   # alpha
   momentum_step_size: 0.0
 
   cost_ratio: 0.2

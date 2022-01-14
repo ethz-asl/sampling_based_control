@@ -27,6 +27,22 @@ void to_trajectory_msg(
   mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
                                                 &trajectory_msg);
 }
+void to_trajectory_msg(
+    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
+    const std::vector<double> &tt,
+    trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
+  mav_msgs::EigenTrajectoryPointVector current_trajectory;
+  mav_msgs::EigenTrajectoryPoint current_trajectory_point;
+  for (size_t i = 0; i < x_opt.size(); i++) {
+    EigenTrajectoryPointFromState(x_opt[i], u_opt[i],
+                                  static_cast<int64_t>((tt[i] - tt[0]) * 1e9),
+                                  current_trajectory_point);
+    current_trajectory.push_back(current_trajectory_point);
+  }
+  mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
+                                                &trajectory_msg);
+  trajectory_msg.header.stamp = ros::Time(tt[0]);
+}
 
 void EigenTrajectoryPointFromStates(
     const observation_array_t &states, const input_array_t &inputs,
@@ -163,9 +179,7 @@ void OptimalRollouttoVelocityVector(const int trajectory_point_index,
 void InterpolateTrajectoryPoints(
     const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point_1,
     const trajectory_msgs::MultiDOFJointTrajectoryPoint &trajectory_msg_point_2,
-    mav_msgs::EigenTrajectoryPoint *trajectory_point) {
-  double t = 0.01 / 0.015;
-
+    const double &t, mav_msgs::EigenTrajectoryPoint *trajectory_point) {
   Eigen::Vector3d position_2 = mav_msgs::vector3FromMsg(
       trajectory_msg_point_2.transforms[0].translation);
   Eigen::Vector3d position_1 = mav_msgs::vector3FromMsg(
@@ -239,6 +253,37 @@ void EigenTrajectoryPointFromState(
   trajectorypoint.angular_velocity_W = state.segment<3>(29);
   trajectorypoint.acceleration_W = input.head(3);
   trajectorypoint.angular_acceleration_W = input.segment<3>(3);
+}
+
+void EigenTrajectoryPointFromState(
+    const observation_t &state, const input_t &input,
+    const int64_t &time_from_start_ns,
+    mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
+  EigenTrajectoryPointFromState(state, input, trajectorypoint);
+  trajectorypoint.time_from_start_ns = time_from_start_ns;
+}
+
+void MultiDofJointTrajectoryPointFromState(
+    const observation_t &state,
+    trajectory_msgs::MultiDOFJointTrajectoryPoint &point) {
+  point.transforms.clear();
+  geometry_msgs::Transform pos;
+  pos.translation.x = state(0);
+  pos.translation.y = state(1);
+  pos.translation.z = state(2);
+  pos.rotation.w = state(3);
+  pos.rotation.x = state(4);
+  pos.rotation.y = state(5);
+  pos.rotation.z = state(6);
+  point.transforms.push_back(pos);
+  pos.translation.x = state(19);
+  pos.translation.y = state(20);
+  pos.translation.z = state(21);
+  pos.rotation.w = state(22);
+  pos.rotation.x = state(23);
+  pos.rotation.y = state(24);
+  pos.rotation.z = state(25);
+  point.transforms.push_back(pos);
 }
 
 // ToDo: Remove this as soon as possible, because it is crazy ugly @Matthias

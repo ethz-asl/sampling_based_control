@@ -32,33 +32,34 @@ bool OMAVControllerInterface::init_ros() {
       nh_.advertise<geometry_msgs::Pose>("debug/mppi_reference", 1);
   // Publish current object state used by mppi
   object_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
+      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 1);
 
   detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
   if (detailed_publishing_) {
     ROS_INFO("[mppi_omav_interaction] Detailed publishing enabled.");
     trajectory_publisher_ =
-        nh_.advertise<geometry_msgs::PoseArray>("debug/all_rollouts", 1);
+        nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
+            "debug/all_rollouts", 1);
 
     cost_publisher_ =
-        nh_.advertise<mppi_ros::Array>("debug/cost_components", 10);
+        nh_.advertise<mppi_ros::Array>("debug/cost_components", 1);
     normalized_force_publisher_ =
         nh_.advertise<visualization_msgs::MarkerArray>(
-            "debug/normalized_forces", 10);
+            "debug/normalized_forces", 1);
     pub_marker_hook_ =
-        nh_.advertise<visualization_msgs::Marker>("debug/hook_pos", 10);
+        nh_.advertise<visualization_msgs::Marker>("debug/hook_pos", 1);
   } else {
     ROS_WARN("[mppi_omav_interaction] Detailed publishing disabled.");
   }
 
   // Initialize subscriber
   reference_subscriber_ =
-      nh_.subscribe("/mppi_pose_desired", 10,
+      nh_.subscribe("/mppi_pose_desired", 1,
                     &OMAVControllerInterface::desired_pose_callback, this);
   mode_subscriber_ = nh_.subscribe(
-      "/mppi_omav_mode", 10, &OMAVControllerInterface::mode_callback, this);
+      "/mppi_omav_mode", 1, &OMAVControllerInterface::mode_callback, this);
   object_reference_subscriber_ =
-      nh_.subscribe("/mppi_object_desired", 10,
+      nh_.subscribe("/mppi_object_desired", 1,
                     &OMAVControllerInterface::object_reference_callback, this);
 
   object_state_.name = {"articulation_joint"};
@@ -181,7 +182,7 @@ bool OMAVControllerInterface::set_controller(
 
 void OMAVControllerInterface::desired_pose_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
+  // std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](0) = msg->pose.position.x;
   ref_.rr[0](1) = msg->pose.position.y;
   ref_.rr[0](2) = msg->pose.position.z;
@@ -189,19 +190,19 @@ void OMAVControllerInterface::desired_pose_callback(
   ref_.rr[0](4) = msg->pose.orientation.x;
   ref_.rr[0](5) = msg->pose.orientation.y;
   ref_.rr[0](6) = msg->pose.orientation.z;
-  std::cout << "Desired Pose Callback" << std::endl;
+  std::cout << "Desired Pose Callback..." << std::endl;
   get_controller()->set_reference_trajectory(ref_);
 }
 
 void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
   ref_.rr[0](7) = ref_angle;
+  // std::cout << "Valve ref callback" << std::endl;
   get_controller()->set_reference_trajectory(ref_);
-  ROS_INFO_STREAM_THROTTLE(0.5, "Setting valve ref to " << ref_angle);
 }
 
 void OMAVControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr &msg) {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
+  // std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](8) = msg->data;
   ROS_INFO_STREAM("Switching to mode:" << msg->data);
   get_controller()->set_reference_trajectory(ref_);
@@ -209,7 +210,7 @@ void OMAVControllerInterface::mode_callback(
 
 void OMAVControllerInterface::object_reference_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
-  std::unique_lock<std::mutex> lock(reference_mutex_);
+  // std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr[0](7) = msg->pose.position.x;
   get_controller()->set_reference_trajectory(ref_);
 }
@@ -245,22 +246,32 @@ bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
 }
 
 void OMAVControllerInterface::publish_ros() {
-  get_controller()->get_optimal_rollout(xx_opt_, uu_opt_);
+  const ros::Time t_now = ros::Time::now();
+  if (!get_controller()->get_optimal_rollout_for_trajectory(
+          xx_opt_, uu_opt_, tt_opt_, t_now.toSec())) {
+    ROS_ERROR("Error getting optimal rollout.");
+    return;
+  }
   x0_ = get_controller()->get_current_observation();
 
-  publish_trajectory(xx_opt_, uu_opt_, x0_);
+  publish_trajectory(xx_opt_, uu_opt_, x0_, tt_opt_);
   publish_optimal_rollout();
-  publish_all_trajectories();
+  static int counter = 0;
+  counter++;
+  if (counter == 1) {
+    publish_all_trajectories();
+    counter = 0;
+  }
 
   static tf::TransformBroadcaster odom_broadcaster;
   tf::Transform omav_odom;
   omav_odom.setOrigin(tf::Vector3(x0_(0), x0_(1), x0_(2)));
   omav_odom.setRotation(tf::Quaternion(x0_(4), x0_(5), x0_(6), x0_(3)));
   odom_broadcaster.sendTransform(
-      tf::StampedTransform(omav_odom, ros::Time::now(), "world", "odom_omav"));
+      tf::StampedTransform(omav_odom, t_now, "world", "odom_omav"));
 
   // update object state visualization
-  object_state_.header.stamp = ros::Time::now();
+  object_state_.header.stamp = t_now;
   object_state_.position[0] = xx_opt_[0](13);
   object_state_publisher_.publish(object_state_);
 }
@@ -270,40 +281,63 @@ void OMAVControllerInterface::publish_ros() {
  *
  * @param[in]  x_opt   Optimal states
  * @param[in]  u_opt   Optimal inputs
- * @param[in]  x0_opt  The x 0 option
  */
 void OMAVControllerInterface::publish_trajectory(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const mppi::observation_t &x0_opt) const {
-  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg;
-  omav_interaction::conversions::to_trajectory_msg(x_opt, u_opt, x0_opt,
-                                                   current_trajectory_msg);
-  current_trajectory_msg.header.stamp = ros::Time::now();
-  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg);
+    const mppi::observation_t &x0_opt, const std::vector<double> &tt) {
+  // Shift trajectory for publishing since the OMAV controller just inserts the
+  // trajectory while ignoring the actual message timestamp
+  const double t_now = ros::Time::now().toSec();
+  size_t offset = 0;
+  while (offset < tt.size() - 1 && tt[offset] <= t_now) {
+    offset++;
+  }
+  mppi::observation_array_t x_opt_offs =
+      mppi::observation_array_t(x_opt.begin() + offset, x_opt.end());
+  mppi::input_array_t u_opt_offs =
+      mppi::input_array_t(u_opt.begin() + offset, u_opt.end());
+  std::vector<double> tt_offs =
+      std::vector<double>(tt.begin() + offset, tt.end());
+  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_offs;
+  conversions::to_trajectory_msg(x_opt, u_opt, tt, current_trajectory_msg_);
+  conversions::to_trajectory_msg(x_opt_offs, u_opt_offs, tt_offs,
+                                 current_trajectory_msg_offs);
+  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_offs);
+  published_trajectory_ = true;
+}
+
+bool OMAVControllerInterface::get_current_trajectory(
+    trajectory_msgs::MultiDOFJointTrajectory *current_trajectory_msg) const {
+  if (published_trajectory_ && current_trajectory_msg_.points.size() > 0) {
+    current_trajectory_msg->points.reserve(
+        current_trajectory_msg_.points.size());
+    *current_trajectory_msg = current_trajectory_msg_;
+    return true;
+  }
+  return false;
 }
 
 /**
  * @brief      Publish all rollouts
  */
 void OMAVControllerInterface::publish_all_trajectories() {
-  std::vector<mppi::Rollout> current_trajectories;
+  std::vector<mppi::Rollout> rollouts;
   if (detailed_publishing_ &&
-      get_controller()->get_rollout_trajectories(current_trajectories)) {
-    geometry_msgs::PoseArray trajectory_array;
+      get_controller()->get_rollout_trajectories(rollouts)) {
+    // geometry_msgs::PoseArray trajectory_array;
+    trajectory_msgs::MultiDOFJointTrajectory trajectory_array;
     geometry_msgs::Pose current_trajectory_pose;
     trajectory_array.header.frame_id = "world";
-    trajectory_array.header.stamp = ros::Time::now();
+    trajectory_array.header.stamp = ros::Time(rollouts.front().tt[0]);
     std::vector<Eigen::VectorXd> xx_current_trajectory;
     // Iterate through rollouts:
-    for (size_t i = 0; i < current_trajectories.size(); i++) {
-      xx_current_trajectory = current_trajectories[i].xx;
-      for (size_t j = 0; j < xx_current_trajectory.size(); j++) {
-        // In each rollout take each 10th point to publish.
-        // if ((j % 10) == 0) {
-        omav_interaction::conversions::PoseMsgFromVector(
-            xx_current_trajectory[j].head<7>(), current_trajectory_pose);
-        trajectory_array.poses.push_back(current_trajectory_pose);
-        // }
+    for (const auto &rollout : rollouts) {
+      xx_current_trajectory = rollout.xx;
+      for (const auto &xx_current_trajectory_point : xx_current_trajectory) {
+        trajectory_msgs::MultiDOFJointTrajectoryPoint current_trajectory_point;
+        conversions::MultiDofJointTrajectoryPointFromState(
+            xx_current_trajectory_point, current_trajectory_point);
+        trajectory_array.points.push_back(current_trajectory_point);
       }
     }
     trajectory_publisher_.publish(trajectory_array);
@@ -311,9 +345,6 @@ void OMAVControllerInterface::publish_all_trajectories() {
 }
 
 void OMAVControllerInterface::publish_optimal_rollout() {
-  get_controller()->get_optimal_rollout(optimal_rollout_states_,
-                                        optimal_rollout_inputs_);
-  x0_ = get_controller()->get_current_observation();
   geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des,
       optimal_inputs_lin_array, optimal_inputs_ang_array,
       optimal_rollout_lin_vel, optimal_rollout_ang_vel;
@@ -330,26 +361,23 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   optimal_rollout_lin_vel.header = header;
   optimal_rollout_ang_vel.header = header;
 
-  omav_interaction::conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7),
-                                                              current_lin_vel);
-  omav_interaction::conversions::PoseMsgForVelocityFromVector(
-      x0_.segment<3>(10), current_ang_vel);
+  conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7), current_lin_vel);
+  conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(10),
+                                            current_ang_vel);
   optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
   optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
 
-  for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
-    omav_interaction::conversions::PoseMsgFromVector(
-        optimal_rollout_states_[i].head<7>(), current_pose);
-    omav_interaction::conversions::PoseMsgFromVector(
-        optimal_rollout_states_[i].segment<7>(19), current_pose_des);
-    omav_interaction::conversions::PoseMsgForVelocityFromVector(
-        optimal_rollout_inputs_[i].segment<3>(0), current_input_lin);
-    omav_interaction::conversions::PoseMsgForVelocityFromVector(
-        optimal_rollout_inputs_[i].segment<3>(3), current_input_ang);
-    omav_interaction::conversions::PoseMsgForVelocityFromVector(
-        optimal_rollout_states_[i].segment<3>(7), current_lin_vel);
-    omav_interaction::conversions::PoseMsgForVelocityFromVector(
-        optimal_rollout_states_[i].segment<3>(10), current_ang_vel);
+  for (size_t i = 0; i < xx_opt_.size(); i++) {
+    conversions::PoseMsgFromVector(xx_opt_[i].head<7>(), current_pose);
+    conversions::PoseMsgFromVector(xx_opt_[i].segment<7>(19), current_pose_des);
+    conversions::PoseMsgForVelocityFromVector(uu_opt_[i].segment<3>(0),
+                                              current_input_lin);
+    conversions::PoseMsgForVelocityFromVector(uu_opt_[i].segment<3>(3),
+                                              current_input_ang);
+    conversions::PoseMsgForVelocityFromVector(xx_opt_[i].segment<3>(7),
+                                              current_lin_vel);
+    conversions::PoseMsgForVelocityFromVector(xx_opt_[i].segment<3>(10),
+                                              current_ang_vel);
     optimal_rollout_array.poses.push_back(current_pose);
     optimal_rollout_array_des.poses.push_back(current_pose_des);
     optimal_inputs_lin_array.poses.push_back(current_input_lin);
@@ -404,14 +432,13 @@ void OMAVControllerInterface::publishHookPos(
   std_msgs::ColorRGBA color;
   color.a = 1.0;
   color.b = 0.0;
-  for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
-    cost_valve_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
-                              i * 0.015);
+  for (size_t i = 0; i < xx_opt_.size(); i++) {
+    cost_valve_->compute_cost(xx_opt_[i], ref_.rr[0], i * 0.015);
     point.x = cost_valve_->hook_pos_(0);
     point.y = cost_valve_->hook_pos_(1);
     point.z = cost_valve_->hook_pos_(2);
-    color.r = static_cast<float>(i) / optimal_rollout_states_.size();
-    color.g = 1.0f - static_cast<float>(i) / optimal_rollout_states_.size();
+    color.r = static_cast<float>(i) / xx_opt_.size();
+    color.g = 1.0f - static_cast<float>(i) / xx_opt_.size();
 
     marker_hook.points.push_back(point);
     marker_hook.colors.push_back(color);
@@ -433,13 +460,12 @@ void OMAVControllerInterface::publishShelfInfo(
   visualization_msgs::MarkerArray force_marker_array;
 
   visualization_msgs::Marker force_marker;
-  omav_interaction::conversions::arrow_initialization(force_marker);
+  conversions::arrow_initialization(force_marker);
   force_marker.header = header;
 
-  for (size_t i = 0; i < optimal_rollout_states_.size(); i++) {
+  for (size_t i = 0; i < xx_opt_.size(); i++) {
     // Cost publishing
-    cost_shelf_->compute_cost(optimal_rollout_states_[i], ref_.rr[0],
-                              i * 0.015);
+    cost_shelf_->compute_cost(xx_opt_[i], ref_.rr[0], i * 0.015);
     // Velocity Cost
     velocity_cost += cost_shelf_->cost_vector_(CostIdx::velocity);
     // Efficiency Cost
@@ -454,8 +480,7 @@ void OMAVControllerInterface::publishShelfInfo(
     pose_cost += cost_shelf_->cost_vector_(CostIdx::pose);
     overall_cost += cost_shelf_->cost_;
 
-    Eigen::Vector3d force_normed =
-        optimal_rollout_states_[i].segment<3>(15).normalized();
+    Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15).normalized();
 
     force_marker.points[0].x = cost_shelf_->hook_pos_(0);
     force_marker.points[0].y = cost_shelf_->hook_pos_(1);
@@ -475,22 +500,20 @@ void OMAVControllerInterface::publishShelfInfo(
   cost_array_message.array.push_back(object_cost);
   cost_array_message.array.push_back(torque_cost);
   cost_array_message.array.push_back(handle_hook_cost);
-  cost_array_message.array.push_back(optimal_rollout_states_[0](15));
-  cost_array_message.array.push_back(optimal_rollout_states_[0](16));
-  cost_array_message.array.push_back(optimal_rollout_states_[0](17));
+  cost_array_message.array.push_back(xx_opt_[0](15));
+  cost_array_message.array.push_back(xx_opt_[0](16));
+  cost_array_message.array.push_back(xx_opt_[0](17));
+  cost_array_message.array.push_back(xx_opt_[0].segment<3>(15).norm());
   cost_array_message.array.push_back(
-      optimal_rollout_states_[0].segment<3>(15).norm());
+      xx_opt_[1].segment<3>(15).cross(com_hook_)(0));
   cost_array_message.array.push_back(
-      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(0));
+      xx_opt_[1].segment<3>(15).cross(com_hook_)(1));
   cost_array_message.array.push_back(
-      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(1));
+      xx_opt_[1].segment<3>(15).cross(com_hook_)(2));
   cost_array_message.array.push_back(
-      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_)(2));
+      xx_opt_[1].segment<3>(15).cross(com_hook_).norm());
   cost_array_message.array.push_back(
-      optimal_rollout_states_[1].segment<3>(15).cross(com_hook_).norm());
-  cost_array_message.array.push_back(
-      acos(optimal_rollout_states_[1].segment<3>(15).normalized().dot(
-          com_hook_.normalized())) *
+      acos(xx_opt_[1].segment<3>(15).normalized().dot(com_hook_.normalized())) *
       180.0 / M_PI);
   cost_array_message.array.push_back(pose_cost);
   cost_array_message.array.push_back(overall_cost);
@@ -499,6 +522,7 @@ void OMAVControllerInterface::publishShelfInfo(
 }
 
 void OMAVControllerInterface::manually_shift_input(const int &index) {
+  // deprecated
   if (index != 0) {
     get_controller()->shift_input_ = true;
   }

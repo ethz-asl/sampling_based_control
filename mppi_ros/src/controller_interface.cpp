@@ -141,7 +141,7 @@ bool ControllerRos::update_reference_thread(
 }
 
 bool ControllerRos::publish_ros_default() {
-  publish_input();
+  // publish_input();
   publish_stage_cost();
   publish_rollout_cost();
   return true;

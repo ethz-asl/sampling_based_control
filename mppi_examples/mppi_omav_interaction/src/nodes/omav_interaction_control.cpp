@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
   // Set first odometry value as reference
   if (running_rotors) {
-    omav_trajectory_node->get_odometry(state);
+    omav_trajectory_node->get_state(state);
     controller.set_initial_reference(state);
     omav_trajectory_node->initialize_integrators(state);
   }
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
       controller.publish_all_trajectories();
     } else if (running_rotors) {
       // Get odometry and target state
-      omav_trajectory_node->get_odometry(state);
+      omav_trajectory_node->get_state(state);
       sim_time += 1.0 / control_rate;
       omav_trajectory_node->target_state_time_ += 1.0 / control_rate;
     }
@@ -190,6 +190,7 @@ int main(int argc, char **argv) {
         omav_interaction::conversions::InterpolateTrajectoryPoints(
             omav_trajectory_node->current_trajectory_.points[6],
             omav_trajectory_node->current_trajectory_.points[7],
+            0.1/0.15,
             &target_state);
         omav_trajectory_node->set_target(target_state);
         controller.manually_shift_input(7);

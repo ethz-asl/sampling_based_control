@@ -22,11 +22,11 @@ OMAVVelocityDynamicsRos::OMAVVelocityDynamicsRos(
     obstacle_publisher_ =
         nh_.advertise<visualization_msgs::Marker>("debug/marker_obstacle", 0);
     object_state_publisher_ =
-        nh_.advertise<sensor_msgs::JointState>("debug/object/joint_state", 10);
+        nh_.advertise<sensor_msgs::JointState>("debug/object/joint_state", 1);
     contact_forces_publisher_ =
-        nh_.advertise<visualization_msgs::Marker>("debug/contact_force", 10);
-    force_dot_ = nh_.advertise<visualization_msgs::Marker>("debug/dot_force", 10);
-    vel_dot_ = nh_.advertise<visualization_msgs::Marker>("debug/dot_vel", 10);
+        nh_.advertise<visualization_msgs::Marker>("debug/contact_force", 1);
+    force_dot_ = nh_.advertise<visualization_msgs::Marker>("debug/dot_force", 1);
+    vel_dot_ = nh_.advertise<visualization_msgs::Marker>("debug/dot_vel", 1);
 
     omav_marker_.header.frame_id = "world";
     omav_marker_.id = 0;
