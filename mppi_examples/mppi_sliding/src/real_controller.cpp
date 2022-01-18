@@ -1,5 +1,5 @@
 //
-// Created by giuseppe on 22.01.21.
+// Created by boyang on 08.12.21.
 //
 
 #include <mppi_sliding/real_controller.h>
@@ -70,6 +70,7 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     ROS_ERROR("Failed to parse gains.");
     return false;
   }
+  ROS_INFO_STREAM("gains is following: " << gains_);
 
   if (!node_handle.getParam("state_topic", state_topic_)) {
     ROS_ERROR("state_topic not found");
@@ -171,10 +172,6 @@ void ManipulationController::state_callback(
 
   std::unique_lock<std::mutex> lock(observation_mutex_);
   // modify the msgToEigen to adapt to panda'
-  // ROS_INFO_STREAM(" position msg before conversion: ");
-  // for (int i = 0; i < state_msg->arm_state.position.size(); i++) {
-  //   ROS_INFO_STREAM(state_msg->arm_state.position[i]);
-  // }
   manipulation::conversions::msgToEigen_panda(*state_msg, x_,
                                               observation_time_);
   observation_time_ = run_time.toSec();
@@ -262,12 +259,6 @@ void ManipulationController::starting(const ros::Time& time) {
 
 void ManipulationController::update(const ros::Time& time,
                                     const ros::Duration& period) {
-  {
-    // std::unique_lock<std::mutex> lock(observation_mutex_);
-    // run_time.nsec = time.nsec - start_time.nsec;
-    // run_time.sec = time.sec - start_time.sec;
-    run_time = run_time + period;
-  }
   // ROS_INFO_STREAM("real time " << time);
   // ROS_INFO_STREAM("start time " << start_time);
   // ROS_INFO_STREAM("run time " << run_time);
@@ -291,15 +282,10 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   {
-    static bool single_time_observation = false;
-
-    // TODO(boyang) reset to initial setup
-    if (!single_time_observation) {
-      std::unique_lock<std::mutex> lock(observation_mutex_);
-      // ROS_INFO_STREAM("observed msg: " << x_.transpose());
-      man_interface_->set_observation(x_, run_time.toSec());
-      man_interface_->update_reference(x_, run_time.toSec());
-    }
+    std::unique_lock<std::mutex> lock(observation_mutex_);
+    // ROS_INFO_STREAM("observed msg: " << x_.transpose());
+    man_interface_->set_observation(x_, run_time.toSec());
+    man_interface_->update_reference(x_, run_time.toSec());
   }
 
   ROS_DEBUG_STREAM("Ctl state:"
@@ -307,7 +293,6 @@ void ManipulationController::update(const ros::Time& time,
                    << std::setprecision(2)
                    << manipulation::conversions::eigenToString_panda(x_));
 
-  // TODO(boyang) uncomment once fixed
   man_interface_->get_input_state(x_, x_nom_, u_, run_time.toSec());
 
   // samilar as before, modify the eigenToMsg to adapt to panda
@@ -325,12 +310,10 @@ void ManipulationController::update(const ros::Time& time,
     bag_.write("current_input", run_time, u_curr_ros_);
   }
 
-  static const double alpha = 0.1;
+  static const double alpha = 0.5;
 
   // update state x_
   for (int i = 0; i < 7; i++) {
-    // x_[i] = robot_state_.q[i];
-    // x_[9+i] = robot_state_.dq[i];
     position_measured_[i] = robot_state_.q[i];
     velocity_measured_[i] = robot_state_.dq[i];
     velocity_filtered_[i] =
@@ -348,10 +331,17 @@ void ManipulationController::update(const ros::Time& time,
     nominal_state_publisher_.unlockAndPublish();
   }
 
-  // {
-  //   std::unique_lock<std::mutex> lock(observation_mutex_);
-  //   stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
-  // }
+  {
+    std::unique_lock<std::mutex> lock(observation_mutex_);
+    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, run_time.toSec());
+  }
+
+  {
+    // std::unique_lock<std::mutex> lock(observation_mutex_);
+    // run_time.nsec = time.nsec - start_time.nsec;
+    // run_time.sec = time.sec - start_time.sec;
+    run_time = run_time + period;
+  }
 }
 
 void ManipulationController::update_position_reference(
@@ -372,12 +362,6 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   }
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
   saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
-  // std::cout <<"sending torq [  ";
-  // for(int i = 0 ; i < 7; i ++){
-  // std::cout << arm_torque_command_[i];
-  // std::cout << ", " ;
-  // }
-  // std::cout << " ]" << std::endl;
   // clang-format on
 
   for (size_t i = 0; i < 7; ++i) {

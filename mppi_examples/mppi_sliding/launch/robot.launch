@@ -3,9 +3,9 @@
     <arg name="robot_ip" default="$(env FRANKA_IP)"/>
     <arg name="object" default="shelf"/>
     <arg name="experiment_name" default="panda_manipulation"/>
+    <arg name="run_camera" default="true"/>
 
-    <!-- <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    </include> -->
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch" if="$(arg run_camera)"/>
 
     <include file="$(find mppi_sliding)/launch/load.launch">
         <arg name="debug" value="false"/>
@@ -19,7 +19,7 @@
     </include>
 
     <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
-        <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_control_node.yaml" />
+        <rosparam command="load" file="$(find mppi_sliding)/config/experiments/franka_control_node.yaml" />
         <param name="robot_ip" value="$(arg robot_ip)" />
     </node>
 

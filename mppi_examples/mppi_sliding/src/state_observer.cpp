@@ -47,10 +47,16 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 
   nh_.param<bool>("exact_sync", exact_sync_, false);
 
+  // normal subscribers
+  arm_state_subscriber_ = nh_.subscribe(
+      arm_state_topic, 1, &StateObserver::arm_state_callback, this);
+  object_state_subscriber_ = nh_.subscribe(
+      object_state_topic, 1, &StateObserver::object_state_callback, this);
+
   // subscribers for message filter
-  arm_sub_.subscribe(nh_, arm_state_topic, 10);
+  // arm_sub_.subscribe(nh_, arm_state_topic, 10);
   // object_sub_.subscribe(nh_, object_pose_topic, 10);
-  obj_state_sub_.subscribe(nh_, object_state_topic, 10);
+  // obj_state_sub_.subscribe(nh_, object_state_topic, 10);
 
   // message filter with sync policy (timestamps must be the same -> only
   // possible in simulation) or approximate timestamp matching policy
@@ -74,13 +80,16 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   //       &StateObserver::message_filter_cb, this, _1, _2, _3, _4, _5));
   // }
   // else
-  {
-    approx_message_filter_ =
-        std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
-            ApproximatePolicy(10), arm_sub_, obj_state_sub_);
-    approx_message_filter_->registerCallback(
-        boost::bind(&StateObserver::message_filter_cb, this, _1, _2));
-  }
+
+  // TOODO(giuseppe+boyang) we commented this out in last test
+  // {
+  //   approx_message_filter_ =
+  //       std::make_unique<message_filters::Synchronizer<ApproximatePolicy>>(
+  //           ApproximatePolicy(1), arm_sub_, obj_state_sub_);
+  //   approx_message_filter_->registerCallback(
+  //       boost::bind(&StateObserver::message_filter_cb, this, _1, _2));
+  // }
+
   //}
   // else
   // {
@@ -234,20 +243,7 @@ bool StateObserver::initialize() {
   return true;
 }
 
-void StateObserver::message_filter_cb(
-    const sensor_msgs::JointStateConstPtr& arm_state,
-    const sensor_msgs::JointStateConstPtr& object_state) {
-  if (arm_state->header.stamp.toSec() <= previous_publishing_time_) {
-    return;
-  }
-  arm_state_callback(arm_state);
-  object_state_callback(object_state);
-  // base_pose_callback(base_pose);
-  // base_twist_callback(base_twist);
-  // object_pose_callback(object_odom);
-  // this must be executed last as it requires computation from previous cb
-  // wrench_callback(wrench);
-
+void StateObserver::publish_state() {
   manipulation::conversions::toMsg_panda(time_, q_, dq_, object_state_, false,
                                          state_ros_);
 
@@ -277,6 +273,17 @@ void StateObserver::message_filter_cb(
   broadcaster.sendTransform(table_trans);
   broadcaster.sendTransform(object_state_trans);
   state_publisher_.publish(state_ros_);
+}
+
+void StateObserver::message_filter_cb(
+    const sensor_msgs::JointStateConstPtr& arm_state,
+    const sensor_msgs::JointStateConstPtr& object_state) {
+  if (arm_state->header.stamp.toSec() <= previous_publishing_time_) {
+    return;
+  }
+  arm_state_callback(arm_state);
+  object_state_callback(object_state);
+  publish_state();
 }
 
 void StateObserver::arm_state_callback(

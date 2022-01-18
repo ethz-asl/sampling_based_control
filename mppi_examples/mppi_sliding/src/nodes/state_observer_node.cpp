@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
 
   ros::Rate rate(100);
   while (ros::ok()) {
+    observer.publish_state();
     rate.sleep();
   }
   spinner.stop();
