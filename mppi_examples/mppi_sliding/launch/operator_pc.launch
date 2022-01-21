@@ -41,10 +41,10 @@
             <remap from="robot_description" to="robot_description"/>
             <remap from="joint_states" to="/panda/joint_states"/>
         </node>
-    </group>
+  </group>
 
-    <include file="$(find easy_handeye)/launch/publish.launch">
-    </include>
+  <include file="$(find easy_handeye)/launch/publish.launch">
+  </include>
 
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 

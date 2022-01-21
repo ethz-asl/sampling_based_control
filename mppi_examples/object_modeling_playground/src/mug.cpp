@@ -249,7 +249,7 @@ void Mug::primitive_visualize()
 
 void Mug::pub_state()
 {
-    //state_publisher_.publish(state_);
+    state_publisher_.publish(state_);
     kp_publisher_.publish(kp_markers_);
     primitive_publisher_.publish(primitive_markers_);
 }
