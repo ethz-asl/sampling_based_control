@@ -29,7 +29,7 @@ void to_trajectory_msg(
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg);
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const std::vector<double> &tt,
+    const std::vector<double> &tt, const double &damping,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg);
 
 void EigenTrajectoryPointFromStates(

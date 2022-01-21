@@ -29,14 +29,24 @@ struct force_t {
   Eigen::Vector3d position;
 };
 
+struct OmavDynamicsSettings {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  double mass = 4.337;
+  double damping = 5.0;
+  Eigen::Matrix<double, 6, 1> pGains;
+  Eigen::Matrix<double, 6, 1> dGains;
+};
+
 class OMAVVelocityDynamics : public mppi::DynamicsBase {
-public:
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using omav_dynamics_ptr = std::shared_ptr<OMAVVelocityDynamics>;
   OMAVVelocityDynamics(const std::string &robot_description,
                        const std::string &object_description, const double dt);
 
   ~OMAVVelocityDynamics() = default;
 
-private:
+ private:
   void initialize_world(const std::string &robot_description,
                         const std::string &object_description);
 
@@ -49,12 +59,21 @@ private:
   void compute_velocities(const input_t &u);
   void integrate_internal(const input_t &u, double dt);
 
-public:
+ public:
   double get_dt() { return dt_; }
 
   size_t get_input_dimension() override { return input_dimension_; }
 
   size_t get_state_dimension() override { return state_dimension_; }
+
+  void setPDGains(const Eigen::Matrix<double, 6, 1> &p,
+                  const Eigen::Matrix<double, 6, 1> &d) {
+    omav_->setPdGains(p, d);
+  }
+
+  void setDampingFactor(const double &k) { settings_.damping = k; }
+
+  void setMass(const double &m) { settings_.mass = m; }
 
   dynamics_ptr create() override {
     return std::make_shared<OMAVVelocityDynamics>(robot_description_,
@@ -84,17 +103,17 @@ public:
   raisim::ArticulatedSystem *get_omav() { return omav_; }
   raisim::ArticulatedSystem *get_object() { return object_; }
 
-protected:
-  size_t input_dimension_;
-  size_t state_dimension_;
-  size_t derrivative_dimension_;
-  size_t robot_dof_;
+ protected:
+  const size_t input_dimension_;
+  const size_t state_dimension_;
+  const size_t derivative_dimension_;
+  const size_t robot_dof_;
 
   observation_t x_;
   observation_t xd_;
 
-private:
-  double dt_;
+ private:
+  const double dt_;
   std::string robot_description_;
   std::string object_description_;
 
@@ -113,5 +132,8 @@ private:
   Eigen::VectorXd omav_pose_, omav_velocity_;
   Eigen::VectorXd object_pose_, object_velocity_;
   force_t contact_force_;
+
+  // double damping_ = 5.0;
+  OmavDynamicsSettings settings_;
 };
-} // namespace omav_interaction
+}  // namespace omav_interaction

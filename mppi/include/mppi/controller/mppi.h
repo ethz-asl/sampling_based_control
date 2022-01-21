@@ -274,6 +274,8 @@ class PathIntegral {
    */
   void update_reference();
 
+  void setHoldTime(const double& t) { t_hold_ = t; }
+
   // Generic getters
   inline const Eigen::ArrayXd& get_weights() const { return omega_; }
   inline double get_stage_cost() { return stage_cost_; }
@@ -289,39 +291,45 @@ class PathIntegral {
 
   int shift_int_internal_ = 0;
 
-public:
+ public:
   /**
    * @brief Set the reference trajectory to be used in the next optimization
    * loop
    * @param ref: reference trajectory
    */
   void set_reference_trajectory(reference_trajectory_t& ref);
+  /**
+   * @brief      Get vector of dynamics pointers and dynamics for rollout sampling
+   * @param      dynamics_v  Vector of dynamics pointers
+   * @param      dynamics    Dynamics pointer
+   */
+  void get_dynamics(std::vector<dynamics_ptr>** dynamics_v,
+                    dynamics_ptr** dynamics);
 
   // TODO clean this up: everything public...
- public:
   bool verbose_;
   Eigen::ArrayXd omega_;
   Eigen::ArrayXd rollouts_cost_;
   Eigen::ArrayXd exponential_cost_;
 
   cost_ptr cost_;
-  config_t config_;
-  SavGolFilter filter_;
-  sampler_ptr sampler_;
-
   dynamics_ptr dynamics_;
+  config_t config_;
+  sampler_ptr sampler_;
+  SavGolFilter filter_;
+
   size_t cached_rollouts_;
 
   std::vector<Rollout> rollouts_;
   std::vector<Rollout> all_rollouts_cached_;
-  int steps_;
+  size_t steps_;
 
   bool first_step_ = true;
   bool shift_input_ = false;
   bool first_mppi_iteration_ = true;
   int shift_int_ = 0;
 
-protected:
+ protected:
   double reset_time_;  // time from which the current optimization has started
   observation_t x0_;   // first state for simulation
   observation_t
@@ -378,6 +386,7 @@ protected:
 
   double hold_time_end_ = 0;
   double hold_time_end_internal_ = 0;
+  double t_hold_ = 0.1;
 };
 
 }  // namespace mppi

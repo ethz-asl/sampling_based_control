@@ -22,6 +22,8 @@
 namespace omav_interaction {
 
 struct OMAVInteractionCostValveParam {
+  double ref_p, ref_v;
+
   double Q_distance_x;  // Distance to reference Cost
   double Q_distance_y;
   double Q_distance_z;

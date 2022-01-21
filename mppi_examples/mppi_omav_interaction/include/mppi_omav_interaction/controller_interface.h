@@ -64,7 +64,20 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   void updateValveReference(const double &ref_angle);
 
   bool get_current_trajectory(
-    trajectory_msgs::MultiDOFJointTrajectory *current_trajectory_msg) const;
+      trajectory_msgs::MultiDOFJointTrajectory *current_trajectory_msg) const;
+
+  /**
+   * @brief      Gets pointers to all optimizer dynamics (used in all threads as
+   * well as optimal rollout sampling).
+   *
+   * @param      omav_dynamics_v  Vector of pointers to dynamics
+   */
+  void getDynamicsPtr(
+      std::vector<std::shared_ptr<OMAVVelocityDynamics>> &omav_dynamics_v);
+
+  void setDampingFactor(const double &d);
+
+  void setHoldTime(const double &t) { get_controller()->setHoldTime(t); }
 
  private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
@@ -83,6 +96,9 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   void publishShelfInfo(const std_msgs::Header &header) const;
   void publishHookPos(const std_msgs::Header &header) const;
 
+  void toMultiDofJointTrajectory(
+      trajectory_msgs::MultiDOFJointTrajectory &t) const;
+
  public:
   mppi::SolverConfig config_;
   std::shared_ptr<OMAVInteractionCost> cost_shelf_;
@@ -93,8 +109,6 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   bool reference_set_ = false;
   bool detailed_publishing_;
-
-  // observation_t x_0_temp;
 
   OMAVInteractionCostParam cost_param_shelf_;
   OMAVInteractionCostValveParam cost_param_valve_;
@@ -130,8 +144,10 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   sensor_msgs::JointState object_state_;
 
-   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
-   bool published_trajectory_ = false;
+  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_;
+  bool published_trajectory_ = false;
+
+  double damping_ = 5.0;
 };
 }  // namespace omav_interaction
 

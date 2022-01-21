@@ -139,7 +139,7 @@ void InteractionControlNode::objectCallback(
 bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
   if (controller_.getTask() == InteractionTask::Valve) {
     // Set valve reference value to current angle
-    controller_.updateValveReference(state_(13) + 0.5);
+    controller_.updateValveReference(state_(13) + rqt_cost_valve_.ref_p);
   }
 
   // Load most recently published trajectory
@@ -335,6 +335,27 @@ void InteractionControlNode::costValveParamCallback(
     mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level) {
   if (controller_.getTask() == InteractionTask::Valve) {
     // Update OMAV pose cost
+    Eigen::VectorXd pGains(6);
+    Eigen::VectorXd dGains(6);
+    pGains << config.p_gain_pos * Eigen::Vector3d::Ones(),
+        config.p_gain_ang * Eigen::Vector3d::Ones();
+    dGains << config.d_gain_pos * Eigen::Vector3d::Ones(),
+        config.d_gain_ang * Eigen::Vector3d::Ones();
+
+    std::vector<std::shared_ptr<OMAVVelocityDynamics>> omav_dynamics_v;
+    controller_.getDynamicsPtr(omav_dynamics_v);
+    size_t n = omav_dynamics_v.size();
+    for (size_t i = 0; i < n; i++) {
+      omav_dynamics_v.at(i)->setPDGains(pGains, dGains);
+      omav_dynamics_v.at(i)->setDampingFactor(config.damping);
+      omav_dynamics_v.at(i)->setMass(config.mass);
+    }
+
+    controller_.setDampingFactor(config.damping);
+    controller_.setHoldTime(config.hold_time);
+
+    rqt_cost_valve_.ref_p = config.ref_p;
+    rqt_cost_valve_.ref_v = config.ref_v;
     rqt_cost_valve_.Q_distance_x = config.Q_x_omav;
     rqt_cost_valve_.Q_distance_y = config.Q_y_omav;
     rqt_cost_valve_.Q_distance_z = config.Q_z_omav;

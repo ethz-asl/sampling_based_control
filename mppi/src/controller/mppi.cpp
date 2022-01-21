@@ -133,6 +133,12 @@ void PathIntegral::init_threading() {
   }
 }
 
+void PathIntegral::get_dynamics(std::vector<dynamics_ptr>** dynamics_v,
+                                dynamics_ptr** dynamics) {
+  *dynamics_v = &dynamics_v_;
+  *dynamics = &dynamics_;
+}
+
 void PathIntegral::init_tree_manager_dynamics() {
   for (size_t i = 0; i < config_.rollouts; i++) {
     tree_dynamics_v_.push_back(dynamics_->create());
@@ -618,7 +624,7 @@ bool PathIntegral::get_optimal_rollout_for_trajectory(observation_array_t& xx,
   xx = opt_roll_cache_.xx;
   uu = opt_roll_cache_.uu;
   tt = opt_roll_cache_.tt;
-  hold_time_end_ = t_now + 0.1;
+  hold_time_end_ = t_now + t_hold_;
   lock.unlock();
   return true;
 }
@@ -627,7 +633,8 @@ bool PathIntegral::get_rollout_trajectories(
     std::vector<mppi::Rollout>& rollouts) {
   if (all_rollouts_cached_.size() > 0) {
     rollouts.clear();
-    for (size_t k = 0; k <= cached_rollouts_ && k < all_rollouts_cached_.size(); k++) {
+    for (size_t k = 0; k <= cached_rollouts_ && k < all_rollouts_cached_.size();
+         k++) {
       rollouts.push_back(all_rollouts_cached_[k]);
     }
     return true;

@@ -116,9 +116,9 @@ bool OMAVControllerInterface::set_controller(
   // -------------------------------
   // dynamics
   // -------------------------------
-  mppi::DynamicsBase::dynamics_ptr dynamics;
-  dynamics = std::make_shared<OMAVVelocityDynamics>(
-      robot_description_raisim_, object_description_, config_.step_size);
+  OMAVVelocityDynamics::omav_dynamics_ptr dynamics =
+      std::make_shared<OMAVVelocityDynamics>(
+          robot_description_raisim_, object_description_, config_.step_size);
 
   // -------------------------------
   // cost
@@ -178,6 +178,25 @@ bool OMAVControllerInterface::set_controller(
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
   return true;
+}
+
+void OMAVControllerInterface::getDynamicsPtr(
+    std::vector<std::shared_ptr<OMAVVelocityDynamics>> &omav_dynamics_v) {
+  // Get pointer to base class dynamics:
+  std::vector<mppi::DynamicsBase::dynamics_ptr> *dynamics_v;
+  mppi::DynamicsBase::dynamics_ptr *dynamics;
+  get_controller()->get_dynamics(&dynamics_v, &dynamics);
+  size_t n = dynamics_v->size();
+  omav_dynamics_v.clear();
+  omav_dynamics_v.resize(n + 1);
+
+  for (size_t i = 0; i < n; i++) {
+    std::shared_ptr<OMAVVelocityDynamics> omav_dynamics =
+        std::dynamic_pointer_cast<OMAVVelocityDynamics>(dynamics_v->at(i));
+    omav_dynamics_v[i] = omav_dynamics;
+  }
+  omav_dynamics_v[n] =
+      std::dynamic_pointer_cast<OMAVVelocityDynamics>(*dynamics);
 }
 
 void OMAVControllerInterface::desired_pose_callback(
@@ -519,6 +538,10 @@ void OMAVControllerInterface::publishShelfInfo(
   cost_array_message.array.push_back(overall_cost);
 
   cost_publisher_.publish(cost_array_message);
+}
+
+void OMAVControllerInterface::setDampingFactor(const double &d) {
+  damping_ = d;
 }
 
 void OMAVControllerInterface::manually_shift_input(const int &index) {

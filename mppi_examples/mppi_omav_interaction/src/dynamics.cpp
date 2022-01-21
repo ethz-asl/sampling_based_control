@@ -13,8 +13,13 @@ namespace omav_interaction {
 OMAVVelocityDynamics::OMAVVelocityDynamics(
     const std::string &robot_description, const std::string &object_description,
     const double dt)
-    : dt_(dt), robot_description_(robot_description),
-      object_description_(object_description) {
+    : dt_(dt),
+      robot_description_(robot_description),
+      object_description_(object_description),
+      input_dimension_(6),
+      state_dimension_(32),
+      derivative_dimension_(12),
+      robot_dof_(6) {
   initialize_world(robot_description, object_description);
   initialize_pd();
 }
@@ -31,37 +36,39 @@ void OMAVVelocityDynamics::initialize_world(
   ground = sim_.addGround(0.0, "steel");
 
   sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
-  robot_dof_ = omav_->getDOF();
+  // robot_dof_ = omav_->getDOF();
   // Set dimensions
-  state_dimension_ = 32; 
+  // state_dimension_ = 32;
   // I_position(3), 0
   // orientation(4), 3
   // I_velocity(3), 7
   // B_omega(3), 10
-  // position_object(1), 11
-  // velocity_object(1), 12
-  // forces(3), 13
-  // contact_state(1), 16
+  // position_object(1), 13
+  // velocity_object(1), 14
+  // forces(3), 15
+  // contact_state(1), 18
   // I_position_desired(3), 19
   // orientation_desired(4), 23
   // I_velocity_desired(3), 26
   // B_omega_desired(3) 29
-  input_dimension_ = 6; // linear_acceleration_(3) angular_acceleration(3)
-  derrivative_dimension_ = 12;
+  // input_dimension_ = 6;  // linear_acceleration_(3) angular_acceleration(3)
+  // derivative_dimension_ = 12;
 
   x_ = observation_t::Zero(state_dimension_);
-  xd_ = observation_t::Zero(derrivative_dimension_);
+  xd_ = observation_t::Zero(derivative_dimension_);
 }
 
 void OMAVVelocityDynamics::initialize_pd() {
-  cmd_.setZero(robot_dof_);
-  cmdv_.setZero(robot_dof_);
+  cmd_.setZero(7);
+  cmdv_.setZero(6);
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
 
   Eigen::VectorXd pGain(robot_dof_), dGain(robot_dof_);
   // TODO: Set gains according to real values.
   pGain << 20.0, 20.0, 20.0, 35.0, 35.0, 35.0;
   dGain << 5.0, 5.0, 5.0, 12.0, 12.0, 12.0;
+  settings_.pGains = pGain;
+  settings_.dGains = dGain;
 
   omav_->setPdGains(pGain, dGain);
 }
@@ -78,8 +85,8 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   omav_->setPdTarget(cmd_, cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
   nonLinearities_ = omav_->getNonlinearities().e();
-  // TODO: Set mass according to real values.
-  feedforward_force_ = feedforward_acceleration_ * 4.337 + nonLinearities_;
+  feedforward_force_ = feedforward_acceleration_ * settings_.mass + nonLinearities_;
+  // feedforward_force_ = nonLinearities_;
   omav_->setGeneralizedForce(feedforward_force_);
   sim_.integrate();
   omav_->getState(omav_pose_, omav_velocity_);
@@ -184,9 +191,12 @@ void OMAVVelocityDynamics::compute_velocities(
   // xd_ contains the derivatives of the reference trajectory, i.e. reference velocities and accelerations
   // The input u contains the accelerations of the reference trajectory
   xd_.head<6>() = x_.segment<6>(26);
-  // TODO: Time derivative of the reference velocity is the input acceleration - 5*reference velocity?
-  // It seems like this is done to damp the input commands.
-  xd_.segment<6>(6) = u - 5 * x_.segment<6>(26);
+  // TODO: Time derivative of the reference velocity is the input acceleration -
+  // 5*reference velocity? It seems like this is done to damp the input
+  // commands.
+  // xd_.segment<6>(6) = u - 5 * x_.segment<6>(26);
+  xd_.segment<6>(6) = u - settings_.damping * x_.segment<6>(26);
+  // xd_.segment<6>(6) = u;
 }
 
 void OMAVVelocityDynamics::integrate_internal(
