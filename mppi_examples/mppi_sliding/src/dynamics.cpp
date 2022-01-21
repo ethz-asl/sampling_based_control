@@ -82,10 +82,10 @@ void PandaRaisimDynamics::initialize_world(
 
   
   // To simulate 2D sliding, we need a table 
-  table_ = sim_.addBox(3,3,0.2,10,"steel",
-          raisim::COLLISION(1), -1);
-  table_->setBodyType(raisim::BodyType::STATIC); //no velocity, inf mass
-  table_->setName("Table");
+  // table_ = sim_.addBox(3,3,0.2,10,"steel",
+  //         raisim::COLLISION(1), -1);
+  // table_->setBodyType(raisim::BodyType::STATIC); //no velocity, inf mass
+  // table_->setName("Table");
   
   // state size init, according to DOF
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
@@ -263,7 +263,7 @@ void PandaRaisimDynamics::advance() {
       update_model();
     }
     auto obj_num = sim_.getConfigurationNumber();
-    ROS_INFO_STREAM("num of object in raisim: " << obj_num);
+    //ROS_INFO_STREAM("num of object in raisim: " << obj_num);
 
   }
 

@@ -4,7 +4,7 @@
     <arg name="enable_obstacle" default="false"/>
     <arg name="fixed_base" default="false"/>
 	<arg name="debug" default="false"/>
-	
+
 	<include file="$(find mppi_sliding)/launch/common.launch">
 	    <arg name="plot" default="$(arg plot)"/>
 	    <arg name="enable_obstacle" default="$(arg enable_obstacle)"/>
@@ -16,24 +16,25 @@
         <arg name="load_simulation_object" value="false"/>
     </include>
 
-	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
-            <remap from="robot_description" to="robot_description"/>
-            <remap from="joint_states" to="/panda/joint_states"/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/panda/joint_states"/>
     </node>
 
-	<node name="table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <node name="table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="table_description_raisim"/>
         <remap from="joint_states" to="/table/joint_state"/>
     </node>
 
-    <!-- <node name="interactive_object" pkg="mppi_sliding" type="interactive_object.py" output="screen">
+    <node name="interactive_object" pkg="mppi_sliding" type="interactive_object.py" output="screen">
         <rosparam command="load" file="$(find object_modeling_playground)/params/fake_obj.yaml"/>
         <param name="marker_server_name" value="reference_marker_server"/>
         <param name="subscribe_initial_pose" value="true"/>
         <param name="object_state_topic" value="/object/state"/>
         <param name="frame_id" value="world"/>
-    </node> -->
+    </node>
 
 	<group if="$(arg debug)">
 		<node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
@@ -41,6 +42,9 @@
             <remap from="joint_states" to="/panda/joint_states"/>
         </node>
     </group>
+
+    <include file="$(find easy_handeye)/launch/publish.launch">
+    </include>
 
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 

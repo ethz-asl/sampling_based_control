@@ -1,0 +1,3 @@
+std_msgs/Header header
+float64 body_height
+float64 body_radius

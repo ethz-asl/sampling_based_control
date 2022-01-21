@@ -9,7 +9,7 @@
                 <box size="3 3 0.2"/>
             </geometry>
             <material name="steel">
-                <color rgba="0.5 0 0 1"/>
+                <color rgba="0.5 0 0 0.5"/>
             </material>
         </visual>0
         <collision>
