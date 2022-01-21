@@ -171,9 +171,14 @@ void ManipulationController::state_callback(
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     // modify the msgToEigen to adapt to panda
+    ROS_INFO_STREAM(" position msg before conversion: ");
+    for ( int i = 0 ; i < state_msg->arm_state.position.size(); i ++)
+    {
+      ROS_INFO_STREAM(state_msg->arm_state.position[i]);
+    }
     manipulation::conversions::msgToEigen_panda(*state_msg, x_,
                                                 observation_time_);
-
+    ROS_INFO_STREAM(" position info after conversion: " << x_.transpose());
     if (!state_received_) {
       if (!man_interface_->init_reference_to_current_pose(x_,
                                                           observation_time_)) {
@@ -192,6 +197,7 @@ void ManipulationController::starting(const ros::Time& time) {
   }
 
   if (started_) return;
+
 
   // with sequential execution the optimization needs to be explicitly called
   // in the update function of the controller (not real-time safe)
@@ -246,12 +252,22 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::add(stage_cost_, "stage_cost");
     signal_logger::logger->startLogger(true);
   }
+
+  start_time = time;
+  ROS_INFO_STREAM("start at ros time: " << start_time);
+
   started_ = true;
   ROS_INFO("Controller started!");
 }
 
 void ManipulationController::update(const ros::Time& time,
                                     const ros::Duration& period) {
+
+  run_time.nsec = time.nsec - start_time.nsec; 
+  run_time.sec = time.sec - start_time.sec;
+
+  ROS_INFO_STREAM("run time " << run_time);
+
   if (!started_) {
     ROS_ERROR("Controller not started. Probably error occurred...");
     return;
@@ -342,8 +358,6 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
     tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[i] - robot_state_.q[i]);
         // - gains_.arm_gains.Kd[i] * velocity_filtered_[i];
   }
-  std::cout << "psition measured: " << position_measured_.transpose() << std::endl;
-  std::cout << "psition desired: " << position_desired_.transpose() << std::endl;
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
   saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
   std::cout <<"sending torq [  ";

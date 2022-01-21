@@ -68,9 +68,13 @@ add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_raisim ${PROJECT_NAME})
 
-
 ## for REAL control test
 target_include_directories(${PROJECT_NAME} PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
+
+## for BAG DATA debug
+add_executable(manipulation_control_sim src/nodes/sim_controller.cpp)
+target_link_libraries(manipulation_control_sim ${PROJECT_NAME} ${catkin_LIBRARIES} )
+add_dependencies(manipulation_control_sim ${PROJECT_NAME})
 
 add_executable(reference_parsing_test src/tests/reference_parsing.cpp)
 target_link_libraries(reference_parsing_test ${PROJECT_NAME} ${catkin_LIBRARIES} )

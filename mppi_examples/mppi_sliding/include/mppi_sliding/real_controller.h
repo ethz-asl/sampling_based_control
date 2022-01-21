@@ -96,6 +96,10 @@ class ManipulationController
   bool state_ok_;
   bool state_received_;
 
+
+  ros::Time start_time;
+  ros::Time run_time;
+  
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
   std::vector<hardware_interface::JointHandle> joint_handles_;

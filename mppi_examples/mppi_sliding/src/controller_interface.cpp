@@ -64,13 +64,13 @@ bool PandaControllerInterface::init_ros() {
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener(tfBuffer);
   geometry_msgs::TransformStamped transformStamped;
-  try {
-    transformStamped = tfBuffer.lookupTransform(
-        "world", "obstacle", ros::Time(0), ros::Duration(3.0));
-  } catch (tf2::TransformException& ex) {
-    ROS_WARN("%s", ex.what());
-    return false;
-  }
+  // try {
+  //   transformStamped = tfBuffer.lookupTransform(
+  //       "world", "obstacle", ros::Time(0), ros::Duration(3.0));
+  // } catch (tf2::TransformException& ex) {
+  //   ROS_WARN("%s", ex.what());
+  //   return false;
+  // }
 
   obstacle_marker_.header.frame_id = "world";
   {
@@ -82,19 +82,18 @@ bool PandaControllerInterface::init_ros() {
     obstacle_marker_.scale.x = 2.0 * 0.01;
     obstacle_marker_.scale.y = 2.0 * 0.01;
     obstacle_marker_.scale.z = 0.01;
-    obstacle_marker_.pose.orientation.x = transformStamped.transform.rotation.x;
-    obstacle_marker_.pose.orientation.y = transformStamped.transform.rotation.y;
-    obstacle_marker_.pose.orientation.z = transformStamped.transform.rotation.z;
-    obstacle_marker_.pose.orientation.w = transformStamped.transform.rotation.w;
-    obstacle_marker_.pose.position.x = transformStamped.transform.translation.x;
-    obstacle_marker_.pose.position.y = transformStamped.transform.translation.y;
-    obstacle_marker_.pose.position.z = transformStamped.transform.translation.z;
+    obstacle_marker_.pose.orientation.x = 0;
+    obstacle_marker_.pose.orientation.y = 0;
+    obstacle_marker_.pose.orientation.z = 0;
+    obstacle_marker_.pose.orientation.w = 1;
+    obstacle_marker_.pose.position.x = 100;
+    obstacle_marker_.pose.position.y = 100;
+    obstacle_marker_.pose.position.z = 10;
   }
 
   std::string references_file;
   nh_.param<std::string>("references_file", references_file, "");
   reference_scheduler_.parse_from_file(references_file);
-
   last_ee_ref_id_ = 0;
   ee_desired_pose_.header.seq = last_ee_ref_id_;
 
@@ -437,7 +436,6 @@ void PandaControllerInterface::publish_ros() {
   obj_state = x_opt_[0].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
   //publish_ros_obj(obj_state);
   publish_ros_obj(x_opt_);
-
   optimal_trajectory_publisher_.publish(optimal_path_);
   // optimal_base_trajectory_publisher_.publish(optimal_base_path_);
 

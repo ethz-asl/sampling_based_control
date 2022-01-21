@@ -6,11 +6,11 @@
     <arg name="rviz" default="true"/>
 
     <!-- Open Rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_sliding)/config/rviz/cup.rviz" output="screen" if="$(arg rviz)"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_sliding)/config/rviz/cup.rviz" output="screen" if="$(arg rviz)" respawn="true"/>
 
     <!--    Plot cost and other info-->
     <group if="$(arg plot)">
-        <arg name="plotjuggler_layout" default="$(find mppi_manipulation)/config/pj/layout_mobile.xml"/>
+        <arg name="plotjuggler_layout" default="$(find mppi_sliding)/config/pj/layout.xml"/>
         <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
               args="--layout $(arg plotjuggler_layout)"
               output="screen"/>

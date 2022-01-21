@@ -46,7 +46,11 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
                         "/table/joint_state");
 
 
-  
+  if (!nh_.getParam("/mppi_sliding/geometry/table_position", table_position)) {
+    ROS_ERROR("Could not read parameter geometry/table_position");
+    table_position = {0,0,0};
+  }
+
   nh_.param<bool>("exact_sync", exact_sync_, false);
 
   // subscribers for message filter
@@ -252,9 +256,9 @@ void StateObserver::message_filter_cb(
 
   table_state_.header.stamp = ros::Time::now();
   table_trans.header.stamp = ros::Time::now();
-  table_trans.transform.translation.x = 0;  //TODO (boyang): table state is hardcoded, good for now
-  table_trans.transform.translation.y = 0;
-  table_trans.transform.translation.z = -0.45;
+  table_trans.transform.translation.x = table_position[0];  //TODO (boyang): table state is hardcoded, good for now
+  table_trans.transform.translation.y = table_position[1];
+  table_trans.transform.translation.z = table_position[2];
   tf2::Quaternion q_table;
   q_table.setRPY(0, 0, 0);
   table_trans.transform.rotation.x = q_table.x();

@@ -100,7 +100,8 @@ class StateObserver {
 
   ros::Publisher table_state_publisher_;
   sensor_msgs::JointState table_state_;
-
+  std::vector<double> table_position;
+  
   geometry_msgs::TransformStamped table_trans;
   geometry_msgs::TransformStamped object_state_trans;
   tf2_ros::TransformBroadcaster broadcaster;

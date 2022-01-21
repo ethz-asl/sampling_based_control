@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     }
     else {
       controller.set_observation(x, sim_time);
-      controller.get_input(x, u, sim_time);
+      //controller.get_input(x, u, sim_time);
     }
 
     //ROS_INFO_STREAM( "controller update , input is: "<< u.transpose());
@@ -111,6 +111,7 @@ int main(int argc, char** argv) {
     // ROS_INFO_STREAM( "sim world update ") ;
 
     controller.get_input_state(x, x_nom, u, sim_time);
+
     manipulation::conversions::eigenToMsg_panda(x_nom, sim_time, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
     // ROS_INFO_STREAM( "contoller state published ") ;
