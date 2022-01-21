@@ -41,7 +41,7 @@
             <remap from="joint_states" to="/panda/joint_states"/>
         </node>
     </group>
-
+    
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 
 </launch>
