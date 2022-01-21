@@ -147,9 +147,14 @@ void PathIntegral::update_policy() {
     log_warning_throttle(1.0, "Reference has never been set. Dropping update");
   } else {
     copy_observation();
+    // Change max: was in substeps loop before:
+    // Prepare rollouts and shift previous rollouts according to new observation
+    prepare_rollouts(true);
 
-    for (size_t i = 0; i < config_.substeps; i++) { 
-      prepare_rollouts();
+    for (size_t i = 0; i < config_.substeps; i++) {
+      // Prepare rollouts by only sorting them according to cost, don't shift in
+      // time
+      prepare_rollouts(false);
       update_reference();
 
       if (config_.use_tree_search) {
@@ -262,39 +267,41 @@ void PathIntegral::initialize_rollouts() {
   lock.unlock();
 }
 
-void PathIntegral::prepare_rollouts() {
-  // find trim index
-  int offset = 0;
-  std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
-  {
-    auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
-                                  opt_roll_cache_.tt.end(), t0_internal_);
-    if (lower == opt_roll_cache_.tt.end()) {
-      std::stringstream warning;
-      warning << "Resetting to time " << t0_internal_
-              << ", greater than the last available time: "
-              << opt_roll_cache_.tt.back();
-      log_warning(warning.str());
-    }
-    offset = std::distance(opt_roll_cache_.tt.begin(), lower);
-  }
+void PathIntegral::prepare_rollouts(const bool& shift) {
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
+  if (shift) {
+    // find trim index
+    int offset = 0;
+    std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
+    {
+      auto lower = std::lower_bound(opt_roll_cache_.tt.begin(),
+                                    opt_roll_cache_.tt.end(), t0_internal_);
+      if (lower == opt_roll_cache_.tt.end()) {
+        std::stringstream warning;
+        warning << "Resetting to time " << t0_internal_
+                << ", greater than the last available time: "
+                << opt_roll_cache_.tt.back();
+        log_warning(warning.str());
+      }
+      offset = std::distance(opt_roll_cache_.tt.begin(), lower);
+    }
 
-  // shift and trim inputs so they restart from current time
-  // also delete rollout states and costs, only keep inputs
-  for (auto& roll : rollouts_) {
-    shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
-    shift_back(roll.tt, 0.0, offset);
-    roll.clear_cost();
-    roll.clear_observation();
+    // shift and trim inputs so they restart from current time
+    // also delete rollout states and costs, only keep inputs
+    for (auto& roll : rollouts_) {
+      shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
+      // shift_back(roll.tt, 0.0, offset);
+      roll.clear_cost();
+      roll.clear_observation();
+    }
+
+    // shift and trim the previously optimized trajectory
+    shift_back(opt_roll_.uu,
+               dynamics_->get_zero_input(opt_roll_cache_.xx.back()), offset);
+    shift_back(momentum_, momentum_.back(), offset);
+    lock.unlock();
   }
-
-  // shift and trim the previously optimized trajectory
-  shift_back(opt_roll_.uu, dynamics_->get_zero_input(opt_roll_cache_.xx.back()),
-             offset);
-  shift_back(momentum_, momentum_.back(), offset);
-  lock.unlock();
 }
 
 void PathIntegral::set_reference_trajectory(mppi::reference_trajectory_t& ref) {

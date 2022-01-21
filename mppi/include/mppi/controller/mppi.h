@@ -158,7 +158,7 @@ class PathIntegral {
    * rollouts has different additive noise wrt new updated optimal input, thus
    * this needs to be recomputed
    */
-  void prepare_rollouts();
+  void prepare_rollouts(const bool& shift);
 
   /**
    * @brief Shift the control vector of one element back for receding horizon
