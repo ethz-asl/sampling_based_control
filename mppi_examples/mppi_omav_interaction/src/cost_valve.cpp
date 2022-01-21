@@ -85,7 +85,7 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
   // Interaction:
   if (mode == 1) {
     // Pose Cost
-    // compute_pose_cost(x, ref);
+    compute_pose_cost(x, ref);
     // Calculate all the necessary vectors
     // Handle Hook Cost
     compute_handle_hook_cost();
@@ -148,8 +148,15 @@ void OMAVInteractionCostValve::compute_pose_cost(
   reference_pose.rotation = {omav_reference(3), omav_reference(4),
                              omav_reference(5), omav_reference(6)};
   delta_pose_ = mppi_pinocchio::get_delta(current_pose, reference_pose);
-  cost_vector_(CostIdx::pose) =
-      delta_pose_.transpose() * param_ptr_->Q_pose * delta_pose_;
+  if (omav_reference(8) == 0) {
+    // In free flight compute full pose cost
+    cost_vector_(CostIdx::pose) =
+        delta_pose_.transpose() * param_ptr_->Q_pose * delta_pose_;
+  } else {
+    // in contact only compute attitude cost
+    cost_vector_(CostIdx::pose) =
+        delta_pose_.tail(3).transpose() * param_ptr_->Q_pose.block<3,3>(3,3) * delta_pose_.tail(3);
+  }
 }
 
 void OMAVInteractionCostValve::compute_handle_hook_cost() {

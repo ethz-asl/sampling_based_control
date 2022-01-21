@@ -94,8 +94,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
                           const mppi::input_array_t &u_opt,
                           const mppi::observation_t &x0_opt,
                           const std::vector<double> &tt);
-
-  void publishShelfInfo(const std_msgs::Header &header) const;
+  template <class T>
+  void publishCostInfo(const T &cost, const std_msgs::Header &header) const;
   void publishHookPos(const std_msgs::Header &header) const;
 
   void toMultiDofJointTrajectory(

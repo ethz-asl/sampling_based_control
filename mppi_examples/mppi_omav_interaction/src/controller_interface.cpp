@@ -15,17 +15,8 @@ bool OMAVControllerInterface::init_ros() {
 
   // Initialize publisher
   optimal_rollout_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_rollout", 1);
-  optimal_rollout_des_publisher_ = nh_.advertise<geometry_msgs::PoseArray>(
-      "debug/optimal_rollout_desired", 1);
-  optimal_linear_input_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_input_linear", 1);
-  optimal_angular_input_publisher_ =
-      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_input_angular", 1);
-  optimal_rollout_ang_vel_ =
-      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_ang_vel", 1);
-  optimal_rollout_lin_vel_ =
-      nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_lin_vel", 1);
+      nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
+          "debug/optimal_rollout", 1);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
@@ -304,24 +295,9 @@ void OMAVControllerInterface::publish_ros() {
 void OMAVControllerInterface::publish_trajectory(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     const mppi::observation_t &x0_opt, const std::vector<double> &tt) {
-  // Shift trajectory for publishing since the OMAV controller just inserts the
-  // trajectory while ignoring the actual message timestamp
-  const double t_now = ros::Time::now().toSec();
-  size_t offset = 0;
-  while (offset < tt.size() - 1 && tt[offset] <= t_now) {
-    offset++;
-  }
-  mppi::observation_array_t x_opt_offs =
-      mppi::observation_array_t(x_opt.begin() + offset, x_opt.end());
-  mppi::input_array_t u_opt_offs =
-      mppi::input_array_t(u_opt.begin() + offset, u_opt.end());
-  std::vector<double> tt_offs =
-      std::vector<double>(tt.begin() + offset, tt.end());
-  trajectory_msgs::MultiDOFJointTrajectory current_trajectory_msg_offs;
-  conversions::to_trajectory_msg(x_opt, u_opt, tt, current_trajectory_msg_);
-  conversions::to_trajectory_msg(x_opt_offs, u_opt_offs, tt_offs,
-                                 current_trajectory_msg_offs);
-  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_offs);
+  conversions::to_trajectory_msg(x_opt, u_opt, tt, damping_,
+                                 current_trajectory_msg_);
+  cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);
   published_trajectory_ = true;
 }
 
@@ -364,53 +340,14 @@ void OMAVControllerInterface::publish_all_trajectories() {
 }
 
 void OMAVControllerInterface::publish_optimal_rollout() {
-  geometry_msgs::PoseArray optimal_rollout_array, optimal_rollout_array_des,
-      optimal_inputs_lin_array, optimal_inputs_ang_array,
-      optimal_rollout_lin_vel, optimal_rollout_ang_vel;
-  geometry_msgs::Pose current_pose, current_pose_des, mppi_reference,
-      current_input_lin, current_input_ang, current_lin_vel, current_ang_vel;
-
   std_msgs::Header header;
   header.frame_id = "world";
-  header.stamp = ros::Time::now();
-  optimal_rollout_array.header = header;
-  optimal_rollout_array_des.header = header;
-  optimal_inputs_lin_array.header = header;
-  optimal_inputs_ang_array.header = header;
-  optimal_rollout_lin_vel.header = header;
-  optimal_rollout_ang_vel.header = header;
+  header.stamp = ros::Time(tt_opt_.front());
+  trajectory_msgs::MultiDOFJointTrajectory msg;
+  toMultiDofJointTrajectory(msg);
+  optimal_rollout_publisher_.publish(msg);
 
-  conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(7), current_lin_vel);
-  conversions::PoseMsgForVelocityFromVector(x0_.segment<3>(10),
-                                            current_ang_vel);
-  optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
-  optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
-
-  for (size_t i = 0; i < xx_opt_.size(); i++) {
-    conversions::PoseMsgFromVector(xx_opt_[i].head<7>(), current_pose);
-    conversions::PoseMsgFromVector(xx_opt_[i].segment<7>(19), current_pose_des);
-    conversions::PoseMsgForVelocityFromVector(uu_opt_[i].segment<3>(0),
-                                              current_input_lin);
-    conversions::PoseMsgForVelocityFromVector(uu_opt_[i].segment<3>(3),
-                                              current_input_ang);
-    conversions::PoseMsgForVelocityFromVector(xx_opt_[i].segment<3>(7),
-                                              current_lin_vel);
-    conversions::PoseMsgForVelocityFromVector(xx_opt_[i].segment<3>(10),
-                                              current_ang_vel);
-    optimal_rollout_array.poses.push_back(current_pose);
-    optimal_rollout_array_des.poses.push_back(current_pose_des);
-    optimal_inputs_lin_array.poses.push_back(current_input_lin);
-    optimal_inputs_ang_array.poses.push_back(current_input_ang);
-    optimal_rollout_lin_vel.poses.push_back(current_lin_vel);
-    optimal_rollout_ang_vel.poses.push_back(current_ang_vel);
-  }
-  optimal_rollout_publisher_.publish(optimal_rollout_array);
-  optimal_rollout_des_publisher_.publish(optimal_rollout_array_des);
-  optimal_linear_input_publisher_.publish(optimal_inputs_lin_array);
-  optimal_angular_input_publisher_.publish(optimal_inputs_ang_array);
-  optimal_rollout_lin_vel_.publish(optimal_rollout_lin_vel);
-  optimal_rollout_ang_vel_.publish(optimal_rollout_ang_vel);
-
+  geometry_msgs::Pose mppi_reference;
   mppi_reference.position.x = ref_.rr[0](0);
   mppi_reference.position.y = ref_.rr[0](1);
   mppi_reference.position.z = ref_.rr[0](2);
@@ -421,9 +358,43 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   mppi_reference_publisher_.publish(mppi_reference);
 
   if (task_ == InteractionTask::Shelf && detailed_publishing_) {
-    publishShelfInfo(header);
+    publishCostInfo(cost_shelf_, header);
   } else if (task_ == InteractionTask::Valve && detailed_publishing_) {
+    publishCostInfo(cost_valve_, header);
     publishHookPos(header);
+  }
+}
+
+void OMAVControllerInterface::toMultiDofJointTrajectory(
+    trajectory_msgs::MultiDOFJointTrajectory &t) const {
+  t.points.clear();
+  ros::Time stamp = ros::Time(tt_opt_.front());
+  t.header.stamp = stamp;
+  t.header.frame_id = "world";
+  geometry_msgs::Transform tf;
+  geometry_msgs::Twist vel;
+  geometry_msgs::Twist acc;
+
+  for (size_t i = 0; i < xx_opt_.size(); i++) {
+    tf::vectorEigenToMsg(xx_opt_[i].head<3>(), tf.translation);
+    tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(3)),
+                             tf.rotation);
+    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(7), vel.linear);
+    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(10), vel.angular);
+    tf::vectorEigenToMsg(uu_opt_[i].segment<3>(0), acc.linear);
+    tf::vectorEigenToMsg(uu_opt_[i].segment<3>(3), acc.angular);
+    trajectory_msgs::MultiDOFJointTrajectoryPoint point;
+    point.transforms.push_back(tf);
+    point.velocities.push_back(vel);
+    point.accelerations.push_back(acc);
+    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(19), tf.translation);
+    tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(22)),
+                             tf.rotation);
+    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(26), vel.linear);
+    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(29), vel.angular);
+    point.transforms.push_back(tf);
+    point.velocities.push_back(vel);
+    t.points.push_back(point);
   }
 }
 
@@ -465,8 +436,9 @@ void OMAVControllerInterface::publishHookPos(
   pub_marker_hook_.publish(marker_hook);
 }
 
-void OMAVControllerInterface::publishShelfInfo(
-    const std_msgs::Header &header) const {
+template <class T>
+void OMAVControllerInterface::publishCostInfo(
+    const T &cost, const std_msgs::Header &header) const {
   // Info about costs:
   float velocity_cost = 0.0f;
   float power_cost = 0.0f;
@@ -484,29 +456,23 @@ void OMAVControllerInterface::publishShelfInfo(
 
   for (size_t i = 0; i < xx_opt_.size(); i++) {
     // Cost publishing
-    cost_shelf_->compute_cost(xx_opt_[i], ref_.rr[0], i * 0.015);
-    // Velocity Cost
-    velocity_cost += cost_shelf_->cost_vector_(CostIdx::velocity);
-    // Efficiency Cost
-    power_cost += cost_shelf_->cost_vector_(CostIdx::efficiency);
-    // Object Cost
-    object_cost += cost_shelf_->cost_vector_(CostIdx::object);
-    // Torque Cost
-    torque_cost += cost_shelf_->cost_vector_(CostIdx::torque);
-    // Handle Hook Cost
-    handle_hook_cost += cost_shelf_->cost_vector_(CostIdx::handle_hook);
-    // Pose Cost
-    pose_cost += cost_shelf_->cost_vector_(CostIdx::pose);
-    overall_cost += cost_shelf_->cost_;
+    cost->compute_cost(xx_opt_[i], ref_.rr[0], tt_opt_[i]);
+    velocity_cost += cost->cost_vector_(CostIdx::velocity);
+    power_cost += cost->cost_vector_(CostIdx::efficiency);
+    object_cost += cost->cost_vector_(CostIdx::object);
+    torque_cost += cost->cost_vector_(CostIdx::torque);
+    handle_hook_cost += cost->cost_vector_(CostIdx::handle_hook);
+    pose_cost += cost->cost_vector_(CostIdx::pose);
+    overall_cost += cost->cost_;
 
     Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15).normalized();
 
-    force_marker.points[0].x = cost_shelf_->hook_pos_(0);
-    force_marker.points[0].y = cost_shelf_->hook_pos_(1);
-    force_marker.points[0].z = cost_shelf_->hook_pos_(2);
-    force_marker.points[1].x = cost_shelf_->hook_pos_(0) + force_normed(0);
-    force_marker.points[1].y = cost_shelf_->hook_pos_(1) + force_normed(1);
-    force_marker.points[1].z = cost_shelf_->hook_pos_(2) + force_normed(2);
+    force_marker.points[0].x = cost->hook_pos_(0);
+    force_marker.points[0].y = cost->hook_pos_(1);
+    force_marker.points[0].z = cost->hook_pos_(2);
+    force_marker.points[1].x = cost->hook_pos_(0) + force_normed(0);
+    force_marker.points[1].y = cost->hook_pos_(1) + force_normed(1);
+    force_marker.points[1].z = cost->hook_pos_(2) + force_normed(2);
     force_marker.id = i;
 
     force_marker_array.markers.push_back(force_marker);
@@ -514,11 +480,15 @@ void OMAVControllerInterface::publishShelfInfo(
   normalized_force_publisher_.publish(force_marker_array);
 
   mppi_ros::Array cost_array_message;
+  cost_array_message.header = header;
+  cost_array_message.array.push_back(pose_cost);
   cost_array_message.array.push_back(velocity_cost);
   cost_array_message.array.push_back(power_cost);
   cost_array_message.array.push_back(object_cost);
   cost_array_message.array.push_back(torque_cost);
   cost_array_message.array.push_back(handle_hook_cost);
+  cost_array_message.array.push_back(overall_cost);
+  // Force vector:
   cost_array_message.array.push_back(xx_opt_[0](15));
   cost_array_message.array.push_back(xx_opt_[0](16));
   cost_array_message.array.push_back(xx_opt_[0](17));
@@ -534,8 +504,6 @@ void OMAVControllerInterface::publishShelfInfo(
   cost_array_message.array.push_back(
       acos(xx_opt_[1].segment<3>(15).normalized().dot(com_hook_.normalized())) *
       180.0 / M_PI);
-  cost_array_message.array.push_back(pose_cost);
-  cost_array_message.array.push_back(overall_cost);
 
   cost_publisher_.publish(cost_array_message);
 }
