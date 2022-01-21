@@ -45,6 +45,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
     pose_cost += (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
     pose_cost += (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+    // contact cost
     if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) contact_cost += params_.Qc;
   }
 
@@ -80,6 +81,17 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
     object_cost += object_error * object_error * params_.Q_obj;
+  }
+
+  // joint-level control
+  else if (mode == 3) {
+    Eigen::VectorXd err_j = ref.head<7>() - x.segment<7>(3);
+    Eigen::VectorXd err_bp = ref.segment<2>(7) - x.head<2>();
+    double err_bo = ref[9] - x[2];
+
+    pose_cost += err_j.norm() * params_.Q_j + err_bp.norm() * params_.Q_bp + err_bo * err_bo * params_.Q_bo;
+    // contact cost
+    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) contact_cost += params_.Qc;
   }
   
   // power cost

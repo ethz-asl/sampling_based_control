@@ -28,6 +28,9 @@ bool CostParams::init_from_config(const manipulation::Config& config){
   Q_reachs = config.parse_key<double>(cost, "reach_weight_slope", sf).value_or(0.0);
   Q_obj = config.parse_key<double>(cost, "object_weight", sf).value_or(0.0);
   Q_tol = config.parse_key<double>(cost, "object_tolerance", sf).value_or(0.0);
+  Q_j = config.parse_key<double>(cost, "arm_joint_weight", sf).value_or(0.0);
+  Q_bp = config.parse_key<double>(cost, "robot_base_position_weight", sf).value_or(0.0);
+  Q_bo = config.parse_key<double>(cost, "robot_base_orientation_weight", sf).value_or(0.0);
   std::vector<double> trans = config.parse_key<std::vector<double>>(cost, "grasp_translation_offset", sf).value_or(std::vector<double>{0.0, 0.0, 0.0});
   std::vector<double> rot = config.parse_key<std::vector<double>>(cost, "grasp_orientation_offset", sf).value_or(std::vector<double>{0, -0.7071068, 0, 0.7071068});
   Eigen::Vector3d t(trans[0], trans[1], trans[2]);

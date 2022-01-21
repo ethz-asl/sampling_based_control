@@ -28,6 +28,9 @@ struct CostParams {
   double Q_reachs;
   double Q_obj;
   double Q_tol;
+  double Q_j; // arm joint cost
+  double Q_bp; // base position cost
+  double Q_bo; // base orientation cost
   mppi_pinocchio::Pose grasp_offset;
   double Q_joint_limit;
   double Q_joint_limit_slope;
