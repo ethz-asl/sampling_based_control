@@ -18,7 +18,7 @@ class ImpExp : public ExpertBase {
     expert_sampler_one_.set_covariance(config_.input_variance);
 
     mean_.clear();
-    for (int step = 0; step < std::floor(config_.horizon / config_.step_size);
+    for (size_t step = 0; step < std::floor(config_.horizon / config_.step_size);
          ++step) {
       expert_sampler_map_[step] = expert_sampler_one_;
       mean_.push_back(Eigen::VectorXd::Zero(dynamics_->get_input_dimension()));
@@ -37,7 +37,7 @@ class ImpExp : public ExpertBase {
   }
 
   void update_expert(std::vector<Eigen::VectorXd> mean) override {
-    for (int step = 0; step < mean.size(); ++step) {
+    for (size_t step = 0; step < mean.size(); ++step) {
       mean_[step] = mean[step];
     }
   }

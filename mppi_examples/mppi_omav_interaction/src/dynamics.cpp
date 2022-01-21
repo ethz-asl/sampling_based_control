@@ -120,8 +120,8 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   object_->setState(x_.segment<1>(13), x_.segment<1>(14));
 }
 
-mppi::DynamicsBase::input_t
-OMAVVelocityDynamics::get_zero_input(const observation_t &x) {
+mppi::DynamicsBase::input_t OMAVVelocityDynamics::get_zero_input(
+    const observation_t &x) {
   return DynamicsBase::input_t::Zero(get_input_dimension());
 }
 
@@ -130,10 +130,9 @@ force_t OMAVVelocityDynamics::get_contact_forces() {
   force.force = {0, 0, 0};
   for (const auto contact : omav_->getContacts()) {
     if (contact.skip())
-      continue; /// if the contact is internal, one contact point is set to
+      continue;  /// if the contact is internal, one contact point is set to
     /// 'skip'
-    if (contact.isSelfCollision())
-      continue;
+    if (contact.isSelfCollision()) continue;
 
     force.force += contact.getContactFrame().e().transpose() *
                    contact.getImpulse()->e() / sim_.getTimeStep();
@@ -152,10 +151,9 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   double max_force = 0.0;
   for (const auto contact : omav_->getContacts()) {
     if (contact.skip())
-      continue; /// if the contact is internal, one contact point is set to
+      continue;  /// if the contact is internal, one contact point is set to
     /// 'skip'
-    if (contact.isSelfCollision())
-      continue;
+    if (contact.isSelfCollision()) continue;
     // Get the contact force
     current_force = contact.getContactFrame().e().transpose() *
                     contact.getImpulse()->e() / sim_.getTimeStep();
@@ -180,16 +178,16 @@ inline void OMAVVelocityDynamics::integrate_quaternion(
     Eigen::Vector3d omega_W = q_WB_n * omega_B;
     Eigen::Quaterniond q_tilde;
     q_tilde.w() = std::cos(angVelNorm * dt / 2.0);
-    q_tilde.vec() =
-        std::sin(angVelNorm * dt / 2.0) * omega_W / angVelNorm;
+    q_tilde.vec() = std::sin(angVelNorm * dt / 2.0) * omega_W / angVelNorm;
     q_WB_n_plus_one = q_tilde * q_WB_n;
   }
 }
 
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
-  // xd_ contains the derivatives of the reference trajectory, i.e. reference velocities and accelerations
-  // The input u contains the accelerations of the reference trajectory
+  // xd_ contains the derivatives of the reference trajectory, i.e. reference
+  // velocities and accelerations The input u contains the accelerations of the
+  // reference trajectory
   xd_.head<6>() = x_.segment<6>(26);
   // TODO: Time derivative of the reference velocity is the input acceleration -
   // 5*reference velocity? It seems like this is done to damp the input
@@ -218,4 +216,4 @@ void OMAVVelocityDynamics::integrate_internal(
   x_.segment<6>(26) += xd_.segment<6>(6) * dt;
 }
 
-} // namespace omav_interaction
+}  // namespace omav_interaction

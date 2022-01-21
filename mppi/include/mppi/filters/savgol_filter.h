@@ -40,7 +40,7 @@ struct MovingExtendedWindow {
   }
 
   double last_trim_t;
-  int start_idx;
+  size_t start_idx;
   int window;
   std::vector<double> uu;
   std::vector<double> tt;
@@ -75,7 +75,7 @@ struct MovingExtendedWindow {
       std::fill(uu.end() - offset, uu.end(), *(uu.end() - offset - 1));
     }
 
-    start_idx = window;
+    start_idx = static_cast<size_t>(window);
     tt[start_idx] = t;
   }
 

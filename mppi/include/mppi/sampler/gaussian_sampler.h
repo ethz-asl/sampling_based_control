@@ -63,7 +63,7 @@ class GaussianSampler {
 
     Eigen::VectorXd sigma = solver_.eigenvalues().cwiseSqrt();
     Eigen::VectorXd sigma_inverse = sigma;
-    double sigma_min = sigma(0);
+    // double sigma_min = sigma(0);
     // std::cout << "sigma" << sigma.transpose() << std::endl;
     // std::cout << "sigma min" << sigma_min << std::endl;
 

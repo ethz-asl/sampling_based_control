@@ -232,7 +232,7 @@ class PathIntegral {
   bool get_optimal_rollout_for_trajectory(observation_array_t& x,
                                           input_array_t& u,
                                           std::vector<double>& tt,
-                                          const double &t_now);
+                                          const double& t_now);
   /**
    * @brief Returns all trajectories of the current rollout
    * @param rollouts vector with all the rollout trajectories

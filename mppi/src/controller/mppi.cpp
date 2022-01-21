@@ -113,9 +113,7 @@ void PathIntegral::init_filter() {
                              config_.filters_order);
       break;
     }
-    default: {
-      throw std::runtime_error("Unrecognized filter type.");
-    }
+    default: { throw std::runtime_error("Unrecognized filter type."); }
   }
 }
 
@@ -176,13 +174,15 @@ void PathIntegral::update_policy() {
         sample_trajectories();
       }
 
-      // Get optimal rollout inputs based on many optimized rollouts. This is stored in opt_roll_.uu
-      // opt_roll_ starts at the most recent x0 and t0_internal (i.e. last observation)
-      // During this entire optimization we always use the recent x0 and t0!
+      // Get optimal rollout inputs based on many optimized rollouts. This is
+      // stored in opt_roll_.uu opt_roll_ starts at the most recent x0 and
+      // t0_internal (i.e. last observation) During this entire optimization we
+      // always use the recent x0 and t0!
       optimize();
       // Filter opt_roll_.uu
       filter_input();
-      // Next step: Simulate dynamics according to optimal opt_roll_.uu to get opt_roll_.xx
+      // Next step: Simulate dynamics according to optimal opt_roll_.uu to get
+      // opt_roll_.xx
 
       // TODO move this away. This goes year since there might be filtering
       // happening before optimal rollout
@@ -190,7 +190,8 @@ void PathIntegral::update_policy() {
       opt_roll_.xx.front() = x0_internal_;
       // IMPORTANT FIX: (mb 01/2022): first element of opt_roll is x0_internal.
       for (size_t t = 1; t < steps_; t++) {
-        opt_roll_.xx[t] = dynamics_->step(opt_roll_.uu[t-1], config_.step_size);
+        opt_roll_.xx[t] =
+            dynamics_->step(opt_roll_.uu[t - 1], config_.step_size);
       }
       stage_cost_ = cost_->get_stage_cost(x0_internal_, t0_internal_);
     }
@@ -227,9 +228,9 @@ void PathIntegral::time_it() {
 
 void PathIntegral::set_observation(const observation_t& x, const double t) {
   if (t < reset_time_) {
-      std::stringstream warning;
-      warning << "New observation older than previous one.";
-      log_warning(warning.str());
+    std::stringstream warning;
+    warning << "New observation older than previous one.";
+    log_warning(warning.str());
   }
   {
     std::unique_lock<std::shared_mutex> lock(state_mutex_);
@@ -352,8 +353,10 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
         rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
-        // Set the noise before the hold time end to zero to avoid any exploration before the next trajectory is published
-        if (rollouts_[k].tt[t] <= hold_time_end_internal_ && !first_mppi_iteration_) {
+        // Set the noise before the hold time end to zero to avoid any
+        // exploration before the next trajectory is published
+        if (rollouts_[k].tt[t] <= hold_time_end_internal_ &&
+            !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
       }
@@ -364,7 +367,8 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       }
       // perturbed trajectory
       else {
-        if (rollouts_[k].tt[t] <= hold_time_end_internal_ && !first_mppi_iteration_) {
+        if (rollouts_[k].tt[t] <= hold_time_end_internal_ &&
+            !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         } else {
           sample_noise(rollouts_[k].nn[t]);
@@ -462,7 +466,6 @@ void PathIntegral::optimize() {
   }
 
   for (size_t t = 0; t < steps_; t++) {
-    // opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
     if (opt_roll_.tt[t] >= hold_time_end_internal_) {
       opt_roll_.uu[t] += config_.alpha * momentum_[t];
     }

@@ -27,7 +27,7 @@ obstacle_position_x: 15
 obstacle_position_y: 15
 # Cost handle hook distance
 handle_hook_cost: 100
-handle_hook_threshold: 0.03
+handle_hook_threshold: 0.2
 # Efficiency cost
 power_cost: 1.0
 # Torque cost

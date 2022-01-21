@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 #include <raisim/World.hpp>
 #include <raisim/configure.hpp>
+#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
 
+#include <mppi/dynamics/dynamics_base.h>
+#include <ros/package.h>
 #include <Eigen/Core>
 #include <cmath>
 #include <iostream>
 #include <memory>
-#include <mppi/dynamics/dynamics_base.h>
 #include <numeric>
-#include <ros/package.h>
 #include <stdexcept>
 #include <string>
 

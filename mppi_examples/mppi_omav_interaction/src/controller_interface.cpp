@@ -11,6 +11,8 @@
 using namespace omav_interaction;
 
 bool OMAVControllerInterface::init_ros() {
+  detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
+
   // Initialize publisher
   optimal_rollout_publisher_ =
       nh_.advertise<geometry_msgs::PoseArray>("debug/optimal_rollout", 1);
@@ -34,7 +36,6 @@ bool OMAVControllerInterface::init_ros() {
   object_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 1);
 
-  detailed_publishing_ = nh_.param<bool>("detailed_publishing", false);
   if (detailed_publishing_) {
     ROS_INFO("[mppi_omav_interaction] Detailed publishing enabled.");
     trajectory_publisher_ =
@@ -215,7 +216,6 @@ void OMAVControllerInterface::desired_pose_callback(
 
 void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
   ref_.rr[0](7) = ref_angle;
-  // std::cout << "Valve ref callback" << std::endl;
   get_controller()->set_reference_trajectory(ref_);
 }
 

@@ -27,6 +27,8 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <memory>
 
+#include <eigen_conversions/eigen_msg.h>
+
 #include <ros/ros.h>
 
 namespace omav_interaction {

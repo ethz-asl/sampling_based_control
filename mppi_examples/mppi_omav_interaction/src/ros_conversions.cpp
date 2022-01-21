@@ -29,14 +29,14 @@ void to_trajectory_msg(
 }
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const std::vector<double> &tt,
+    const std::vector<double> &tt, const double &damping,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
   mav_msgs::EigenTrajectoryPointVector current_trajectory;
   mav_msgs::EigenTrajectoryPoint current_trajectory_point;
   for (size_t i = 0; i < x_opt.size(); i++) {
-    EigenTrajectoryPointFromState(x_opt[i], u_opt[i],
-                                  static_cast<int64_t>((tt[i] - tt[0]) * 1e9),
-                                  current_trajectory_point);
+    EigenTrajectoryPointFromState(
+        x_opt[i], u_opt[i] - damping * x_opt[i].segment<6>(26),
+        static_cast<int64_t>((tt[i] - tt[0]) * 1e9), current_trajectory_point);
     current_trajectory.push_back(current_trajectory_point);
   }
   mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,

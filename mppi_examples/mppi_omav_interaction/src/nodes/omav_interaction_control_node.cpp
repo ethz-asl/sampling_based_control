@@ -43,11 +43,6 @@ bool InteractionControlNode::InitializeNodeParams() {
 
   controller_.setTask(object_name);
 
-  // ROS_INFO_STREAM("Controller Created");
-  // simulation_ = std::make_shared<OMAVVelocityDynamicsRos>(
-  //     private_nh_, robot_description_raisim, object_description, kSim_dt);
-  // ROS_INFO_STREAM("Simulation Created");
-
   // set initial state
   // state_ = observation_t::Zero(simulation_->get_state_dimension());
   state_ = observation_t::Zero(32);
@@ -201,8 +196,9 @@ bool InteractionControlNode::getTargetStateFromTrajectory() {
     }
     if (i == current_trajectory_.points.size()) {
       ROS_ERROR(
-          "Target exceeded trajectory length, t_odom_s = %i, last traj t = %i",
-          t_odom_s, t_ref);
+          "Target exceeded trajectory length, t_odom_s = %f, last traj t = %f",
+          static_cast<double>(t_odom_s / 1e9),
+          static_cast<double>(t_ref / 1e9));
       i = 0;
     }
     if (i > 1 && i < current_trajectory_.points.size()) {

@@ -130,16 +130,17 @@ bool OmavTrajectoryGenerator::getTargetStateFromTrajectory() {
     }
     if (i == current_trajectory_.points.size()) {
       ROS_ERROR(
-          "Target exceeded trajectory length, t_odom_s = %i, last traj t = %i",
-          t_odom_s, t_ref);
+          "Target exceeded trajectory length, t_odom_s = %f, last traj t = %f",
+          static_cast<double>(t_odom_s / 1e9),
+          static_cast<double>(t_ref / 1e9));
       i = 0;
     }
     if (i > 1 && i < current_trajectory_.points.size()) {
       double t = static_cast<double>((t_odom_s - (t_ref - 15e6)) / 1e9) / 0.015;
       mav_msgs::EigenTrajectoryPoint target_state;
       omav_interaction::conversions::InterpolateTrajectoryPoints(
-          current_trajectory_.points[i - 2], current_trajectory_.points[i-1], t,
-          &target_state);
+          current_trajectory_.points[i - 2], current_trajectory_.points[i - 1],
+          t, &target_state);
       set_target(target_state);
     } else {
       set_target(current_trajectory_.points[i]);
