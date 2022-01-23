@@ -96,7 +96,7 @@
 
     <node name="manipulation_control" type="manipulation_control" pkg="mppi_sliding" output="screen" launch-prefix="$(arg launch_prefix)">
         <param name="object_reference_position" value="$(arg object_reference_position)"/>
-        <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
+        <param name="activation_file" value="/home/user/.raisim/activation.raisim"/>
         <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/controller_panda.yaml"/>

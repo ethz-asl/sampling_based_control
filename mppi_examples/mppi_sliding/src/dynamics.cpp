@@ -21,7 +21,7 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
   if(!if_sim_)
   {
     std::cout << "this dynamics is as [MODEL ESTIMATED] dynamics" << std::endl;
-    if_update_ = false;
+    if_update_ = true;
     if(if_update_)
     {
       std::cout << "activate model updater " << std::endl;
@@ -64,12 +64,16 @@ void PandaRaisimDynamics::initialize_world(
   //  create cylinder object
   if(!if_sim_)
   {
-    // cylinder_description_ = cylinder_description;
-    // cylinder_ = sim_.addCylinder(params_.cylinder_radius, params_.cylinder_height,
-    //             0.5,"steel", raisim::COLLISION(1), -1); 
-    // cylinder_->setMass(params_.cylinder_mass);
-    // cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
-    // cylinder_->setName("Cylinder");
+    cylinder_description_ = cylinder_description;
+    cylinder_ = sim_.addCylinder(params_.cylinder_radius, params_.cylinder_height,
+                0.5,"steel", raisim::COLLISION(1), -1); 
+    cylinder_->setMass(params_.cylinder_mass);
+    cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
+    cylinder_->setName("Cylinder");
+
+    object_p_.resize(OBJECT_DIMENSION);
+    object_p_.setZero();
+    object_p_(3) = 1;
   }
 
   // create mug 
@@ -82,10 +86,10 @@ void PandaRaisimDynamics::initialize_world(
 
   
   // To simulate 2D sliding, we need a table 
-  // table_ = sim_.addBox(3,3,0.2,10,"steel",
-  //         raisim::COLLISION(1), -1);
-  // table_->setBodyType(raisim::BodyType::STATIC); //no velocity, inf mass
-  // table_->setName("Table");
+  table_ = sim_.addBox(3,3,0.2,10,"steel",
+          raisim::COLLISION(1), -1);
+  table_->setBodyType(raisim::BodyType::STATIC); //no velocity, inf mass
+  table_->setName("Table");
   
   // state size init, according to DOF
   robot_dof_ = BASE_ARM_GRIPPER_DIM;
@@ -98,11 +102,11 @@ void PandaRaisimDynamics::initialize_world(
   // init state setup
   reset(params_.initial_state, t_);
 
-  // std::cout << "table inited at: " << table_->getPosition() << std::endl; 
-  // if (if_sim_)
-  //   std::cout << "mug inited at: " << mug_->getGeneralizedCoordinate() << std::endl; 
-  // if (!if_sim_)
-  //   std::cout << "cylinder inited at: " << cylinder_->getPosition() << std::endl; 
+  std::cout << "table inited at: " << table_->getPosition() << std::endl; 
+  if (if_sim_)
+    std::cout << "mug inited at: " << mug_->getGeneralizedCoordinate() << std::endl; 
+  if (!if_sim_)
+    std::cout << "cylinder inited at: " << cylinder_->getPosition() << std::endl; 
   
 }
 
@@ -224,13 +228,13 @@ void PandaRaisimDynamics::advance() {
 
   if(!if_sim_)
   {
-    // for (const auto& contact : cylinder_->getContacts()) {
-    //   if (!contact.skip() && !contact.isSelfCollision()) {
-    //     //std::cout << "this contact position: " <<contact.getPosition().e().transpose()<<std::endl;
-    //     in_contact = 1;
-    //     break;
-    //   }
-    // }
+    for (const auto& contact : cylinder_->getContacts()) {
+      if (!contact.skip() && !contact.isSelfCollision()) {
+        //std::cout << "this contact position: " <<contact.getPosition().e().transpose()<<std::endl;
+        in_contact = 1;
+        break;
+      }
+    }
 
     // get external torque
     get_external_torque(tau_ext_);
@@ -239,23 +243,24 @@ void PandaRaisimDynamics::advance() {
     sim_.integrate();
     t_ += sim_.getTimeStep();
 
+
     // update state x
     panda_->getState(joint_p_, joint_v_);
     object_p_.resize(OBJECT_DIMENSION);
     object_p_.setZero();
-    // object_p_(0) = cylinder_->getPosition()(0);
-    // object_p_(1) = cylinder_->getPosition()(1);
-    // object_p_(2) = cylinder_->getPosition()(2);
-    // object_p_(3) = cylinder_->getQuaternion()(0);
-    // object_p_(4) = cylinder_->getQuaternion()(1);  
-    // object_p_(5) = cylinder_->getQuaternion()(2);  
-    // object_p_(6) = cylinder_->getQuaternion()(3);
+    object_p_(0) = cylinder_->getPosition()(0);
+    object_p_(1) = cylinder_->getPosition()(1);
+    object_p_(2) = cylinder_->getPosition()(2);
+    object_p_(3) = cylinder_->getQuaternion()(0);
+    object_p_(4) = cylinder_->getQuaternion()(1);  
+    object_p_(5) = cylinder_->getQuaternion()(2);  
+    object_p_(6) = cylinder_->getQuaternion()(3);
     
     object_v_.resize(OBJECT_DIMENSION);
     object_v_.setZero();   //TODO: update real rot vel here
-    // object_v_(0) = cylinder_->getLinearVelocity()(0);
-    // object_v_(1) = cylinder_->getLinearVelocity()(1);
-    // object_v_(2) = cylinder_->getLinearVelocity()(2);
+    object_v_(0) = cylinder_->getLinearVelocity()(0);
+    object_v_(1) = cylinder_->getLinearVelocity()(1);
+    object_v_(2) = cylinder_->getLinearVelocity()(2);
 
     // update model depending on the flag
     if(if_update_)
@@ -276,7 +281,7 @@ void PandaRaisimDynamics::advance() {
   x_.segment(2 * robot_dof_ + OBJECT_DIMENSION, OBJECT_DIMENSION) = object_v_;
   x_(2 * robot_dof_ + 2 * OBJECT_DIMENSION) = in_contact;  // contact flag
 
-  //display_state();
+  display_state();
 }
 
 void PandaRaisimDynamics::update_model()
@@ -305,8 +310,8 @@ void PandaRaisimDynamics::update_model()
   cylinder_->setMass(params_.cylinder_mass);
   cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
   cylinder_->setName("Cylinder");
-  // pos_c[0] = pos_c[0] + (r-0.5)/50;
-  // pos_c[1] = pos_c[1] + (r-0.5)/50;
+  pos_c[0] = pos_c[0] + (r-0.5)/500;
+  pos_c[1] = pos_c[1] + (r-0.5)/500;
   cylinder_->setPosition(pos_c);
   cylinder_->setOrientation(q);
   cylinder_->setLinearVelocity(vel_c);  //todo:  add angular velocity
@@ -344,16 +349,18 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
                    x_.segment(robot_dof_,robot_dof_));
 
   //cylinder_->setPosition(Eigen::Vector3d(x_(2* robot_dof_),x_(2* robot_dof_+1),params_.cylinder_z));
-  //cylinder_->setLinearVelocity(Eigen::Vector3d(x_(2* robot_dof_+3),x_(2* robot_dof_+4),0));
+  // raisim::Mat<3,1> vel_c = {0.1,0.1,0};
+  // cylinder_->setLinearVelocity(vel_c);
+
   if(if_sim_)
     mug_->setGeneralizedCoordinate({x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2),
                            x_(2* robot_dof_+3),x_(2* robot_dof_+4),x_(2* robot_dof_+5),x_(2* robot_dof_+6)});
   if(!if_sim_)
   {
-    // cylinder_->setPosition(x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2) + 0.5*cylinder_->getHeight());
-    // cylinder_->setOrientation(x_(2* robot_dof_+3),x_(2* robot_dof_+4),x_(2* robot_dof_+5),x_(2* robot_dof_+6));
+    cylinder_->setPosition(x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2) + 0.5*cylinder_->getHeight());
+    cylinder_->setOrientation(x_(2* robot_dof_+3),x_(2* robot_dof_+4),x_(2* robot_dof_+5),x_(2* robot_dof_+6));
   }
-  //table_->setPosition(Eigen::Vector3d(params_.table_position[0],params_.table_position[1],params_.table_position[2]));
+  table_->setPosition(Eigen::Vector3d(params_.table_position[0],params_.table_position[1],params_.table_position[2]));
 }
 
 mppi::input_t PandaRaisimDynamics::get_zero_input(

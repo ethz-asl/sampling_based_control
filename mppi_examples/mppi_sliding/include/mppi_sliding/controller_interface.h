@@ -12,6 +12,7 @@
 #include "mppi_sliding/cost.h"
 #include "mppi_sliding/params/dynamics_params.h"
 #include "mppi_sliding/reference_scheduler.h"
+#include "mppi_sliding/dynamics.h"
 
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
@@ -74,6 +75,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   size_t last_ob_ref_id_;
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
+
+  std::shared_ptr<PandaRaisimDynamics> dynamics;
 
   DynamicsParams dynamics_params_;
   mppi_pinocchio::RobotModel robot_model_;

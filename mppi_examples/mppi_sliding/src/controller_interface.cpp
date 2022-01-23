@@ -161,7 +161,6 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // -------------------------------
   // dynamics
   // -------------------------------
-  mppi::dynamics_ptr dynamics;
   ROS_INFO("setting controller dynamics ");
   if (!dynamics_params_.init_from_ros(nh_)) {
     ROS_ERROR("Failed to init dynamics parameters.");
@@ -407,7 +406,10 @@ void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& 
     object_predict_marker_.pose.orientation.z = obj_state[6];
     object_predict_marker_.pose.orientation.w = obj_state[3];
     object_predict_marker_.id = i;
-    object_predict_marker_.color.a = 1.0 - (i/step_num);
+    object_predict_marker_.color.a = 1.0 - 3*(i/step_num);
+    object_predict_marker_.color.r = 0.0; 
+    object_predict_marker_.color.g = 0.2;
+    object_predict_marker_.color.b = 0.8;
     object_predict_markers.markers.push_back(object_predict_marker_);
   }
 
@@ -433,32 +435,12 @@ void PandaControllerInterface::publish_ros() {
   }
 
   obj_state.setZero(7);
-  obj_state = x_opt_[0].segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
-  //publish_ros_obj(obj_state);
+  // obj_state = dynamics->get_state().segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
+  obj_state = dynamics->get_primitive_state();
+  publish_ros_obj(obj_state);
   publish_ros_obj(x_opt_);
   optimal_trajectory_publisher_.publish(optimal_path_);
   // optimal_base_trajectory_publisher_.publish(optimal_base_path_);
-
-  // extrapolate base twist from optimal base path
-  // if (optimal_base_path_.poses.size() > 2) {
-  //   geometry_msgs::TwistStamped base_twist_from_path;
-  //   base_twist_from_path.header.frame_id = "world";
-  //   base_twist_from_path.twist.linear.x =
-  //       (optimal_base_path_.poses[1].pose.position.x -
-  //        optimal_base_path_.poses[0].pose.position.x) /
-  //       config_.step_size;
-  //   base_twist_from_path.twist.linear.y =
-  //       (optimal_base_path_.poses[1].pose.position.y -
-  //        optimal_base_path_.poses[0].pose.position.y) /
-  //       config_.step_size;
-  //   base_twist_from_path.twist.linear.z = 0.0;
-
-  //   base_twist_from_path.twist.angular.x = 0.0;
-  //   base_twist_from_path.twist.angular.y = 0.0;
-  //   base_twist_from_path.twist.angular.z =
-  //       (x_opt_[1](3) - x_opt_[0](3)) / config_.step_size;
-  //   base_twist_from_path_publisher_.publish(base_twist_from_path);
-  // }
 
   // for debug
   pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));

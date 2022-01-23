@@ -5,10 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /TF1
         - /TF1/Frames1
         - /World1
-        - /World1/Object Model1/Links1
         - /World1/Panda1
         - /World1/cylinder1
         - /World1/mug1
@@ -19,7 +17,7 @@ Panels:
         - /MarkerArray2
         - /Image2
       Splitter Ratio: 0.49884527921676636
-    Tree Height: 373
+    Tree Height: 1045
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -38,7 +36,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Image
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -69,25 +67,33 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        camera_color_frame:
-          Value: false
-        camera_color_optical_frame:
+        axis_link:
           Value: true
-        camera_depth_frame:
-          Value: false
-        camera_depth_optical_frame:
-          Value: false
-        camera_link:
+        base_inertia:
+          Value: true
+        cylinder_frame:
+          Value: true
+        cylinder_t_frame:
+          Value: true
+        door:
+          Value: true
+        door_hinge:
+          Value: true
+        handle_link:
+          Value: true
+        handle_support_left:
+          Value: true
+        handle_support_right:
+          Value: true
+        measured_joint_link:
+          Value: true
+        measured_joint_link_test:
           Value: true
         mug_frame:
           Value: true
+        obstacle:
+          Value: true
         odom:
-          Value: false
-        panda_EE:
-          Value: false
-        panda_K:
-          Value: false
-        panda_NE:
           Value: false
         panda_grasp:
           Value: true
@@ -117,6 +123,26 @@ Visualization Manager:
           Value: false
         pivot:
           Value: false
+        shelf:
+          Value: true
+        sim_axis_link:
+          Value: true
+        sim_door:
+          Value: true
+        sim_door_hinge:
+          Value: true
+        sim_handle_link:
+          Value: true
+        sim_handle_support_left:
+          Value: true
+        sim_handle_support_right:
+          Value: true
+        sim_measured_joint_link:
+          Value: true
+        sim_measured_joint_link_test:
+          Value: true
+        sim_shelf:
+          Value: true
         table_frame:
           Value: true
         world:
@@ -133,7 +159,14 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          cylinder_frame:
+            {}
+          cylinder_t_frame:
+            {}
           mug_frame:
+            base_inertia:
+              {}
+          obstacle:
             {}
           odom:
             x_slider:
@@ -148,23 +181,37 @@ Visualization Manager:
                               panda_link6:
                                 panda_link7:
                                   panda_link8:
-                                    panda_NE:
-                                      panda_EE:
-                                        panda_K:
-                                          {}
                                     panda_hand:
                                       panda_grasp:
-                                        camera_link:
-                                          camera_color_frame:
-                                            camera_color_optical_frame:
-                                              {}
-                                          camera_depth_frame:
-                                            camera_depth_optical_frame:
-                                              {}
+                                        {}
                                       panda_leftfinger:
                                         {}
                                       panda_rightfinger:
                                         {}
+          shelf:
+            door_hinge:
+              axis_link:
+                measured_joint_link:
+                  door:
+                    handle_link:
+                      handle_support_left:
+                        {}
+                      handle_support_right:
+                        {}
+                      measured_joint_link_test:
+                        {}
+          sim_shelf:
+            sim_door_hinge:
+              sim_axis_link:
+                sim_measured_joint_link:
+                  sim_door:
+                    sim_handle_link:
+                      sim_handle_support_left:
+                        {}
+                      sim_handle_support_right:
+                        {}
+                      sim_measured_joint_link_test:
+                        {}
           table_frame:
             {}
       Update Interval: 0
@@ -386,18 +433,23 @@ Visualization Manager:
         - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: false
+          Enabled: true
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            cylinder_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
           Name: cylinder
           Robot Description: cylinder_description_raisim
           TF Prefix: ""
           Update Interval: 0
-          Value: false
+          Value: true
           Visual Enabled: true
         - Alpha: 1
           Class: rviz/RobotModel
@@ -423,34 +475,48 @@ Visualization Manager:
         - Alpha: 0.5
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: false
+          Enabled: true
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            cylinder_t_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
           Name: target
           Robot Description: target_cylinder_description
           TF Prefix: ""
           Update Interval: 0
-          Value: false
+          Value: true
           Visual Enabled: true
         - Alpha: 1
           Class: rviz/RobotModel
           Collision Enabled: false
-          Enabled: false
+          Enabled: true
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            base_inertia:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            mug_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
           Name: mug
           Robot Description: mug_description
           TF Prefix: ""
           Update Interval: 0
-          Value: false
+          Value: true
           Visual Enabled: true
       Enabled: true
       Name: World
@@ -609,13 +675,13 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /predicted_objects
       Name: predicted_object_state
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: false
@@ -626,7 +692,7 @@ Visualization Manager:
       Update Topic: /reference_marker_server/update
       Value: false
     - Class: rviz/Image
-      Enabled: false
+      Enabled: true
       Image Topic: /object_keypoints_ros/result_img
       Max Value: 1
       Median window: 5
@@ -636,7 +702,7 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /kp_markers
@@ -654,7 +720,7 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/Image
-      Enabled: true
+      Enabled: false
       Image Topic: /camera/color/image_raw
       Max Value: 1
       Median window: 5
@@ -664,7 +730,7 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 211; 215; 207
@@ -693,7 +759,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.6361771821975708
+      Distance: 2.141350030899048
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -701,27 +767,27 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.2836301028728485
-        Y: 0.09323552250862122
-        Z: 0.4867790639400482
+        X: 1.459441065788269
+        Y: 0.28015708923339844
+        Z: -0.5749346613883972
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5447970628738403
+      Pitch: 0.75479656457901
       Target Frame: <Fixed Frame>
-      Yaw: 0.5505748987197876
+      Yaw: 3.0487728118896484
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 863
+  Height: 2032
   Hide Left Dock: false
   Hide Right Dock: true
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000156000002c6fc020000000bfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000001b2000000c900fffffffb0000000a0049006d00610067006501000001f50000010e0000001600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065000000022a000001780000001600fffffffb0000000a0049006d00610067006501000002a9000000f90000000000000000000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000055800000039fc0100000002fb0000000800540069006d0065010000000000000558000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000003fc000002c600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000003e7000006e8fc020000000bfb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b000fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000b0fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000006e000004830000018200fffffffb0000000a0049006d00610067006501000004fd000002590000002600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065000000022a000001780000002600fffffffb0000000a0049006d00610067006501000002a9000000f90000000000000000000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000003630000013200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000e7000000060fc0100000002fb0000000800540069006d0065010000000000000e700000057100fffffffb0000000800540069006d0065010000000000000450000000000000000000000a7d000006e800000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -730,6 +796,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 1368
-  X: 72
-  Y: 0
+  Width: 3696
+  X: 144
+  Y: 54

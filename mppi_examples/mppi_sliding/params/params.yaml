@@ -15,7 +15,7 @@ dynamics:
   object_handle_link: handle_link
   object_handle_joint: handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003, 0.0, 0.0,    # robot position 9
+  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
                    0.73, 0.40, 0.28, -0.707, 0.0, 0, -0.707,                                  # object joint pose 3 [x,y,fi] in 2D
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                                         # object joint velocity 3
@@ -42,9 +42,9 @@ sim_dynamics:
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ -0.11, 0.15, 2.90, -0.37, -2.58, 0.84, 0.65, 0.0, 0.0,         # robot position 9
+  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,         # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.73, 0.40, 0.28, -0.707, 0.0, 0, -0.707,                                       # object joint position
+                   0.33, 0.30, 0.28, -0.707, 0.0, 0, -0.707,                                       # object joint position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                                      # object joint velocity
                    0]             # contact flag
   gains:

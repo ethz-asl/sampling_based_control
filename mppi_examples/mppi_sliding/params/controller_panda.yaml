@@ -7,7 +7,7 @@ ros_publish_rate: 10.0
 gaussian_policy: true
 sequential: false
 
-default_pose: [0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003]
+default_pose: [0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0]
 #default_pose: [1, 1, 1, 1, 1, 1, 1]
 object_tolerance: 0.09 # ~5 deg
 solver:
