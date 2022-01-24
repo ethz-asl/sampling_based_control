@@ -8,7 +8,7 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
 find_package(catkin REQUIRED dynamic_reconfigure)
 
-generate_dynamic_reconfigure_options(cfg/mppi_omav_reference.cfg cfg/mppi_omav_cost.cfg cfg/mppi_omav_cost_valve.cfg cfg/mppi_settings.cfg)
+generate_dynamic_reconfigure_options(cfg/mppi_omav_reference.cfg cfg/mppi_omav_cost_shelf.cfg cfg/mppi_omav_cost_valve.cfg cfg/mppi_settings.cfg)
 
 set(PACKAGE_DEPENDENCIES
         std_msgs
@@ -38,7 +38,7 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/dynamics_ros.cpp
-        src/cost.cpp
+        src/cost_shelf.cpp
         src/cost_valve.cpp
         src/controller_interface.cpp
         src/ros_conversions.cpp

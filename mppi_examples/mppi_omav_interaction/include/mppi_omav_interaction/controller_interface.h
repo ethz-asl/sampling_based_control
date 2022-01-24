@@ -9,7 +9,7 @@
 #ifndef OMAV_MPPI_CONTROLLER_INTERFACE_H
 #define OMAV_MPPI_CONTROLLER_INTERFACE_H
 
-#include <mppi_omav_interaction/cost.h>
+#include <mppi_omav_interaction/cost_shelf.h>
 #include <mppi_omav_interaction/cost_valve.h>
 #include <mppi_omav_interaction/dynamics.h>
 #include <mppi_omav_interaction/ros_conversions.h>
@@ -56,7 +56,10 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   bool update_reference() override;
 
-  bool update_cost_param_shelf(const OMAVInteractionCostParam &cost_param);
+  void getCostParamShelf(OMAVInteractionCostShelfParam &cost_param) const;
+  void getCostParamValve(OMAVInteractionCostValveParam &cost_param) const;
+
+  bool update_cost_param_shelf(const OMAVInteractionCostShelfParam &cost_param);
   bool update_cost_param_valve(const OMAVInteractionCostValveParam &cost_param);
 
   bool set_initial_reference(const observation_t &x);
@@ -95,14 +98,15 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
                           const std::vector<double> &tt);
   template <class T>
   void publishCostInfo(const T &cost, const std_msgs::Header &header) const;
-  void publishHookPos(const std_msgs::Header &header) const;
+  template <class T>
+  void publishHookPos(const T &cost, const std_msgs::Header &header) const;
 
   void toMultiDofJointTrajectory(
       trajectory_msgs::MultiDOFJointTrajectory &t) const;
 
  public:
   mppi::SolverConfig config_;
-  std::shared_ptr<OMAVInteractionCost> cost_shelf_;
+  std::shared_ptr<OMAVInteractionCostShelf> cost_shelf_;
   std::shared_ptr<OMAVInteractionCostValve> cost_valve_;
 
  private:
@@ -111,7 +115,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   bool reference_set_ = false;
   bool detailed_publishing_;
 
-  OMAVInteractionCostParam cost_param_shelf_;
+  OMAVInteractionCostShelfParam cost_param_shelf_;
   OMAVInteractionCostValveParam cost_param_valve_;
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;

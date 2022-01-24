@@ -6,7 +6,7 @@
 #define MPPI_OMAV_TRAJECTORY_GENERATOR_H_
 
 #include "mppi_omav_interaction/controller_interface.h"
-#include "mppi_omav_interaction/cost.h"
+#include "mppi_omav_interaction/cost_shelf.h"
 #include "mppi_omav_interaction/dynamics_ros.h"
 #include "mppi_omav_interaction/ros_conversions.h"
 
@@ -22,7 +22,7 @@
 #include <std_srvs/Empty.h>
 
 #include <dynamic_reconfigure/server.h>
-#include <mppi_omav_interaction/MPPIOmavCostConfig.h>
+#include <mppi_omav_interaction/MPPIOmavCostShelfConfig.h>
 #include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>
 #include <mppi_omav_interaction/MPPIOmavReferenceConfig.h>
 
@@ -55,7 +55,7 @@ class OmavTrajectoryGenerator {
   double target_state_time_ = 0.0;
   ros::Time last_target_received_;
 
-  OMAVInteractionCostParam rqt_cost_shelf_;
+  OMAVInteractionCostShelfParam rqt_cost_shelf_;
   OMAVInteractionCostValveParam rqt_cost_valve_;
 
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_;
@@ -69,7 +69,7 @@ class OmavTrajectoryGenerator {
       const trajectory_msgs::MultiDOFJointTrajectory &position_target_msg);
   void ReferenceParamCallback(
       mppi_omav_interaction::MPPIOmavReferenceConfig &config, uint32_t level);
-  void CostParamCallback(mppi_omav_interaction::MPPIOmavCostConfig &config,
+  void CostShelfParamCallback(mppi_omav_interaction::MPPIOmavCostShelfConfig &config,
                          uint32_t level);
   void CostValveParamCallback(
       mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level);
@@ -94,8 +94,8 @@ class OmavTrajectoryGenerator {
   // Dynamics Reconfigure
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavReferenceConfig>
       reference_param_server_;
-  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostConfig>
-      cost_param_server_;
+  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostShelfConfig>
+      cost_shelf_param_server_;
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostValveConfig>
       cost_valve_param_server_;
 

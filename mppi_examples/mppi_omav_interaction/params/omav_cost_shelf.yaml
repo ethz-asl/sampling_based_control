@@ -1,14 +1,18 @@
 # Weights for the deviation from the reference position
-x_distance_weight: 20.0
-y_distance_weight: 20.0
-z_distance_weight: 20.0
+Q_x_omav: 20.0
+Q_y_omav: 20.0
+Q_z_omav: 20.0
 # Weight for the deviation from the reference orientation
-orientation_weight: 10.0
+Q_orientation_omav: 10.0
+Q_int_roll: 10.0
+Q_int_pitch: 10.0
 # Weights for the deviation from the reference position
-object_weight: 150.0
+Q_object: 150.0
 # Velocity costs
-lin_vel_weight: 0.0
-ang_vel_weight: 0.0
+Q_linear_velocity: 0.0
+Q_roll: 0.0
+Q_pitch: 0.0
+Q_yaw: 0.0
 # Cost for leaving the field
 leaving_field_cost: 10000.0
 # Negative and positive limits of the field
@@ -18,7 +22,7 @@ field_limit_y_min: -5.0
 field_limit_y_max: 5.0
 field_limit_z_max: 2.0
 # Cost for flying near the floor
-floor_threshold: 0.2
+floor_thresh: 0.2
 floor_cost: 1000
 # Cost for Obstacle colision
 obstacle_cost: 10000
@@ -27,8 +31,10 @@ obstacle_position_x: 15
 obstacle_position_y: 15
 # Cost handle hook distance
 handle_hook_cost: 100
-handle_hook_threshold: 0.03
+handle_hook_thresh: 0.03
 # Efficiency cost
-power_cost: 1.0
+efficiency_cost: 0.0
+force_cost: 1.0
 # Torque cost
 torque_cost: 200.0
+contact_prohibitor: True

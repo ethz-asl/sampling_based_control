@@ -10,7 +10,8 @@ InteractionControlNode::InteractionControlNode(ros::NodeHandle &nh,
       controller_(private_nh, nh),
       reference_param_server_(
           ros::NodeHandle(private_nh, "reference_parameters")),
-      cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")),
+      cost_shelf_param_server_(
+          ros::NodeHandle(private_nh, "cost_shelf_parameters")),
       cost_valve_param_server_(
           ros::NodeHandle(private_nh, "cost_valve_parameters")),
       mppiSettingsParamServer_(ros::NodeHandle(private_nh, "mppi_settings")) {
@@ -38,6 +39,11 @@ bool InteractionControlNode::InitializeNodeParams() {
                         "");
   getParam<std::vector<double>>(private_nh_, "initial_configuration", x0, {});
   // getParam<bool>(private_nh_, "sequential", sequential_, false);
+  if (x0.size() != 32) {
+    ROS_ERROR(
+        "[mppi_omav_interaction] Wrong size of initial state. Shutting down.");
+    ros::shutdown();
+  }
 
   ROS_INFO_STREAM(
       "[mppi_omav_interaction] Robot & Object Description Raisim Loaded");
@@ -46,8 +52,7 @@ bool InteractionControlNode::InitializeNodeParams() {
 
   // set initial state
   // state_ = observation_t::Zero(simulation_->get_state_dimension());
-  state_ = observation_t::Zero(32);
-  for (size_t i = 0; i < x0.size(); i++) state_(i) = x0[i];
+  state_ = Eigen::Matrix<double, 32, 1>(x0.data());
   // simulation_->reset(state_);
 
   // init the controller
@@ -81,9 +86,10 @@ bool InteractionControlNode::InitializeNodeParams() {
 
   if (controller_.getTask() == InteractionTask::Shelf) {
     dynamic_reconfigure::Server<
-        mppi_omav_interaction::MPPIOmavCostConfig>::CallbackType g;
-    g = boost::bind(&InteractionControlNode::costParamCallback, this, _1, _2);
-    cost_param_server_.setCallback(g);
+        mppi_omav_interaction::MPPIOmavCostShelfConfig>::CallbackType g;
+    g = boost::bind(&InteractionControlNode::costShelfParamCallback, this, _1,
+                    _2);
+    cost_shelf_param_server_.setCallback(g);
   } else {
     dynamic_reconfigure::Server<
         mppi_omav_interaction::MPPIOmavCostValveConfig>::CallbackType h;
@@ -151,7 +157,7 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
 
   if (controller_.getTask() == InteractionTask::Valve) {
     // Set valve reference value to current angle
-    controller_.updateValveReference(state_(13) + rqt_cost_valve_.ref_p);
+    controller_.updateValveReference(state_(13) + cost_valve_params_.ref_p);
   }
 
   // Load most recently published trajectory
@@ -304,37 +310,48 @@ void InteractionControlNode::referenceParamCallback(
   }
 }
 
-void InteractionControlNode::costParamCallback(
-    mppi_omav_interaction::MPPIOmavCostConfig &config, uint32_t level) {
+void InteractionControlNode::costShelfParamCallback(
+    mppi_omav_interaction::MPPIOmavCostShelfConfig &config, uint32_t level) {
   if (controller_.getTask() == InteractionTask::Shelf) {
+    controller_.getCostParamShelf(cost_shelf_params_);
     // Update OMAV pose cost
-    rqt_cost_shelf_.Q_distance_x = config.Q_x_omav;
-    rqt_cost_shelf_.Q_distance_y = config.Q_y_omav;
-    rqt_cost_shelf_.Q_distance_z = config.Q_z_omav;
-    rqt_cost_shelf_.Q_orientation = config.Q_orientation_omav;
-    rqt_cost_shelf_.pose_costs << rqt_cost_shelf_.Q_distance_x,
-        rqt_cost_shelf_.Q_distance_y, rqt_cost_shelf_.Q_distance_z,
-        rqt_cost_shelf_.Q_orientation, rqt_cost_shelf_.Q_orientation,
-        rqt_cost_shelf_.Q_orientation;
-    rqt_cost_shelf_.Q_pose = rqt_cost_shelf_.pose_costs.asDiagonal();
+    cost_shelf_params_.Q_x_omav = config.Q_x_omav;
+    cost_shelf_params_.Q_y_omav = config.Q_y_omav;
+    cost_shelf_params_.Q_z_omav = config.Q_z_omav;
+    cost_shelf_params_.Q_orientation = config.Q_orientation_omav;
+
+    cost_shelf_params_.pose_costs << cost_shelf_params_.Q_x_omav,
+        cost_shelf_params_.Q_y_omav, cost_shelf_params_.Q_z_omav,
+        cost_shelf_params_.Q_orientation, cost_shelf_params_.Q_orientation,
+        cost_shelf_params_.Q_orientation;
+    cost_shelf_params_.Q_pose = cost_shelf_params_.pose_costs.asDiagonal();
+
+    cost_shelf_params_.pose_costs_int << 0, 0, 0, config.Q_int_roll,
+        config.Q_int_pitch, 0;
+    cost_shelf_params_.Q_pose_int =
+        cost_shelf_params_.pose_costs_int.asDiagonal();
+
     // Update Object cost
-    rqt_cost_shelf_.Q_object = config.Q_object;
+    cost_shelf_params_.Q_object = config.Q_object;
     // Update velocity cost
-    rqt_cost_shelf_.Q_lin_vel = config.Q_linear_velocity;
-    rqt_cost_shelf_.vel_costs << rqt_cost_shelf_.Q_lin_vel,
-        rqt_cost_shelf_.Q_lin_vel, rqt_cost_shelf_.Q_lin_vel, config.Q_roll,
-        config.Q_pitch, config.Q_yaw;
-    rqt_cost_shelf_.Q_vel = rqt_cost_shelf_.vel_costs.asDiagonal();
+    cost_shelf_params_.Q_lin_vel = config.Q_linear_velocity;
+    cost_shelf_params_.vel_costs << cost_shelf_params_.Q_lin_vel,
+        cost_shelf_params_.Q_lin_vel, cost_shelf_params_.Q_lin_vel,
+        config.Q_roll, config.Q_pitch, config.Q_yaw;
+    cost_shelf_params_.Q_vel = cost_shelf_params_.vel_costs.asDiagonal();
     // Update Handle Hook cost components
-    rqt_cost_shelf_.handle_hook_thresh = config.Handle_Hook_Threshold;
-    rqt_cost_shelf_.Q_handle_hook = config.Handle_Hook_Cost;
+    cost_shelf_params_.handle_hook_thresh = config.handle_hook_thresh;
+    cost_shelf_params_.Q_handle_hook = config.handle_hook_cost;
     // Update floor cost components
-    rqt_cost_shelf_.floor_thresh = config.Floor_Threshold;
-    rqt_cost_shelf_.Q_floor = config.floor_cost;
-    rqt_cost_shelf_.Q_power = config.power_cost;
-    rqt_cost_shelf_.Q_torque = config.torque_cost;
-    rqt_cost_shelf_.contact_bool = config.contact_prohibitor;
-    controller_.update_cost_param_shelf(rqt_cost_shelf_);
+    cost_shelf_params_.floor_thresh = config.floor_thresh;
+    cost_shelf_params_.Q_force = config.force_cost;
+    cost_shelf_params_.Q_efficiency = config.efficiency_cost;
+    cost_shelf_params_.Q_floor = config.floor_cost;
+    cost_shelf_params_.Q_torque = config.torque_cost;
+    cost_shelf_params_.contact_bool = config.contact_prohibitor;
+    controller_.update_cost_param_shelf(cost_shelf_params_);
+    std::cout << "Updated costs." << std::endl
+              << cost_shelf_params_ << std::endl;
   } else {
     ROS_ERROR("Wrong scenario chosen. Cannot set cost.");
   }
@@ -365,35 +382,43 @@ void InteractionControlNode::mppiSettingsParamCallback(
 void InteractionControlNode::costValveParamCallback(
     mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level) {
   if (controller_.getTask() == InteractionTask::Valve) {
-    rqt_cost_valve_.ref_p = config.ref_p;
-    rqt_cost_valve_.ref_v = config.ref_v;
-    rqt_cost_valve_.Q_distance_x = config.Q_x_omav;
-    rqt_cost_valve_.Q_distance_y = config.Q_y_omav;
-    rqt_cost_valve_.Q_distance_z = config.Q_z_omav;
-    rqt_cost_valve_.Q_orientation = config.Q_orientation_omav;
-    rqt_cost_valve_.pose_costs << rqt_cost_valve_.Q_distance_x,
-        rqt_cost_valve_.Q_distance_y, rqt_cost_valve_.Q_distance_z,
-        rqt_cost_valve_.Q_orientation, rqt_cost_valve_.Q_orientation,
-        rqt_cost_valve_.Q_orientation;
-    rqt_cost_valve_.Q_pose = rqt_cost_valve_.pose_costs.asDiagonal();
+    controller_.getCostParamValve(cost_valve_params_);
+    cost_valve_params_.ref_p = config.ref_p;
+    cost_valve_params_.ref_v = config.ref_v;
+    cost_valve_params_.Q_x_omav = config.Q_x_omav;
+    cost_valve_params_.Q_y_omav = config.Q_y_omav;
+    cost_valve_params_.Q_z_omav = config.Q_z_omav;
+    cost_valve_params_.Q_orientation = config.Q_orientation_omav;
+    cost_valve_params_.pose_costs << cost_valve_params_.Q_x_omav,
+        cost_valve_params_.Q_y_omav, cost_valve_params_.Q_z_omav,
+        cost_valve_params_.Q_orientation, cost_valve_params_.Q_orientation,
+        cost_valve_params_.Q_orientation;
+    cost_valve_params_.Q_pose = cost_valve_params_.pose_costs.asDiagonal();
+
+    cost_valve_params_.pose_costs_int << 0, 0, 0, config.Q_int_roll,
+        config.Q_int_pitch, 0;
+    cost_valve_params_.Q_pose_int =
+        cost_valve_params_.pose_costs_int.asDiagonal();
+
     // Update Object cost
-    rqt_cost_valve_.Q_object = config.Q_object;
+    cost_valve_params_.Q_object = config.Q_object;
     // Update velocity cost
-    rqt_cost_valve_.Q_lin_vel = config.Q_linear_velocity;
-    rqt_cost_valve_.vel_costs << rqt_cost_valve_.Q_lin_vel,
-        rqt_cost_valve_.Q_lin_vel, rqt_cost_valve_.Q_lin_vel, config.Q_roll,
-        config.Q_pitch, config.Q_yaw;
-    rqt_cost_valve_.Q_vel = rqt_cost_valve_.vel_costs.asDiagonal();
+    cost_valve_params_.Q_lin_vel = config.Q_linear_velocity;
+    cost_valve_params_.vel_costs << cost_valve_params_.Q_lin_vel,
+        cost_valve_params_.Q_lin_vel, cost_valve_params_.Q_lin_vel,
+        config.Q_roll, config.Q_pitch, config.Q_yaw;
+    cost_valve_params_.Q_vel = cost_valve_params_.vel_costs.asDiagonal();
     // Update Handle Hook cost components
-    rqt_cost_valve_.handle_hook_thresh = config.Handle_Hook_Threshold;
-    rqt_cost_valve_.Q_handle_hook = config.Handle_Hook_Cost;
+    cost_valve_params_.handle_hook_thresh = config.handle_hook_thresh;
+    cost_valve_params_.Q_handle_hook = config.handle_hook_cost;
     // Update floor cost components
-    rqt_cost_valve_.floor_thresh = config.Floor_Threshold;
-    rqt_cost_valve_.Q_floor = config.floor_cost;
-    rqt_cost_valve_.Q_power = config.power_cost;
-    rqt_cost_valve_.Q_torque = config.torque_cost;
-    rqt_cost_valve_.contact_bool = config.contact_prohibitor;
-    controller_.update_cost_param_valve(rqt_cost_valve_);
+    cost_valve_params_.floor_thresh = config.floor_thresh;
+    cost_valve_params_.Q_floor = config.floor_cost;
+    cost_valve_params_.Q_force = config.force_cost;
+    cost_valve_params_.Q_efficiency = config.efficiency_cost;
+    cost_valve_params_.Q_torque = config.torque_cost;
+    cost_valve_params_.contact_bool = config.contact_prohibitor;
+    controller_.update_cost_param_valve(cost_valve_params_);
   } else {
     ROS_ERROR("Wrong scenario chosen. Cannot set cost.");
   }

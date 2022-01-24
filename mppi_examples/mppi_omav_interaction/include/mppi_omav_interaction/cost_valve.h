@@ -24,16 +24,16 @@ namespace omav_interaction {
 struct OMAVInteractionCostValveParam {
   double ref_p, ref_v;
 
-  double Q_distance_x;  // Distance to reference Cost
-  double Q_distance_y;
-  double Q_distance_z;
+  double Q_x_omav;  // Distance to reference Cost
+  double Q_y_omav;
+  double Q_z_omav;
 
   double Q_orientation;  // Orientation Cost
 
-  Eigen::Matrix<double, 6, 1> pose_costs;
+  Eigen::Matrix<double, 6, 1> pose_costs, pose_costs_int;
 
   Eigen::Matrix<double, 6, 6>
-      Q_pose;  // Pose cost, is constructed from Q_distance and Q_orientation
+      Q_pose, Q_pose_int;  // Pose cost, is constructed from Q_x,y,z and Q_orientation
 
   double Q_object;  // Object Cost
 
@@ -61,7 +61,8 @@ struct OMAVInteractionCostValveParam {
   double Q_handle_hook;       // Cost when handle hook distance is 1m
   double handle_hook_thresh;  // threshold so that handle hook cost is 0
 
-  double Q_power;
+  double Q_efficiency;
+  double Q_force;
 
   double Q_torque;
 
@@ -96,10 +97,10 @@ class OMAVInteractionCostValve : public mppi::CostBase {
 
   Eigen::Matrix<double, 6, 1> delta_pose_;
   Eigen::Matrix<double, 6, 1> delta_pose_object;
-  double distance;
-  double distance_from_savezone;
-  double obstacle_cost;
-  double mode;
+  // double distance;
+  // double distance_from_savezone;
+  // double obstacle_cost;
+  double mode_;
   double torque_angle_;
   Eigen::Vector3d hook_handle_vector_;
   Eigen::Vector3d tip_lin_velocity_;
@@ -128,7 +129,9 @@ class OMAVInteractionCostValve : public mppi::CostBase {
     return std::make_shared<OMAVInteractionCostValve>(*this);
   }
 
-  double distance_from_obstacle_cost(const mppi::observation_t &x);
+  void compute_field_cost(const mppi::observation_t &x);
+
+  // double distance_from_obstacle_cost(const mppi::observation_t &x);
 
   void compute_floor_cost(const double &omav_z);
 

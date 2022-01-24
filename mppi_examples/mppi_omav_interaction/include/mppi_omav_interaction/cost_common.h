@@ -22,16 +22,16 @@ struct Frames {
 namespace CostIdx {
 enum IdxEnum {
   floor = 0,
-  pose = 1,
-  object = 2,
-  handle_hook = 3,
-  tip_velocity = 4,
-  torque = 5,
-  efficiency = 6,
-  velocity = 7,
-  force = 8,
-  leaving_field = 9,
-  contact = 10
+  pose,
+  object,
+  handle_hook,
+  tip_velocity,
+  torque,
+  efficiency,
+  velocity,
+  force,
+  leaving_field,
+  contact
 };
 }
 constexpr size_t kN_costs = 11;

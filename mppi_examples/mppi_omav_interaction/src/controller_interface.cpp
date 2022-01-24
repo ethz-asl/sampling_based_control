@@ -122,7 +122,7 @@ bool OMAVControllerInterface::set_controller(
       return false;
     }
     ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_shelf_);
-    cost_shelf_ = std::make_shared<OMAVInteractionCost>(
+    cost_shelf_ = std::make_shared<OMAVInteractionCostShelf>(
         robot_description_pinocchio_, object_description_, &cost_param_shelf_);
     controller =
         std::make_shared<mppi::PathIntegral>(dynamics, cost_shelf_, config_);
@@ -231,8 +231,18 @@ bool OMAVControllerInterface::update_reference() {
   return true;
 }
 
+void OMAVControllerInterface::getCostParamShelf(
+    OMAVInteractionCostShelfParam &cost_param) const {
+  cost_param = cost_param_shelf_;
+}
+
+void OMAVControllerInterface::getCostParamValve(
+    OMAVInteractionCostValveParam &cost_param) const {
+  cost_param = cost_param_valve_;
+}
+
 bool OMAVControllerInterface::update_cost_param_shelf(
-    const OMAVInteractionCostParam &cost_param) {
+    const OMAVInteractionCostShelfParam &cost_param) {
   cost_param_shelf_ = cost_param;
   return false;
 }
@@ -359,9 +369,10 @@ void OMAVControllerInterface::publish_optimal_rollout() {
 
   if (task_ == InteractionTask::Shelf && detailed_publishing_) {
     publishCostInfo(cost_shelf_, header);
+    publishHookPos(cost_shelf_, header);
   } else if (task_ == InteractionTask::Valve && detailed_publishing_) {
     publishCostInfo(cost_valve_, header);
-    publishHookPos(header);
+    publishHookPos(cost_valve_, header);
   }
 }
 
@@ -398,8 +409,9 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
   }
 }
 
+template <class T>
 void OMAVControllerInterface::publishHookPos(
-    const std_msgs::Header &header) const {
+    const T &cost, const std_msgs::Header &header) const {
   visualization_msgs::Marker marker_hook;
   marker_hook.header = header;
   marker_hook.header.frame_id = "world";
@@ -423,10 +435,10 @@ void OMAVControllerInterface::publishHookPos(
   color.a = 1.0;
   color.b = 0.0;
   for (size_t i = 0; i < xx_opt_.size(); i++) {
-    cost_valve_->compute_cost(xx_opt_[i], ref_.rr[0], i * 0.015);
-    point.x = cost_valve_->hook_pos_(0);
-    point.y = cost_valve_->hook_pos_(1);
-    point.z = cost_valve_->hook_pos_(2);
+    cost->compute_cost(xx_opt_[i], ref_.rr[0], i * 0.015);
+    point.x = cost->hook_pos_(0);
+    point.y = cost->hook_pos_(1);
+    point.z = cost->hook_pos_(2);
     color.r = static_cast<float>(i) / xx_opt_.size();
     color.g = 1.0f - static_cast<float>(i) / xx_opt_.size();
 
@@ -440,13 +452,8 @@ template <class T>
 void OMAVControllerInterface::publishCostInfo(
     const T &cost, const std_msgs::Header &header) const {
   // Info about costs:
-  float velocity_cost = 0.0f;
-  float power_cost = 0.0f;
-  float object_cost = 0.0f;
-  float torque_cost = 0.0f;
-  float handle_hook_cost = 0.0f;
-  float pose_cost = 0.0f;
-  float overall_cost = 0.0f;
+  Eigen::VectorXd cost_vector(kN_costs);
+  cost_vector.setZero();
 
   visualization_msgs::MarkerArray force_marker_array;
 
@@ -457,13 +464,7 @@ void OMAVControllerInterface::publishCostInfo(
   for (size_t i = 0; i < xx_opt_.size(); i++) {
     // Cost publishing
     cost->compute_cost(xx_opt_[i], ref_.rr[0], tt_opt_[i]);
-    velocity_cost += cost->cost_vector_(CostIdx::velocity);
-    power_cost += cost->cost_vector_(CostIdx::efficiency);
-    object_cost += cost->cost_vector_(CostIdx::object);
-    torque_cost += cost->cost_vector_(CostIdx::torque);
-    handle_hook_cost += cost->cost_vector_(CostIdx::handle_hook);
-    pose_cost += cost->cost_vector_(CostIdx::pose);
-    overall_cost += cost->cost_;
+    cost_vector += cost->cost_vector_;
 
     Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15).normalized();
 
@@ -481,13 +482,14 @@ void OMAVControllerInterface::publishCostInfo(
 
   mppi_ros::Array cost_array_message;
   cost_array_message.header = header;
-  cost_array_message.array.push_back(pose_cost);
-  cost_array_message.array.push_back(velocity_cost);
-  cost_array_message.array.push_back(power_cost);
-  cost_array_message.array.push_back(object_cost);
-  cost_array_message.array.push_back(torque_cost);
-  cost_array_message.array.push_back(handle_hook_cost);
-  cost_array_message.array.push_back(overall_cost);
+  for (size_t i = 0; i < kN_costs; i++) {
+    cost_array_message.array.push_back(static_cast<float>(cost_vector(i)));
+  }
+  cost_array_message.array.push_back(cost_vector.sum());
+  // Current object reference:
+  cost_array_message.array.push_back(ref_.rr[0](7));
+  // Current mode (free flight vs. interaction):
+  cost_array_message.array.push_back(ref_.rr[0](8));
   // Force vector:
   cost_array_message.array.push_back(xx_opt_[0](15));
   cost_array_message.array.push_back(xx_opt_[0](16));
