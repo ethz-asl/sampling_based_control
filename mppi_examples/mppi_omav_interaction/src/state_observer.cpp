@@ -95,7 +95,7 @@ namespace object_observer {
             start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
                                                T_hinge_handle_init_.translation().y());
             articulation_first_computation_ = false;
-            previous_time_ = ros::Time::now().toSec();
+            previous_time_ = msg->header.stamp.toSec();
 
             static tf2_ros::StaticTransformBroadcaster static_broadcaster;
             geometry_msgs::TransformStamped T_world_shelf_ros;
@@ -113,7 +113,7 @@ namespace object_observer {
                                              T_hinge_handle_.translation().y());
 
         double theta_new = current_relative_angle_ - start_relative_angle_;
-        double current_time = ros::Time::now().toSec();
+        double current_time = msg->header.stamp.toSec();
 
         object_state_.velocity[0] =
                 (theta_new - object_state_.position[0]) / (current_time - previous_time_);
@@ -154,7 +154,7 @@ namespace object_observer {
     }
 
     void StateObserver::publish() {
-        object_state_.header.stamp = ros::Time::now();
+        object_state_.header.stamp = ros::Time(previous_time_);
         object_state_publisher_.publish(object_state_);
     }
 

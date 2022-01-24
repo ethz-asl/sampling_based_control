@@ -508,10 +508,6 @@ void OMAVControllerInterface::publishCostInfo(
   cost_publisher_.publish(cost_array_message);
 }
 
-void OMAVControllerInterface::setDampingFactor(const double &d) {
-  damping_ = d;
-}
-
 void OMAVControllerInterface::manually_shift_input(const int &index) {
   // deprecated
   if (index != 0) {

@@ -16,6 +16,7 @@
 #include <mppi_omav_interaction/MPPIOmavCostConfig.h>
 #include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>
 #include <mppi_omav_interaction/MPPIOmavReferenceConfig.h>
+#include <mppi_omav_interaction/MPPIOmavSettingsConfig.h>
 // ros
 #include <ros/ros.h>
 
@@ -57,6 +58,8 @@ class InteractionControlNode {
                          uint32_t level);
   void costValveParamCallback(
       mppi_omav_interaction::MPPIOmavCostValveConfig& config, uint32_t level);
+  void mppiSettingsParamCallback(
+      mppi_omav_interaction::MPPIOmavSettingsConfig& config, uint32_t level);
   template <class T>
   void getParam(const ros::NodeHandle& nh, const std::string& id, T& var,
                 const T& val_def) const;
@@ -89,6 +92,8 @@ class InteractionControlNode {
   trajectory_msgs::MultiDOFJointTrajectory current_trajectory_;
   mav_msgs::EigenTrajectoryPoint target_state_;
   Eigen::Vector2d object_state_;
+  ros::Time object_state_time_;
+  
   // Dynamics Reconfigure
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavReferenceConfig>
       reference_param_server_;
@@ -96,6 +101,8 @@ class InteractionControlNode {
       cost_param_server_;
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostValveConfig>
       cost_valve_param_server_;
+  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavSettingsConfig>
+      mppiSettingsParamServer_;
 
   OMAVInteractionCostParam rqt_cost_shelf_;
   OMAVInteractionCostValveParam rqt_cost_valve_;

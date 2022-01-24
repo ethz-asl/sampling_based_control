@@ -12,7 +12,8 @@ InteractionControlNode::InteractionControlNode(ros::NodeHandle &nh,
           ros::NodeHandle(private_nh, "reference_parameters")),
       cost_param_server_(ros::NodeHandle(private_nh, "cost_parameters")),
       cost_valve_param_server_(
-          ros::NodeHandle(private_nh, "cost_valve_parameters")) {
+          ros::NodeHandle(private_nh, "cost_valve_parameters")),
+      mppiSettingsParamServer_(ros::NodeHandle(private_nh, "mppi_settings")) {
   // timed_command_ = nh_.createTimer(
   //     ros::Duration(1. / kControl_rate),
   //     &InteractionControlNode::TimedCommandCallback, this, false, true);
@@ -70,17 +71,26 @@ bool InteractionControlNode::InitializeNodeParams() {
   dynamic_reconfigure::Server<
       mppi_omav_interaction::MPPIOmavReferenceConfig>::CallbackType f;
   dynamic_reconfigure::Server<
-      mppi_omav_interaction::MPPIOmavCostConfig>::CallbackType g;
-  dynamic_reconfigure::Server<
-      mppi_omav_interaction::MPPIOmavCostValveConfig>::CallbackType h;
+      mppi_omav_interaction::MPPIOmavSettingsConfig>::CallbackType k;
   f = boost::bind(&InteractionControlNode::referenceParamCallback, this, _1,
                   _2);
-  g = boost::bind(&InteractionControlNode::costParamCallback, this, _1, _2);
-  h = boost::bind(&InteractionControlNode::costValveParamCallback, this, _1,
+  k = boost::bind(&InteractionControlNode::mppiSettingsParamCallback, this, _1,
                   _2);
   reference_param_server_.setCallback(f);
-  cost_param_server_.setCallback(g);
-  cost_valve_param_server_.setCallback(h);
+  mppiSettingsParamServer_.setCallback(k);
+
+  if (controller_.getTask() == InteractionTask::Shelf) {
+    dynamic_reconfigure::Server<
+        mppi_omav_interaction::MPPIOmavCostConfig>::CallbackType g;
+    g = boost::bind(&InteractionControlNode::costParamCallback, this, _1, _2);
+    cost_param_server_.setCallback(g);
+  } else {
+    dynamic_reconfigure::Server<
+        mppi_omav_interaction::MPPIOmavCostValveConfig>::CallbackType h;
+    h = boost::bind(&InteractionControlNode::costValveParamCallback, this, _1,
+                    _2);
+    cost_valve_param_server_.setCallback(h);
+  }
 
   return true;
 }
@@ -121,6 +131,7 @@ void InteractionControlNode::odometryCallback(
 
 void InteractionControlNode::objectCallback(
     const sensor_msgs::JointState &object_msg) {
+  object_state_time_ = object_msg.header.stamp;
   object_state_(0) = object_msg.position[0];
   object_state_(1) = object_msg.velocity[0];
   object_valid_ = true;
@@ -132,6 +143,12 @@ void InteractionControlNode::objectCallback(
 // }
 
 bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
+  if (!controller_running_) {
+    // Start controller once odometry has been received
+    controller_.start();
+    controller_running_ = true;
+  }
+
   if (controller_.getTask() == InteractionTask::Valve) {
     // Set valve reference value to current angle
     controller_.updateValveReference(state_(13) + rqt_cost_valve_.ref_p);
@@ -142,22 +159,13 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
     trajectory_available_ = true;
   }
 
-  // Get odometry and target state
-  ros::Time t_odom_t;
-  t_odom_t = t_odom_t.fromNSec(current_odometry_.timestamp_ns);
-  const double t_odom = t_odom_t.toSec();
+  // Get recent state by combining odometry, object, and recently published
+  // trajectory
   getState(state_);
 
+  const double t_odom =
+      1.e-9 * static_cast<double>(current_odometry_.timestamp_ns);
   controller_.set_observation(state_, t_odom);
-  if (t_odom < 0) {
-    ROS_WARN_THROTTLE(
-        1.0, "[mppi_omav_interaction] Bad odom time. Is odometry available?");
-    return false;
-  } else if (!controller_running_) {
-    // Start controller once odometry has been received
-    controller_.start();
-    controller_running_ = true;
-  }
   return true;
 }
 
@@ -180,6 +188,11 @@ bool InteractionControlNode::getState(observation_t &x) {
   x.segment<3>(26) = target_state_.velocity_W;
   x.segment<3>(29) = target_state_.angular_velocity_W;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
+  if (ros::Time::now() - object_state_time_ > ros::Duration(0.5)) {
+    ROS_WARN_THROTTLE(0.5,
+                      "[mppi_omav_interaction] Object state timeout: t = %fs",
+                      (ros::Time::now() - object_state_time_).toSec());
+  }
   return true;
 }
 
@@ -327,29 +340,31 @@ void InteractionControlNode::costParamCallback(
   }
 }
 
+void InteractionControlNode::mppiSettingsParamCallback(
+    mppi_omav_interaction::MPPIOmavSettingsConfig &config, uint32_t level) {
+  // Update OMAV pose cost
+  Eigen::Matrix<double, 6, 1> pGains;
+  Eigen::Matrix<double, 6, 1> dGains;
+  pGains << config.p_gain_pos * Eigen::Vector3d::Ones(),
+      config.p_gain_ang * Eigen::Vector3d::Ones();
+  dGains << config.d_gain_pos * Eigen::Vector3d::Ones(),
+      config.d_gain_ang * Eigen::Vector3d::Ones();
+
+  std::vector<std::shared_ptr<OMAVVelocityDynamics>> omav_dynamics_v;
+  controller_.getDynamicsPtr(omav_dynamics_v);
+  size_t n = omav_dynamics_v.size();
+  for (size_t i = 0; i < n; i++) {
+    omav_dynamics_v.at(i)->setPDGains(pGains, dGains);
+    omav_dynamics_v.at(i)->setDampingFactor(config.damping);
+    omav_dynamics_v.at(i)->setMass(config.mass);
+  }
+  controller_.setDampingFactor(config.damping);
+  controller_.setHoldTime(config.hold_time);
+}
+
 void InteractionControlNode::costValveParamCallback(
     mppi_omav_interaction::MPPIOmavCostValveConfig &config, uint32_t level) {
   if (controller_.getTask() == InteractionTask::Valve) {
-    // Update OMAV pose cost
-    Eigen::VectorXd pGains(6);
-    Eigen::VectorXd dGains(6);
-    pGains << config.p_gain_pos * Eigen::Vector3d::Ones(),
-        config.p_gain_ang * Eigen::Vector3d::Ones();
-    dGains << config.d_gain_pos * Eigen::Vector3d::Ones(),
-        config.d_gain_ang * Eigen::Vector3d::Ones();
-
-    std::vector<std::shared_ptr<OMAVVelocityDynamics>> omav_dynamics_v;
-    controller_.getDynamicsPtr(omav_dynamics_v);
-    size_t n = omav_dynamics_v.size();
-    for (size_t i = 0; i < n; i++) {
-      omav_dynamics_v.at(i)->setPDGains(pGains, dGains);
-      omav_dynamics_v.at(i)->setDampingFactor(config.damping);
-      omav_dynamics_v.at(i)->setMass(config.mass);
-    }
-
-    controller_.setDampingFactor(config.damping);
-    controller_.setHoldTime(config.hold_time);
-
     rqt_cost_valve_.ref_p = config.ref_p;
     rqt_cost_valve_.ref_v = config.ref_v;
     rqt_cost_valve_.Q_distance_x = config.Q_x_omav;

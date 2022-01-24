@@ -70,14 +70,13 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   /**
    * @brief      Gets pointers to all optimizer dynamics (used in all threads as
-   * well as optimal rollout sampling).
-   *
+   *             well as optimal rollout sampling).
    * @param      omav_dynamics_v  Vector of pointers to dynamics
    */
   void getDynamicsPtr(
       std::vector<std::shared_ptr<OMAVVelocityDynamics>> &omav_dynamics_v);
 
-  void setDampingFactor(const double &d);
+  void setDampingFactor(const double &d) { damping_ = d; };
 
   void setHoldTime(const double &t) { get_controller()->setHoldTime(t); }
 
@@ -116,15 +115,10 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   OMAVInteractionCostValveParam cost_param_valve_;
 
   ros::Publisher cmd_multi_dof_joint_trajectory_pub_;
-  ros::Publisher optimal_rollout_des_publisher_;
   ros::Publisher cost_publisher_;
   ros::Publisher object_state_publisher_;
   ros::Publisher normalized_force_publisher_;
   ros::Publisher mppi_reference_publisher_;
-  ros::Publisher optimal_linear_input_publisher_;
-  ros::Publisher optimal_angular_input_publisher_;
-  ros::Publisher optimal_rollout_lin_vel_;
-  ros::Publisher optimal_rollout_ang_vel_;
   ros::Publisher pub_marker_hook_;
 
   ros::Subscriber reference_subscriber_;
