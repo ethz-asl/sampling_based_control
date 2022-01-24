@@ -1,7 +1,6 @@
 #pragma once
 #include "object_modeling_playground/object.h"
 #include <manipulation_msgs/State.h>
-#include <manipulation_msgs/MugPrimitive.h>
 #include <Eigen/Dense>
 
 class Mug: public Object
@@ -19,7 +18,7 @@ class Mug: public Object
     void primitive_visualize() override;
     void primitive_estimate() override;
     void update() override;
-  
+    void kptoPrimitive();
 
   private:
     bool estimate_center_pose(Eigen::Vector3d& pos,

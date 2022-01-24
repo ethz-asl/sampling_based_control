@@ -343,14 +343,8 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
   t_ = t;
   x_ = x;
 
-  // panda_->setState(x_.head<BASE_ARM_GRIPPER_DIM>(),
-  //                  x_.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM));
   panda_->setState(x_.head(robot_dof_),
                    x_.segment(robot_dof_,robot_dof_));
-
-  //cylinder_->setPosition(Eigen::Vector3d(x_(2* robot_dof_),x_(2* robot_dof_+1),params_.cylinder_z));
-  // raisim::Mat<3,1> vel_c = {0.1,0.1,0};
-  // cylinder_->setLinearVelocity(vel_c);
 
   if(if_sim_)
     mug_->setGeneralizedCoordinate({x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2),
@@ -360,7 +354,9 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
     cylinder_->setPosition(x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2) + 0.5*cylinder_->getHeight());
     cylinder_->setOrientation(x_(2* robot_dof_+3),x_(2* robot_dof_+4),x_(2* robot_dof_+5),x_(2* robot_dof_+6));
   }
+
   table_->setPosition(Eigen::Vector3d(params_.table_position[0],params_.table_position[1],params_.table_position[2]));
+  
 }
 
 mppi::input_t PandaRaisimDynamics::get_zero_input(

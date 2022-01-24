@@ -42,7 +42,6 @@ bool PandaControllerInterface::init_ros() {
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaControllerInterface::ee_pose_desired_callback, this);
 
-  
   std::vector<double> default_pose;
   if (!nh_.param<std::vector<double>>("default_pose", default_pose, {}) ||
       default_pose.size() != 7) {
@@ -64,32 +63,6 @@ bool PandaControllerInterface::init_ros() {
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener(tfBuffer);
   geometry_msgs::TransformStamped transformStamped;
-  // try {
-  //   transformStamped = tfBuffer.lookupTransform(
-  //       "world", "obstacle", ros::Time(0), ros::Duration(3.0));
-  // } catch (tf2::TransformException& ex) {
-  //   ROS_WARN("%s", ex.what());
-  //   return false;
-  // }
-
-  obstacle_marker_.header.frame_id = "world";
-  {
-    obstacle_marker_.type = visualization_msgs::Marker::CYLINDER;
-    obstacle_marker_.color.r = 1.0;
-    obstacle_marker_.color.g = 0.0;
-    obstacle_marker_.color.b = 0.0;
-    obstacle_marker_.color.a = 0.4;
-    obstacle_marker_.scale.x = 2.0 * 0.01;
-    obstacle_marker_.scale.y = 2.0 * 0.01;
-    obstacle_marker_.scale.z = 0.01;
-    obstacle_marker_.pose.orientation.x = 0;
-    obstacle_marker_.pose.orientation.y = 0;
-    obstacle_marker_.pose.orientation.z = 0;
-    obstacle_marker_.pose.orientation.w = 1;
-    obstacle_marker_.pose.position.x = 100;
-    obstacle_marker_.pose.position.y = 100;
-    obstacle_marker_.pose.position.z = 10;
-  }
 
   std::string references_file;
   nh_.param<std::string>("references_file", references_file, "");
@@ -97,8 +70,6 @@ bool PandaControllerInterface::init_ros() {
   last_ee_ref_id_ = 0;
   ee_desired_pose_.header.seq = last_ee_ref_id_;
 
-  last_ob_ref_id_ = 0;
-  obstacle_pose_.header.seq = last_ob_ref_id_;
 
   optimal_path_.header.frame_id = "world";
   optimal_base_path_.header.frame_id = "world";
@@ -297,6 +268,12 @@ void PandaControllerInterface::ee_pose_desired_callback(
   reference_set_ = true;
 }
 
+void PandaControllerInterface::update_dynamics(const mppi::observation_t& x,
+                                                const double t)
+{
+  dynamics->reset(x,t);
+}
+
 void PandaControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
@@ -418,13 +395,9 @@ void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& 
 }
 
 void PandaControllerInterface::publish_ros() {
-  obstacle_marker_publisher_.publish(obstacle_marker_);
 
   optimal_path_.header.stamp = ros::Time::now();
   optimal_path_.poses.clear();
-
-  // optimal_base_path_.header.stamp = ros::Time::now();
-  // optimal_base_path_.poses.clear();
 
   mppi_pinocchio::Pose pose_temp;
   get_controller()->get_optimal_rollout(x_opt_, u_opt_);
@@ -435,12 +408,10 @@ void PandaControllerInterface::publish_ros() {
   }
 
   obj_state.setZero(7);
-  // obj_state = dynamics->get_state().segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
   obj_state = dynamics->get_primitive_state();
   publish_ros_obj(obj_state);
   publish_ros_obj(x_opt_);
   optimal_trajectory_publisher_.publish(optimal_path_);
-  // optimal_base_trajectory_publisher_.publish(optimal_base_path_);
 
   // for debug
   pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));

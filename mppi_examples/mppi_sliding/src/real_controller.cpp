@@ -1,5 +1,5 @@
 //
-// Created by giuseppe on 22.01.21.
+// Created by boyang on 08.12.21.
 //
 
 #include <mppi_sliding/real_controller.h>
@@ -70,6 +70,7 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     ROS_ERROR("Failed to parse gains.");
     return false;
   }
+  ROS_INFO_STREAM("gains is following: " << gains_);
 
   if (!node_handle.getParam("state_topic", state_topic_)) {
     ROS_ERROR("state_topic not found");
@@ -77,12 +78,12 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   }
   ROS_INFO_STREAM("sub state topic from: " << state_topic_);
 
-  if (!node_handle.getParam( "table_state_topic", table_state_topic_)) {
+  if (!node_handle.getParam("table_state_topic", table_state_topic_)) {
     ROS_ERROR("table_state_topic not found");
     return false;
   }
-   
-  if (!node_handle.getParam( "nominal_state_topic", nominal_state_topic_)) {
+
+  if (!node_handle.getParam("nominal_state_topic", nominal_state_topic_)) {
     ROS_ERROR("nominal_state_topic not found");
     return false;
   }
@@ -168,25 +169,21 @@ void ManipulationController::init_ros(ros::NodeHandle& nh) {
 void ManipulationController::state_callback(
     const manipulation_msgs::StateConstPtr& state_msg) {
   if (!started_) return;
-  {
-    std::unique_lock<std::mutex> lock(observation_mutex_);
-    // modify the msgToEigen to adapt to panda
-    ROS_INFO_STREAM(" position msg before conversion: ");
-    for ( int i = 0 ; i < state_msg->arm_state.position.size(); i ++)
-    {
-      ROS_INFO_STREAM(state_msg->arm_state.position[i]);
-    }
-    manipulation::conversions::msgToEigen_panda(*state_msg, x_,
-                                                observation_time_);
-    ROS_INFO_STREAM(" position info after conversion: " << x_.transpose());
-    if (!state_received_) {
-      if (!man_interface_->init_reference_to_current_pose(x_,
-                                                          observation_time_)) {
-        ROS_WARN("Failed to set the controller reference to current state.");
-      }
+
+  std::unique_lock<std::mutex> lock(observation_mutex_);
+  // modify the msgToEigen to adapt to panda'
+  manipulation::conversions::msgToEigen_panda(*state_msg, x_,
+                                              observation_time_);
+  observation_time_ = run_time.toSec();
+  // ROS_INFO_STREAM(" position info after conversion: " << x_.transpose());
+
+  if (!state_received_) {
+    if (!man_interface_->init_reference_to_current_pose(x_,
+                                                        observation_time_)) {
+      ROS_WARN("Failed to set the controller reference to current state.");
     }
   }
-  std::cout << "in callback" << std::endl;
+
   x_ros_ = *state_msg;
   state_received_ = true;
 }
@@ -197,7 +194,6 @@ void ManipulationController::starting(const ros::Time& time) {
   }
 
   if (started_) return;
-
 
   // with sequential execution the optimization needs to be explicitly called
   // in the update function of the controller (not real-time safe)
@@ -252,8 +248,9 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::add(stage_cost_, "stage_cost");
     signal_logger::logger->startLogger(true);
   }
-
   start_time = time;
+  run_time.nsec = 0;
+  run_time.sec = 0;
   ROS_INFO_STREAM("start at ros time: " << start_time);
 
   started_ = true;
@@ -262,11 +259,6 @@ void ManipulationController::starting(const ros::Time& time) {
 
 void ManipulationController::update(const ros::Time& time,
                                     const ros::Duration& period) {
-
-  run_time.nsec = time.nsec - start_time.nsec; 
-  run_time.sec = time.sec - start_time.sec;
-
-  ROS_INFO_STREAM("run time " << run_time);
 
   if (!started_) {
     ROS_ERROR("Controller not started. Probably error occurred...");
@@ -287,8 +279,10 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    man_interface_->set_observation(x_, time.toSec());
-    man_interface_->update_reference(x_, time.toSec());
+    // ROS_INFO_STREAM("observed msg: " << x_.transpose());
+    man_interface_->set_observation(x_, run_time.toSec());
+    man_interface_->update_reference(x_, run_time.toSec());
+    man_interface_->update_dynamics(x_, run_time.toSec());
   }
 
   ROS_DEBUG_STREAM("Ctl state:"
@@ -296,10 +290,11 @@ void ManipulationController::update(const ros::Time& time,
                    << std::setprecision(2)
                    << manipulation::conversions::eigenToString_panda(x_));
 
-  man_interface_->get_input_state(x_, x_nom_, u_, time.toSec());
+  man_interface_->get_input_state(x_, x_nom_, u_, run_time.toSec());
 
   // samilar as before, modify the eigenToMsg to adapt to panda
-  manipulation::conversions::eigenToMsg_panda(x_nom_, time.toSec(), x_nom_ros_);
+  manipulation::conversions::eigenToMsg_panda(x_nom_, run_time.toSec(),
+                                              x_nom_ros_);
   // get state from pandaHW
   robot_state_ = state_handle_->getRobotState();
 
@@ -308,25 +303,23 @@ void ManipulationController::update(const ros::Time& time,
     man_interface_->get_controller()->get_optimal_rollout(optimal_rollout_);
     mppi_ros::to_msg(optimal_rollout_, optimal_rollout_ros_, true, 30);
     u_curr_ros_.data.assign(u_.data(), u_.data() + u_.size());
-    bag_.write("optimal_rollout", time, optimal_rollout_ros_);
-    bag_.write("current_input", time, u_curr_ros_);
+    bag_.write("optimal_rollout", run_time, optimal_rollout_ros_);
+    bag_.write("current_input", run_time, u_curr_ros_);
   }
 
-  static const double alpha = 0.1;
+  static const double alpha = 0.5;
 
   // update state x_
   for (int i = 0; i < 7; i++) {
-    // x_[i] = robot_state_.q[i];
-    // x_[9+i] = robot_state_.dq[i];
     position_measured_[i] = robot_state_.q[i];
     velocity_measured_[i] = robot_state_.dq[i];
     velocity_filtered_[i] =
         (1 - alpha) * velocity_filtered_[i] + alpha * robot_state_.dq[i];
   }
 
-  {
-    u_opt_.head<7>()  =  u_.head<7>();
-  }
+  // retrieving only the arm commands
+  u_opt_.head<7>() = u_.head<7>();
+
   update_position_reference(period);
   send_command_arm(period);
 
@@ -337,37 +330,34 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, time.toSec());
+    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, run_time.toSec());
+  }
+
+  {
+    run_time = run_time + period;
   }
 }
 
 void ManipulationController::update_position_reference(
     const ros::Duration& period) {
-  // position_desired_.head<7>() += u_opt_.head<7>() * period.toSec();
-  // position_desired_ = position_measured_;
+  position_desired_.head<7>() += u_opt_.head<7>() * period.toSec();
   position_desired_ =
-      position_measured_ + (position_desired_ - position_measured_);
-  //  .cwiseMax(-max_position_error_)
-  //  .cwiseMin(max_position_error_);
+      position_measured_ + (position_desired_ - position_measured_)
+                               .cwiseMax(-max_position_error_)
+                               .cwiseMin(max_position_error_);
 }
 
 void ManipulationController::send_command_arm(const ros::Duration& period) {
   // clang-format off
   std::array<double, 7> tau_d_calculated{};
   for (int i = 0; i < 7; ++i) {
-    tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[i] - robot_state_.q[i]);
-        // - gains_.arm_gains.Kd[i] * velocity_filtered_[i];
+    tau_d_calculated[i] = gains_.arm_gains.Ki[i] * (position_desired_[i] - robot_state_.q[i])
+        - gains_.arm_gains.Kd[i] * velocity_filtered_[i];
   }
   // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
   saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, arm_torque_command_);
-  std::cout <<"sending torq [  ";
-  for(int i = 0 ; i < 7; i ++){
-  std::cout << arm_torque_command_[i];
-  std::cout << ", " ;
-  }
-  std::cout << " ]" << std::endl;
   // clang-format on
-  
+
   for (size_t i = 0; i < 7; ++i) {
     joint_handles_[i].setCommand(arm_torque_command_[i]);
   }

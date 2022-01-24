@@ -1,6 +1,9 @@
 #include <cmath>
 #include "object_modeling_playground/mug.h"
-
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 
 void Mug::primitive_estimate() 
@@ -29,8 +32,8 @@ void Mug::primitive_estimate()
     // POSE 
         // estimate the center point's pose(s) of the objects, will be used as the pose 
         // for the primitive(s)
-    ROS_INFO("pose estimation");
-    ROS_INFO_STREAM(keypoints_xd.transpose());
+    // ROS_INFO("pose estimation");
+    // ROS_INFO_STREAM(keypoints_xd.transpose());
     state_.header.stamp = ros_time;
     state_.header.frame_id = prim_frame;
     state_.position.resize(primitive_num*7);
@@ -48,9 +51,41 @@ void Mug::primitive_estimate()
     state_.position[5] = center_orien[2]; //z
     state_.position[6] = center_orien[3]; //w
 
-
+    kptoPrimitive();
 }
 
+void Mug::kptoPrimitive()
+{
+    // 3d kp to primitive msg
+    mug_primitive.pose.position.x = state_.position[0];
+    mug_primitive.pose.position.y = state_.position[1];
+    mug_primitive.pose.position.z = state_.position[2];
+
+    mug_primitive.pose.orientation.x = state_.position[3];
+    mug_primitive.pose.orientation.y = state_.position[4];
+    mug_primitive.pose.orientation.z = state_.position[5];
+    mug_primitive.pose.orientation.w = state_.position[6];
+
+
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_(tf_buffer_);
+
+    geometry_msgs::TransformStamped transform;
+
+    geometry_msgs::PoseStamped pri_pos_in_pri;
+    pri_pos_in_pri.header = mug_primitive.header;
+    pri_pos_in_pri.pose.position = mug_primitive.pose.position;
+    pri_pos_in_pri.pose.orientation = mug_primitive.pose.orientation;
+
+    geometry_msgs::PoseStamped pri_pos_in_world;
+
+    transform = tf_buffer_.lookupTransform("world", "camera_color_optical_frame",  ros::Time(0), ros::Duration(1.0) );
+
+    tf2::doTransform(pri_pos_in_pri, pri_pos_in_world, transform); 
+    ROS_INFO_STREAM("transformed: " << pri_pos_in_world);
+
+
+}
 double Mug::point_to_line(const Eigen::Vector3d& pos_1,
                         const Eigen::Vector3d& pos_2,
                         const Eigen::Vector3d& pos_3){
@@ -62,7 +97,7 @@ double Mug::point_to_line(const Eigen::Vector3d& pos_1,
     double sqrt_nom =  nominator.norm();
     double sqrt_denom = denominator.norm();
 
-    ROS_INFO_STREAM("radius is: " << (sqrt_nom/sqrt_denom));
+    // ROS_INFO_STREAM("radius is: " << (sqrt_nom/sqrt_denom));
     return (sqrt_nom/sqrt_denom);
 }
 
@@ -158,8 +193,9 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
     this->handle_idx = 1;
     this->bottom_idx = 2;
     this->top_idx = 3;
-
     ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
+    mug_primitive.header.frame_id = ref_frame;
+    ROS_INFO_STREAM("primitive state in [ " << ref_frame << " ]");
 }
 
 
@@ -211,9 +247,9 @@ void Mug::update_kp_markers()
         }
         if((!sim) && kp_msg_received)
         {   
-            kp_markers_.markers[i].scale.x = 0.012 + i*0.004;
-            kp_markers_.markers[i].scale.y = 0.012 + i*0.004;
-            kp_markers_.markers[i].scale.z = 0.012 + i*0.004;
+            kp_markers_.markers[i].scale.x = 0.012;
+            kp_markers_.markers[i].scale.y = 0.012;
+            kp_markers_.markers[i].scale.z = 0.012;
             kp_markers_.markers[i].pose.position.z = keypoints_xd[i*4+2];
             kp_markers_.markers[i].pose.position.y = keypoints_xd[i*4+1];
             kp_markers_.markers[i].pose.position.x = keypoints_xd[i*4+0];
@@ -249,7 +285,7 @@ void Mug::primitive_visualize()
 
 void Mug::pub_state()
 {
-    state_publisher_.publish(state_);
+    state_publisher_.publish(mug_primitive);
     kp_publisher_.publish(kp_markers_);
     primitive_publisher_.publish(primitive_markers_);
 }

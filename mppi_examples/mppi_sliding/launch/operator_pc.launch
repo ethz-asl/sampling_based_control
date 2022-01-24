@@ -2,8 +2,8 @@
 <launch>
 	<arg name="plot" default="false"/>
     <arg name="enable_obstacle" default="false"/>
-    <arg name="fixed_base" default="false"/>
 	<arg name="debug" default="false"/>
+    <arg name="run_camera" default="true"/>
 
 	<include file="$(find mppi_sliding)/launch/common.launch">
 	    <arg name="plot" default="$(arg plot)"/>
@@ -36,15 +36,17 @@
         <param name="frame_id" value="world"/>
     </node>
 
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch" if="$(arg run_camera)"/>
+
 	<group if="$(arg debug)">
 		<node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
             <remap from="robot_description" to="robot_description"/>
             <remap from="joint_states" to="/panda/joint_states"/>
         </node>
-  </group>
+    </group>
 
-  <include file="$(find easy_handeye)/launch/publish.launch">
-  </include>
+    <!-- <include file="$(find easy_handeye)/launch/publish.launch">
+    </include> -->
 
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 

@@ -15,6 +15,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <interactive_markers/interactive_marker_server.h>
 #include <tf/transform_listener.h>
+#include <manipulation_msgs/MugPrimitive.h>
 
 class Object
 {
@@ -35,6 +36,7 @@ public:
 protected:
     bool init_param();
     void kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg);
+    void keypoints_filter(const geometry_msgs::PoseArray::ConstPtr& msg, double alpha);
 
     bool sim;
     std::string kp_3d_topic;
@@ -49,11 +51,16 @@ protected:
     std::vector<double> obj_pos_;
     std::vector<double> obj_rot_;
     int primitive_num = 0 ;
+    
+    // filter
+    int filter_length;
+    std::vector<double> filter_alpha;
 
     // kp vars
     int kp_num;
     int gt_kp_num;
     Eigen::VectorXd keypoints_xd;
+    Eigen::VectorXd keypoints_filtered;
     Eigen::VectorXd keypoints_sim_xd;
     std::vector<double> keypoints_;
     std::vector<double> keypoints_past_;

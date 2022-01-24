@@ -45,6 +45,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
                         const double t);
   bool init_reference_to_current_pose(const mppi::observation_t& x,
                                       const double t);
+  void update_dynamics(const mppi::observation_t& x,
+                                      const double t);
 
  private:
   void init_model(const std::string& robot_description,
@@ -57,7 +59,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
   void publish_ros_obj(const Eigen::VectorXd& state);
   void publish_ros_obj(const mppi::observation_array_t& x_opt_);
- 
+  
  public:
   mppi::config_t config_;
 

@@ -19,6 +19,8 @@ keypoints: [0,-0.120,0.11, 0,     # handle hole
 #             -0.196, -0.098, 0.29, 0,     #top center 
 #             -0.225,-0.118, 0.3326, 0]     # handle edge
 
+filter:
+  alpha: [0.1,0.3,0.6]
 
 approx_params:
   primitive_numbers: 1
