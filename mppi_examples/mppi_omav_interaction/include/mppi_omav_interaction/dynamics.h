@@ -95,7 +95,11 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
 
   const observation_t get_state() const override { return x_; }
 
-  force_t get_contact_forces();
+  force_t get_contact_forces(double &unwanted_contact);
+  force_t get_contact_forces() {
+    double a;
+    return get_contact_forces(a);
+  };
   force_t get_dominant_force();
 
   raisim::World *get_world() { return &sim_; }

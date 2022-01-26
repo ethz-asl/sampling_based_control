@@ -31,14 +31,17 @@ enum IdxEnum {
   velocity,
   force,
   leaving_field,
-  contact
+  contact,
+  unwantedContact,
+  objectDistance
 };
 }
-constexpr size_t kN_costs = 11;
+constexpr size_t kN_costs = 13;
 const std::string kCost_descr[kN_costs] = {
     "floor",        "pose",          "object",     "handle_hook",
     "tip_velocity", "torque",        "efficiency", "velocity",
-    "force",        "leaving_field", "contact"};
+    "force",        "leaving_field", "contact",    "unwanted_contact",
+    "object_distance"};
 }  // namespace omav_interaction
 
 #endif

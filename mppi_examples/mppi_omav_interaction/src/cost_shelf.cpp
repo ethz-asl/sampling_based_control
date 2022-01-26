@@ -118,8 +118,7 @@ void OMAVInteractionCostShelf::compute_pose_cost(
 
 void OMAVInteractionCostShelf::compute_handle_hook_cost() {
   // Calculate distance between hook and handle
-  distance_hook_handle_ =
-      sqrt(hook_handle_vector_.transpose() * hook_handle_vector_);
+  distance_hook_handle_ = hook_handle_vector_.norm();
   // Handle Hook distance cost
   cost_vector_(CostIdx::handle_hook) = std::max(
       0.0, param_ptr_->Q_handle_hook / (1.0 - param_ptr_->handle_hook_thresh) *
@@ -138,8 +137,8 @@ void OMAVInteractionCostShelf::compute_vectors() {
   hook_handle_vector_ = robot_model_.get_pose(frames_.hook).translation -
                         object_model_.get_pose(frames_.handle_link).translation;
   // Vector from hook to omav
-  com_hook_vector_ = robot_model_.get_pose(frames_.omav).translation -
-                     robot_model_.get_pose(frames_.tip).translation;
+  r_tip_omav_I_ = robot_model_.get_pose(frames_.omav).translation -
+                  robot_model_.get_pose(frames_.tip).translation;
   // Vector from handle ref to handle link eg. orthogonal to door panel
   handle_orthogonal_vector_ =
       object_model_.get_pose(frames_.handle_link).translation -
@@ -150,13 +149,17 @@ void OMAVInteractionCostShelf::compute_vectors() {
 
 void OMAVInteractionCostShelf::compute_tip_velocity_cost(
     const Eigen::VectorXd &omav_state) {
-  // Tip velocity cost
-  tip_lin_velocity_ = omav_state.segment<3>(7) +
-                      omav_state.segment<3>(10).cross(com_hook_vector_);
-  tip_velocity_ << tip_lin_velocity_, omav_state.segment<3>(10);
+  Eigen::Vector3d ang_vel_I = Eigen::Quaterniond(omav_state(3), omav_state(4),
+                                                 omav_state(5), omav_state(6)) *
+                              omav_state.segment<3>(10);
+  // Tip velocity in inertial frame:
+  tip_lin_velocity_ =
+      omav_state.segment<3>(7) + ang_vel_I.cross(-r_tip_omav_I_);
+  // tip_velocity_ << tip_lin_velocity_, omav_state.segment<3>(10);
 
-  cost_vector_(CostIdx::tip_velocity) =
-      tip_velocity_.transpose() * param_ptr_->Q_vel * tip_velocity_;
+  cost_vector_(CostIdx::tip_velocity) = tip_lin_velocity_.transpose() *
+                                        param_ptr_->Q_vel.block<3, 3>(0, 0) *
+                                        tip_lin_velocity_;
 }
 
 /**
@@ -171,7 +174,7 @@ void OMAVInteractionCostShelf::compute_torque_cost(
     const Eigen::VectorXd &omav_state) {
   // Compute cosine of the torque angle (dot product):
   torque_angle_ =
-      handle_orthogonal_vector_.normalized().dot(com_hook_vector_.normalized());
+      handle_orthogonal_vector_.normalized().dot(r_tip_omav_I_.normalized());
 
   cost_vector_(CostIdx::torque) = std::min(
       param_ptr_->Q_torque, param_ptr_->Q_torque * (1.0 - torque_angle_));

@@ -17,7 +17,7 @@ OMAVVelocityDynamics::OMAVVelocityDynamics(
       robot_description_(robot_description),
       object_description_(object_description),
       input_dimension_(6),
-      state_dimension_(32),
+      state_dimension_(33),
       derivative_dimension_(12),
       robot_dof_(6) {
   initialize_world(robot_description, object_description);
@@ -85,22 +85,22 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   omav_->setPdTarget(cmd_, cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
   nonLinearities_ = omav_->getNonlinearities().e();
-  feedforward_force_ = feedforward_acceleration_ * settings_.mass + nonLinearities_;
+  feedforward_force_ =
+      feedforward_acceleration_ * settings_.mass + nonLinearities_;
   // feedforward_force_ = nonLinearities_;
   omav_->setGeneralizedForce(feedforward_force_);
   sim_.integrate();
   omav_->getState(omav_pose_, omav_velocity_);
   object_->getState(object_pose_, object_velocity_);
   // get contact state
-  double in_contact = 0;
+  double in_contact = 0.0;
   for (const auto &contact : omav_->getContacts()) {
-    if (contact.skip())
-      continue;
+    if (contact.skip()) continue;
     in_contact = 1;
     break;
   }
-
-  contact_force_ = get_contact_forces();
+  double unwanted_contact = 0.0;
+  contact_force_ = get_contact_forces(unwanted_contact);
 
   // Assemble state
   x_.head<7>() = omav_pose_;
@@ -109,6 +109,7 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   x_.segment<1>(14) = object_velocity_;
   x_.segment<3>(15) = contact_force_.force;
   x_(18) = in_contact;
+  x_(32) = unwanted_contact;
   return x_;
 }
 
@@ -125,18 +126,35 @@ mppi::DynamicsBase::input_t OMAVVelocityDynamics::get_zero_input(
   return DynamicsBase::input_t::Zero(get_input_dimension());
 }
 
-force_t OMAVVelocityDynamics::get_contact_forces() {
+force_t OMAVVelocityDynamics::get_contact_forces(double &unwanted_contact) {
   force_t force;
   force.force = {0, 0, 0};
   for (const auto contact : omav_->getContacts()) {
     if (contact.skip())
-      continue;  /// if the contact is internal, one contact point is set to
-    /// 'skip'
+      continue;  // if the contact is internal, one contact point is set to
+                 // 'skip'
     if (contact.isSelfCollision()) continue;
-
-    force.force += contact.getContactFrame().e().transpose() *
-                   contact.getImpulse()->e() / sim_.getTimeStep();
-    force.position = contact.getPosition().e();
+    Eigen::Vector3d this_contact_force =
+        contact.getContactFrame().e().transpose() * contact.getImpulse()->e() /
+        sim_.getTimeStep();
+    // force.position = contact.getPosition().e();
+    // Compute contact point in body frame:
+    // omav_pose: q = [w, x, y, z]
+    // Eigen::Quaternion expects [w, x, y, z]
+    // Eigen::Quaterniond(omav_pose_.segment<4>(3)) will result in wrong
+    // quaternion as it directly writes internally into [x y z w]!
+    Eigen::Quaterniond q_IB = Eigen::Quaterniond(omav_pose_(3), omav_pose_(4),
+                                                 omav_pose_(5), omav_pose_(6));
+    Eigen::Vector3d contact_point_B =
+        q_IB.inverse() * (contact.getPosition().e() - omav_pose_.head(3));
+    // Check position of contact: If not at end effector, set to true.
+    if (contact_point_B(0) < 0.55) {
+      // Adding the norm leads to noisy values, does not work in optimizer:
+      // unwanted_contact += this_contact_force.norm();
+      unwanted_contact = 1.0;
+    } else {
+      force.force += this_contact_force;
+    }
   }
   return force;
 }

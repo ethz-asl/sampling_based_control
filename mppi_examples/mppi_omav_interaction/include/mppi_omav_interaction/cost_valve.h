@@ -29,6 +29,7 @@ struct OMAVInteractionCostValveParam {
   double Q_z_omav;
 
   double Q_orientation;  // Orientation Cost
+  double Q_unwanted_contact;
 
   Eigen::Matrix<double, 6, 1> pose_costs, pose_costs_int;
 
@@ -68,6 +69,9 @@ struct OMAVInteractionCostValveParam {
 
   bool contact_bool;
 
+  double Q_object_distance;
+  double object_distance_thresh;
+
   bool parse_from_ros(const ros::NodeHandle &nh);
   template <class A>
   bool getParameter(const ros::NodeHandle &nh, const std::string &id, A &val,
@@ -103,11 +107,12 @@ class OMAVInteractionCostValve : public mppi::CostBase {
   double mode_;
   double torque_angle_;
   Eigen::Vector3d hook_handle_vector_;
+  Eigen::Vector3d r_omav_handle_I_;
   Eigen::Vector3d tip_lin_velocity_;
   Eigen::Matrix<double, 6, 1> tip_velocity_;
   Eigen::Vector3d torque_;
   Eigen::Vector3d force_normed_;
-  Eigen::Vector3d com_hook_vector_;
+  Eigen::Vector3d r_tip_omav_I_;
   Eigen::Vector3d handle_orthogonal_vector_;
   double distance_hook_handle_;
 
@@ -143,13 +148,17 @@ class OMAVInteractionCostValve : public mppi::CostBase {
   void compute_object_cost(const Eigen::VectorXd &omav_state,
                            const Eigen::VectorXd &omav_reference);
 
+  void compute_unwanted_contact_cost(const Eigen::VectorXd &omav_state);
+
   void compute_vectors();
 
   void compute_tip_velocity_cost(const Eigen::VectorXd &omav_state);
 
-  void compute_torque_cost(const Eigen::VectorXd &omav_state);
+  void compute_distance_to_object_cost(const mppi::observation_t &x);
 
-  void compute_efficiency_cost(const Eigen::VectorXd &omav_state);
+  // void compute_torque_cost(const Eigen::VectorXd &omav_state);
+
+  // void compute_efficiency_cost(const Eigen::VectorXd &omav_state);
 
   void compute_velocity_cost(const Eigen::Vector3d &linear_velocity,
                              const Eigen::Vector3d &angular_velocity);

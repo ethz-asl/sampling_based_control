@@ -156,8 +156,14 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
   }
 
   if (controller_.getTask() == InteractionTask::Valve) {
-    // Set valve reference value to current angle
-    controller_.updateValveReference(state_(13) + cost_valve_params_.ref_p);
+    // if (state_(13) + cost_valve_params_.ref_p > last_ref) {
+    // last_ref = state_(13) + cost_valve_params_.ref_p;
+    // controller_.updateValveReference(last_ref);
+    // Use dynamic updating of the valve reference: Reference angle increases
+    // throughout the horizon
+    controller_.updateValveReferenceDynamic(
+        state_(13), state_(13) + cost_valve_params_.ref_p, t_now.toSec());
+    // }
   }
 
   // Load most recently published trajectory
@@ -415,9 +421,12 @@ void InteractionControlNode::costValveParamCallback(
     cost_valve_params_.floor_thresh = config.floor_thresh;
     cost_valve_params_.Q_floor = config.floor_cost;
     cost_valve_params_.Q_force = config.force_cost;
-    cost_valve_params_.Q_efficiency = config.efficiency_cost;
-    cost_valve_params_.Q_torque = config.torque_cost;
+    // cost_valve_params_.Q_efficiency = config.efficiency_cost;
+    // cost_valve_params_.Q_torque = config.torque_cost;
     cost_valve_params_.contact_bool = config.contact_prohibitor;
+    cost_valve_params_.Q_unwanted_contact = config.Q_unwanted_contact;
+    cost_valve_params_.Q_object_distance = config.Q_object_distance;
+    cost_valve_params_.object_distance_thresh = config.object_distance_thresh;
     controller_.update_cost_param_valve(cost_valve_params_);
   } else {
     ROS_ERROR("Wrong scenario chosen. Cannot set cost.");

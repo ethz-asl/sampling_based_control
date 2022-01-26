@@ -104,7 +104,7 @@ class OMAVInteractionCostShelf : public mppi::CostBase {
   Eigen::Matrix<double, 6, 1> tip_velocity_;
   Eigen::Vector3d torque_;
   Eigen::Vector3d force_normed_;
-  Eigen::Vector3d com_hook_vector_;
+  Eigen::Vector3d r_tip_omav_I_;
   Eigen::Vector3d handle_orthogonal_vector_;
   double distance_hook_handle_;
 

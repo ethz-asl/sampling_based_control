@@ -67,6 +67,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   void manually_shift_input(const int &index);
 
   void updateValveReference(const double &ref_angle);
+  void updateValveReferenceDynamic(
+    const double &start_angle, const double &end_angle, const double &t_start);
 
   bool get_current_trajectory(
       trajectory_msgs::MultiDOFJointTrajectory *current_trajectory_msg) const;

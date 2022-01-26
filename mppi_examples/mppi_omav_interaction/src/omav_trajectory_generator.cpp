@@ -253,9 +253,9 @@ void OmavTrajectoryGenerator::CostValveParamCallback(
   // Update floor cost components
   rqt_cost_valve_.floor_thresh = config.floor_thresh;
   rqt_cost_valve_.Q_floor = config.floor_cost;
-  rqt_cost_valve_.Q_efficiency = config.efficiency_cost;
+  // rqt_cost_valve_.Q_efficiency = config.efficiency_cost;
   rqt_cost_valve_.Q_force = config.force_cost;
-  rqt_cost_valve_.Q_torque = config.torque_cost;
+  // rqt_cost_valve_.Q_torque = config.torque_cost;
   rqt_cost_valve_.contact_bool = config.contact_prohibitor;
   rqt_cost_valve_bool_ = true;
 }

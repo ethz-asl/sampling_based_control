@@ -166,7 +166,6 @@ bool OMAVControllerInterface::set_controller(
   ref_.rr[0](7) = 0.0;
   // Initialize mode
   ref_.rr[0](8) = 0;
-  ref_.tt.resize(1, 0.0);
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
   return true;
@@ -194,6 +193,8 @@ void OMAVControllerInterface::getDynamicsPtr(
 void OMAVControllerInterface::desired_pose_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
   // std::unique_lock<std::mutex> lock(reference_mutex_);
+  ref_.rr.resize(1, mppi::observation_t::Zero(9));
+  ref_.tt.resize(1, msg->header.stamp.toSec());
   ref_.rr[0](0) = msg->pose.position.x;
   ref_.rr[0](1) = msg->pose.position.y;
   ref_.rr[0](2) = msg->pose.position.z;
@@ -210,10 +211,27 @@ void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
   get_controller()->set_reference_trajectory(ref_);
 }
 
+void OMAVControllerInterface::updateValveReferenceDynamic(
+    const double &start_angle, const double &end_angle, const double &t_start) {
+  mppi::observation_t ref0 = ref_.rr[0];
+  const size_t kN = 10;
+  ref_.rr.resize(kN);
+  ref_.tt.resize(kN);
+  for (size_t i = 0; i < kN; i++) {
+    ref_.tt[i] = t_start + static_cast<double>(i) / kN * 1.0;
+    ref_.rr[i] = ref0;
+    ref_.rr[i](7) =
+        start_angle + static_cast<double>(i) / kN * (end_angle - start_angle);
+  }
+  get_controller()->set_reference_trajectory(ref_);
+}
+
 void OMAVControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr &msg) {
   // std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr[0](8) = msg->data;
+  for (size_t i = 0; i < ref_.rr.size(); i++) {
+    ref_.rr[0](8) = msg->data;
+  }
   ROS_INFO_STREAM("Switching to mode:" << msg->data);
   get_controller()->set_reference_trajectory(ref_);
 }
@@ -254,6 +272,8 @@ bool OMAVControllerInterface::update_cost_param_valve(
 }
 
 bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
+  ref_.tt.resize(1, 0.0);
+  ref_.rr.resize(1, observation_t::Zero(9));
   ref_.rr[0](0) = x(0);
   ref_.rr[0](1) = x(1);
   ref_.rr[0](2) = x(2);

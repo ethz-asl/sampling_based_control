@@ -10,6 +10,7 @@ Q_int_pitch: 10.0
 Q_object: 150.0
 # Velocity costs
 Q_linear_velocity: 0.0
+Q_unwanted_contact: 10.0
 Q_roll: 0.0
 Q_pitch: 0.0
 Q_yaw: 0.0
@@ -38,3 +39,6 @@ force_cost: 1.0
 # Torque cost
 torque_cost: 0.0
 contact_prohibitor: True
+
+Q_object_distance: 10
+object_distance_thresh: 0.5
