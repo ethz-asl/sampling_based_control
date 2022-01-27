@@ -29,6 +29,7 @@ set(PACKAGE_DEPENDENCIES
         franka_hw
         hardware_interface
         tf2_ros
+        tf2_geometry_msgs
         kdl_parser
         signal_logger
         message_filters

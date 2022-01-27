@@ -24,9 +24,11 @@
 #include <kdl/jacobian.hpp>
 
 #include <manipulation_msgs/State.h>
+#include <manipulation_msgs/MugPrimitive.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 namespace manipulation_panda {
 
@@ -50,10 +52,10 @@ class StateObserver {
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
   void wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg);
-  void object_state_callback(const sensor_msgs::JointStateConstPtr& msg);
+  void object_state_callback(const manipulation_msgs::MugPrimitiveConstPtr& msg);
 
   void message_filter_cb(const sensor_msgs::JointStateConstPtr& arm_state,
-                         const sensor_msgs::JointStateConstPtr& object_state);
+                         const manipulation_msgs::MugPrimitiveConstPtr& object_state);
 
   void message_filter_cb_sim(
       const sensor_msgs::JointStateConstPtr& arm_state,
@@ -82,9 +84,8 @@ class StateObserver {
   // Eigen::Affine3d T_world_base_;
   // Eigen::Affine3d T_world_reference_;
 
-  // // base odometry
-  // Eigen::Vector3d base_twist_;
-  // Eigen::Vector3d base_pose_;
+  // env objects
+  double table_x, table_y, table_z;
 
   // arm
   Eigen::Matrix<double, 9, 1> dq_;

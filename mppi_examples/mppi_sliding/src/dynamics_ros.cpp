@@ -108,18 +108,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   object_state_.header.stamp = ros::Time::now();
   object_state_.position[0] = x_(2 * robot_dof_);
   object_state_publisher_.publish(object_state_);
-  // update cylinder state and its visulization
-  cylinder_state_.header.stamp = ros::Time::now();
-  cylinder_trans.header.stamp = ros::Time::now();
-  cylinder_trans.transform.translation.x = x_(2 * robot_dof_);
-  cylinder_trans.transform.translation.y = x_(2 * robot_dof_ +1 );
-  cylinder_trans.transform.translation.z = params_.cylinder_z;
-  tf2::Quaternion q_cylinder;
-  q_cylinder.setRPY(0, 0, x_(2 * robot_dof_)+2);
-  cylinder_trans.transform.rotation.x = q_cylinder.x();
-  cylinder_trans.transform.rotation.y = q_cylinder.y();
-  cylinder_trans.transform.rotation.z = q_cylinder.z();
-  cylinder_trans.transform.rotation.w = q_cylinder.w();
   // update cylinder target state and its visulization
   cylinder_target_.header.stamp = ros::Time::now();
   cylinder_target_trans.header.stamp = ros::Time::now();
@@ -156,9 +144,8 @@ void ManipulatorDynamicsRos::publish_ros() {
   table_trans.transform.rotation.y = q_table.y();
   table_trans.transform.rotation.z = q_table.z();
   table_trans.transform.rotation.w = q_table.w();
+  
   //send the joint state and transform
-  // cylinder_state_publisher_.publish(cylinder_state_);
-  // broadcaster.sendTransform(cylinder_trans);
 
   cylinder_target_publisher_.publish(cylinder_target_);
   broadcaster.sendTransform(cylinder_target_trans);
@@ -212,21 +199,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   pose_ros.pose.orientation.w = ee_orientation.w();
   ee_publisher_.publish(pose_ros);
 
-  // publish handle pose
-  // Eigen::Vector3d handle_position;
-  // Eigen::Quaterniond handle_orientation;
-  // get_handle_pose(handle_position, handle_orientation);
-  // geometry_msgs::PoseStamped handle_pose;
-  // handle_pose.header.stamp = ros::Time::now();
-  // handle_pose.header.frame_id = "world";
-  // handle_pose.pose.position.x = handle_position.x();
-  // handle_pose.pose.position.y = handle_position.y();
-  // handle_pose.pose.position.z = handle_position.z();
-  // handle_pose.pose.orientation.x = handle_orientation.x();
-  // handle_pose.pose.orientation.y = handle_orientation.y();
-  // handle_pose.pose.orientation.z = handle_orientation.z();
-  // handle_pose.pose.orientation.w = handle_orientation.w();
-  // handle_publisher_.publish(handle_pose);
 }
 
 }  // namespace manipulation

@@ -12,6 +12,7 @@
 #include "mppi_sliding/cost.h"
 #include "mppi_sliding/params/dynamics_params.h"
 #include "mppi_sliding/reference_scheduler.h"
+#include "mppi_sliding/dynamics.h"
 
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
@@ -44,6 +45,8 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
                         const double t);
   bool init_reference_to_current_pose(const mppi::observation_t& x,
                                       const double t);
+  void update_dynamics(const mppi::observation_t& x,
+                                      const double t);
 
  private:
   void init_model(const std::string& robot_description,
@@ -56,7 +59,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
   void publish_ros_obj(const Eigen::VectorXd& state);
   void publish_ros_obj(const mppi::observation_array_t& x_opt_);
- 
+  
  public:
   mppi::config_t config_;
 
@@ -75,13 +78,15 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
 
+  std::shared_ptr<PandaRaisimDynamics> dynamics;
+
   DynamicsParams dynamics_params_;
   mppi_pinocchio::RobotModel robot_model_;
   mppi_pinocchio::RobotModel object_model_;
   mppi_pinocchio::RobotModel cylinder_model_;
 
   // estimated object in closed-loop
-  Eigen::VectorXd obj_state;
+  Eigen::VectorXd obj_state, obj_state_pub;
   ros::Publisher cylinder_state_publisher_;
   sensor_msgs::JointState cylinder_state_;
   tf2_ros::TransformBroadcaster broadcaster;

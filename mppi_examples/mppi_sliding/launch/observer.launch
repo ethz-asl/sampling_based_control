@@ -11,8 +11,11 @@
 
     <!--    State observer node-->
     <node pkg="mppi_sliding" name="state_observer_node" type="state_observer_node" output="screen">
-        <param name="object_state_topic" value="/object/state"/>
+        <param name="object_state_topic" value="/mug/joint_states"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="table_x" value= 1.2/>
+        <param name="table_y" value= 0/>
+        <param name="table_z" value= -0.05/>  <!-- table_z should be half table height lower, due to frame stuff -->>
         <param name="observer_update_frequency" value="200"/>
     </node>
 

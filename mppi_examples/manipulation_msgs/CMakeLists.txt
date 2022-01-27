@@ -12,7 +12,7 @@ find_package(Eigen3 REQUIRED 3.3)
 
 add_message_files(
         DIRECTORY msg
-        FILES State.msg Input.msg InputState.msg
+        FILES State.msg Input.msg InputState.msg MugPrimitive.msg
 )
 
 add_service_files(

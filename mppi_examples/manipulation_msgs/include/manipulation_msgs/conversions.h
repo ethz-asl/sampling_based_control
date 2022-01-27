@@ -6,6 +6,7 @@
 #include "manipulation_msgs/Input.h"
 #include "manipulation_msgs/InputState.h"
 #include "manipulation_msgs/State.h"
+#include "manipulation_msgs/MugPrimitive.h"
 #include <sensor_msgs/JointState.h>
 
 #include <Eigen/Core>

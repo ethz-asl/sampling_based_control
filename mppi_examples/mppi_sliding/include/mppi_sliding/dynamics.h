@@ -68,7 +68,9 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   }
 
   void reset(const mppi::observation_t& x, const double t) override;
-
+  
+  void reload(const mppi::observation_t& x, const double t);
+  
   void advance();
   
   void set_control(const mppi::input_t& u);
@@ -78,6 +80,8 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   mppi::input_t get_zero_input(const mppi::observation_t& x) override;
   
   const mppi::observation_t get_state() const override { return x_; }
+
+  Eigen::VectorXd get_primitive_state();
 
   raisim::World* get_world() { return &sim_; }
   

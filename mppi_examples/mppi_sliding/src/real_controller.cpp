@@ -259,10 +259,6 @@ void ManipulationController::starting(const ros::Time& time) {
 
 void ManipulationController::update(const ros::Time& time,
                                     const ros::Duration& period) {
-  // ROS_INFO_STREAM("real time " << time);
-  // ROS_INFO_STREAM("start time " << start_time);
-  // ROS_INFO_STREAM("run time " << run_time);
-  // ROS_INFO_STREAM("duration " << period);
 
   if (!started_) {
     ROS_ERROR("Controller not started. Probably error occurred...");
@@ -286,6 +282,7 @@ void ManipulationController::update(const ros::Time& time,
     // ROS_INFO_STREAM("observed msg: " << x_.transpose());
     man_interface_->set_observation(x_, run_time.toSec());
     man_interface_->update_reference(x_, run_time.toSec());
+    man_interface_->update_dynamics(x_, run_time.toSec());
   }
 
   ROS_DEBUG_STREAM("Ctl state:"
@@ -337,9 +334,6 @@ void ManipulationController::update(const ros::Time& time,
   }
 
   {
-    // std::unique_lock<std::mutex> lock(observation_mutex_);
-    // run_time.nsec = time.nsec - start_time.nsec;
-    // run_time.sec = time.sec - start_time.sec;
     run_time = run_time + period;
   }
 }

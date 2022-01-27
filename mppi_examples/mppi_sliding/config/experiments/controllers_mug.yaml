@@ -40,7 +40,7 @@ mppi_sliding:
   cost:
     regularization: 0.0
     linear_weight: 100.0
-    angular_weight: 10.0
+    angular_weight: 20.0
 
     linear_weight_opening: 100.0
     angular_weight_opening: 100.0
@@ -57,7 +57,7 @@ mppi_sliding:
     obstacle_weight_slope: 0
     obstacle_radius: 0.8
 
-    contact_weight: 100.0
+    contact_weight: 10.0
 
     object_weight: 100
     object_tolerance: 0.01
@@ -93,12 +93,12 @@ mppi_sliding:
       i_max: []
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      # kd: [ 45.0, 45.0, 45.0, 45.0, 35.0, 30.0, 1.0 ]
-      # ki: [ 40.0, 40.0, 40.0, 40.0, 30.0, 20.0, 5.0 ]
-      # i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-      kd: [ 50.0, 50.0, 50.0, 50.0, 20.0, 10.0, 1.0 ]
-      ki: [ 80.0, 80.0, 80.0, 80.0, 40.0, 40.0, 2.0 ]
+      kd: [ 15.0, 15.0, 15.0, 15.0, 10.0, 10.0, 1.0 ]
+      ki: [ 30.0, 30.0, 30.0, 30.0, 25.0, 20.0, 5.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+      # kd: [ 60.0, 60.0, 60.0, 60.0, 30.0, 20.0, 1.0 ]
+      # ki: [ 80.0, 80.0, 80.0, 80.0, 40.0, 40.0, 2.0 ]
+      # i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
       kd: [ 50.0, 50.0 ]
@@ -110,11 +110,11 @@ mppi_sliding:
   # Parameters of the dynamics internal to the controller
 
   geometry:
-    cylinder_height: 0.1
-    cylinder_radius: 0.05
+    cylinder_height: 0.11
+    cylinder_radius: 0.02
     cylinder_mass: 1    # ideally equal to the object
     cylinder_z: 0.98 # table_z + 1/2(table_height+cylinder_height)
-    table_position: [0,0,-0.15]
+    table_position: [1.2,0,-0.00] 
     target_pos: [0.58, 0.65, 0.28]
     friction: 0.15  
 
@@ -128,7 +128,7 @@ mppi_sliding:
     apply_filter: false
     initial_state: [ 0.62, 0.005, 1.43, 0.99, 0.05, -0.1, -0.003, 0.0, 0.0,   # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.3, 0.3, 0.05, -0.707, 0.0, 0, -0.707,                  # object joint pose  3+4
+                   0.3, 0.3, 15, -0.707, 0.0, 0, -0.707,                  # object joint pose  3+4
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                       # object joint velocity 3+4
                    0]            # contact flag
     gains:
