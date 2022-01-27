@@ -32,6 +32,8 @@ struct DynamicsParams {
   // controller config
   bool fixed_base;
 
+  bool update_dynamics;
+
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };
 

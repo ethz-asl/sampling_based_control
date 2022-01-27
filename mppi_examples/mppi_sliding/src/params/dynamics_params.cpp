@@ -138,6 +138,12 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  if (!nh.getParam("dynamics/update_dynamics_from_perception", update_dynamics))
+  {
+    ROS_ERROR_STREAM("config params parsing: failed to parse dynamics/update_dynamics_from_perception or invalid!");
+    return false;
+  }
+
   // parse gains
   if (!gains.init_from_ros(nh, prefix + "dynamics/")) {
     ROS_ERROR("Failed to parse simulation gains.");

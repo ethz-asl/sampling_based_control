@@ -157,6 +157,7 @@ bool ManipulationController::init_interfaces(
 
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   nominal_state_publisher_.init(nh, nominal_state_topic_, 1);
+  stage_cost_publisher_.init(nh, "/stage_cost", 1);
 
   state_subscriber_ = nh.subscribe(
       state_topic_, 1, &ManipulationController::state_callback, this);
@@ -230,7 +231,7 @@ void ManipulationController::starting(const ros::Time& time) {
   position_measured_ = position_desired_;
 
   // metrics
-  stage_cost_ = 0.0;
+  stage_cost_.data = 0.0;
 
   // logging
   {
@@ -245,7 +246,7 @@ void ManipulationController::starting(const ros::Time& time) {
     signal_logger::add(velocity_filtered_, "velocity_filtered");
     signal_logger::add(position_measured_, "position_measured");
     signal_logger::add(position_desired_, "position_desired");
-    signal_logger::add(stage_cost_, "stage_cost");
+    signal_logger::add(stage_cost_.data, "stage_cost");
     signal_logger::logger->startLogger(true);
   }
   start_time = time;
@@ -282,7 +283,6 @@ void ManipulationController::update(const ros::Time& time,
     // ROS_INFO_STREAM("observed msg: " << x_.transpose());
     man_interface_->set_observation(x_, run_time.toSec());
     man_interface_->update_reference(x_, run_time.toSec());
-    man_interface_->update_dynamics(x_, run_time.toSec());
   }
 
   ROS_DEBUG_STREAM("Ctl state:"
@@ -330,7 +330,13 @@ void ManipulationController::update(const ros::Time& time,
 
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
-    stage_cost_ = man_interface_->get_stage_cost(x_, u_opt_, run_time.toSec());
+    stage_cost_.data = man_interface_->get_stage_cost(x_, u_opt_, run_time.toSec());
+    // ROS_INFO_STREAM("stage cost: " << stage_cost_.data);
+  }
+
+  if (stage_cost_publisher_.trylock()) {
+    stage_cost_publisher_.msg_ = stage_cost_;
+    stage_cost_publisher_.unlockAndPublish();
   }
 
   {

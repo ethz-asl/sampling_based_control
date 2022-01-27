@@ -21,7 +21,7 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
   if(!if_sim_)
   {
     std::cout << "this dynamics is as [MODEL ESTIMATED] dynamics" << std::endl;
-    if_update_ = true;
+    if_update_ = params.update_dynamics;
     if(if_update_)
     {
       std::cout << "activate model updater " << std::endl;
@@ -283,6 +283,7 @@ void PandaRaisimDynamics::advance() {
   x_.segment(2 * robot_dof_, OBJECT_DIMENSION) = object_p_;
   x_.segment(2 * robot_dof_ + OBJECT_DIMENSION, OBJECT_DIMENSION) = object_v_;
   x_(2 * robot_dof_ + 2 * OBJECT_DIMENSION) = in_contact;  // contact flag
+
   // display_state();
 
 }

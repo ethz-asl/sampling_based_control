@@ -119,6 +119,7 @@ class ManipulationController
   ros::Subscriber state_subscriber_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
   RTPublisher<sensor_msgs::JointState> table_state_publisher_;
+  RTPublisher<std_msgs::Float64> stage_cost_publisher_;
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
@@ -142,7 +143,7 @@ class ManipulationController
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
 
   // metrics
-  double stage_cost_;
+  std_msgs::Float64 stage_cost_;
 
   // optimal rollout info
   bool publish_rollout_;

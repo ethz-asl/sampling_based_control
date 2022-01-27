@@ -35,8 +35,10 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // regularization cost
   cost += params_.Qreg *
           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
+
   // ROS_INFO_STREAM("observe is: " << x.head<9>().transpose());
   // ROS_INFO_STREAM("ref is: " << ref.head<7>().transpose());
+
   // end effector reaching cost
   if (mode == 0) {
     auto temp_pose = robot_model_.get_pose(params_.tracked_frame);
@@ -140,11 +142,13 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += object_error * object_error * params_.Q_obj;
   }
 
+
   // // power cost
   cost +=
       params_.Q_power *
       std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) -
                         params_.max_power);
+
 
   // // self collision cost
   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
@@ -173,6 +177,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += params_.Q_reach +
             params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
   }
+
 
   // joint limits cost
   for (size_t i = 0; i < 8; i++) {
