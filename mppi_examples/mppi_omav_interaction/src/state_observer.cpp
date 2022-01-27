@@ -4,25 +4,6 @@
 
 #include "mppi_omav_interaction/state_observer.h"
 
-
-#include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/JointState.h>
-
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-
-#include <tf2_ros/static_transform_broadcaster.h>
-
-#include <eigen_conversions/eigen_kdl.h>
-#include <eigen_conversions/eigen_msg.h>
-
-#include <kdl/chain.hpp>
-#include <kdl/chainfksolverpos_recursive.hpp>
-#include <kdl/frames.hpp>
-#include <kdl/tree.hpp>
-#include <kdl_parser/kdl_parser.hpp>
-
-
 namespace object_observer {
 
     StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {

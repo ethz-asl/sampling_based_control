@@ -2,21 +2,32 @@
 // Created by studigem on 13.06.21.
 //
 
-#pragma once
+#ifndef OBJECT_OBSERVER_SHELF_H
+#define OBJECT_OBSERVER_SHELF_H
 
 #include <ros/ros.h>
 #include <ros/package.h>
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
-#include <std_msgs/Float64MultiArray.h>
+#include <geometry_msgs/TransformStamped.h>
 
 #include <tf/transform_listener.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <Eigen/Dense>
+
+#include <tf2_ros/static_transform_broadcaster.h>
+
+#include <eigen_conversions/eigen_kdl.h>
+#include <eigen_conversions/eigen_msg.h>
+
+#include <kdl/chain.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/frames.hpp>
+#include <kdl/tree.hpp>
+#include <kdl_parser/kdl_parser.hpp>
 
 
 namespace object_observer {
@@ -47,10 +58,10 @@ namespace object_observer {
 
         ///// Articulation
         // articulation
-        double previous_time_;
-        double start_relative_angle_;
-        double current_relative_angle_;
-        bool articulation_first_computation_;
+        double previous_time_ = 0.0;
+        double start_relative_angle_ = 0.0;
+        double current_relative_angle_ = 0.0;
+        bool articulation_first_computation_ = false;
         sensor_msgs::JointState object_state_;
         ros::Publisher object_state_publisher_;
         tf::TransformListener listener;
@@ -70,3 +81,4 @@ namespace object_observer {
 
     };
 }  // namespace object_observer
+#endif

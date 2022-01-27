@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME}
         src/controller_interface.cpp
         src/ros_conversions.cpp
         src/state_observer.cpp
+        src/state_observer_valve.cpp
         src/omav_trajectory_generator.cpp
         )
 
