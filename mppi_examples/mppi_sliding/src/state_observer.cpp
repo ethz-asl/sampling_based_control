@@ -86,8 +86,8 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   object_state_.position[2] = 0.15;
   object_state_.position[6] = 1.0;  // quat w = 1
   // TODO:(Boyang)  currently use velocity to pass geometry value
-  object_state_.velocity[4] = 1.0;  // set the geometry to a non-zero default value
-  object_state_.velocity[5] = 1.0; 
+  object_state_.velocity[4] = 0.5;  // set the geometry to a non-zero default value
+  object_state_.velocity[5] = 0.5; 
 
   articulation_first_computation_ = true;
   ROS_INFO("State observer inited");

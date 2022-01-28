@@ -418,5 +418,5 @@ void PandaControllerInterface::publish_ros() {
   optimal_trajectory_publisher_.publish(optimal_path_);
 
   // for debug
-  pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));
+  // pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));
 }

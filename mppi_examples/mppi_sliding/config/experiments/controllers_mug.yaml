@@ -50,7 +50,7 @@ mppi_sliding:
     angular_tolerance_manipulation: 0.6
 
     min_dist: 0.15
-    max_reach: 100 #0.65
+    max_reach: 0.65
     reach_weight: 0
     reach_weight_slope: 0
 
@@ -128,7 +128,7 @@ mppi_sliding:
     object_handle_joint: handle_joint
     articulation_joint: articulation_joint
 
-    update_dynamics_from_perception: false
+    update_dynamics_from_perception: true
 
     has_filter: false
     apply_filter: false
