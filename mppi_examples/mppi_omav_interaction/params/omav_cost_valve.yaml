@@ -40,5 +40,5 @@ force_cost: 1.0
 torque_cost: 0.0
 contact_prohibitor: True
 
-Q_object_distance: 10
+Q_object_distance: 0
 object_distance_thresh: 0.5

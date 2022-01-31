@@ -292,12 +292,20 @@ void PathIntegral::prepare_rollouts(const bool& shift) {
         log_warning(warning.str());
       }
       offset = std::distance(opt_roll_cache_.tt.begin(), lower);
+      if (offset > 0) {
+        // This is done such that the shifted rollout aligns better with the
+        // previous measurement. The shifted trajectory will then rather be
+        // behind the recent measurement (i.e. rather too slow than too fast)
+        offset--;
+      }
     }
 
     // shift and trim inputs so they restart from current time
     // also delete rollout states and costs, only keep inputs
     for (auto& roll : rollouts_) {
       shift_back(roll.uu, dynamics_->get_zero_input(roll.xx.back()), offset);
+      // interpolate_rollout_inputs(roll.uu, roll.tt, t0_internal_,
+      //                            dynamics_->get_zero_input(roll.xx.back()));
       // shift_back(roll.tt, 0.0, offset);
       roll.clear_cost();
       roll.clear_observation();
@@ -307,6 +315,12 @@ void PathIntegral::prepare_rollouts(const bool& shift) {
     shift_back(opt_roll_.uu,
                dynamics_->get_zero_input(opt_roll_cache_.xx.back()), offset);
     shift_back(momentum_, momentum_.back(), offset);
+    // interpolate_rollout_inputs(
+    //     opt_roll_.uu, opt_roll_.tt, t0_internal_,
+    //     dynamics_->get_zero_input(opt_roll_cache_.xx.back()));
+    // shift_back(opt_roll_.tt, 0.0, offset);
+    // interpolate_rollout_inputs(momentum_, opt_roll_.tt, t0_internal_,
+    //                            momentum_.back());
     lock.unlock();
   }
 }
@@ -349,13 +363,13 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
     dynamics->reset(x0_internal_);
     x = x0_internal_;
     for (size_t t = 0; t < steps_; t++) {
-      rollouts_[k].tt[t] = t0_internal_ + t * config_.step_size;
+      double tt = t0_internal_ + t * config_.step_size;
       // cached rollout (recompute noise)
       if (k < cached_rollouts_) {
         rollouts_[k].nn[t] = rollouts_[k].uu[t] - opt_roll_.uu[t];
         // Set the noise before the hold time end to zero to avoid any
         // exploration before the next trajectory is published
-        if (rollouts_[k].tt[t] <= hold_time_end_internal_ &&
+        if (tt <= hold_time_end_internal_ &&
             !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         }
@@ -367,7 +381,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
       }
       // perturbed trajectory
       else {
-        if (rollouts_[k].tt[t] <= hold_time_end_internal_ &&
+        if (tt <= hold_time_end_internal_ &&
             !first_mppi_iteration_) {
           rollouts_[k].nn[t].setZero();
         } else {
@@ -457,7 +471,7 @@ void PathIntegral::optimize() {
   // rollouts averaging
   for (size_t t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
-    if (opt_roll_.tt[t] > hold_time_end_internal_) {
+    if (opt_roll_.tt[t] >= hold_time_end_internal_) {
       momentum_[t] = config_.beta * momentum_[t];
       for (size_t k = 0; k < config_.rollouts; k++) {
         momentum_[t] += omega_[k] * rollouts_[k].nn[t];
@@ -491,16 +505,19 @@ void PathIntegral::optimize() {
 
 void PathIntegral::filter_input() {
   if (config_.filter_type) {
-    filter_.reset(t0_internal_);
+    // filter_.reset(t0_internal_);
+    filter_.reset(hold_time_end_internal_);
     // All inputs are part of the measurements, but not all of them should be
     // filtered!
     for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
-      filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
+      if (opt_roll_.tt[i] >= hold_time_end_internal_) {
+        filter_.add_measurement(opt_roll_.uu[i], opt_roll_.tt[i]);
+      }
     }
     // Only the inputs that can be changed in reality should be filtered hence
     // this part
     for (size_t i = 0; i < opt_roll_.uu.size(); i++) {
-      if (opt_roll_.tt[i] > hold_time_end_internal_) {
+      if (opt_roll_.tt[i] >= hold_time_end_internal_) {
         filter_.apply(opt_roll_.uu[i], opt_roll_.tt[i]);
       }
     }
