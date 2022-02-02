@@ -7,13 +7,13 @@
 
     <link name="mug_frame">
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 -1.57" xyz="0 0 0"/>
             <geometry>
                 <mesh filename="/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/Mug.dae" scale="0.05 0.05 0.05"/>
             </geometry>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 -1.57" xyz="0 0 0"/>
             <geometry>
                <mesh filename="/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/Mug_2_very_low.obj" scale="0.05 0.05 0.05"/>
             </geometry>
@@ -28,12 +28,12 @@
     <joint name="base_to_base_inertia" type="fixed">
         <parent link="mug_frame"/>
         <child link="base_inertia"/>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin rpy="0 0 0" xyz="0 0 0.0"/>
     </joint>
     <!-- Dummy inertia link, because KDL cannot have inertia on the base link -->
     <link name="base_inertia">
         <inertial>
-            <origin rpy="0 0 0" xyz="-0.001960558279 -0.001413217745 0.050207125344"/>
+            <origin rpy="0 0 0" xyz="-0.001960558279 -0.001413217745  -0.01207125344"/>
             <mass value="1"/>
             <inertia ixx="0.2" ixy="-0.0013" ixz="-0.2" iyy="0.5" iyz="-0.24" izz="0.5"/>
         </inertial>

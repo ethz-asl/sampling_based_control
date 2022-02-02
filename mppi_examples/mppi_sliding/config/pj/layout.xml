@@ -1,73 +1,64 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<root version="2.3.8">
+<root>
  <tabbed_widget parent="main_window" name="Main Window">
   <Tab containers="1" tab_name="Position Measured">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
-     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
+    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+     <DockSplitter orientation="|" sizes="0.202082;0.202949;0.202082;0.202082;0.190807" count="5">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.583274" bottom="0.583252" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint1/position" color="#1f77b4"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="-1.045746" bottom="-1.045756" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint2/position" color="#d62728"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="-0.733039" bottom="-0.733075" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint3/position" color="#1ac938"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="-2.570148" bottom="-2.570195" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint4/position" color="#ff7f0e"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="-0.633326" bottom="-0.633332" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint5/position" color="#f14cc1"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="5" sizes="0.202381;0.202381;0.202381;0.202381;0.190476">
+     <DockSplitter orientation="|" sizes="0.202082;0.202949;0.202082;0.202082;0.190807" count="5">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="2.137434" bottom="2.137427" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint6/position" color="#9467bd"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="1.108987" bottom="1.108974" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint7/position" color="#17becf"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.038467" bottom="0.038467" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_finger_joint1/position" color="#9467bd"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.038467" bottom="0.038467" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_finger_joint2/position" color="#17becf"/>
        </plot>
       </DockArea>
       <DockArea name="...">
@@ -82,57 +73,50 @@
   </Tab>
   <Tab containers="1" tab_name="Velocity Measured">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
-     <DockSplitter orientation="|" count="5" sizes="0.20074;0.19889;0.20074;0.19889;0.20074">
+    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+     <DockSplitter orientation="|" sizes="0.201214;0.198612;0.200347;0.198612;0.201214" count="5">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.001875" bottom="-0.001650" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint1/velocity" color="#bcbd22"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.001575" bottom="-0.001405" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint2/velocity" color="#1f77b4"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.001776" bottom="-0.001302" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint3/velocity" color="#d62728"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.000703" bottom="-0.000907" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint5/velocity" color="#1ac938"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.000703" bottom="-0.000907" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint5/velocity" color="#1ac938"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="5" sizes="0.20074;0.19889;0.20074;0.19889;0.20074">
+     <DockSplitter orientation="|" sizes="0.201214;0.198612;0.200347;0.198612;0.201214" count="5">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.000815" bottom="-0.000848" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint6/velocity" color="#ff7f0e"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="0.023059" top="0.001603" bottom="-0.002139" right="4.853100"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/panda/joint_states/panda_joint7/velocity" color="#f14cc1"/>
        </plot>
       </DockArea>
       <DockArea name="...">
@@ -159,64 +143,71 @@
   </Tab>
   <Tab containers="1" tab_name="Object State">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
-     <DockSplitter orientation="|" count="3" sizes="0.333333;0.333333;0.333333">
+    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+     <DockSplitter orientation="|" sizes="0.333333;0.333333;0.333333" count="3">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="8.924037" top="0.100000" bottom="-0.100000" right="13.856723"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/observer/state/object_state/position.0" color="#1f77b4"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="8.924037" top="0.100000" bottom="-0.100000" right="13.856723"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/observer/state/object_state/position.1" color="#d62728"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="8.924037" top="0.100000" bottom="-0.100000" right="13.856723"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/observer/state/object_state/position.2" color="#1ac938"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" count="3" sizes="0.333333;0.333333;0.333333">
+     <DockSplitter orientation="|" sizes="0.333333;0.333333;0.333333" count="3">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="8.924037" top="0.100000" bottom="-0.100000" right="13.856723"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/observer/state/object_state/velocity.0" color="#ff7f0e"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="8.924037" top="0.100000" bottom="-0.100000" right="13.856723"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/observer/state/object_state/velocity.0" color="#ff7f0e"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range left="8.924037" top="0.100000" bottom="-0.100000" right="13.856723"/>
+        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
         <limitY/>
-        <curve name="/observer/state/object_state/velocity.2" color="#f14cc1"/>
        </plot>
       </DockArea>
      </DockSplitter>
     </DockSplitter>
    </Container>
   </Tab>
-  <currentTabIndex index="2"/>
+  <Tab containers="1" tab_name="tab2">
+   <Container>
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockArea name="...">
+      <plot style="Lines" mode="TimeSeries">
+       <range left="8.923562" top="191.400779" bottom="191.399504" right="13.922707"/>
+       <limitY/>
+       <curve color="#1f77b4" name="/mppi_sliding/stage_cost/data"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="3"/>
  </tabbed_widget>
  <use_relative_time_offset enabled="1"/>
  <!-- - - - - - - - - - - - - - - -->
  <!-- - - - - - - - - - - - - - - -->
  <Plugins>
   <plugin ID="DataLoad CSV">
-   <default time_axis=""/>
+   <default time_axis="" delimiter="0"/>
   </plugin>
   <plugin ID="DataLoad ROS bags">
    <use_header_stamp value="false"/>
@@ -233,10 +224,9 @@
   </plugin>
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
-  <plugin ID="ZMQ Subscriber"/>
-  <plugin status="idle" ID="CSV Exporter"/>
-  <plugin status="idle" ID="ROS /rosout Visualization"/>
-  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
+  <plugin ID="CSV Exporter" status="idle"/>
+  <plugin ID="ROS /rosout Visualization" status="idle"/>
+  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
  <previouslyLoaded_Datafiles/>

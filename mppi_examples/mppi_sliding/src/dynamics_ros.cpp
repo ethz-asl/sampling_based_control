@@ -28,12 +28,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
 
 
-  // cylinder
-  cylinder_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("/cylinder/joint_state", 10);
-  cylinder_trans.header.frame_id = "world";
-  cylinder_trans.child_frame_id = "cylinder_frame";
-
   //target
   cylinder_target_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/target_cylinder/joint_states", 10);
@@ -96,18 +90,21 @@ void ManipulatorDynamicsRos::reset_to_default() {
 
 void ManipulatorDynamicsRos::publish_ros() {
   tweak = tweak + 1;
+
   // update robot state visualization
   joint_state_.header.stamp = ros::Time::now();
   for (size_t j = 0; j < robot_dof_; j++) {
     joint_state_.position[j] = x_(j);
     joint_state_.velocity[j] = x_(j + robot_dof_);
   }
+
   state_publisher_.publish(joint_state_);
 
   // update object state visualization
   object_state_.header.stamp = ros::Time::now();
   object_state_.position[0] = x_(2 * robot_dof_);
   object_state_publisher_.publish(object_state_);
+
   // update cylinder target state and its visulization
   cylinder_target_.header.stamp = ros::Time::now();
   cylinder_target_trans.header.stamp = ros::Time::now();
@@ -120,18 +117,18 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_target_trans.transform.rotation.y = q_cylinder_t.y();
   cylinder_target_trans.transform.rotation.z = q_cylinder_t.z();
   cylinder_target_trans.transform.rotation.w = q_cylinder_t.w();
+
   // update mug state and its visulization
   mug_state_.header.stamp = ros::Time::now();
   mug_state_trans.header.stamp = ros::Time::now();
   mug_state_trans.transform.translation.x = x_(2 * robot_dof_);
   mug_state_trans.transform.translation.y = x_(2 * robot_dof_+1);
   mug_state_trans.transform.translation.z = x_(2 * robot_dof_+2);
-  // tf2::Quaternion mug_rot;
-  // mug_rot.setRPY(0, 0, 0);
-  mug_state_trans.transform.rotation.x = x_(2* robot_dof_+4);
-  mug_state_trans.transform.rotation.y = x_(2* robot_dof_+5);
-  mug_state_trans.transform.rotation.z = x_(2* robot_dof_+6);
-  mug_state_trans.transform.rotation.w = x_(2* robot_dof_+3);
+  mug_state_trans.transform.rotation.x = x_(2* robot_dof_+3);
+  mug_state_trans.transform.rotation.y = x_(2* robot_dof_+4);
+  mug_state_trans.transform.rotation.z = x_(2* robot_dof_+5);
+  mug_state_trans.transform.rotation.w = x_(2* robot_dof_+6);
+  
   // update table state and its visulization
   table_state_.header.stamp = ros::Time::now();
   table_trans.header.stamp = ros::Time::now();

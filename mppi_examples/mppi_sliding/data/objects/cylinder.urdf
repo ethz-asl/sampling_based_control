@@ -6,16 +6,16 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder length="0.1" radius="0.05"/>
+                <cylinder length="0.1" radius="0.03"/>
             </geometry>
             <material name="steel">
-                <color rgba="0 0 .8 1"/>
+                <color rgba="0 0 .8 0.6"/>
             </material>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <cylinder length="0.1" radius="0.05"/>
+                <cylinder length="0.1" radius="0.03"/>
             </geometry>
             <material name="">
                 <contact name="steel"/>

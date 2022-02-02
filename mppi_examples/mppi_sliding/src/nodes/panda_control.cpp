@@ -13,6 +13,7 @@
 #include <sensor_msgs/JointState.h>
 #include <chrono>
 #include <signal_logger/signal_logger.hpp>
+#include <random>
 
 using namespace std::chrono;
 using namespace manipulation;
@@ -51,6 +52,10 @@ int main(int argc, char** argv) {
   ros::Publisher x_nom_publisher_ =
       nh.advertise<manipulation_msgs::State>("/observer/state", 10);
 
+  std_msgs::Float64 stage_cost;
+  ros::Publisher stage_cost_publisher_ = 
+      nh.advertise<std_msgs::Float64>("/stage_cost",10);
+
   // init state and input
   mppi::observation_t x = simulation->get_state();  // get_state() returns x
   mppi::input_t u = simulation->get_zero_input(x);
@@ -69,7 +74,6 @@ int main(int argc, char** argv) {
   controller.set_observation(x, sim_time);
   ROS_INFO_STREAM("init first observation as : " << x.transpose());
   
-
   // start controller
   bool sequential;
   nh.param<bool>("sequential", sequential, false);
@@ -88,10 +92,11 @@ int main(int argc, char** argv) {
   signal_logger::logger->updateLogger();
   signal_logger::logger->startLogger();
 
-
   while (ros::ok()) {
+
     start = std::chrono::steady_clock::now();
     controller.update_reference(x, sim_time);
+
     if (sequential) {
       controller.set_observation(x, sim_time);
       controller.update_policy();
@@ -101,33 +106,48 @@ int main(int argc, char** argv) {
     }
     else {
       controller.set_observation(x, sim_time);
-      //controller.get_input(x, u, sim_time);
     }
-
-    //ROS_INFO_STREAM( "controller update , input is: "<< u.transpose());
 
     x = simulation->step(u, simulation->get_dt());
     sim_time += simulation->get_dt();
-    // ROS_INFO_STREAM( "sim world update ") ;
+
+    // compensate z-axis, since the frame origin of mug obj is at the bottom
+    x(2*ARM_GRIPPER_DIM+2) += 0.05;
+
+    //ROS_INFO_STREAM("raw x : " << x.transpose());
+
+    // add noise
+    for(int i = 0; i < 2; i ++)
+    {
+      std::random_device rd{};
+      std::mt19937 gen{rd()};
+      std::normal_distribution<> d{x(2*ARM_GRIPPER_DIM+i), 0.01};
+      x(2*ARM_GRIPPER_DIM+i) = d(gen); 
+    }
+
+    //ROS_INFO_STREAM("noise x : " << x.transpose());    
 
     controller.get_input_state(x, x_nom, u, sim_time);
 
     manipulation::conversions::eigenToMsg_panda(x_nom, sim_time, x_nom_ros);
     x_nom_publisher_.publish(x_nom_ros);
-    // ROS_INFO_STREAM( "contoller state published ") ;
+
+    stage_cost.data = controller.get_stage_cost(x, u, sim_time);
+    stage_cost_publisher_.publish(stage_cost);
 
     end = steady_clock::now();
     elapsed = duration_cast<milliseconds>(end - start).count() / 1000.0;
+
     if (simulation->get_dt() - elapsed > 0)
       ros::Duration(simulation->get_dt() - elapsed).sleep();
     else
       ROS_INFO_STREAM_THROTTLE(
           3.0, "Slower than real-time: " << elapsed / simulation->get_dt()
                                          << "x slower.");
-    simulation->publish_ros();
-    //ROS_INFO_STREAM( "sim world state published ") ;
 
-    signal_logger::logger->collectLoggerData();
+    simulation->publish_ros();
+
+    //signal_logger::logger->collectLoggerData();
     ros::spinOnce();
   }
   

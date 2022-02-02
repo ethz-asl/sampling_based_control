@@ -57,7 +57,6 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   object_state_subscriber_ = nh_.subscribe(
       object_state_topic, 1, &StateObserver::object_state_callback, this);
 
-
   // TOODO(giuseppe+boyang) we commented this out in last test
   // {
   //   approx_message_filter_ =
@@ -66,26 +65,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   //   approx_message_filter_->registerCallback(
   //       boost::bind(&StateObserver::message_filter_cb, this, _1, _2));
   // }
-
   //}
-  // else
-  // {
-  //   if (exact_sync_) {
-  //     exact_message_filter_sim_ =
-  //         std::make_unique<message_filters::Synchronizer<ExactPolicySim>>(
-  //             ExactPolicySim(10), arm_sub_, base_pose_sub_, base_twist_sub_,
-  //             obj_state_sub_, wrench_sub_);
-  //     exact_message_filter_sim_->registerCallback(boost::bind(
-  //         &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
-  //   } else {
-  //     approx_message_filter_sim_ =
-  //         std::make_unique<message_filters::Synchronizer<ApproximatePolicySim>>(
-  //             ApproximatePolicySim(10), arm_sub_, base_pose_sub_,
-  //             base_twist_sub_, obj_state_sub_, wrench_sub_);
-  //     approx_message_filter_sim_->registerCallback(boost::bind(
-  //         &StateObserver::message_filter_cb_sim, this, _1, _2, _3, _4, _5));
-  //   }
-  // }
 
   // ros publishing
   state_publisher_ =
@@ -93,18 +73,25 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   object_state_publisher_ = nh_.advertise<sensor_msgs::JointState>(
       "/observer/object/joint_state", 10);
 
-
-
+  // init object state
   object_state_.name.push_back("object");
   for (int i = 0; i < 7; i++) {
     object_state_.position.push_back(0.0);
     object_state_.velocity.push_back(0.0);
   }
-  articulation_first_computation_ = true;
 
-  // base_twist_ros_.header.frame_id = "world";
+  // TODO : this default obj pos is hardcode now, and does not always equal to the init state of dynamics
+  object_state_.position[0] = 1.0;
+  object_state_.position[1] = 0;
+  object_state_.position[2] = 0.10;
+  object_state_.position[6] = 1.0;  // quat w = 1
+  // TODO:(Boyang)  currently use velocity to pass geometry value
+  object_state_.velocity[4] = 0.02;  // set the geometry to a non-zero default value
+  object_state_.velocity[5] = 0.11; 
+
+  articulation_first_computation_ = true;
   ROS_INFO("State observer inited");
-  // ext_tau_.setZero();
+
 }
 
 bool StateObserver::init_ros() {
@@ -113,7 +100,7 @@ bool StateObserver::init_ros() {
       nh_.advertise<sensor_msgs::JointState>("/table/joint_state", 10);
   table_trans.header.frame_id = "world";
   table_trans.child_frame_id = "table_frame";
-
+  // object
   object_state_trans.header.frame_id = "world";
   object_state_trans.child_frame_id = "mug_frame";
 
@@ -191,7 +178,7 @@ void StateObserver::object_state_callback(
 
   geometry_msgs::PoseStamped pri_pos_in_world;
 
-  transform = tf_buffer_.lookupTransform(  "world", msg->header.frame_id, ros::Time(0), ros::Duration(1.0) );
+  transform = tf_buffer_.lookupTransform( "world", msg->header.frame_id, ros::Time(0), ros::Duration(1.0));
 
   tf2::doTransform(pri_pos_in_pri, pri_pos_in_world, transform); 
 
@@ -206,6 +193,10 @@ void StateObserver::object_state_callback(
   object_state_.position[4] = pri_pos_in_world.pose.orientation.y;
   object_state_.position[5] = pri_pos_in_world.pose.orientation.z;
   object_state_.position[6] = pri_pos_in_world.pose.orientation.w;
+
+  // TODO:(Boyang)  currently use velocity to pass geometry value
+  object_state_.velocity[4] = msg->body_radius;
+  object_state_.velocity[5] = msg->body_height;
 
   object_state_publisher_.publish(object_state_);
 }

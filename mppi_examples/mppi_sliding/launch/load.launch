@@ -4,7 +4,7 @@
     <arg name="object" default="door"/>
     <arg name="cylinder" default="cylinder"/>
     <arg name="table" default="table"/>
-    <arg name="description_file" default="$(find mppi_sliding)/data/panda_mobile.urdf.xacro"/>
+    <arg name="description_file" default="$(find mppi_sliding)/data/panda.urdf.xacro"/>
     <arg name="object_height" default="1.0"/>
     <arg name="load_simulation_object" default="true"/>
 

@@ -74,24 +74,6 @@
     </node>
     <!--       ..............         -->>
 
-
-    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="object_description_raisim"/>
-        <remap from="joint_states" to="/object/joint_state"/>
-    </node>
-
-    <node name="simulation_object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="object_description_raisim_simulation"/>
-        <remap from="joint_states" to="/object/joint_state"/>
-    </node>
-    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="obstacle_description"/>
-        <remap from="joint_states" to="/fake_joint_state"/>
-    </node>
-
     <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
 
     <node name="manipulation_control" type="manipulation_control" pkg="mppi_sliding" output="screen" launch-prefix="$(arg launch_prefix)">
@@ -106,6 +88,10 @@
     <include file="$(find mppi_sliding)/launch/common.launch">
         <arg name="plot" value="$(arg plot)"/>
         <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
+        <arg name="rviz" value="false"/>
     </include>
+
+    <!-- Open Rviz (the sim config) -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_sliding)/config/rviz/cup_sim.rviz" output="screen"  respawn="true"/>
 
 </launch>

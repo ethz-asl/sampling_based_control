@@ -3,8 +3,8 @@ geometry:
   cylinder_radius: 0.05
   cylinder_mass: 1    # ideally equal to the object
   cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
-  table_position: [1.6,1.5,0.13]
-  target_pos: [0.58, 0.65, 0.28]
+  table_position: [1.0,0.0,0.2]
+  target_pos: [0.75, 0.15, 0.3]
   friction: 0.15  
 
 setup_config:
@@ -17,8 +17,8 @@ dynamics:
   articulation_joint: articulation_joint
   initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.73, 0.40, 0.28, -0.707, 0.0, 0, -0.707,                                  # object joint pose 3 [x,y,fi] in 2D
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                                         # object joint velocity 3
+                   0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
     base_gains:
@@ -42,11 +42,11 @@ sim_dynamics:
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,         # robot position 9
+  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.33, 0.30, 0.28, -0.707, 0.0, 0, -0.707,                                       # object joint position
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                                      # object joint velocity
-                   0]             # contact flag
+                   0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
+                   0]            # contact flag
   gains:
     base_gains:
       kp: []
@@ -74,8 +74,8 @@ cost:
 
   min_dist: 0.0
   max_reach: 3.0
-  reach_weight: 100
-  reach_weight_slope: 10
+  reach_weight: 0
+  reach_weight_slope: 0
 
   obstacle_weight: 0
   obstacle_weight_slope: 0
@@ -95,8 +95,8 @@ cost:
   # upper_joint_limits: [1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800 ]
   # lower_joint_limits: [ -1800, -1800, -1800, -1800, -1800, -1800, -1800, -1800 ]
 
-  joint_limit_cost: 1000 #1000
-  joint_limit_slope: 1000000 #100
+  joint_limit_cost: 0 #1000
+  joint_limit_slope: 0 #100
 
   max_power: 0.0
   power_weight: 0.0

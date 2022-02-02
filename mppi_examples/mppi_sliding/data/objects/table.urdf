@@ -6,16 +6,16 @@
         <visual>
             <origin xyz="0 0 0"/>
             <geometry>
-                <box size="3 3 0.2"/>
+                <box size="2 2 0.1"/>
             </geometry>
             <material name="steel">
-                <color rgba="0.5 0 0 0.5"/>
+                <color rgba="0.5 0 0 0.9"/>
             </material>
-        </visual>0
+        </visual>
         <collision>
             <origin xyz="0 0 0"/>
             <geometry>
-                <box size="3 3 0.2"/>
+                <box size="2 2 0.1"/>
             </geometry>
             <material name="">
                 <contact name="steel"/>

@@ -72,7 +72,7 @@ class ManipulationController
   void state_callback(const manipulation_msgs::StateConstPtr& state_msg);
 
   // Apply the safety filter to the optimized velocity
-  //void enforce_constraints(const ros::Duration& period);
+  // void enforce_constraints(const ros::Duration& period);
 
   // Update the desired position reference
   void update_position_reference(const ros::Duration& period);
@@ -96,10 +96,9 @@ class ManipulationController
   bool state_ok_;
   bool state_received_;
 
-
   ros::Time start_time;
   ros::Time run_time;
-  
+
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
   std::vector<hardware_interface::JointHandle> joint_handles_;
@@ -120,6 +119,7 @@ class ManipulationController
   ros::Subscriber state_subscriber_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
   RTPublisher<sensor_msgs::JointState> table_state_publisher_;
+  RTPublisher<std_msgs::Float64> stage_cost_publisher_;
 
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;
 
@@ -143,7 +143,7 @@ class ManipulationController
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
 
   // metrics
-  double stage_cost_;
+  std_msgs::Float64 stage_cost_;
 
   // optimal rollout info
   bool publish_rollout_;
