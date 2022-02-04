@@ -67,7 +67,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
 
   // object displacement cost
-  else if (mode == 2) {
+  else if (mode == 2 || mode == 4) {
     // get the desired offset from reference and not from configs (see mode 1 for details)
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
@@ -81,6 +81,15 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
     object_cost += object_error * object_error * params_.Q_obj;
+
+    if (mode == 4){
+      // mode 4 adds a collision cost if we are not interacting with the hand or finger links
+      float hand_force = x.tail<3>().norm();
+      if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0 && hand_force == 0.0){
+        // in contact AND there is no external torque at or below the hand joint
+        contact_cost += params_.Q_collision;
+      }
+    }
   }
 
   // joint-level control
