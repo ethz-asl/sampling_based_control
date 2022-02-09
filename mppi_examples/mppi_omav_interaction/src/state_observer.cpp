@@ -86,6 +86,9 @@ namespace object_observer {
             T_world_shelf_ros.child_frame_id = "shelf";
             static_broadcaster.sendTransform(T_world_shelf_ros);
             ROS_INFO_STREAM("Published initial transform from world to shelf frame.");
+            std::cout << "Transform is:" << std::endl;
+            std::cout << "Translation: " << T_world_shelf_.translation().transpose() << std::endl;
+            std::cout << "Rotation: " << std::endl << T_world_shelf_.rotation() << std::endl;
             return;
         }
 

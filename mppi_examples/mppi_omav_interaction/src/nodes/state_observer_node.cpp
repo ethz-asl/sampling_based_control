@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
   const double frequency = 250.0;
 
-  if (object_name.compare("shelf") == 0) {
+  if (object_name.compare("shelf") == 0 || object_name.compare("shelf_door") == 0) {
     object_observer::StateObserver observer(nh);
     if (!observer.initialize()) {
       ROS_ERROR(

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<robot name="valve" xmlns:xacro="http://www.ros.org/wiki/xacro">  
-    <xacro:arg name="resource_prefix" default=""/>
+<robot name="valve" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
+    <xacro:arg name="object_position" default="-1 0 1"/>
+    <xacro:arg name="object_rpy" default="1.5708 0 0"/>
 
     <xacro:property name="base_position_x" default="1.0"/>
     <xacro:property name="base_position_y" default="0.0"/>
@@ -9,19 +10,6 @@
     <xacro:property name="base_height" default="0.5"/>
     <xacro:property name="base_width" default="0.2"/>
     <xacro:property name="valve_type" default="lee_"/>
-
-    <xacro:macro name="box_inertia" params="m x y z">
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="${m}"/>
-            <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
-                     ixy="0"
-                     ixz="0"
-                     iyy="${0.0833 * m * (x**2 + z**2)}"
-                     iyz="0"
-                     izz="${0.0833 * m * (x**2 + y**2)}"/>
-        </inertial>
-    </xacro:macro>
 
     <link name="world"/>
 
@@ -32,7 +20,6 @@
     </joint>
 
     <link name="valve_base">
-        <xacro:box_inertia m="100" x="${base_width}" y="${base_length}" z="${base_height}"/>
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
@@ -42,20 +29,9 @@
                 <color rgba="1.0 1.0 1.0 1"/>
             </material>
         </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <geometry>
-                <box size="${base_width} ${base_length} ${base_height-0.1}"/>
-            </geometry>
-        </collision>
     </link>
 
     <link name="handle_link">
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="0.1"/>
-            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
-        </inertial>
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
@@ -71,9 +47,10 @@
     </link>
 
     <joint name="articulation_joint" type="revolute">
-        <parent link="valve_base"/>
+        <parent link="world"/>
         <child link="handle_link"/>
-        <origin xyz="0 0 ${base_height/2.0+0.2}" rpy="0 0 0"/> <!-- 1.5708 0 0 -->
+        <!--<origin xyz="0 0 ${base_height/2.0+0.2}" rpy="1.5708 0 0"/> <!- 1.5708 0 0 -->
+        <origin xyz="$(arg object_position)" rpy="$(arg object_rpy)"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 1 0"/>
         <limit upper="300.14" lower="-300.14" effort="100" velocity="1.0"/>

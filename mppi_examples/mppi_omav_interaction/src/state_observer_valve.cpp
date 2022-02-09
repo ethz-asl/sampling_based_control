@@ -65,6 +65,9 @@ void StateObserverValve::computeAngle(const ros::Time& stamp) {
     T_world_valve_init.child_frame_id = "valve";
     static_broadcaster.sendTransform(T_world_valve_init);
     ROS_INFO_STREAM("Published initial transform from world to valve frame.");
+    std::cout << "Transform is:" << std::endl;
+    std::cout << "Translation: " << T_world_valve_.translation().transpose() << std::endl;
+    std::cout << "Rotation: " << std::endl << T_world_valve_.rotation() << std::endl;
     return;
   }
 
