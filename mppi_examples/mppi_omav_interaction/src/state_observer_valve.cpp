@@ -66,8 +66,16 @@ void StateObserverValve::computeAngle(const ros::Time& stamp) {
     static_broadcaster.sendTransform(T_world_valve_init);
     ROS_INFO_STREAM("Published initial transform from world to valve frame.");
     std::cout << "Transform is:" << std::endl;
-    std::cout << "Translation: " << T_world_valve_.translation().transpose() << std::endl;
-    std::cout << "Rotation: " << std::endl << T_world_valve_.rotation() << std::endl;
+    std::cout << "Translation: " << T_world_valve_.translation().transpose()
+              << std::endl;
+    std::cout << "Rotation: " << std::endl
+              << T_world_valve_.rotation() << std::endl;
+    std::cout << "Euler: "
+              << T_world_valve_.rotation().eulerAngles(0, 1, 2).transpose()
+              << std::endl;
+    std::cout << "Euler: "
+              << T_world_valve_.rotation().eulerAngles(2, 1, 0).transpose()
+              << std::endl;
     return;
   }
 
