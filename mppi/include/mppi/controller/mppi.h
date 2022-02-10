@@ -276,6 +276,11 @@ class PathIntegral {
 
   void setHoldTime(const double& t) { t_hold_ = t; }
 
+  template <class T>
+  void interpolate_rollout_inputs(std::vector<T>& rollout,
+                                  const std::vector<double> tt,
+                                  const double& t0, const T& fill) const;
+
   // Generic getters
   inline const Eigen::ArrayXd& get_weights() const { return omega_; }
   inline double get_stage_cost() { return stage_cost_; }
@@ -299,7 +304,8 @@ class PathIntegral {
    */
   void set_reference_trajectory(reference_trajectory_t& ref);
   /**
-   * @brief      Get vector of dynamics pointers and dynamics for rollout sampling
+   * @brief      Get vector of dynamics pointers and dynamics for rollout
+   * sampling
    * @param      dynamics_v  Vector of dynamics pointers
    * @param      dynamics    Dynamics pointer
    */
