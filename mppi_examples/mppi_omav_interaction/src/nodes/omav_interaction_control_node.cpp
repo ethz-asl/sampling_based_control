@@ -240,7 +240,16 @@ bool InteractionControlNode::getTargetStateFromTrajectory() {
     }
     return true;
   }
-  ROS_ERROR("No trajectory available.");
+  // If there's no trajectory available, use current odometry as default target
+  // state. This is just to ensure that the solver does not diverge.
+  target_state_.position_W = current_odometry_.position_W;
+  target_state_.orientation_W_B = current_odometry_.orientation_W_B;
+  target_state_.velocity_W = Eigen::Vector3d::Zero();
+  target_state_.angular_velocity_W = Eigen::Vector3d::Zero();
+  ROS_ERROR(
+      "No trajectory available or length 0 (%i, %i). Using odometry as target.",
+      static_cast<int>(trajectory_available_),
+      current_trajectory_.points.size());
   return false;
 }
 

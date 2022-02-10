@@ -274,11 +274,42 @@ void PathIntegral::initialize_rollouts() {
   lock.unlock();
 }
 
+template <class T>
+void PathIntegral::interpolate_rollout_inputs(std::vector<T>& rollout,
+                                              const std::vector<double> tt,
+                                              const double& t0,
+                                              const T& fill) const {
+  // Instead of shifting the rollouts upon starting a new iteration we can also
+  // interpolate, this should lead to more accurate results. However it's
+  // unclear if this really has a significant impact. Also this gets distorted
+  // if we use damping of the inputs.
+  size_t idx = 1;
+  std::vector<T> r = rollout;
+  while (tt[idx] <= t0) {
+    idx++;
+  }
+  double t = t0;
+  size_t i = 0;
+  while (idx < tt.size()) {
+    double k = (t - tt[idx - 1]) / config_.step_size;
+    r[i] = rollout[idx - 1] + k * (rollout[idx] - rollout[idx - 1]);
+    t += config_.step_size;
+    idx++;
+    i++;
+  }
+  while (i < tt.size()) {
+    r[i] = fill;
+    i++;
+  }
+  rollout = r;
+}
+
 void PathIntegral::prepare_rollouts(const bool& shift) {
   // sort rollouts for easier caching
   std::sort(rollouts_.begin(), rollouts_.end());
   if (shift) {
-    // find trim index
+    // Shift optimal rollout and sampled rollouts such that they start at the
+    // most recent measured state, i.e. x0_internal and t0_internal
     int offset = 0;
     std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
     {
