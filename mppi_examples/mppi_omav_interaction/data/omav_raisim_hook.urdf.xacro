@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omav_raisim_hook">
 
     <!-- Properties -->
-    <xacro:property name="manipulator_length" value="0.62"/>   <!-- [m] -->
+    <xacro:property name="manipulator_length" value="0.605"/>   <!-- [m] -->
     <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
 
     <xacro:property name="tool_length" value="0.05"/>         <!-- [m] -->

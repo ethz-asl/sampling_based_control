@@ -4,6 +4,7 @@
     <xacro:arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
     <xacro:arg name="object_position" default="-1 0 1"/>
     <xacro:arg name="object_rpy" default="1.5708 0 0"/>
+    <xacro:arg name="host_name" default="kea"/>
 
     <xacro:property name="base_position_x" default="1.0"/>
     <xacro:property name="base_position_y" default="0.0"/>
@@ -30,16 +31,17 @@
             <mass value="0.1"/>
             <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
         </inertial>
-        <visual>
+        <!-- <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
                 <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_${valve_type}visual.obj" scale="1 1 1"/>
             </geometry>
-        </visual>
+        </visual> -->
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	       <geometry>
-                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_${valve_type}collision.obj" scale="1 1 1"/>
+                <!-- <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_${valve_type}collision.obj" scale="1 1 1"/> -->
+                <mesh  filename="/home/$(arg host_name)/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/data/meshes/valve_${valve_type}collision.obj" scale="1 1 1"/>
             </geometry>
         </collision>
     </link>

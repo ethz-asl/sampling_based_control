@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omav_hook_visualization">
 
     <!-- Properties -->
-    <xacro:property name="manipulator_length" value="0.62"/>   <!-- [m] -->
+    <xacro:property name="manipulator_length" value="0.605"/>   <!-- [m] -->
     <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
 
     <xacro:property name="tool_length" value="0.05"/>         <!-- [m] -->
@@ -15,10 +15,10 @@
     <xacro:property name="radius_ouzel" value="0.2"/>
     <xacro:property name="height_ouzel" value="0.3"/>
 
-    <link name="odom_omav"/>
+    <link name="state"/>
 
-    <joint name="odom_omav_to_omav_base" type="fixed">
-        <parent link="odom_omav"/>
+    <joint name="state_to_omav_base" type="fixed">
+        <parent link="state"/>
         <child link="omav_base"/>
         <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     </joint>

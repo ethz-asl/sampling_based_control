@@ -13,7 +13,7 @@
 
     <link name="world"/>
 
-    <joint name="fixed" type="fixed">
+    <!-- <joint name="fixed" type="fixed">
         <parent link="world"/>
         <child link="valve_base"/>
         <origin xyz="${base_position_x} ${base_position_y} ${base_height/2.0}" rpy="0.0 0 0"/>
@@ -29,7 +29,7 @@
                 <color rgba="1.0 1.0 1.0 1"/>
             </material>
         </visual>
-    </link>
+    </link> -->
 
     <link name="handle_link">
         <visual>
