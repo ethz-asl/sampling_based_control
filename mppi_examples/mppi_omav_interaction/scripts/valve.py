@@ -86,13 +86,13 @@ if __name__ == "__main__":
     reference_publisher.publish(reference_pose)
     mode_publisher.publish(mode)
 
-    rospy.sleep(10.0)
+    rospy.sleep(5.0)
     mode.data = 1.0
 
     rospy.loginfo("Starting Interaction")
     mode_publisher.publish(mode)
 
-    rospy.sleep(20.0)
+    rospy.sleep(10.0)
     reference_pose = set_retreat_pose(pos_mode)
     mode.data = 0.0
     rospy.loginfo("Setting reference as target")
