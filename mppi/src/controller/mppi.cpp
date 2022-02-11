@@ -200,15 +200,20 @@ void PathIntegral::update_policy() {
 
     if (renderer_) renderer_->render(rollouts_);
     if (config_.logging) {
+      auto stop = std::chrono::high_resolution_clock::now();
       // data_.rollouts = rollouts_;
       data_.step_count = step_count_;
       data_.stage_cost = stage_cost_;
       data_.rollouts_cost = rollouts_cost_;
       data_.weights = omega_;
-      data_.optimization_time = 0.0;
+      data_.optimization_time =
+          std::chrono::duration_cast<std::chrono::microseconds>(stop -
+                                                                start_time_)
+              .count() / 1000000.0;
       data_.reset_time = t0_internal_;
       data_.optimal_rollout = opt_roll_;
       step_count_++;
+      start_time_ = std::chrono::high_resolution_clock::now();
     }
   }
 }
