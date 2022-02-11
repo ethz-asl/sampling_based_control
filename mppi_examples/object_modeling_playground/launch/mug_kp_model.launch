@@ -2,6 +2,7 @@
 <launch>
     <arg name="sim"  default="false"/>
     <arg name="rviz" default="false"/>
+
     <node name="primitive_modeling" type="primitive_modeling" pkg="object_modeling_playground" output="screen">
         <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
         <param name="keypoints_config" value="$(find object_keypoints_ros)/config/cups.json"/>
@@ -9,7 +10,7 @@
     </node>
 
     <group if="$(arg rviz)">
-        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen"/>
     </group>
 
 </launch>

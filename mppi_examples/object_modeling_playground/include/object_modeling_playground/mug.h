@@ -6,17 +6,14 @@
 class Mug: public Object
 {
   public:
-
-
   
     Mug(const ros::NodeHandle& nh);
     ~Mug() = default;
 
     void update_TF() override;
     void pub_state() override;
-    void update_kp_markers() override;
     void primitive_visualize() override;
-    void primitive_estimate() override;
+    bool primitive_estimate(int obj_idx) override;
     void update() override;
     void kptoPrimitive();
 
@@ -30,6 +27,7 @@ class Mug: public Object
 
     Eigen::Matrix3d rot_of_two_frame(const Eigen::Matrix3d& ref_rot,
                             const Eigen::Matrix3d& rel_rot);
+    Eigen::Vector3d get_pt_from_kpArray(int obj_idx, int pt_idx);
 
     ros::NodeHandle nh_;
 

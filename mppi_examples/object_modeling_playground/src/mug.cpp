@@ -6,28 +6,69 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 
-void Mug::primitive_estimate() 
+Eigen::Vector3d Mug::get_pt_from_kpArray(int obj_idx, int pt_idx)
+{
+    // get the point3d from the ObjectsArray msgs
+    // obj_idx: the idx of the object
+    // pt_idx: the idx of the point in the object
+    if(obj_idx > this->obj_num)
+    {
+        ROS_WARN_ONCE("Trying to get object outside the given ObjectArray.msg range");
+    }
+
+    if(pt_idx > keypoint_obj_array_msg->KeypointsArrays[obj_idx].PointSize)
+    {
+        ROS_WARN_ONCE("Trying to get keypoint outside the given KeypointsArray.msg range");
+    }
+
+    Eigen::Vector3d pt_eigen;
+    geometry_msgs::Point pt_msg;
+    bool pt_validity = keypoint_obj_array_msg->KeypointsArrays[obj_idx].keypoints[pt_idx].valid;
+
+    if(pt_validity)
+    {
+        pt_msg = keypoint_obj_array_msg->KeypointsArrays[obj_idx].keypoints[pt_idx].point3d;
+        pt_eigen << pt_msg.x, pt_msg.y, pt_msg.z;
+    }
+    else
+    {
+        //TODO: Don't know how to deal with invalide point now
+    }
+
+    return pt_eigen;
+
+}
+bool Mug::primitive_estimate(int obj_idx) 
 
 {   // --------------------------------------------------------------------//
             // for Mug: [handle hole,   bottom,      top,     handle edge]
-            // Input: Eigen::VectorXd keypoints_xd,  size(kp_num*4)
+            // Input: idx of the keypointsArray from the msg
             // Updated: JointState state_ [ x,y,z, qx, qy, qz, qw] 
      // -----------------------------------------------------------------//
     
+    // get point (Different for different object)
+    Eigen::Vector3d kp_bottom = get_pt_from_kpArray(obj_idx, this->bottom_idx);
+    Eigen::Vector3d kp_top    = get_pt_from_kpArray(obj_idx, this->top_idx);
+    Eigen::Vector3d kp_handle = get_pt_from_kpArray(obj_idx, this->handle_idx);
+    Eigen::Vector3d kp_avg    = get_pt_from_kpArray(obj_idx, this->avg_idx);
+
     //   GEOMETRY ESTIMATE
         // estimate the geometry feature
         // height and radius
 
     // center line (from bottow point to top)
-    center_line << keypoints_xd.segment(top_idx*4,3) - keypoints_xd.segment(bottom_idx*4, 3);
+    //center_line << keypoints_xd.segment(top_idx*4,3) - keypoints_xd.segment(bottom_idx*4, 3);
+    center_line << kp_top - kp_bottom;
 
     // height  (= norm of the center line)
     mug_primitive.body_height = center_line.norm();
 
     // radius  ( = the dist between handle cirle point to the center line)
-    mug_primitive.body_radius = point_to_line(keypoints_xd.segment(bottom_idx*4,3),
-                                              keypoints_xd.segment(top_idx*4,3),
-                                              keypoints_xd.segment(avg_idx*4,3) );
+    // mug_primitive.body_radius = point_to_line(keypoints_xd.segment(bottom_idx*4,3),
+    //                                           keypoints_xd.segment(top_idx*4,3),
+    //                                           keypoints_xd.segment(avg_idx*4,3) );
+    mug_primitive.body_radius = point_to_line(kp_bottom, kp_top, kp_avg);
+                                                
 
     // POSE 
         // estimate the center point's pose(s) of the objects, will be used as the pose 
@@ -52,6 +93,8 @@ void Mug::primitive_estimate()
     state_.position[6] = center_orien[3]; //w
 
     kptoPrimitive();
+
+    return true;
 }
 
 void Mug::kptoPrimitive()
@@ -82,7 +125,7 @@ void Mug::kptoPrimitive()
     transform = tf_buffer_.lookupTransform("world", "camera_color_optical_frame",  ros::Time(0), ros::Duration(1.0) );
 
     tf2::doTransform(pri_pos_in_pri, pri_pos_in_world, transform); 
-    ROS_INFO_STREAM("transformed: " << pri_pos_in_world);
+    // ROS_INFO_STREAM("transformed: " << pri_pos_in_world);
 
 
 }
@@ -136,7 +179,7 @@ bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
                0,0,1;
     Eigen::Vector3d pri_x_axis,pri_y_axis,pri_z_axis;
     pri_z_axis = center_line.normalized();
-    pri_x_axis = (keypoints_xd.segment(handle_idx*4, 3) - pos).normalized();
+    pri_x_axis = (keypoints_xd.segment(handle_idx*4, 3) - pos).normalized(); //TODO: should be point-to-line
     pri_y_axis = pri_z_axis.cross(pri_x_axis);
     Eigen::Matrix3d pri_rot; 
     pri_rot.col(0) = pri_x_axis;
@@ -170,21 +213,19 @@ void Mug::update()
     if(sim)
         ros_time = ros::Time::now();
 
-    if(kp_num!=gt_kp_num)
-    {
-        ROS_INFO("kp msg incomplete, holding...");
-        return;
+    for(int i = 0; i < this->obj_num; i ++ )
+    {    
+        primitive_estimate(i);  
+        update_TF();
+        primitive_visualize();
+        pub_state();
     }
-    primitive_estimate();  
-    update_kp_markers();
-    update_TF();
-    primitive_visualize();
-    pub_state();
+
 }
 
 Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
 {
-
+    ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
     if(sim)
     {  
     }
@@ -193,7 +234,7 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
     this->handle_idx = 1;
     this->bottom_idx = 2;
     this->top_idx = 3;
-    ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
+
     mug_primitive.header.frame_id = ref_frame;
     ROS_INFO_STREAM("primitive state in [ " << ref_frame << " ]");
 }
@@ -234,28 +275,6 @@ void Mug::update_TF()
 
 
 
-void Mug::update_kp_markers()
-{   
-    for(int i = 0 ; i<kp_num; i++)
-    {   
-        kp_markers_.markers[i].header.stamp = ros_time;
-        if(sim)
-        {
-            kp_markers_.markers[i].pose.position.z = keypoints_sim_xd[i*4+2];
-            kp_markers_.markers[i].pose.position.y = keypoints_sim_xd[i*4+1];
-            kp_markers_.markers[i].pose.position.x = keypoints_sim_xd[i*4+0];
-        }
-        if((!sim) && kp_msg_received)
-        {   
-            kp_markers_.markers[i].scale.x = 0.012;
-            kp_markers_.markers[i].scale.y = 0.012;
-            kp_markers_.markers[i].scale.z = 0.012;
-            kp_markers_.markers[i].pose.position.z = keypoints_xd[i*4+2];
-            kp_markers_.markers[i].pose.position.y = keypoints_xd[i*4+1];
-            kp_markers_.markers[i].pose.position.x = keypoints_xd[i*4+0];
-        }
-    }
-}
 
 void Mug::primitive_visualize()
 {   
@@ -286,6 +305,5 @@ void Mug::primitive_visualize()
 void Mug::pub_state()
 {
     state_publisher_.publish(mug_primitive);
-    kp_publisher_.publish(kp_markers_);
     primitive_publisher_.publish(primitive_markers_);
 }

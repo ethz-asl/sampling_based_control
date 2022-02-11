@@ -16,6 +16,10 @@
 #include <interactive_markers/interactive_marker_server.h>
 #include <tf/transform_listener.h>
 #include <manipulation_msgs/MugPrimitive.h>
+#include <keypoint_msgs/KeypointsArray.h>
+#include <keypoint_msgs/keypoint.h>
+#include <keypoint_msgs/ObjectsArray.h>
+#include <sensor_msgs/PointCloud2.h>
 
 class Object
 {
@@ -24,9 +28,8 @@ public:
     ~Object() = default;
     virtual void update_TF(){};
     virtual void pub_state(){};
-    virtual void update_kp_markers(){};
     virtual void primitive_visualize(){};
-    virtual void primitive_estimate(){};
+    virtual bool primitive_estimate(int obj_idx){};
     virtual void update(){};
     
     geometry_msgs::TransformStamped obj_trans;
@@ -35,17 +38,17 @@ public:
     
 protected:
     bool init_param();
-    void kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg);
+    void kp_msg_callback(const keypoint_msgs::ObjectsArray::ConstPtr& msg);
+    void pcl_roi_callback(const sensor_msgs::PointCloud2::ConstPtr& pcl_msg);
     void keypoints_filter(const geometry_msgs::PoseArray::ConstPtr& msg, double alpha);
 
     bool sim;
-    std::string kp_3d_topic;
+    std::string kp_msg_topic;
 
     // obj config vars
     std::string ref_frame;
     std::string obj_frame;
     std::string prim_frame;
-
     std::string object_name;
     std::vector<double> obj_scale_;
     std::vector<double> obj_pos_;
@@ -58,6 +61,7 @@ protected:
 
     // kp vars
     int kp_num;
+    int obj_num;
     int gt_kp_num;
     Eigen::VectorXd keypoints_xd;
     Eigen::VectorXd keypoints_filtered;
@@ -66,23 +70,21 @@ protected:
     std::vector<double> keypoints_past_;
 
     // ros vars
-    ros::Subscriber kp_int_subscriber_;
-
+    ros::Subscriber kp_msg_subscriber_;
     ros::Publisher state_publisher_;
-    sensor_msgs::JointState state_; 
-    
-    ros::Publisher kp_publisher_;
-    visualization_msgs::Marker kp_marker_;
-    visualization_msgs::MarkerArray kp_markers_;
-
     ros::Publisher primitive_publisher_;
+
+    sensor_msgs::JointState state_; 
     visualization_msgs::MarkerArray primitive_markers_;
     visualization_msgs::Marker primitive_marker_;
+    keypoint_msgs::ObjectsArray::ConstPtr keypoint_obj_array_msg;
 
     tf2_ros::TransformBroadcaster broadcaster;
 
     bool kp_msg_received = false;
     ros::Time ros_time;
+    std::string kp_ref_frame;
+
 
 private:
     // params of approx primitive

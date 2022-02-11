@@ -1,4 +1,4 @@
-kp_3d_topic: /kp_3d_poses
+kp_msg_topic: /object_keypoints_ros/keypoints_array
 object:
   object_name: "mug"
   ref_frame: "camera_color_optical_frame"

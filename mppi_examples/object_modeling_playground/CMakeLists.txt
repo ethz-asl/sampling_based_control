@@ -14,6 +14,7 @@ set(PACKAGE_DEPENDENCIES
         sensor_msgs
         std_msgs
         manipulation_msgs
+        keypoint_msgs
         roscpp
         roslib
         roscpp

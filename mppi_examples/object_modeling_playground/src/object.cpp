@@ -2,26 +2,27 @@
 #include <cmath>
 #include "object_modeling_playground/object.h"
 
-void Object::kp_int_callback(const geometry_msgs::PoseArray::ConstPtr& msg)
+void Object::kp_msg_callback(const keypoint_msgs::ObjectsArray::ConstPtr& msg)
 {   
 
-    // save the current kp for state estiamtion
-    kp_num = msg->poses.size();
-    // ROS_INFO_STREAM("kp num: "<< kp_num);
+    keypoint_obj_array_msg = msg;
     ros_time = msg->header.stamp;
+    kp_ref_frame = msg->header.frame_id;
+    kp_num = keypoint_obj_array_msg->PointSize;
+    obj_num = keypoint_obj_array_msg->ObjectSize;
 
     if(kp_num == 0)
     { 
-      ROS_INFO_STREAM(" No detection ");
+      ROS_WARN_THROTTLE(1, "No detected keypoints");
       // TODO: no detection -> action
       return;
     }
 
     // filtering
-    double alpha = 0.5;
-    keypoints_filter(msg, alpha);
+    // double alpha = 0.5;
+    // keypoints_filter(msg, alpha);
 
-    keypoints_xd = keypoints_filtered.segment( (filter_length-1)*4*gt_kp_num, 4*gt_kp_num );
+    // keypoints_xd = keypoints_filtered.segment( (filter_length-1)*4*gt_kp_num, 4*gt_kp_num );
 
     kp_msg_received = true;
     
@@ -87,54 +88,29 @@ Object::Object(const ros::NodeHandle& nh):nh_(nh)
 {
     init_param();
 
+    // ros pubs and subs
     state_publisher_=nh_.advertise<manipulation_msgs::MugPrimitive>("/"+object_name+"/joint_states",10);   
-
-    kp_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/keypoints_marker_array",10);
-    kp_markers_.markers.clear();
-    kp_markers_.markers.resize(gt_kp_num);
-
-    for(int i = 0 ; i<gt_kp_num; i++)
-    {   
-        kp_marker_.type = visualization_msgs::Marker::SPHERE;
-        kp_marker_.id = i;
-        if(sim)
-          kp_marker_.header.frame_id = obj_frame;
-        else if(!sim)
-          kp_marker_.header.frame_id = ref_frame;
-        kp_marker_.action = visualization_msgs::Marker::ADD;
-        kp_marker_.color.r = 0.6;
-        kp_marker_.color.b = 0.0;
-        kp_marker_.color.g = 0.4;
-        kp_marker_.color.a = 1.0;
-        kp_marker_.scale.x = 0.012;
-        kp_marker_.scale.y = 0.012;
-        kp_marker_.scale.z = 0.012;
-        kp_marker_.pose.orientation.x = 0.0;
-        kp_marker_.pose.orientation.y = 0.0;
-        kp_marker_.pose.orientation.z = 0.0;
-        kp_marker_.pose.orientation.w = 1.0;
-        kp_marker_.pose.position.z = 0;
-        kp_marker_.pose.position.y = 0;
-        kp_marker_.pose.position.x = 0;
-        kp_markers_.markers[i] = kp_marker_;
-    }
-    ROS_INFO("[keypoints marker inited");
+    primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/primitives_marker_array",100);
+    kp_msg_subscriber_ = nh_.subscribe(kp_msg_topic, 100, &Object::kp_msg_callback, this);
     
-    primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/primitives_marker_array",1000);
-    kp_int_subscriber_ = 
-        nh_.subscribe(kp_3d_topic, 100, &Object::kp_int_callback, this);
-    ROS_INFO_STREAM(" subscribe keypoints 3d poses" << kp_3d_topic);
+    // ros param and msgs
     obj_trans.header.frame_id = ref_frame;
     obj_trans.child_frame_id = obj_frame;
 
+
     if(!sim)
+    {
       prim_trans.header.frame_id = ref_frame; // TODO: make it also in ref_frame
-    else if(sim)
+    }
+    
+    else
     {
       prim_trans.header.frame_id = obj_frame;
     }
 
     prim_trans.child_frame_id = prim_frame;
+
+    ROS_INFO_STREAM(" subscribe keypoints msg from " << kp_msg_topic);
 
 }
 
@@ -187,8 +163,8 @@ bool Object::init_param()
     return false;
   }    
 
-  if (!nh_.getParam("kp_3d_topic", kp_3d_topic)) {
-    ROS_ERROR("Failed to parse kp_3d_topic or invalid!");
+  if (!nh_.getParam("kp_msg_topic", kp_msg_topic)) {
+    ROS_ERROR("Failed to parse kp_msg_topic or invalid!");
     return false;
   }  
 
