@@ -116,6 +116,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   bool reference_set_ = false;
   bool detailed_publishing_;
+  bool publish_all_trajectories_;
+  double detailed_publishing_rate_;
 
   OMAVInteractionCostShelfParam cost_param_shelf_;
   OMAVInteractionCostValveParam cost_param_valve_;

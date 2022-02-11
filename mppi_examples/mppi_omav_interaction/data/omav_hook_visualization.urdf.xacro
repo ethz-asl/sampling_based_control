@@ -2,16 +2,12 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omav_hook_visualization">
 
     <!-- Properties -->
-    <xacro:property name="manipulator_length" value="0.605"/>   <!-- [m] -->
+    <xacro:property name="manipulator_length" value="$(arg manipulator_length)"/>   <!-- [m] -->
     <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
 
     <xacro:property name="tool_length" value="0.05"/>         <!-- [m] -->
     <xacro:property name="tool_radius" value="0.0075"/>         <!-- [m] -->
 
-    <xacro:property name="mass_ouzel" value="5.0"/>
-    <xacro:property name="ixx_ouzel" value="0.12"/>
-    <xacro:property name="iyy_ouzel" value="0.14"/>
-    <xacro:property name="izz_ouzel" value="0.18"/>
     <xacro:property name="radius_ouzel" value="0.2"/>
     <xacro:property name="height_ouzel" value="0.3"/>
 

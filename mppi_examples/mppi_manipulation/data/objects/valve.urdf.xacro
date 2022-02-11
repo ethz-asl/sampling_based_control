@@ -4,7 +4,7 @@
     <xacro:arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
     <xacro:arg name="object_position" default="-1 0 1"/>
     <xacro:arg name="object_rpy" default="1.5708 0 0"/>
-    <xacro:arg name="host_name" default="kea"/>
+    <xacro:arg name="host_name" default="$(arg host_name)"/>
 
     <xacro:property name="base_position_x" default="1.0"/>
     <xacro:property name="base_position_y" default="0.0"/>

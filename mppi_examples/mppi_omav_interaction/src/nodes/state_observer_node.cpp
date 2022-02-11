@@ -20,9 +20,9 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "state_observer_object");
   ros::NodeHandle nh("~");
   std::string object_name;
+  double observer_rate = 100.0;
   getParam<std::string>(nh, "object_name", object_name, "shelf");
-
-  const double frequency = 250.0;
+  getParam<double>(nh, "observer_rate", observer_rate, observer_rate);
 
   if (object_name.compare("shelf") == 0 || object_name.compare("shelf_door") == 0) {
     object_observer::StateObserver observer(nh);
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
       return 0;
     }
     ROS_INFO("[state_observer_node] Starting state observer for shelf.");
-    ros::Rate rate(frequency);
+    ros::Rate rate(observer_rate);
     while (ros::ok()) {
       observer.publish();
       ros::spinOnce();
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
       return 0;
     }
     ROS_INFO("[state_observer_node] Starting state observer for valve.");
-    ros::Rate rate(frequency);
+    ros::Rate rate(observer_rate);
     while (ros::ok()) {
       observer.publish();
       ros::spinOnce();

@@ -35,13 +35,13 @@ bool ControllerRos::init_default_params() {
 }
 
 void ControllerRos::init_default_ros() {
-  cost_publisher_ = nh_.advertise<std_msgs::Float64>("/cost", 10);
-  input_publisher_ = nh_.advertise<std_msgs::Float32MultiArray>("/input", 10);
+  cost_publisher_ = nh_.advertise<std_msgs::Float64>("/cost", 1);
+  input_publisher_ = nh_.advertise<std_msgs::Float32MultiArray>("/input", 1);
   min_rollout_cost_publisher_ =
-      nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 10);
+      nh_.advertise<std_msgs::Float64>("/min_rollout_cost", 1);
   max_rollout_cost_publisher_ =
-      nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 10);
-  data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 10);
+      nh_.advertise<std_msgs::Float64>("/max_rollout_cost", 1);
+  data_publisher_ = nh_.advertise<mppi_ros::Data>("/mppi_data", 1);
 }
 
 bool ControllerRos::init() {

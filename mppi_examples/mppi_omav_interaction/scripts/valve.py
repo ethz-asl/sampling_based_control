@@ -24,8 +24,8 @@ def set_init_pose(pos_mode=0):
     reference_pose.header.frame_id = "world"    
     if pos_mode == 0:
         reference_pose.pose.position.x = 0.4
-        reference_pose.pose.position.y = -0.1
-        reference_pose.pose.position.z = 0.8
+        reference_pose.pose.position.y = 0.0
+        reference_pose.pose.position.z = 0.9
         reference_pose.pose.orientation.w = 1
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
@@ -47,7 +47,7 @@ def set_retreat_pose(pos_mode=0):
     if pos_mode == 0:
         reference_pose.pose.position.x = 0.0  # Use this parameter to set the ref position or velocity of the valve.
         reference_pose.pose.position.y = 0
-        reference_pose.pose.position.z = 0.8
+        reference_pose.pose.position.z = 0.9
         reference_pose.pose.orientation.w = 1.0
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     mode = Int64()
 
     rospy.sleep(1.0)
-    pos_mode = 1
+    pos_mode = 0
     reference_pose = set_init_pose(pos_mode)
 
     mode.data = 0.0
