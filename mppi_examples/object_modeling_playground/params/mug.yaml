@@ -1,4 +1,7 @@
+
 kp_msg_topic: /object_keypoints_ros/keypoints_array
+pcl_msg_topic: /kp_msg_vis_node/pcl_roi
+
 object:
   object_name: "mug"
   ref_frame: "camera_color_optical_frame"

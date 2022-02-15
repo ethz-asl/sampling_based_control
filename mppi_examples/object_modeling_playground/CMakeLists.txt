@@ -19,6 +19,7 @@ set(PACKAGE_DEPENDENCIES
         roslib
         roscpp
         tf2_ros
+        pcl_ros
         interactive_markers
         )
 
@@ -31,6 +32,7 @@ catkin_package(
 
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
 
 add_library(${PROJECT_NAME}
         src/object.cpp

@@ -19,11 +19,14 @@ class Mug: public Object
 
   private:
     bool estimate_center_pose(Eigen::Vector3d& pos,
-                        Eigen::Vector4d& orien);
+                        Eigen::Vector4d& orien,
+                        int obj_idx);
 
     double point_to_line(const Eigen::Vector3d& pos_1,
                         const Eigen::Vector3d& pos_2,
                         const Eigen::Vector3d& pos_3);
+
+    void ransac_fitting();
 
     Eigen::Matrix3d rot_of_two_frame(const Eigen::Matrix3d& ref_rot,
                             const Eigen::Matrix3d& rel_rot);

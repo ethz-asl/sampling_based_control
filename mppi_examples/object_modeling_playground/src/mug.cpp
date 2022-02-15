@@ -81,7 +81,8 @@ bool Mug::primitive_estimate(int obj_idx)
     state_.velocity.resize(primitive_num*7);
     Eigen::Vector3d center_pos;
     Eigen::Vector4d center_orien;
-    estimate_center_pose(center_pos, center_orien);
+
+    estimate_center_pose(center_pos, center_orien, obj_idx);
 
     state_.position[0] = center_pos[0];
     state_.position[1] = center_pos[1];
@@ -92,7 +93,7 @@ bool Mug::primitive_estimate(int obj_idx)
     state_.position[5] = center_orien[2]; //z
     state_.position[6] = center_orien[3]; //w
 
-    kptoPrimitive();
+    //kptoPrimitive();   //TODO: comment this out for develop in local frame
 
     return true;
 }
@@ -155,12 +156,23 @@ Eigen::Matrix3d Mug::rot_of_two_frame(const Eigen::Matrix3d& rot_1,
 
 
 bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
-                        Eigen::Vector4d& orien)
-{
+                        Eigen::Vector4d& orien,
+                        int obj_idx)
+{   
+
+    // get point (Different for different object)
+    Eigen::Vector3d kp_bottom = get_pt_from_kpArray(obj_idx, this->bottom_idx);
+    Eigen::Vector3d kp_top    = get_pt_from_kpArray(obj_idx, this->top_idx);
+    Eigen::Vector3d kp_handle = get_pt_from_kpArray(obj_idx, this->handle_idx);
+    Eigen::Vector3d kp_avg    = get_pt_from_kpArray(obj_idx, this->avg_idx);
+    // TODO: this is reperated, fix this later
+
+
     // calculate a single primitve's center position & orientation
 
     // position
-    pos << center_line/2 + keypoints_xd.segment(bottom_idx*4, 3);
+    // pos << center_line/2 + keypoints_xd.segment(bottom_idx*4, 3);
+    pos << center_line/2 + kp_bottom;
     
     // orientation
         // roll  (= 0)
@@ -179,7 +191,8 @@ bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
                0,0,1;
     Eigen::Vector3d pri_x_axis,pri_y_axis,pri_z_axis;
     pri_z_axis = center_line.normalized();
-    pri_x_axis = (keypoints_xd.segment(handle_idx*4, 3) - pos).normalized(); //TODO: should be point-to-line
+    // pri_x_axis = (keypoints_xd.segment(handle_idx*4, 3) - pos).normalized(); //TODO: should be point-to-line
+    pri_x_axis = (kp_handle - pos).normalized(); //TODO: should be point-to-line
     pri_y_axis = pri_z_axis.cross(pri_x_axis);
     Eigen::Matrix3d pri_rot; 
     pri_rot.col(0) = pri_x_axis;
@@ -190,11 +203,8 @@ bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
     
     Eigen::Matrix3d rot = rot_of_two_frame(ref_rot, pri_rot);
     Eigen::Quaterniond q(rot);
-    tf2::Quaternion q_;
+    q = q.normalized();
 
-    // q_.setRPY(center_roll,center_pitch,center_yaw);
-    // q_.setEuler(center_yaw,center_pitch,center_roll);
-    
     orien[0] = q.x();
     orien[1] = q.y();
     orien[2] = q.z();
@@ -221,6 +231,14 @@ void Mug::update()
         pub_state();
     }
 
+    ransac_fitting();
+
+}
+
+void Mug::ransac_fitting()
+{   
+
+    return;
 }
 
 Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)

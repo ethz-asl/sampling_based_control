@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /keypoint_heatmap1
+        - /primitive1
       Splitter Ratio: 0.5
     Tree Height: 773
   - Class: rviz/Selection
@@ -81,6 +82,10 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        camera_color_optical_frame:
+          Value: true
+        primitive_frame:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -88,7 +93,9 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        camera_color_optical_frame:
+          primitive_frame:
+            {}
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
@@ -167,6 +174,14 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /mug/primitives_marker_array
+      Name: primitive
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -195,7 +210,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.7004651427268982
+      Distance: 0.6165777444839478
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -203,17 +218,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.03128160908818245
-        Y: -0.10374467819929123
-        Z: 0.5499222278594971
+        X: -0.047653913497924805
+        Y: -0.03436891362071037
+        Z: 0.5294268727302551
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -1.5697963237762451
+      Pitch: -0.9297965168952942
       Target Frame: <Fixed Frame>
-      Yaw: 4.3622283935546875
+      Yaw: 4.602212429046631
     Saved: ~
 Window Geometry:
   Displays:

@@ -20,6 +20,9 @@
 #include <keypoint_msgs/keypoint.h>
 #include <keypoint_msgs/ObjectsArray.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_ros/point_cloud.h>
 
 class Object
 {
@@ -44,6 +47,7 @@ protected:
 
     bool sim;
     std::string kp_msg_topic;
+    std::string pcl_msg_topic;
 
     // obj config vars
     std::string ref_frame;
@@ -71,20 +75,28 @@ protected:
 
     // ros vars
     ros::Subscriber kp_msg_subscriber_;
+    ros::Subscriber pcl_msg_subscriber_;
     ros::Publisher state_publisher_;
     ros::Publisher primitive_publisher_;
 
     sensor_msgs::JointState state_; 
     visualization_msgs::MarkerArray primitive_markers_;
     visualization_msgs::Marker primitive_marker_;
+    
     keypoint_msgs::ObjectsArray::ConstPtr keypoint_obj_array_msg;
+    sensor_msgs::PointCloud2::ConstPtr pcl_ptr;
 
     tf2_ros::TransformBroadcaster broadcaster;
+
 
     bool kp_msg_received = false;
     ros::Time ros_time;
     std::string kp_ref_frame;
 
+
+    pcl::PCLPointCloud2 pcl_pc2;
+    pcl::PointCloud<pcl::PointXYZ> point_cloud;
+    
 
 private:
     // params of approx primitive

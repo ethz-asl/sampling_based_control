@@ -28,6 +28,30 @@ void Object::kp_msg_callback(const keypoint_msgs::ObjectsArray::ConstPtr& msg)
     
 }
 
+void Object::pcl_roi_callback(const sensor_msgs::PointCloud2::ConstPtr& pcl_msg)
+{
+    pcl_ptr = pcl_msg;
+    if(pcl_ptr->data.size() > 0)
+    {
+      ROS_INFO_STREAM("size: " << pcl_ptr->data.size());
+
+      pcl_conversions::toPCL(*pcl_msg,pcl_pc2);
+      pcl::PointCloud<pcl::PointXYZ>::Ptr pt_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+      pcl::fromPCLPointCloud2(pcl_pc2,*pt_cloud);
+
+      for(int i = 0 ; i < 10 ; i ++)
+      {
+        ROS_INFO_STREAM("point " << i << " has x : " << pt_cloud->points[i].x);
+        ROS_INFO_STREAM("point " << i << " has y : " << pt_cloud->points[i].y);
+        ROS_INFO_STREAM("point " << i << " has z : " << pt_cloud->points[i].z);
+      }
+    }
+
+    
+
+}
+
+
 void Object::keypoints_filter(const geometry_msgs::PoseArray::ConstPtr& msg, double alpha)
 {
     kp_num = msg->poses.size();
@@ -92,7 +116,8 @@ Object::Object(const ros::NodeHandle& nh):nh_(nh)
     state_publisher_=nh_.advertise<manipulation_msgs::MugPrimitive>("/"+object_name+"/joint_states",10);   
     primitive_publisher_=nh_.advertise<visualization_msgs::MarkerArray>("/"+object_name+"/primitives_marker_array",100);
     kp_msg_subscriber_ = nh_.subscribe(kp_msg_topic, 100, &Object::kp_msg_callback, this);
-    
+    pcl_msg_subscriber_ =nh_.subscribe(pcl_msg_topic, 1, &Object::pcl_roi_callback, this);
+
     // ros param and msgs
     obj_trans.header.frame_id = ref_frame;
     obj_trans.child_frame_id = obj_frame;
@@ -163,10 +188,15 @@ bool Object::init_param()
     return false;
   }    
 
+  if (!nh_.getParam("pcl_msg_topic", pcl_msg_topic)) {
+    ROS_ERROR("Failed to parse pcl_msg_topic or invalid!");
+    return false;
+  }  
+  
   if (!nh_.getParam("kp_msg_topic", kp_msg_topic)) {
     ROS_ERROR("Failed to parse kp_msg_topic or invalid!");
     return false;
-  }  
+  }
 
   if (!nh_.getParam("sim", sim)) {
     ROS_ERROR("Failed to parse sim or invalid!");
