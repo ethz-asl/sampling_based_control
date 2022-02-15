@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="debug" default="false"/>
+    <arg name="interactive" default="false"/>
+    <arg name="sim" default="false"/>
+    <arg name="rviz" default="false"/>
+
+    <!-- mug -->
+    <param name="mug_description"
+           textfile="$(find object_modeling_playground)/data/objects/mug.urdf"/>
+           
+    <node name="mug_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="mug_description"/>
+        <remap from="joint_states" to="/mug/joint_states"/>
+    </node>
+    <!--     .....................    -->
+
+    <node name="primitive_modeling" type="primitive_modeling" pkg="object_modeling_playground" output="screen">
+        <param name="sim" value="$(arg sim)"/>
+        <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
+    </node>
+
+    <group if="$(arg interactive)">
+    <!-- interative keypoints controller-->
+        <node name="interactive_reference" pkg="object_modeling_playground" type="interactive_marker.py" output="screen">
+            <rosparam command="load" file="$(find object_modeling_playground)/params/mug.yaml"/>
+            <param name="marker_server_name" value="reference_marker_server"/>
+            <param name="subscribe_initial_pose" value="true"/>
+            <param name="frame_id" value="mug_frame"/>
+        </node>
+    </group>
+
+    <!-- Open Rviz -->
+    <group if="$(arg sim)">
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen" launch-prefix="xterm -e"/>
+    </group>
+
+</launch>

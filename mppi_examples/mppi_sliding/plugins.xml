@@ -1,0 +1,9 @@
+<library path="lib/libmppi_sliding">
+    <class name="manipulation_panda/ManipulationController" 
+           type="manipulation_panda::ManipulationController"
+           base_class_type="controller_interface::ControllerBase">
+        <description>
+            A sampling based controller for the panda robot with a closed_loop coontrol pipeline.
+        </description>
+    </class>
+</library>

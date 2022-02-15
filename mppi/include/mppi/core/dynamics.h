@@ -44,7 +44,7 @@ class Dynamics {
   virtual const observation_t get_state() const = 0;
 
   /**
-   * Used to extend the input sequence when extening the horizon
+   * Used to extend the input sequence when extending the horizon
    */
   virtual input_t get_zero_input(const observation_t& x) {
     return input_t::Zero(this->get_input_dimension());

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="valve" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+    <xacro:arg name="resource_prefix" default=""/>
+    <xacro:arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
+
+    <xacro:arg name="height" default="0.0"/>
+    <xacro:property name="height" default="$(arg height)"/>
+
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="valve_base"/>
+        <origin xyz="1.0 0.0 ${height + 0.335}" rpy="1.57 0 0"/>
+    </joint>
+
+    <link name="valve_base"/>
+
+    <link name="handle_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="$(arg resource_prefix)$(arg resource_directory)/valve_visual.obj"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+	    <geometry>
+                <mesh  filename="$(arg resource_prefix)$(arg resource_directory)/valve_collision.obj"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="articulation_joint" type="revolute">
+        <parent link="valve_base"/>
+        <child link="handle_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <dynamics damping="1.0" friction="2.0"/>
+        <axis xyz="0 1 0"/>
+        <limit upper="3.14" lower="3.14" effort="100" velocity="1.0"/>
+    </joint>
+</robot>

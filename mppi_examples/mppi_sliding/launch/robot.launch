@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<launch>
+    <arg name="robot_ip" default="$(env FRANKA_IP)"/>
+    <arg name="object" default="shelf"/>
+    <arg name="experiment_name" default="panda_manipulation"/>
+
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    </include>
+
+    <include file="$(find mppi_sliding)/launch/load.launch">
+        <arg name="debug" value="false"/>
+        <arg name="object" value="$(arg object)"/>
+        <arg name="load_simulation_object" value="false"/>
+        <arg name="description_file" value="$(find mppi_sliding)/data/panda.urdf.xacro"/>
+    </include>
+
+    <include file="$(find franka_gripper)/launch/franka_gripper.launch">
+        <arg name="robot_ip" value="$(arg robot_ip)" />
+    </include>
+
+    <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
+        <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/franka_control_node.yaml" />
+        <param name="robot_ip" value="$(arg robot_ip)" />
+    </node>
+    
+    <!-- controller manager-->
+    <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
+    <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>
+
+    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
+    <param name="experiment_name" value="$(arg experiment_name)"/>
+
+    <!-- controller manager-->
+    <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
+    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
+
+    
+</launch>

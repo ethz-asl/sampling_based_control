@@ -1,0 +1,22 @@
+<launch>
+    <arg name="debug" default="false"/>
+    <arg name="launch_prefix" value="" unless="$(arg debug)"/>
+    <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
+
+
+    <include file="$(find mppi_sliding)/launch/load.launch">
+        <arg name="debug" value="false"/>
+        <arg name="load_simulation_object" value="false"/>
+        <arg name="description_file" value="$(find mppi_sliding)/data/panda.urdf.xacro"/>
+    </include>
+
+
+    <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
+    <rosparam command="load" file="$(find mppi_sliding)/config/experiments/controllers_mug.yaml" />
+    <node name="manipulation_control_sim" type="manipulation_control_sim" pkg="mppi_sliding" output="screen" launch-prefix="$(arg launch_prefix)">
+        <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
+        <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
+        <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_sliding)/params/controller_panda.yaml"/>
+    </node>
+</launch>

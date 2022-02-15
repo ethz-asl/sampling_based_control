@@ -112,6 +112,7 @@ void PandaRaisimDynamics::set_control(const mppi::input_t& u) {
 void PandaRaisimDynamics::advance() {
   // get contact state
   double in_contact = -1;
+  std::cout << "contact size" << object_->getContacts().size() << std::endl;
   for (const auto& contact : object_->getContacts()) {
     if (!contact.skip() && !contact.isSelfCollision()) {
       in_contact = 1;

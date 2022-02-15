@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="fixed_base" default="false"/>
+    <param name="robot_description_ogre" command="$(find xacro)/xacro $(find mppi_manipulation)/data/panda_mobile.urdf.xacro
+      ridgeback_resources_prefix:='$(find ridgeback_description)'
+      collision_links:=false
+      collision_hand:=true
+      collision_finger:=true
+      collision_format:='obj'
+      custom_fingers:=true
+      add_finger:=true
+      no_position_limits:=true
+      fixed_base:=$(arg fixed_base)"/>
+    
+    <node pkg="mppi_manipulation" type="raisim_rendering_node" name="raisim_rendering_node" output="screen">
+      <param name="fixed_base" value="$(arg fixed_base)"/>
+    </node>
+</launch>

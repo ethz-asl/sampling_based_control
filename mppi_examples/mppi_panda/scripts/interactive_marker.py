@@ -93,6 +93,7 @@ class SingleMarkerBroadcaster:
         marker.color.g = 0.5
         marker.color.b = 0.5
         marker.color.a = 0.5
+
         return marker
 
     def create_marker(self):

@@ -1,0 +1,34 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/user/catkin_ws/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/user/raisim_ws/raisim_install/include/**",
+                "/home/user/catkin_ws/src/kindr/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_examples/manipulation_msgs/include/**",
+                "/home/user/catkin_ws/src/message_logger/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda_mobile/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_pinocchio/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_ros/include/**",
+                "/home/user/catkin_ws/src/sampling_based_control/mppi_tools/include/**",
+                "/home/user/catkin_ws/src/signal_logger/signal_logger/include/**",
+                "/home/user/catkin_ws/src/signal_logger/signal_logger_core/include/**",
+                "/home/user/catkin_ws/src/signal_logger/signal_logger_ros/include/**",
+                "/home/user/catkin_ws/src/signal_logger/signal_logger_std/include/**",
+                "/usr/include/**",
+                "${workspaceFolder}/mppi_examples/mppi_sliding/include/**",
+                "${workspaceFolder}/mppi_examples/mppi_sliding/include"
+            ],
+            "name": "ROS"
+        }
+    ],
+    "version": 4
+}

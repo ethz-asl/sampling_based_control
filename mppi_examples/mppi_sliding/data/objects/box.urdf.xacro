@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<robot name="box"  xmlns:xacro="http://www.ros.org/wiki/xacro" >
+    <xacro:arg name="obstacle_x" default="1.0"/>
+    <xacro:arg name="obstacle_y" default="1.0"/>
+    <xacro:arg name="obstacle_z" default="0.5"/>
+    <xacro:arg name="obstacle_size" default="0.5"/>
+
+    <xacro:property name="obstacle_x" default="$(arg obstacle_x)"/>
+    <xacro:property name="obstacle_y" default="$(arg obstacle_y)"/>
+    <xacro:property name="obstacle_z" default="$(arg obstacle_z)"/>
+    <xacro:property name="obstacle_size" default="$(arg obstacle_size)"/>
+
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="obstacle"/>
+        <origin xyz="${obstacle_x} ${obstacle_y} ${obstacle_z}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="obstacle">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.4 0.6 0.34"/>
+            </geometry>
+            <material name="box_material">
+                <color rgba="0.5 0.5 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.4 0.6 0.34"/>
+            </geometry>
+        </collision>
+    </link>
+</robot>

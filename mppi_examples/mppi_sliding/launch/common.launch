@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="plot" default="false"/>
+    <arg name="enable_obstacle" default="false"/>
+    <arg name="rviz" default="true"/>
+
+    <!-- Open Rviz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_sliding)/config/rviz/cup.rviz" output="screen" if="$(arg rviz)" respawn="true"/>
+
+    <!--    Plot cost and other info-->
+    <group if="$(arg plot)">
+        <arg name="plotjuggler_layout" default="$(find mppi_sliding)/config/pj/layout.xml"/>
+        <node name="plotjuggler" pkg="plotjuggler" type="plotjuggler"
+              args="--layout $(arg plotjuggler_layout)"
+              output="screen"/>
+    </group>
+
+    <!--        Interactive marker to command the end effector-->
+    <!-- <node name="interactive_reference" pkg="mppi_panda" type="interactive_marker.py" output="screen">
+        <param name="marker_server_name" value="reference_marker_server"/>
+        <param name="target_frame" value="panda_grasp"/>
+        <param name="frame_id" value="world"/>
+        <param name="target_pose_topic" value="/end_effector_pose_desired"/>
+    </node> -->
+
+    <!--    Interactive marker for the end effector obstacle -->
+    <group if="$(arg enable_obstacle)">
+        <node name="interactive_obstacle" pkg="mppi_panda" type="interactive_marker.py" output="screen">
+            <param name="marker_server_name" value="obstacle_marker_server"/>
+            <param name="frame_id" value="world"/>
+            <param name="target_pose_topic" value="/obstacle"/>
+            <param name="target_frame" value="obstacle"/>
+        </node>
+    </group>
+
+    
+</launch>

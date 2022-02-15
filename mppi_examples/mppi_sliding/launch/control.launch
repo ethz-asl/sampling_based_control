@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="debug" default="false"/>
+    <arg name="launch_prefix" value="" unless="$(arg debug)"/>
+    <arg name="launch_prefix" value="gdb -ex run --args" if="$(arg debug)"/>
+
+    <arg name="object" default="shelf"/>
+    <arg name="plot" default="false"/>
+    <arg name="enable_obstacle" default="false"/>
+
+    <arg name="experiment" default="false"/>
+    <arg name="experiment_name" default="mppi_sliding"/>
+
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
+    <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
+    <arg name="object_reference_position" default="0.50" if="$(eval arg('object') == 'drawer')"/>
+    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
+
+    <include file="$(find mppi_sliding)/launch/load.launch">
+        <arg name="debug" value="false"/>
+        <arg name="object" value="$(arg object)"/>
+    </include>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <param name="use_tf_static" value="true"/>
+        <param name="tf_prefix" value=""/>
+        <remap from="robot_description" to="robot_description"/>
+        <remap from="joint_states" to="/joint_states"/>
+    </node>
+    
+    <!-- mug -->
+    <node name="mug_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="mug_description"/>
+        <remap from="joint_states" to="/mug/joint_states"/>
+    </node>
+    <!--     .....................    -->
+
+
+    <!-- add cylinder for test -->>
+    <!-- TODO: add another sim cylinder -->>
+    <node name="sim_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="cylinder_description_raisim_simulation"/>
+        <remap from="joint_states" to="/sim/cylinder/joint_states"/>
+    </node>
+
+    <node name="cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="cylinder_description_raisim"/>
+        <remap from="joint_states" to="/cylinder/joint_state"/>
+    </node>
+
+    <!--       ..............         -->>
+    
+    <!-- cylinder target -->
+    <node name="target_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="target_cylinder_description"/>
+        <remap from="joint_states" to="/target_cylinder/joint_states"/>
+    </node>
+    <!--     .....................    -->
+
+    
+    <!-- add table -->
+    <node name="sim_table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="table_description_raisim_simulation"/>
+        <remap from="joint_states" to="/sim/table/joint_states"/>
+    </node>
+
+    <node name="table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="table_description_raisim"/>
+        <remap from="joint_states" to="/table/joint_state"/>
+    </node>
+    <!--       ..............         -->>
+
+
+    <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="object_description_raisim"/>
+        <remap from="joint_states" to="/object/joint_state"/>
+    </node>
+
+    <node name="simulation_object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="object_description_raisim_simulation"/>
+        <remap from="joint_states" to="/object/joint_state"/>
+    </node>
+    <node name="obstacle_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="100"/>
+        <remap from="robot_description" to="obstacle_description"/>
+        <remap from="joint_states" to="/fake_joint_state"/>
+    </node>
+
+
+
+    <param name="/config_file" value="$(find mppi_sliding)/params/controller.yaml"/>
+
+    <node name="manipulation_control" type="manipulation_control" pkg="mppi_sliding" output="screen" launch-prefix="$(arg launch_prefix)">
+        <param name="object_reference_position" value="$(arg object_reference_position)"/>
+        <param name="activation_file" value="/home/boyang/.raisim/activation.raisim"/>
+        <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
+        <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_sliding)/params/controller.yaml"/>
+        <param name="experiment_name" value="$(arg experiment_name)"/>
+    </node>
+
+    <include file="$(find mppi_sliding)/launch/common.launch">
+        <arg name="plot" value="$(arg plot)"/>
+        <arg name="enable_obstacle" value="$(arg enable_obstacle)"/>
+    </include>
+
+</launch>

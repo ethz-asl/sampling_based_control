@@ -20,7 +20,6 @@ using namespace manipulation;
 int main(int argc, char** argv) {
   ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
-
   std::string experiment_name;
   nh.param<std::string>("experiment_name", experiment_name, "test");
 

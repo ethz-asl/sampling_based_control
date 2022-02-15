@@ -1,0 +1,29 @@
+
+kp_msg_topic: /object_keypoints_ros/keypoints_array
+pcl_msg_topic: /kp_msg_vis_node/pcl_roi
+
+object:
+  object_name: "mug"
+  ref_frame: "camera_color_optical_frame"
+  object_frame: "mug_frame"
+  primitive_frame: "primitive_frame"
+  scale: [0.1,0.1,0.1]
+  position: [0,0,1]
+  orientation: [0,0,0,1]
+
+
+keypoints: [0,-0.120,0.11, 0,     # handle hole
+            0, 0,  0.01, 0,     #bottom center   
+            0, 0, 0.20, 0,      #top center 
+            0,-0.15,0.11, 0]     # handle edge
+
+# keypoints: [-0.219,-0.111, 0.3223, 0,     # handle hole
+#             -0.232,  -0.116, 0.341, 0,    #bottom center   
+#             -0.196, -0.098, 0.29, 0,     #top center 
+#             -0.225,-0.118, 0.3326, 0]     # handle edge
+
+filter:
+  alpha: [0.1,0.3,0.6]
+
+approx_params:
+  primitive_numbers: 1

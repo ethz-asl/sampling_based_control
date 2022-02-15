@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <node name="joint_state_aggregator" type="joint_state_aggregator" pkg="mppi_sliding" output="screen">
+        <param name="arm_state_topic" value="/franka_state_controller/joint_states"/>
+        <param name="finger_state_topic" value="/franka_gripper/joint_states"/>
+        <param name="output_topic" value="/panda/joint_states"/>
+        <param name="exact_sync" value="false"/>
+    </node>
+
+    
+    <!--    State observer node-->
+    <node pkg="mppi_sliding" name="state_observer_node" type="state_observer_node" output="screen">
+        <param name="object_state_topic" value="/object/state"/>
+        <!-- <param name="object_state_topic" value="/mug/joint_states"/> -->
+        <param name="arm_state_topic" value="/panda/joint_states"/>
+        <param name="observer_update_frequency" value="200"/>
+    </node>
+
+    <node pkg="mppi_sliding" name="object_state_publisher_node" type="object_state_publisher_node" output="screen">
+    </node>
+
+    <!-- hand-eye calibration publisher-->
+    <include file="$(find easy_handeye)/launch/publish.launch">
+    </include>
+
+</launch>

@@ -1,0 +1,111 @@
+geometry:
+  cylinder_height: 0.1
+  cylinder_radius: 0.05
+  cylinder_mass: 1    # ideally equal to the object
+  cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
+  table_position: [1.0,0.0,0.2]
+  target_pos: [0.75, 0.15, 0.3]
+  friction: 0.15  
+
+setup_config:
+  fixed_base: false
+
+dynamics:
+  dt: 0.015
+  object_handle_link: handle_link
+  object_handle_joint: handle_joint
+  articulation_joint: articulation_joint
+  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,    # robot position 9
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
+                   0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
+                   0]            # contact flag
+  gains:
+    base_gains:
+      kp: []
+      kd: []
+      ki: []
+      i_max: []
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]
+
+sim_dynamics:
+  dt: 0.015
+  object_handle_link: sim_handle_link
+  object_handle_joint: sim_handle_joint
+  articulation_joint: articulation_joint
+  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.0, 0.0,    # robot position 9
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
+                   0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
+                   0]            # contact flag
+  gains:
+    base_gains:
+      kp: []
+      kd: []
+      ki: []
+      i_max: []
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]
+
+cost:
+  regularization: 0.0
+  linear_weight: 100.0
+  linear_weight_opening: 10.0
+
+  angular_weight: 5.0
+  angular_weight_opening: 1.0
+
+  min_dist: 0.0
+  max_reach: 3.0
+  reach_weight: 0
+  reach_weight_slope: 0
+
+  obstacle_weight: 0
+  obstacle_weight_slope: 0
+  obstacle_radius: 0.8
+
+  contact_weight: 10.0
+
+  object_weight: 1000
+  object_tolerance: 0.01
+
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
+
+  upper_joint_limits: [ 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
+  lower_joint_limits: [ -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
+
+  # upper_joint_limits: [1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800 ]
+  # lower_joint_limits: [ -1800, -1800, -1800, -1800, -1800, -1800, -1800, -1800 ]
+
+  joint_limit_cost: 0 #1000
+  joint_limit_slope: 0 #100
+
+  max_power: 0.0
+  power_weight: 0.0
+
+  handle_frame: handle_link
+  tracked_frame: panda_grasp
+  arm_base_frame: panda_link0
+
+  collision_link_0: panda_link1
+  collision_link_1: panda_link7
+  collision_threshold: 0.35
+  collision_weight: 1000
