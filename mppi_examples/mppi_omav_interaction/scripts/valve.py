@@ -18,19 +18,19 @@ def cost_callback(data):
         rospy.loginfo("Task sufficiently good executed.")
         reference_publisher.publish(reference_pose)
 
-def set_init_pose(pos_mode=0):
+def set_init_pose(pos_mode):
     reference_pose = PoseStamped()
     reference_pose.header.stamp = rospy.get_rostime()
     reference_pose.header.frame_id = "world"    
-    if pos_mode == 0:
-        reference_pose.pose.position.x = 0.4
-        reference_pose.pose.position.y = 0.0
-        reference_pose.pose.position.z = 0.9
-        reference_pose.pose.orientation.w = 1
+    if pos_mode == 'lee':
+        reference_pose.pose.position.x = 1.06
+        reference_pose.pose.position.y = 0.35
+        reference_pose.pose.position.z = 1.3
+        reference_pose.pose.orientation.w = 0.707
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = 0.0
-    else:
+        reference_pose.pose.orientation.z = -0.707
+    elif pos_mode =='sim':
         reference_pose.pose.position.x = 1.0
         reference_pose.pose.position.y = 0.7
         reference_pose.pose.position.z = 0.78
@@ -38,21 +38,23 @@ def set_init_pose(pos_mode=0):
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
         reference_pose.pose.orientation.z = -0.707
+    else:
+        raise ValueError('Wrong position mode.')
     return reference_pose
 
-def set_retreat_pose(pos_mode=0):
+def set_retreat_pose(pos_mode):
     reference_pose = PoseStamped()
     reference_pose.header.stamp = rospy.get_rostime()
     reference_pose.header.frame_id = "world"    
-    if pos_mode == 0:
-        reference_pose.pose.position.x = 0.0  # Use this parameter to set the ref position or velocity of the valve.
-        reference_pose.pose.position.y = 0
-        reference_pose.pose.position.z = 0.9
-        reference_pose.pose.orientation.w = 1.0
+    if pos_mode == 'lee':
+        reference_pose.pose.position.x = 0.8  # Use this parameter to set the ref position or velocity of the valve.
+        reference_pose.pose.position.y = 0.9
+        reference_pose.pose.position.z = 1.3
+        reference_pose.pose.orientation.w = 0.707
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = 0.0
-    else:
+        reference_pose.pose.orientation.z = -0.707
+    elif pos_mode =='sim':
         reference_pose.pose.position.x = 1.0
         reference_pose.pose.position.y = 1.4
         reference_pose.pose.position.z = 0.78
@@ -60,6 +62,8 @@ def set_retreat_pose(pos_mode=0):
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
         reference_pose.pose.orientation.z = -0.707
+    else:
+        raise ValueError('Wrong position mode.')
     return reference_pose
 
 if __name__ == "__main__":
@@ -77,7 +81,7 @@ if __name__ == "__main__":
     mode = Int64()
 
     rospy.sleep(1.0)
-    pos_mode = 0
+    pos_mode = 'lee'
     reference_pose = set_init_pose(pos_mode)
 
     mode.data = 0.0
