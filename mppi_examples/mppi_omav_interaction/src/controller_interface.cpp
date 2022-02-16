@@ -217,11 +217,12 @@ void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
 void OMAVControllerInterface::updateValveReferenceDynamic(
     const double &start_angle, const double &end_angle, const double &t_start) {
   mppi::observation_t ref0 = ref_.rr[0];
-  const size_t kN = 10;
+  const size_t kN = 50;
+  const double kHorizon_time = 1.0;
   ref_.rr.resize(kN);
   ref_.tt.resize(kN);
   for (size_t i = 0; i < kN; i++) {
-    ref_.tt[i] = t_start + static_cast<double>(i) / kN * 1.0;
+    ref_.tt[i] = t_start + static_cast<double>(i) / kN * kHorizon_time;
     ref_.rr[i] = ref0;
     ref_.rr[i](7) =
         start_angle + static_cast<double>(i) / kN * (end_angle - start_angle);
@@ -324,7 +325,6 @@ void OMAVControllerInterface::publish_ros() {
   // omav_odom.setRotation(tf::Quaternion(x0_(4), x0_(5), x0_(6), x0_(3)));
   // odom_broadcaster.sendTransform(
   //     tf::StampedTransform(omav_odom, t_now, "world", "odom_omav"));
-
 }
 
 /**
@@ -384,10 +384,8 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   std_msgs::Header header;
   header.frame_id = "world";
   header.stamp = ros::Time(tt_opt_.front());
-  trajectory_msgs::MultiDOFJointTrajectory msg;
-  toMultiDofJointTrajectory(msg);
-  optimal_rollout_publisher_.publish(msg);
 
+  // Publish single pose reference:
   geometry_msgs::Pose mppi_reference;
   mppi_reference.position.x = ref_.rr[0](0);
   mppi_reference.position.y = ref_.rr[0](1);
@@ -398,13 +396,20 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   mppi_reference.orientation.z = ref_.rr[0](6);
   mppi_reference_publisher_.publish(mppi_reference);
 
-  if (task_ == InteractionTask::Shelf && detailed_publishing_) {
+  // Compute cost components and publish
+  if (task_ == InteractionTask::Shelf) {
     publishCostInfo(cost_shelf_, header);
-    publishHookPos(cost_shelf_, header);
-  } else if (task_ == InteractionTask::Valve && detailed_publishing_) {
+  } else if (task_ == InteractionTask::Valve) {
     publishCostInfo(cost_valve_, header);
-    publishHookPos(cost_valve_, header);
   }
+
+  // Publish optimal rollout (trajectory, object ref. information)
+  trajectory_msgs::MultiDOFJointTrajectory msg;
+  toMultiDofJointTrajectory(msg);
+  optimal_rollout_publisher_.publish(msg);
+
+  // Publish hook position for visualization
+  publishHookPos(header);
 }
 
 void OMAVControllerInterface::toMultiDofJointTrajectory(
@@ -416,6 +421,11 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
   geometry_msgs::Transform tf;
   geometry_msgs::Twist vel;
   geometry_msgs::Twist acc;
+
+  // Structure:
+  // tf[0] = position
+  // tf[1] = ref_position
+  // tf[2] = object information
 
   for (size_t i = 0; i < xx_opt_.size(); i++) {
     tf::vectorEigenToMsg(xx_opt_[i].head<3>(), tf.translation);
@@ -436,52 +446,61 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
     tf::vectorEigenToMsg(xx_opt_[i].segment<3>(29), vel.angular);
     point.transforms.push_back(tf);
     point.velocities.push_back(vel);
+    // Contact force:
+    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(15), vel.linear);
+    point.velocities.push_back(vel);
+    tf = geometry_msgs::Transform();
+    tf.translation.x = xx_opt_[i](13);  // Object position / rotation
+    tf.translation.y = xx_opt_[i](14);  // Object velocity
+    tf.translation.z = ref_interpolated_[i](7);  // Object reference
+    point.transforms.push_back(tf);
     t.points.push_back(point);
   }
 }
 
-template <class T>
 void OMAVControllerInterface::publishHookPos(
-    const T &cost, const std_msgs::Header &header) const {
-  visualization_msgs::Marker marker_hook;
-  marker_hook.header = header;
-  marker_hook.header.frame_id = "world";
-  marker_hook.type = visualization_msgs::Marker::POINTS;
-  marker_hook.pose.orientation.x = 0;
-  marker_hook.pose.orientation.y = 0;
-  marker_hook.pose.orientation.z = 0;
-  marker_hook.pose.orientation.w = 1;
-  marker_hook.pose.position.x = 0;
-  marker_hook.pose.position.y = 0;
-  marker_hook.pose.position.z = 0;
-  marker_hook.scale.x = 0.02;
-  marker_hook.scale.y = 0.02;
-  marker_hook.scale.z = 0.02;
-  marker_hook.color.a = 1.0;
-  marker_hook.color.r = 0.0;
-  marker_hook.color.g = 1.0;
-  marker_hook.color.b = 0.0;
-  geometry_msgs::Point point;
-  std_msgs::ColorRGBA color;
-  color.a = 1.0;
-  color.b = 0.0;
-  for (size_t i = 0; i < xx_opt_.size(); i++) {
-    cost->compute_cost(xx_opt_[i], ref_.rr[0], i * 0.015);
-    point.x = cost->hook_pos_(0);
-    point.y = cost->hook_pos_(1);
-    point.z = cost->hook_pos_(2);
-    color.r = static_cast<float>(i) / xx_opt_.size();
-    color.g = 1.0f - static_cast<float>(i) / xx_opt_.size();
+    const std_msgs::Header &header) const {
+  const size_t N = xx_opt_.size();
+  if (hook_pos_.size() == N) {
+    visualization_msgs::Marker marker_hook;
+    marker_hook.header = header;
+    marker_hook.header.frame_id = "world";
+    marker_hook.type = visualization_msgs::Marker::POINTS;
+    marker_hook.pose.orientation.x = 0;
+    marker_hook.pose.orientation.y = 0;
+    marker_hook.pose.orientation.z = 0;
+    marker_hook.pose.orientation.w = 1;
+    marker_hook.pose.position.x = 0;
+    marker_hook.pose.position.y = 0;
+    marker_hook.pose.position.z = 0;
+    marker_hook.scale.x = 0.02;
+    marker_hook.scale.y = 0.02;
+    marker_hook.scale.z = 0.02;
+    marker_hook.color.a = 1.0;
+    marker_hook.color.r = 0.0;
+    marker_hook.color.g = 1.0;
+    marker_hook.color.b = 0.0;
+    geometry_msgs::Point point;
+    std_msgs::ColorRGBA color;
+    color.a = 1.0;
+    color.b = 0.0;
+    for (size_t i = 0; i < N; i++) {
+      point.x = hook_pos_[i](0);
+      point.y = hook_pos_[i](1);
+      point.z = hook_pos_[i](2);
+      color.r = static_cast<float>(i) / N;
+      color.g = 1.0f - static_cast<float>(i) / N;
 
-    marker_hook.points.push_back(point);
-    marker_hook.colors.push_back(color);
+      marker_hook.points.push_back(point);
+      marker_hook.colors.push_back(color);
+    }
+    pub_marker_hook_.publish(marker_hook);
   }
-  pub_marker_hook_.publish(marker_hook);
 }
 
 template <class T>
-void OMAVControllerInterface::publishCostInfo(
-    const T &cost, const std_msgs::Header &header) const {
+void OMAVControllerInterface::publishCostInfo(const T &cost,
+                                              const std_msgs::Header &header) {
   // Info about costs:
   Eigen::VectorXd cost_vector(kN_costs);
   cost_vector.setZero();
@@ -492,9 +511,13 @@ void OMAVControllerInterface::publishCostInfo(
   conversions::arrow_initialization(force_marker);
   force_marker.header = header;
 
+  hook_pos_.resize(xx_opt_.size());
+  ref_interpolated_.resize(xx_opt_.size());
+
   for (size_t i = 0; i < xx_opt_.size(); i++) {
     // Cost publishing
-    cost->compute_cost(xx_opt_[i], ref_.rr[0], tt_opt_[i]);
+    cost->get_stage_cost(xx_opt_[i], tt_opt_[i]);
+    ref_interpolated_[i] = cost->r_;
     cost_vector += cost->cost_vector_;
 
     Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15).normalized();
@@ -508,6 +531,7 @@ void OMAVControllerInterface::publishCostInfo(
     force_marker.id = i;
 
     force_marker_array.markers.push_back(force_marker);
+    hook_pos_[i] = cost->hook_pos_;
   }
   normalized_force_publisher_.publish(force_marker_array);
 
@@ -518,25 +542,21 @@ void OMAVControllerInterface::publishCostInfo(
   }
   cost_array_message.array.push_back(cost_vector.sum());
   // Current object reference:
-  cost_array_message.array.push_back(ref_.rr[0](7));
+  // cost_array_message.array.push_back(ref_.rr[0](7));
   // Current mode (free flight vs. interaction):
   cost_array_message.array.push_back(ref_.rr[0](8));
-  // Force vector:
-  cost_array_message.array.push_back(xx_opt_[0](15));
-  cost_array_message.array.push_back(xx_opt_[0](16));
-  cost_array_message.array.push_back(xx_opt_[0](17));
-  cost_array_message.array.push_back(xx_opt_[0].segment<3>(15).norm());
-  cost_array_message.array.push_back(
-      xx_opt_[1].segment<3>(15).cross(com_hook_)(0));
-  cost_array_message.array.push_back(
-      xx_opt_[1].segment<3>(15).cross(com_hook_)(1));
-  cost_array_message.array.push_back(
-      xx_opt_[1].segment<3>(15).cross(com_hook_)(2));
-  cost_array_message.array.push_back(
-      xx_opt_[1].segment<3>(15).cross(com_hook_).norm());
-  cost_array_message.array.push_back(
-      acos(xx_opt_[1].segment<3>(15).normalized().dot(com_hook_.normalized())) *
-      180.0 / M_PI);
+  // cost_array_message.array.push_back(xx_opt_[0].segment<3>(15).norm());
+  // cost_array_message.array.push_back(
+  //     xx_opt_[1].segment<3>(15).cross(com_hook_)(0));
+  // cost_array_message.array.push_back(
+  //     xx_opt_[1].segment<3>(15).cross(com_hook_)(1));
+  // cost_array_message.array.push_back(
+  //     xx_opt_[1].segment<3>(15).cross(com_hook_)(2));
+  // cost_array_message.array.push_back(
+  //     xx_opt_[1].segment<3>(15).cross(com_hook_).norm());
+  // cost_array_message.array.push_back(
+  //     acos(xx_opt_[1].segment<3>(15).normalized().dot(com_hook_.normalized())) *
+  //     180.0 / M_PI);
 
   cost_publisher_.publish(cost_array_message);
 }

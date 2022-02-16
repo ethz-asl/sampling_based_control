@@ -99,14 +99,14 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
                           const mppi::observation_t &x0_opt,
                           const std::vector<double> &tt);
   template <class T>
-  void publishCostInfo(const T &cost, const std_msgs::Header &header) const;
-  template <class T>
-  void publishHookPos(const T &cost, const std_msgs::Header &header) const;
+  void publishCostInfo(const T &cost, const std_msgs::Header &header);
+  void publishHookPos(const std_msgs::Header &header) const;
 
   void toMultiDofJointTrajectory(
       trajectory_msgs::MultiDOFJointTrajectory &t) const;
 
  public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   mppi::SolverConfig config_;
   std::shared_ptr<OMAVInteractionCostShelf> cost_shelf_;
   std::shared_ptr<OMAVInteractionCostValve> cost_valve_;
@@ -139,6 +139,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
+  mppi::reference_array_t ref_interpolated_;
 
   observation_array_t xx_opt_;
   input_array_t uu_opt_;
@@ -152,6 +153,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   bool published_trajectory_ = false;
 
   double damping_ = 5.0;
+
+  std::vector<Eigen::Vector3d> hook_pos_;
 };
 }  // namespace omav_interaction
 

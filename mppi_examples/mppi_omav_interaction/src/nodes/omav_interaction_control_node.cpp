@@ -249,7 +249,7 @@ bool InteractionControlNode::getTargetStateFromTrajectory() {
   ROS_ERROR(
       "No trajectory available or length 0 (%i, %i). Using odometry as target.",
       static_cast<int>(trajectory_available_),
-      current_trajectory_.points.size());
+      static_cast<int>(current_trajectory_.points.size()));
   return false;
 }
 

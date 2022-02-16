@@ -41,7 +41,7 @@ class CostBase {
    */
   void set_reference_trajectory(const reference_trajectory_t& traj);
 
- private:
+ // private:
   /**
    * @brief The derived class must implement this in order to compute the cost
    * at the current time wrt to the given reference
@@ -65,7 +65,7 @@ class CostBase {
   virtual void interpolate_reference(const observation_t& x, reference_t& ref,
                                      const double t);
 
- private:
+ // private:
   reference_t r_;
   reference_trajectory_t timed_ref_;
 };

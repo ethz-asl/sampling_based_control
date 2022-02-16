@@ -26,7 +26,7 @@ void CostBase::interpolate_reference(const observation_t & /*x*/,
                                      reference_t &ref, const double t) {
   auto lower = std::lower_bound(timed_ref_.tt.begin(), timed_ref_.tt.end(), t);
   size_t offset = std::distance(timed_ref_.tt.begin(), lower);
-  if (lower == timed_ref_.tt.end()) offset -= 1;
+  if (lower == timed_ref_.tt.end() && offset > 0) offset -= 1;
   ref = timed_ref_.rr[offset];
 }
 
