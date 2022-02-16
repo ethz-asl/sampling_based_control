@@ -70,10 +70,10 @@ void StateObserverValve::computeAngle(const ros::Time& stamp) {
               << std::endl;
     std::cout << "Rotation: " << std::endl
               << T_world_valve_.rotation() << std::endl;
-    std::cout << "Euler: "
-              << T_world_valve_.rotation().eulerAngles(0, 1, 2).transpose()
-              << std::endl;
-    std::cout << "Euler: "
+    // std::cout << "Euler: "
+    //           << T_world_valve_.rotation().eulerAngles(0, 1, 2).transpose()
+    //           << std::endl;
+    std::cout << "Euler (yaw, pitch, roll, world->valve): "
               << T_world_valve_.rotation().eulerAngles(2, 1, 0).transpose()
               << std::endl;
     return;
