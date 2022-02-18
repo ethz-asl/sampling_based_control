@@ -8,9 +8,11 @@
 
 Eigen::Vector3d Mug::get_pt_from_kpArray(int obj_idx, int pt_idx)
 {
-    // get the point3d from the ObjectsArray msgs
-    // obj_idx: the idx of the object
-    // pt_idx: the idx of the point in the object
+    /* 
+    Get the point3d from the ObjectsArray msgs
+        obj_idx: the idx of the object
+        pt_idx: the idx of the point in the object 
+    */
     if(obj_idx > this->obj_num)
     {
         ROS_WARN_ONCE("Trying to get object outside the given ObjectArray.msg range");
@@ -39,7 +41,6 @@ Eigen::Vector3d Mug::get_pt_from_kpArray(int obj_idx, int pt_idx)
 
 }
 bool Mug::primitive_estimate(int obj_idx) 
-
 {   // --------------------------------------------------------------------//
             // for Mug: [handle hole,   bottom,      top,     handle edge]
             // Input: idx of the keypointsArray from the msg
@@ -52,42 +53,36 @@ bool Mug::primitive_estimate(int obj_idx)
     Eigen::Vector3d kp_handle = get_pt_from_kpArray(obj_idx, this->handle_idx);
     Eigen::Vector3d kp_avg    = get_pt_from_kpArray(obj_idx, this->avg_idx);
 
-    //   GEOMETRY ESTIMATE
+    // center line (from bottow point to top)
+    center_line << kp_top - kp_bottom;
+
+    //  GEOMETRY ESTIMATE
         // estimate the geometry feature
         // height and radius
-
-    // center line (from bottow point to top)
-    //center_line << keypoints_xd.segment(top_idx*4,3) - keypoints_xd.segment(bottom_idx*4, 3);
-    center_line << kp_top - kp_bottom;
 
     // height  (= norm of the center line)
     mug_primitive.body_height = center_line.norm();
 
     // radius  ( = the dist between handle cirle point to the center line)
-    // mug_primitive.body_radius = point_to_line(keypoints_xd.segment(bottom_idx*4,3),
-    //                                           keypoints_xd.segment(top_idx*4,3),
-    //                                           keypoints_xd.segment(avg_idx*4,3) );
     mug_primitive.body_radius = point_to_line(kp_bottom, kp_top, kp_avg);
                                                 
-
-    // POSE 
+    // POSE ESTIMATE
         // estimate the center point's pose(s) of the objects, will be used as the pose 
         // for the primitive(s)
-    // ROS_INFO("pose estimation");
-    // ROS_INFO_STREAM(keypoints_xd.transpose());
+
     state_.header.stamp = ros_time;
     state_.header.frame_id = prim_frame;
     state_.position.resize(primitive_num*7);
     state_.velocity.resize(primitive_num*7);
+
     Eigen::Vector3d center_pos;
     Eigen::Vector4d center_orien;
-
     estimate_center_pose(center_pos, center_orien, obj_idx);
 
+    // update primitive frame params, 
     state_.position[0] = center_pos[0];
     state_.position[1] = center_pos[1];
     state_.position[2] = center_pos[2];
-    
     state_.position[3] = center_orien[0]; //x
     state_.position[4] = center_orien[1]; //y
     state_.position[5] = center_orien[2]; //z
@@ -138,24 +133,41 @@ double Mug::point_to_line(const Eigen::Vector3d& pos_1,
 
     auto nominator = (pos_3-pos_1).cross(pos_3-pos_2);
     auto denominator = pos_2 - pos_1;
-    double sqrt_nom =  nominator.norm();
-    double sqrt_denom = denominator.norm();
 
-    // ROS_INFO_STREAM("radius is: " << (sqrt_nom/sqrt_denom));
-    return (sqrt_nom/sqrt_denom);
+    return (nominator.norm()/denominator.norm());
 }
 
 Eigen::Matrix3d Mug::rot_of_two_frame(const Eigen::Matrix3d& rot_1,
                             const Eigen::Matrix3d& rot_2){
-    // calculate the angle between two given vectors
-    // double cos_angle = vec_1.dot(vec_2) / ( vec_1.norm() * vec_2.norm() );
-    // double angle = std::acos(cos_angle);
-    // ROS_INFO_STREAM("angle is: " << angle);
     return rot_1*rot_2;
 }
 
 
-bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
+void Mug::get_orien_from_axisXZ(Eigen::Vector3d& axis_x, Eigen::Vector3d& axis_z, Eigen::Quaterniond& quat)
+{   
+    axis_x = axis_x.normalized();
+    axis_z = axis_z.normalized();
+
+    Eigen::Matrix3d ref_rot; 
+    ref_rot << 1,0,0, 
+               0,1,0, 
+               0,0,1;
+    Eigen::Vector3d axis_y = axis_z.cross(axis_x);
+    Eigen::Matrix3d pri_rot;
+    pri_rot.col(0) = axis_x;
+    pri_rot.col(1) = axis_y;
+    pri_rot.col(2) = axis_z;
+
+    Eigen::Matrix3d rot = rot_of_two_frame(ref_rot, pri_rot);
+    Eigen::Quaterniond q(rot);
+    quat = q.normalized();
+
+    return;
+}
+
+
+// TODO:: remove pos and orien arg, use obj_idx to read the pos and orien from a vector or Eigen
+bool Mug::estimate_center_pose(Eigen::Vector3d& pos,    
                         Eigen::Vector4d& orien,
                         int obj_idx)
 {   
@@ -167,43 +179,21 @@ bool Mug::estimate_center_pose(Eigen::Vector3d& pos,
     Eigen::Vector3d kp_avg    = get_pt_from_kpArray(obj_idx, this->avg_idx);
     // TODO: this is reperated, fix this later
 
-
     // calculate a single primitve's center position & orientation
 
     // position
-    // pos << center_line/2 + keypoints_xd.segment(bottom_idx*4, 3);
     pos << center_line/2 + kp_bottom;
     
     // orientation
-        // roll  (= 0)
-    center_roll = 0;
-        // pitch (= 0)
-    center_pitch = 0;
-        // yaw  (= angle between center line and the camera_world_frame) 
-    // TODO: figure out the frame of the camera_world_frame
-    // for now, set this frame ideantical to ref_frame
-    Eigen::Vector3d ref_x_axis = {1,0,0};
-    Eigen::Vector3d ref_y_axis = {0,1,0};
-    Eigen::Vector3d ref_z_axis = {0,0,1};
-    Eigen::Matrix3d ref_rot; 
-    ref_rot << 1,0,0, 
-               0,1,0, 
-               0,0,1;
-    Eigen::Vector3d pri_x_axis,pri_y_axis,pri_z_axis;
-    pri_z_axis = center_line.normalized();
-    // pri_x_axis = (keypoints_xd.segment(handle_idx*4, 3) - pos).normalized(); //TODO: should be point-to-line
-    pri_x_axis = (kp_handle - pos).normalized(); //TODO: should be point-to-line
-    pri_y_axis = pri_z_axis.cross(pri_x_axis);
-    Eigen::Matrix3d pri_rot; 
-    pri_rot.col(0) = pri_x_axis;
-    pri_rot.col(1) = pri_y_axis;
-    pri_rot.col(2) = pri_z_axis;
+        // the frame of the camera_world_frame is the ref_frame in this project with Realsense D
+        // for now, set this frame ideantical to ref_frame
 
-    // center_yaw = rot_of_two_frame(ref_rot, pri_rot);
-    
-    Eigen::Matrix3d rot = rot_of_two_frame(ref_rot, pri_rot);
-    Eigen::Quaterniond q(rot);
-    q = q.normalized();
+    Eigen::Vector3d pri_x_axis,pri_y_axis,pri_z_axis;
+    pri_z_axis = center_line;
+    pri_x_axis = kp_handle - pos; //TODO: should be point-to-line
+
+    Eigen::Quaterniond q;
+    get_orien_from_axisXZ(pri_x_axis,pri_z_axis,q);
 
     orien[0] = q.x();
     orien[1] = q.y();
@@ -235,8 +225,6 @@ void Mug::update()
         primitive_visualize();
         pub_state();
     }
-
-    
 
 }
 
@@ -275,10 +263,12 @@ void Mug::ransac_fitting(int obj_idx)
     // {
     //     ROS_INFO_STREAM("fitting result error :" << cylinder_fit_srv.response.fit_error);
     // }
+
+    // RANSAC Infinite Cylinder
     typedef pcl::PointXYZ PointT;
     pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
     pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg;
-    pcl::PointIndices::Ptr inliers_cylinder(new pcl::PointIndices);
+    pcl::PointIndices::Ptr inliers_cylinder_idxPtr(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients_cylinder(new pcl::ModelCoefficients);
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
     pcl::NormalEstimation<PointT, pcl::Normal> ne;
@@ -300,35 +290,70 @@ void Mug::ransac_fitting(int obj_idx)
     seg.setRadiusLimits(0, 0.1);
     seg.setInputCloud(cloud_filtered);
     seg.setInputNormals(cloud_normals);
-    seg.segment(*inliers_cylinder, *coefficients_cylinder);
+    seg.segment(*inliers_cylinder_idxPtr, *coefficients_cylinder);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr extracted_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::copyPointCloud(*cloud_filtered, *inliers_cylinder, pcl_cloudXYZ);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr inliers_cylinder_Ptr(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::copyPointCloud(*cloud_filtered, *inliers_cylinder_idxPtr, *inliers_cylinder_Ptr);
 
-    pcl_cloudXYZ = *extracted_cloud;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
+    pcl_cloudXYZ = *inliers_cylinder_Ptr;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
     std::cerr << "Cylinder coefficients: " << (*coefficients_cylinder) << std::endl;
     std::cout << "extracted size: " << pcl_cloudXYZ.points.size() << std::endl;
 
     if(coefficients_cylinder->values.size() > 6)
     {
+        // update center axis
         p_center.x = coefficients_cylinder->values[0];
         p_center.y = coefficients_cylinder->values[1];
         p_center.z = coefficients_cylinder->values[2];
         direction_.x = coefficients_cylinder->values[3];
         direction_.y = coefficients_cylinder->values[4];
         direction_.z = coefficients_cylinder->values[5];
+    
+        // Project inliers onto center axis
+        pcl::ModelCoefficients::Ptr coefficients_line (new pcl::ModelCoefficients ());
+        coefficients_line->values.resize(6);
+        for(int j = 0 ; j < 6; j++)
+        {
+            coefficients_line->values[j] = coefficients_cylinder->values[j];
+        }
+        pcl::ProjectInliers<pcl::PointXYZ> proj;
+        proj.setModelType(pcl::SACMODEL_LINE);
+        proj.setInputCloud(inliers_cylinder_Ptr);
+        proj.setModelCoefficients(coefficients_line);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
+        proj.filter(*cloud_projected);
+
+        pcl_cloud_vis = pcl_cloudXYZ + *cloud_projected;
+
+        // get center point and height
+           // simply compute the middle point of furthest two points
+        pcl::PointXYZ p_1, p_2;
+        mug_primitive.body_height = pcl::getMaxSegment(*cloud_projected,p_1,p_2);    
+        mug_primitive.body_radius = coefficients_cylinder->values[6];
+           // update the pitimitive model
+        state_.position[0] = 0.5*(p_1.x-p_2.x) + p_2.x;
+        state_.position[1] = 0.5*(p_1.y-p_2.y) + p_2.y;
+        state_.position[2] = 0.5*(p_1.z-p_2.z) + p_2.z;
+
+        // TODO: set currently an extra step of primitive pose, only z_axis is measured now
+        Eigen::Vector3d p_axis_z, p_axis_x;
+        p_axis_z <<  p_1.x-p_2.x, p_1.y-p_2.y, p_1.z-p_2.z;
+        p_axis_x << 1,0,0;
+        Eigen::Quaterniond q;
+        get_orien_from_axisXZ(p_axis_x,p_axis_z,q);
+        state_.position[3] = q.x();
+        state_.position[4] = q.y();
+        state_.position[5] = q.z();
+        state_.position[6] = q.w();
     }
-
-
+    
     return;
 }
 
 Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
 {
     ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
-    if(sim)
-    {  
-    }
+    if(sim){}
 
     this->avg_idx = 0;
     this->handle_idx = 1;
@@ -380,9 +405,6 @@ void Mug::update_TF()
     broadcaster.sendTransform(prim_trans);
 }
 
-
-
-
 void Mug::primitive_visualize()
 {   
     primitive_markers_.markers.clear();
@@ -414,25 +436,26 @@ void Mug::pub_state()
     state_publisher_.publish(mug_primitive);
     primitive_publisher_.publish(primitive_markers_);
 
-    if(pcl_cloudXYZ.points.size()>0)
+    if(pcl_cloud_vis.points.size()>0)
     {
-        inliers_pub.publish(pcl_cloudXYZ);   
+        inliers_pub.publish(pcl_cloud_vis);   
 
         // vis center line
         visualization_msgs::Marker line_list;
         line_list.header.frame_id = pcl_cloudXYZ.header.frame_id;
         line_list.action = visualization_msgs::Marker::ADD;
+        line_list.pose.orientation.w = 1.0;
         line_list.id = 3;
         line_list.type = visualization_msgs::Marker::LINE_LIST;
-        line_list.scale.x = 0.01;
-        line_list.color.r = 0.8;
+        line_list.scale.x = 0.003;
+        line_list.color.b = 0.8;
         line_list.color.a = 0.8;
         geometry_msgs::Point p1, p2;
         float len = 1000;
         p1.x = p_center.x + len*direction_.x;
         p1.y = p_center.y + len*direction_.y;
         p1.z = p_center.z + len*direction_.z;
-        
+    
         p2.x = p_center.x - len*direction_.x;
         p2.y = p_center.y - len*direction_.y;
         p2.z = p_center.z - len*direction_.z;
@@ -440,9 +463,6 @@ void Mug::pub_state()
         line_list.points.push_back(p1);
         line_list.points.push_back(p2);
         cyliner_line_marker_pub.publish(line_list);
-
     }
-    
-    
 
 }

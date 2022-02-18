@@ -5,6 +5,7 @@
 //#include "object_modeling_playground/cylinder_fit.h"
 #include <manipulation_msgs/CylinderFit.h>
 
+// PCL
 #include <pcl/ModelCoefficients.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
@@ -14,6 +15,7 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl_ros/segmentation/sac_segmentation.h>
+#include <pcl/filters/project_inliers.h>
 
 class Mug: public Object
 {
@@ -30,9 +32,17 @@ class Mug: public Object
     void kptoPrimitive();
 
   private:
+    // Esimate one object's center 6D Pose
     bool estimate_center_pose(Eigen::Vector3d& pos,
                         Eigen::Vector4d& orien,
                         int obj_idx);
+
+    // Generate Quaternion from two direction axis: X and Z 
+      // axis_x z: Two vector of directions(doesn't have to be orthogonal)
+      // quat: Resulting quaternion estimated from the given axis
+    void get_orien_from_axisXZ(Eigen::Vector3d& axis_x,
+                        Eigen::Vector3d& axis_z,
+                        Eigen::Quaterniond& quat);
 
     double point_to_line(const Eigen::Vector3d& pos_1,
                         const Eigen::Vector3d& pos_2,
@@ -40,18 +50,11 @@ class Mug: public Object
 
     void ransac_fitting(int obj_idx);
 
-    Eigen::Matrix3d rot_of_two_frame(const Eigen::Matrix3d& ref_rot,
-                            const Eigen::Matrix3d& rel_rot);
+    Eigen::Matrix3d rot_of_two_frame(const Eigen::Matrix3d& ref_rot, const Eigen::Matrix3d& rel_rot);
     Eigen::Vector3d get_pt_from_kpArray(int obj_idx, int pt_idx);
-
-    ros::NodeHandle nh_;
 
     // fitting 
     manipulation_msgs::MugPrimitive mug_primitive;
-
-    double center_roll;
-    double center_pitch;
-    double center_yaw;
     Eigen::Vector3d center_line;
     std::vector<double> height;
     std::vector<double> radius;
@@ -61,12 +64,17 @@ class Mug: public Object
     int handle_idx;
     int avg_idx;
 
+    // service
     ros::ServiceClient cylinder_fit_client;
     manipulation_msgs::CylinderFit cylinder_fit_srv; 
+    
+    // ros 
+    ros::NodeHandle nh_;
     ros::Publisher inliers_pub;
-
     ros::Publisher cyliner_line_marker_pub;
     geometry_msgs::Point p_center;
     geometry_msgs::Vector3 direction_;
 
+    // PCL
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud_vis;  // pointcloud for visulization
 };

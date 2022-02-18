@@ -81,6 +81,7 @@
         "variant": "cpp",
         "bit": "cpp",
         "forward_list": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "*.ipp": "cpp"
     }
 }
