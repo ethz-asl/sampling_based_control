@@ -37,8 +37,9 @@ void OMAVVelocityDynamics::initialize_world(
 
   // Material properties: friction, bounciness (restitution), restitution threshold
   // sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
-  sim_.setMaterialPairProp("steel", "steel", 0.001, 0.001, 0.5);
-  sim_.setDefaultMaterial(0.001, 0.001, 0.5);
+  // sim_.setMaterialPairProp("steel", "steel", 0.001, 0.001, 0.5);
+  sim_.setMaterialPairProp("steel", "steel", 0.001, 0.5, 0.001);
+  sim_.setDefaultMaterial(0.001, 0.001, 0.001);
   // raisim::CollisionSet omav_c = omav_->getCollisionBodies();
   // std::cout << "Collision bodies omav: ";
   // for (auto c : omav_c) {

@@ -3,41 +3,31 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Int64, Float64
+from scipy.spatial.transform import Rotation as Rot
 import sys
-
-# def cost_callback(data):
-#     if data.data < 100:
-#         reference_pose.header.frame_id = "odom"
-#         reference_pose.pose.position.x = 0.0
-#         reference_pose.pose.position.y = 0.0
-#         reference_pose.pose.position.z = 0.5
-#         reference_pose.pose.orientation.w = 1.0
-#         reference_pose.pose.orientation.x = 0.0
-#         reference_pose.pose.orientation.y = 0.0
-#         reference_pose.pose.orientation.z = 0.0
-#         rospy.loginfo("Task sufficiently good executed.")
-#         reference_publisher.publish(reference_pose)
 
 def set_init_pose(pos_mode):
     reference_pose = PoseStamped()
     reference_pose.header.stamp = rospy.get_rostime()
     reference_pose.header.frame_id = "world"    
     if pos_mode == 'lee':
+        r = Rot.from_euler('y',15,degrees=True).as_quat()
         reference_pose.pose.position.x = 1.06
         reference_pose.pose.position.y = 0.35
         reference_pose.pose.position.z = 1.3
-        reference_pose.pose.orientation.w = 0.707
-        reference_pose.pose.orientation.x = 0.0
-        reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = -0.707
+        reference_pose.pose.orientation.w = r[3]
+        reference_pose.pose.orientation.x = r[0]
+        reference_pose.pose.orientation.y = r[1]
+        reference_pose.pose.orientation.z = r[2]
     elif pos_mode =='sim':
+        r = Rot.from_euler('y',15,degrees=True).as_quat()
         reference_pose.pose.position.x = 0.4
         reference_pose.pose.position.y = 0.0
         reference_pose.pose.position.z = 1.1
-        reference_pose.pose.orientation.w = 1
-        reference_pose.pose.orientation.x = 0.0
-        reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = 0.0
+        reference_pose.pose.orientation.w = r[3]
+        reference_pose.pose.orientation.x = r[0]
+        reference_pose.pose.orientation.y = r[1]
+        reference_pose.pose.orientation.z = r[2]
     else:
         raise ValueError('Wrong position mode.')
     return reference_pose
@@ -50,12 +40,12 @@ def set_retreat_pose(pos_mode):
         reference_pose.pose.position.x = 0.8  # Use this parameter to set the ref position or velocity of the valve.
         reference_pose.pose.position.y = 0.9
         reference_pose.pose.position.z = 1.3
-        reference_pose.pose.orientation.w = 0.707
+        reference_pose.pose.orientation.w = 1.0
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = -0.707
+        reference_pose.pose.orientation.z = 0.0
     elif pos_mode =='sim':
-        reference_pose.pose.position.x = 0.0
+        reference_pose.pose.position.x = 0.4
         reference_pose.pose.position.y = 0.0
         reference_pose.pose.position.z = 1.1
         reference_pose.pose.orientation.w = 1
@@ -99,7 +89,7 @@ if __name__ == "__main__":
     rospy.loginfo("Starting Interaction")
     mode_publisher.publish(mode)
 
-    rospy.sleep(20.0)
+    rospy.sleep(10.0)
     reference_pose = set_retreat_pose(pos_mode)
     mode.data = 0.0
     rospy.loginfo("Setting reference as target")

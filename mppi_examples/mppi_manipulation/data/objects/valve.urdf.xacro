@@ -49,7 +49,7 @@
         <child link="handle_link"/>
         <!--<origin xyz="0 0 ${base_height/2.0+0.2}" rpy="0 0 0"/> <!- 1.5708 0 0 -->
         <origin xyz="$(arg object_position)" rpy="$(arg object_rpy)"/>
-        <dynamics damping="1" friction="2"/>
+        <dynamics damping="0" friction="0.002"/>
         <axis xyz="0 0 1"/>
         <limit upper="300.14" lower="-300.14" effort="100" velocity="1.0"/>
     </joint>
