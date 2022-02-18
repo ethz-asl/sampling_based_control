@@ -136,10 +136,15 @@ void OMAVInteractionCostValve::compute_pose_cost(
 void OMAVInteractionCostValve::compute_handle_hook_cost() {
   // Calculate distance between hook and handle
   distance_hook_handle_ = hook_handle_vector_.norm();
+  if (distance_hook_handle_ > param_ptr_->handle_hook_thresh) {
+    cost_vector_(CostIdx::handle_hook) =
+        param_ptr_->Q_handle_hook *
+        (distance_hook_handle_ - param_ptr_->handle_hook_thresh);
+  }
   // Handle Hook distance cost
-  cost_vector_(CostIdx::handle_hook) = std::max(
-      0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
-               (distance_hook_handle_ - param_ptr_->handle_hook_thresh));
+  // cost_vector_(CostIdx::handle_hook) = std::max(
+  //     0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
+  //              (distance_hook_handle_ - param_ptr_->handle_hook_thresh));
 }
 
 void OMAVInteractionCostValve::compute_object_cost(

@@ -157,12 +157,12 @@ force_t OMAVVelocityDynamics::get_contact_forces(double &unwanted_contact) {
         q_IB.inverse() * (contact.getPosition().e() - omav_pose_.head(3));
     // Check position of contact: If not at end effector, set to true.
     if (contact_point_B(0) < 0.55) {
-      // Adding the norm leads to noisy values, does not work in optimizer:
-      // unwanted_contact += this_contact_force.norm();
-      unwanted_contact = 1.0;
-    } else {
+    //   // Adding the norm leads to noisy values, does not work in optimizer:
+    //   // unwanted_contact += this_contact_force.norm();
+       unwanted_contact = 1.0;
+    }// else {
       force.force += this_contact_force;
-    }
+    // }
   }
   return force;
 }
