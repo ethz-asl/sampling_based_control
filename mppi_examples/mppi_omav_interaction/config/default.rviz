@@ -6,8 +6,10 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Object1
         - /PoseArray1
         - /ReferencePoses1
+        - /RobotModel1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -79,7 +81,7 @@ Visualization Manager:
           Value: true
         tip:
           Value: false
-        valve_base:
+        valve:
           Value: true
         world:
           Value: false
@@ -90,22 +92,23 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          handle_link:
+            {}
           ouzel/base_link:
             imu:
               {}
             odom_omav:
-              omav_base:
-                rod:
-                  tip:
-                    hook:
-                      {}
+              {}
           ouzel/odometry_sensor1:
             {}
           state:
+            omav_base:
+              rod:
+                tip:
+                  hook:
+                    {}
+          valve:
             {}
-          valve_base:
-            handle_link:
-              {}
       Update Interval: 0
       Value: true
     - Alpha: 0.5
@@ -123,10 +126,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        odom_omav:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         omav_base:
           Alpha: 1
           Show Axes: false
@@ -137,6 +136,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        state:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         tip:
           Alpha: 1
           Show Axes: false
@@ -148,7 +151,7 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
-    - Alpha: 1
+    - Alpha: 0.5
       Class: rviz/RobotModel
       Collision Enabled: false
       Enabled: true
@@ -159,11 +162,6 @@ Visualization Manager:
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
         handle_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        valve_base:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -215,6 +213,47 @@ Visualization Manager:
       Marker Topic: /ouzel/omav_mppi_interaction/debug/hook_pos
       Name: Marker
       Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        handle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Name: RobotModel
+      Robot Description: object_description_rviz_collision
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /ouzel/mppi_omav_interaction/debug/hook_pos
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /ouzel/mppi_omav_interaction/debug/normalized_forces
+      Name: MarkerArray
+      Namespaces:
         "": true
       Queue Size: 100
       Value: true
@@ -246,25 +285,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.0790271759033203
+      Distance: 2.420164108276367
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.05201690271496773
-        Y: -0.5409061312675476
-        Z: 0.007839888334274292
+        X: 0.22382502257823944
+        Y: -0.6829478740692139
+        Z: -0.046427369117736816
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.42539843916893005
+      Pitch: 0.6853982210159302
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.9453980326652527
+      Yaw: 0.8353981375694275
     Saved: ~
 Window Geometry:
   Displays:

@@ -35,7 +35,15 @@ void OMAVVelocityDynamics::initialize_world(
   object_ = sim_.addArticulatedSystem(object_description_, "/");
   ground = sim_.addGround(0.0, "steel");
 
-  sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
+  // Material properties: friction, bounciness (restitution), restitution threshold
+  // sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
+  sim_.setMaterialPairProp("steel", "steel", 0.001, 0.001, 0.5);
+  sim_.setDefaultMaterial(0.001, 0.001, 0.5);
+  // raisim::CollisionSet omav_c = omav_->getCollisionBodies();
+  // std::cout << "Collision bodies omav: ";
+  // for (auto c : omav_c) {
+  //   std::cout << c.name << ", ";
+  // }
   // robot_dof_ = omav_->getDOF();
   // Set dimensions
   // state_dimension_ = 32;

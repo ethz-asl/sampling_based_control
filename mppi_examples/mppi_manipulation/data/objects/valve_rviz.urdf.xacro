@@ -3,13 +3,13 @@
     <xacro:arg name="resource_directory" default="$(find mppi_manipulation)/data/meshes"/>
     <xacro:arg name="object_position" default="-1 0 1"/>
     <xacro:arg name="object_rpy" default="1.5708 0 0"/>
+    <xacro:arg name="valve_type" default="lee"/>
 
     <xacro:property name="base_position_x" default="1.0"/>
     <xacro:property name="base_position_y" default="0.0"/>
     <xacro:property name="base_length" default="0.2"/>
     <xacro:property name="base_height" default="0.5"/>
     <xacro:property name="base_width" default="0.2"/>
-    <xacro:property name="valve_type" default="lee_"/>
 
     <link name="world"/>
 
@@ -35,13 +35,13 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="file://$(arg resource_directory)/valve_${valve_type}visual.obj" scale="1 1 1"/>
+                <mesh filename="file://$(arg resource_directory)/valve_$(arg valve_type)_visual.obj" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-                <mesh  filename="file://$(arg resource_directory)/valve_${valve_type}collision.obj" scale="1 1 1"/>
+                <mesh  filename="file://$(arg resource_directory)/valve_$(arg valve_type)_collision.obj" scale="1 1 1"/>
             </geometry>
         </collision>
     </link>

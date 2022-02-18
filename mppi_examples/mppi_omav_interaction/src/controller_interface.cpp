@@ -520,7 +520,7 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
     ref_interpolated_[i] = cost->r_;
     cost_vector += cost->cost_vector_;
 
-    Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15).normalized();
+    Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15);//.normalized();
 
     force_marker.points[0].x = cost->hook_pos_(0);
     force_marker.points[0].y = cost->hook_pos_(1);

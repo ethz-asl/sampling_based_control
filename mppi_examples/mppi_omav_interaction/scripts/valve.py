@@ -3,20 +3,20 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Int64, Float64
+import sys
 
-
-def cost_callback(data):
-    if data.data < 100:
-        reference_pose.header.frame_id = "odom"
-        reference_pose.pose.position.x = 0.0
-        reference_pose.pose.position.y = 0.0
-        reference_pose.pose.position.z = 0.5
-        reference_pose.pose.orientation.w = 1.0
-        reference_pose.pose.orientation.x = 0.0
-        reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = 0.0
-        rospy.loginfo("Task sufficiently good executed.")
-        reference_publisher.publish(reference_pose)
+# def cost_callback(data):
+#     if data.data < 100:
+#         reference_pose.header.frame_id = "odom"
+#         reference_pose.pose.position.x = 0.0
+#         reference_pose.pose.position.y = 0.0
+#         reference_pose.pose.position.z = 0.5
+#         reference_pose.pose.orientation.w = 1.0
+#         reference_pose.pose.orientation.x = 0.0
+#         reference_pose.pose.orientation.y = 0.0
+#         reference_pose.pose.orientation.z = 0.0
+#         rospy.loginfo("Task sufficiently good executed.")
+#         reference_publisher.publish(reference_pose)
 
 def set_init_pose(pos_mode):
     reference_pose = PoseStamped()
@@ -31,13 +31,13 @@ def set_init_pose(pos_mode):
         reference_pose.pose.orientation.y = 0.0
         reference_pose.pose.orientation.z = -0.707
     elif pos_mode =='sim':
-        reference_pose.pose.position.x = 1.0
-        reference_pose.pose.position.y = 0.7
-        reference_pose.pose.position.z = 0.78
-        reference_pose.pose.orientation.w = 0.707
+        reference_pose.pose.position.x = 0.4
+        reference_pose.pose.position.y = 0.0
+        reference_pose.pose.position.z = 1.1
+        reference_pose.pose.orientation.w = 1
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = -0.707
+        reference_pose.pose.orientation.z = 0.0
     else:
         raise ValueError('Wrong position mode.')
     return reference_pose
@@ -55,18 +55,21 @@ def set_retreat_pose(pos_mode):
         reference_pose.pose.orientation.y = 0.0
         reference_pose.pose.orientation.z = -0.707
     elif pos_mode =='sim':
-        reference_pose.pose.position.x = 1.0
-        reference_pose.pose.position.y = 1.4
-        reference_pose.pose.position.z = 0.78
-        reference_pose.pose.orientation.w = 0.707
+        reference_pose.pose.position.x = 0.0
+        reference_pose.pose.position.y = 0.0
+        reference_pose.pose.position.z = 1.1
+        reference_pose.pose.orientation.w = 1
         reference_pose.pose.orientation.x = 0.0
         reference_pose.pose.orientation.y = 0.0
-        reference_pose.pose.orientation.z = -0.707
+        reference_pose.pose.orientation.z = 0.0
     else:
         raise ValueError('Wrong position mode.')
     return reference_pose
 
 if __name__ == "__main__":
+    if len(sys.argv) == 1 or (sys.argv[1] != 'lee' and sys.argv[1] != 'sim'):
+        raise ValueError("Wrong mode, choose lee or sim.")
+        exit()
     rospy.init_node("reference_node")
     # rospy.loginfo("Set new reference in 3 seconds.")
 
@@ -81,7 +84,7 @@ if __name__ == "__main__":
     mode = Int64()
 
     rospy.sleep(1.0)
-    pos_mode = 'lee'
+    pos_mode = sys.argv[1]
     reference_pose = set_init_pose(pos_mode)
 
     mode.data = 0.0
@@ -96,7 +99,7 @@ if __name__ == "__main__":
     rospy.loginfo("Starting Interaction")
     mode_publisher.publish(mode)
 
-    rospy.sleep(10.0)
+    rospy.sleep(20.0)
     reference_pose = set_retreat_pose(pos_mode)
     mode.data = 0.0
     rospy.loginfo("Setting reference as target")

@@ -38,7 +38,9 @@ void StateObserverValve::jointStateCallback(
   double wrapped = std::fmod(msg->position[0], 2.0 * M_PI);
   // Add some random initial rotation and only rotate around valve z axis (for
   // debugging)
-  T_world_valve_ = Eigen::AngleAxisd(M_PI, Eigen::Vector3d(1.0, 0.0, 0.0)) *
+  T_world_valve_ = Eigen::AngleAxisd(0.02, Eigen::Vector3d(1.0, 0.0, 0.0)) *
+                   Eigen::AngleAxisd(-0.04, Eigen::Vector3d(0.0, 1.0, 0.0)) *
+                   Eigen::AngleAxisd(0.8, Eigen::Vector3d(0.0, 0.0, 1.0)) *
                    Eigen::AngleAxisd(wrapped, Eigen::Vector3d(0.0, 0.0, 1.0));
   computeAngle(msg->header.stamp);
 }

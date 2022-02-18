@@ -48,12 +48,14 @@
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
                 <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
+                <!-- <box size="${manipulator_radius*2} ${manipulator_radius*2} ${manipulator_length}"/> -->
             </geometry>
         </collision>
         <visual>
             <origin rpy="0 1.5708 0" xyz="0 0 0"/>
             <geometry>
                 <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
+                <!-- <box size="${manipulator_radius*2} ${manipulator_radius*2} ${manipulator_length}"/> -->
             </geometry>
             <material name="">
                 <color rgba="1 1 1 1"/>
@@ -61,10 +63,10 @@
         </visual>
     </link>
 
-    <joint name="rod_to_tip" type="fixed">
+    <joint name="rod_to_hook" type="fixed">
         <parent link="rod"/>
-        <child link="tip"/>
-        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
+        <child link="hook"/>
+        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 -${tool_length/2}"/>
     </joint>
     <!--
         <joint name="tip_to_thick" type="fixed">
@@ -94,7 +96,7 @@
             </visual>
         </link>
 -->
-        <link name="tip">
+        <!-- <link name="tip">
             <collision>
                 <origin rpy="0 0 0" xyz="0 0 0"/>
                 <geometry>
@@ -113,13 +115,13 @@
                     <color rgba="1 1 1 1"/>
                 </material>
             </visual>
-        </link>
+        </link> -->
 
-        <joint name="tip_to_hook" type="fixed">
+        <!-- <joint name="tip_to_hook" type="fixed">
             <parent link="tip"/>
             <child link="hook"/>
             <origin rpy="0 0 0" xyz="0.0 0.0 -${tool_length/2}"/>
-        </joint>
+        </joint> -->
 
         <link name="hook">
             <collision>
@@ -135,6 +137,7 @@
                 <origin rpy="0 0 0" xyz="0 0 0"/>
                 <geometry>
                     <cylinder radius="${tool_radius}" length="${tool_length}"/>
+                    <!-- <box size="${tool_radius*2} ${tool_radius*2} ${tool_length}"/> -->
                 </geometry>
                 <material name="">
                     <color rgba="1 1 1 1"/>
