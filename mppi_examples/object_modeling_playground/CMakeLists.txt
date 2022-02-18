@@ -45,7 +45,7 @@ add_executable(primitive_modeling src/main.cpp)
 target_link_libraries(primitive_modeling ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(primitive_modeling ${PROJECT_NAME})
 
-catkin_install_python(PROGRAMS scripts/interactive_marker.py 
+catkin_install_python(PROGRAMS scripts/interactive_marker.py  scripts/cylinder_fitting_server.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

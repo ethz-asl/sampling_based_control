@@ -9,6 +9,8 @@
         <param name="sim" value="$(arg sim)"/>
     </node>
 
+    <node name="cylinder_fit_server_node" pkg="object_modeling_playground" type="cylinder_fitting_server.py" output="screen"/>
+
     <group if="$(arg rviz)">
         <node name="rviz" pkg="rviz" type="rviz" args="-d $(find object_modeling_playground)/config/rviz/config.rviz" output="screen"/>
     </group>

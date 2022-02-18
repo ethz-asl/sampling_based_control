@@ -17,7 +17,7 @@ add_message_files(
 
 add_service_files(
         DIRECTORY srv
-        FILES StateRequest.srv
+        FILES StateRequest.srv CylinderFit.srv
 )
 
 generate_messages(
@@ -26,6 +26,7 @@ generate_messages(
         std_msgs
         sensor_msgs
 )
+
 
 catkin_package(
         INCLUDE_DIRS include

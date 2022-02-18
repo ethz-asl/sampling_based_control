@@ -225,18 +225,100 @@ void Mug::update()
 
     for(int i = 0; i < this->obj_num; i ++ )
     {    
-        primitive_estimate(i);  
+        primitive_estimate(i); 
+        auto start = std::chrono::high_resolution_clock::now(); 
+        ransac_fitting(i);
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        ROS_INFO_STREAM("ransac takes: " <<duration.count() << "  micro secs");
         update_TF();
         primitive_visualize();
         pub_state();
     }
 
-    ransac_fitting();
+    
 
 }
 
-void Mug::ransac_fitting()
+void Mug::ransac_fitting(int obj_idx)
 {   
+
+    // random extract points
+
+    // fit the cylinder
+        //TODO: now use ros service, switch to a cpp pkg to acclerate
+
+    // geometry_msgs::Point32 point;
+    // geometry_msgs::Vector3 axis_direction;
+    // Eigen::Quaterniond q;
+    // q.x() = state_.position[3];
+    // q.y() = state_.position[4];
+    // q.z() = state_.position[5];
+    // q.w() = state_.position[6];
+    // auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    // ROS_INFO_STREAM("Euler from quaternion in roll, pitch, yaw"<< std::endl << euler);
+    // axis_direction.x = euler[0];
+    // axis_direction.y = euler[0];
+    // axis_direction.z = euler[0];
+
+    // int sample_num = 3;
+    // for(int i = 0 ; i < sample_num; i ++)
+    // {   
+    //     point.x = 1.0;
+    //     point.y = 1.0;
+    //     point.z = 1.0;
+    //     cylinder_fit_srv.request.points.push_back(point);
+    // }
+    // cylinder_fit_srv.request.init_direction = axis_direction;
+    
+    // if (cylinder_fit_client.call(cylinder_fit_srv))
+    // {
+    //     ROS_INFO_STREAM("fitting result error :" << cylinder_fit_srv.response.fit_error);
+    // }
+    typedef pcl::PointXYZ PointT;
+    pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg;
+    pcl::PointIndices::Ptr inliers_cylinder(new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients_cylinder(new pcl::ModelCoefficients);
+    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+    pcl::NormalEstimation<PointT, pcl::Normal> ne;
+    pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
+    
+    *cloud_filtered = pcl_cloudXYZ;
+
+    ne.setSearchMethod(tree);
+    ne.setInputCloud(cloud_filtered);
+    ne.setKSearch(50);
+    ne.compute(*cloud_normals);
+
+    seg.setOptimizeCoefficients(true);
+    seg.setModelType(pcl::SACMODEL_CYLINDER);
+    seg.setMethodType(pcl::SAC_RANSAC);
+    seg.setNormalDistanceWeight(0.1);
+    seg.setMaxIterations(10000);
+    seg.setDistanceThreshold(0.05);
+    seg.setRadiusLimits(0, 0.1);
+    seg.setInputCloud(cloud_filtered);
+    seg.setInputNormals(cloud_normals);
+    seg.segment(*inliers_cylinder, *coefficients_cylinder);
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr extracted_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::copyPointCloud(*cloud_filtered, *inliers_cylinder, pcl_cloudXYZ);
+
+    pcl_cloudXYZ = *extracted_cloud;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
+    std::cerr << "Cylinder coefficients: " << (*coefficients_cylinder) << std::endl;
+    std::cout << "extracted size: " << pcl_cloudXYZ.points.size() << std::endl;
+
+    if(coefficients_cylinder->values.size() > 6)
+    {
+        p_center.x = coefficients_cylinder->values[0];
+        p_center.y = coefficients_cylinder->values[1];
+        p_center.z = coefficients_cylinder->values[2];
+        direction_.x = coefficients_cylinder->values[3];
+        direction_.y = coefficients_cylinder->values[4];
+        direction_.z = coefficients_cylinder->values[5];
+    }
+
 
     return;
 }
@@ -255,6 +337,13 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
 
     mug_primitive.header.frame_id = ref_frame;
     ROS_INFO_STREAM("primitive state in [ " << ref_frame << " ]");
+
+    // init fitting service
+    cylinder_fit_client = nh_.serviceClient<manipulation_msgs::CylinderFit>("/fit_cylinder_with_points");
+
+    // fitting-related pub
+    inliers_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/inliers_points", 1);
+    cyliner_line_marker_pub = nh_.advertise<visualization_msgs::Marker>("/cylinder_centerline", 1);
 }
 
 
@@ -324,4 +413,36 @@ void Mug::pub_state()
 {
     state_publisher_.publish(mug_primitive);
     primitive_publisher_.publish(primitive_markers_);
+
+    if(pcl_cloudXYZ.points.size()>0)
+    {
+        inliers_pub.publish(pcl_cloudXYZ);   
+
+        // vis center line
+        visualization_msgs::Marker line_list;
+        line_list.header.frame_id = pcl_cloudXYZ.header.frame_id;
+        line_list.action = visualization_msgs::Marker::ADD;
+        line_list.id = 3;
+        line_list.type = visualization_msgs::Marker::LINE_LIST;
+        line_list.scale.x = 0.01;
+        line_list.color.r = 0.8;
+        line_list.color.a = 0.8;
+        geometry_msgs::Point p1, p2;
+        float len = 1000;
+        p1.x = p_center.x + len*direction_.x;
+        p1.y = p_center.y + len*direction_.y;
+        p1.z = p_center.z + len*direction_.z;
+        
+        p2.x = p_center.x - len*direction_.x;
+        p2.y = p_center.y - len*direction_.y;
+        p2.z = p_center.z - len*direction_.z;
+
+        line_list.points.push_back(p1);
+        line_list.points.push_back(p2);
+        cyliner_line_marker_pub.publish(line_list);
+
+    }
+    
+    
+
 }

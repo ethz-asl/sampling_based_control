@@ -1,0 +1,8 @@
+geometry_msgs/Point32[] points
+geometry_msgs/Vector3 init_direction
+---
+geometry_msgs/Vector3 direction
+geometry_msgs/Point32 axis_point
+float64 radius
+geometry_msgs/Point32 c_point
+float64 fit_error

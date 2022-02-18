@@ -28,29 +28,47 @@ void Object::kp_msg_callback(const keypoint_msgs::ObjectsArray::ConstPtr& msg)
     
 }
 
+
 void Object::pcl_roi_callback(const sensor_msgs::PointCloud2::ConstPtr& pcl_msg)
 {
     pcl_ptr = pcl_msg;
+
     if(pcl_ptr->data.size() > 0)
     {
       ROS_INFO_STREAM("size: " << pcl_ptr->data.size());
 
-      pcl_conversions::toPCL(*pcl_msg,pcl_pc2);
-      pcl::PointCloud<pcl::PointXYZ>::Ptr pt_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-      pcl::fromPCLPointCloud2(pcl_pc2,*pt_cloud);
+      pcl::PCLPointCloud2::Ptr pcl_pc2_ptr (new pcl::PCLPointCloud2 ());
 
-      for(int i = 0 ; i < 10 ; i ++)
-      {
-        ROS_INFO_STREAM("point " << i << " has x : " << pt_cloud->points[i].x);
-        ROS_INFO_STREAM("point " << i << " has y : " << pt_cloud->points[i].y);
-        ROS_INFO_STREAM("point " << i << " has z : " << pt_cloud->points[i].z);
-      }
+      pcl_conversions::toPCL(*pcl_msg, *pcl_pc2_ptr);
+      
+      // down sample the pcl 
+      ROS_INFO_STREAM("original size: " << pcl_pc2_ptr->data.size());
+      pcl_pc2_ptr = pcl_downsampling(pcl_pc2_ptr);
+      ROS_INFO_STREAM("filtered size: " << pcl_pc2_ptr->data.size());
+
+      pcl::fromPCLPointCloud2(*pcl_pc2_ptr,pcl_cloudXYZ);
+      ROS_INFO_STREAM("filtered pclxyz size: " << pcl_cloudXYZ.size());
+
+      // for(int i = 0 ; i < 10 ; i ++)
+      // {
+      //   ROS_INFO_STREAM("point " << i << " has x : " << pcl_cloudXYZ.points[i].x);
+      //   ROS_INFO_STREAM("point " << i << " has y : " << pcl_cloudXYZ.points[i].y);
+      //   ROS_INFO_STREAM("point " << i << " has z : " << pcl_cloudXYZ.points[i].z);
+      // }
     }
 
     
 
 }
 
+pcl::PCLPointCloud2::Ptr Object::pcl_downsampling(pcl::PCLPointCloud2::Ptr dense_pcl_ptr)
+{
+  pcl::PCLPointCloud2::Ptr cloud_filtered (new pcl::PCLPointCloud2 ());
+  sor.setInputCloud(dense_pcl_ptr);
+  sor.setLeafSize (0.002f, 0.002f, 0.002f);
+  sor.filter (*cloud_filtered);
+  return cloud_filtered;
+}
 
 void Object::keypoints_filter(const geometry_msgs::PoseArray::ConstPtr& msg, double alpha)
 {
