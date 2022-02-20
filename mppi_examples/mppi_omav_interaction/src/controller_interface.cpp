@@ -196,8 +196,8 @@ void OMAVControllerInterface::getDynamicsPtr(
 void OMAVControllerInterface::desired_pose_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
   // std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr.resize(1, mppi::observation_t::Zero(9));
-  ref_.tt.resize(1, msg->header.stamp.toSec());
+  ref_.rr.resize(1);
+  ref_.tt.resize(1);
   ref_.rr[0](0) = msg->pose.position.x;
   ref_.rr[0](1) = msg->pose.position.y;
   ref_.rr[0](2) = msg->pose.position.z;
@@ -205,12 +205,16 @@ void OMAVControllerInterface::desired_pose_callback(
   ref_.rr[0](4) = msg->pose.orientation.x;
   ref_.rr[0](5) = msg->pose.orientation.y;
   ref_.rr[0](6) = msg->pose.orientation.z;
+  ref_.tt[0] = msg->header.stamp.toSec();
   std::cout << "Desired Pose Callback..." << std::endl;
   get_controller()->set_reference_trajectory(ref_);
 }
 
 void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
+  ref_.rr.resize(1);
+  ref_.tt.resize(1);
   ref_.rr[0](7) = ref_angle;
+  ref_.tt.[0] = ros::Time::now().toSec();
   get_controller()->set_reference_trajectory(ref_);
 }
 
@@ -233,17 +237,23 @@ void OMAVControllerInterface::updateValveReferenceDynamic(
 void OMAVControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr &msg) {
   // std::unique_lock<std::mutex> lock(reference_mutex_);
+  setInteractionMode(msg->data);
+}
+
+void OMAVControllerInterface::setInteractionMode(const int &mode) {
   for (size_t i = 0; i < ref_.rr.size(); i++) {
-    ref_.rr[0](8) = msg->data;
+    ref_.rr[i](8) = mode;
   }
-  ROS_INFO_STREAM("Switching to mode:" << msg->data);
+  ROS_INFO_STREAM("Switching to mode: " << mode);
   get_controller()->set_reference_trajectory(ref_);
 }
 
 void OMAVControllerInterface::object_reference_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
   // std::unique_lock<std::mutex> lock(reference_mutex_);
-  ref_.rr[0](7) = msg->pose.position.x;
+  for (size_t i = 0; i < ref_.rr.size(); i++) {
+    ref_.rr[i](7) = msg->pose.position.x;
+  }
   get_controller()->set_reference_trajectory(ref_);
 }
 

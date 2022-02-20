@@ -161,8 +161,14 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
     // controller_.updateValveReference(last_ref);
     // Use dynamic updating of the valve reference: Reference angle increases
     // throughout the horizon
-    controller_.updateValveReferenceDynamic(
-        state_(13), state_(13) + cost_valve_params_.ref_p, t_now.toSec());
+    if (cost_valve_params_.cost_mode == 0) {
+      controller_.updateValveReferenceDynamic(
+          state_(13) + cost_valve_params_.ref_p,
+          state_(13) + cost_valve_params_.ref_p + cost_valve_params_.ref_v,
+          t_now.toSec());
+    } else {
+      controller_.updateValveReference(cost_valve_params_.ref_angle);
+    }
     // }
   }
 
@@ -430,12 +436,23 @@ void InteractionControlNode::costValveParamCallback(
     cost_valve_params_.floor_thresh = config.floor_thresh;
     cost_valve_params_.Q_floor = config.floor_cost;
     cost_valve_params_.Q_force = config.force_cost;
+
+    cost_valve_params_.Q_forcev << config.Q_force_x, config.Q_force_y,
+        config.Q_force_z;
     // cost_valve_params_.Q_efficiency = config.efficiency_cost;
     // cost_valve_params_.Q_torque = config.torque_cost;
     cost_valve_params_.contact_bool = config.contact_prohibitor;
     cost_valve_params_.Q_unwanted_contact = config.Q_unwanted_contact;
     cost_valve_params_.Q_object_distance = config.Q_object_distance;
     cost_valve_params_.object_distance_thresh = config.object_distance_thresh;
+    cost_valve_params_.cost_mode = config.cost_mode;
+    cost_valve_params_.ref_angle = config.ref_angle;
+    cost_valve_params_.Q_handle_hookV = config.Q_handle_hookV;
+    if (config.int_mode == true) {
+      controller_.setInteractionMode(1);
+    } else {
+      controller_.setInteractionMode(0);
+    }
     controller_.update_cost_param_valve(cost_valve_params_);
   } else {
     ROS_ERROR("Wrong scenario chosen. Cannot set cost.");

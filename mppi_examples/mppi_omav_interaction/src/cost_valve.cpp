@@ -54,9 +54,9 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
   // Velocity Cost
   // Computes cost on *reference* velocity, not on actual velocity
   compute_velocity_cost(x.segment<3>(26), x.segment<3>(29));
-  compute_field_cost(x);
-  compute_floor_cost(x(2));
-  compute_distance_to_object_cost(x);
+  // compute_field_cost(x);
+  // compute_floor_cost(x(2));
+  // compute_distance_to_object_cost(x);
 
   // Free flight:
   if (mode_ == 0) {
@@ -78,10 +78,14 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
     // Object Cost
     compute_object_cost(x, ref);
 
-    compute_unwanted_contact_cost(x);
+    // compute_unwanted_contact_cost(x);
     // Minimize force
-    double force = x.segment<3>(15).norm();
-    cost_vector_(CostIdx::force) = param_ptr_->Q_force * force * force;
+    // double force = x.segment<3>(15).norm();
+    // cost_vector_(CostIdx::force) = param_ptr_->Q_force * force * force;
+    cost_vector_(CostIdx::force) = (x.segment<3>(15)
+                                        .cwiseProduct(param_ptr_->Q_forcev)
+                                        .cwiseProduct(x.segment<3>(15)))
+                                       .sum();
   }
   double cost = cost_vector_.sum();
   cost_ = cost;
@@ -141,6 +145,9 @@ void OMAVInteractionCostValve::compute_handle_hook_cost() {
         param_ptr_->Q_handle_hook *
         (distance_hook_handle_ - param_ptr_->handle_hook_thresh);
   }
+  cost_vector_(CostIdx::handle_hook) += hook_handle_vector_(2) *
+                                        hook_handle_vector_(2) *
+                                        param_ptr_->Q_handle_hookV;
   // Handle Hook distance cost
   // cost_vector_(CostIdx::handle_hook) = std::max(
   //     0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
@@ -152,9 +159,9 @@ void OMAVInteractionCostValve::compute_object_cost(
   // ROS_INFO_STREAM_THROTTLE(0.5, "state: " << omav_state(13)
   //                                         << ", vel: " << omav_state(14)
   //                                         << ", ref: " << omav_reference(7));
-  cost_vector_(CostIdx::object) = param_ptr_->Q_object *
-                                  (omav_state(13) - omav_reference(7)) *
-                                  (omav_state(13) - omav_reference(7));
+  cost_vector_(CostIdx::object) =
+      param_ptr_->Q_object * abs((omav_state(13) - omav_reference(7)));  // *
+  // (omav_state(13) - omav_reference(7));
   // ROS_INFO_STREAM(omav_state(13) << " - " << omav_reference(7));
 }
 
@@ -255,7 +262,7 @@ bool OMAVInteractionCostValveParam::parse_from_ros(
   suc = suc && getParameter(nh, "Q_unwanted_contact", Q_unwanted_contact, true);
   suc =
       suc && getParameter(nh, "handle_hook_thresh", handle_hook_thresh, false);
-  suc = suc && getParameter(nh, "efficiency_cost", Q_efficiency, true);
+  // suc = suc && getParameter(nh, "efficiency_cost", Q_efficiency, true);
   suc = suc && getParameter(nh, "force_cost", Q_force, true);
   suc = suc && getParameter(nh, "contact_prohibitor", contact_bool, false);
 

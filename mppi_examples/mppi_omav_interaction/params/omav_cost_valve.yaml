@@ -7,7 +7,8 @@ Q_orientation_omav: 10.0
 Q_int_roll: 10.0
 Q_int_pitch: 10.0
 # Weights for the deviation from the reference position
-Q_object: 50.0
+# Needs to be around 1 for static reference, around 10 for dynamic reference
+Q_object: 1.0
 # Velocity costs
 Q_linear_velocity: 0.0
 Q_unwanted_contact: 0.0
@@ -32,13 +33,19 @@ obstacle_position_x: 15
 obstacle_position_y: 15
 # Cost handle hook distance
 handle_hook_cost: 100
-handle_hook_thresh: 0.2
+handle_hook_thresh: 0.08
 # Efficiency cost
-efficiency_cost: 0.0
+# efficiency_cost: 0.0
 force_cost: 1.0
 # Torque cost
-torque_cost: 0.0
+# torque_cost: 0.0
 contact_prohibitor: True
 
 Q_object_distance: 0
 object_distance_thresh: 0.5
+
+Q_force_x: 1.0
+Q_force_y: 1.0
+Q_force_z: 10.0
+
+Q_handle_hookV: 100

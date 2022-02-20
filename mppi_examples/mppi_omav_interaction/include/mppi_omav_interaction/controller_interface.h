@@ -85,6 +85,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   void setHoldTime(const double &t) { get_controller()->setHoldTime(t); }
 
+  void setInteractionMode(const int &mode);
+
  private:
   bool set_controller(std::shared_ptr<mppi::PathIntegral> &controller) override;
 

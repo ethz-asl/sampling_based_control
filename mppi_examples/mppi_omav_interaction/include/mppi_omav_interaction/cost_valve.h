@@ -64,6 +64,7 @@ struct OMAVInteractionCostValveParam {
 
   double Q_efficiency;
   double Q_force;
+  Eigen::Vector3d Q_forcev;
 
   double Q_torque;
 
@@ -71,6 +72,12 @@ struct OMAVInteractionCostValveParam {
 
   double Q_object_distance;
   double object_distance_thresh;
+
+  double Q_handle_hookV = 0;
+
+  int cost_mode = 1;
+
+  double ref_angle = 0.0;
 
   bool parse_from_ros(const ros::NodeHandle &nh);
   template <class A>
