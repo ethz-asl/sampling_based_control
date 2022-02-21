@@ -117,6 +117,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
 
  protected:
   size_t robot_dof_;
+  size_t obj_dof_;
   size_t input_dimension_;
   size_t state_dimension_;
 

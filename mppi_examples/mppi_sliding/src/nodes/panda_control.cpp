@@ -22,7 +22,9 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "panda_raisim_control_node");
   ros::NodeHandle nh("~");
   std::string experiment_name;
+  bool add_noise;
   nh.param<std::string>("experiment_name", experiment_name, "test");
+  nh.param<bool>("add_noise",add_noise,false);
 
   // init logger
   signal_logger::setSignalLoggerStd();
@@ -48,9 +50,11 @@ int main(int argc, char** argv) {
   ROS_INFO_STREAM("real world simulation initiated");
 
   observation_t x_nom;
-  manipulation_msgs::State x_nom_ros;
+  manipulation_msgs::State x_nom_ros, x_sim_ros;
   ros::Publisher x_nom_publisher_ =
       nh.advertise<manipulation_msgs::State>("/observer/state", 10);
+  ros::Publisher x_sim_publisher_ =
+      nh.advertise<manipulation_msgs::State>("/observer/sim_state", 10);
 
   std_msgs::Float64 stage_cost;
   ros::Publisher stage_cost_publisher_ = 
@@ -120,25 +124,29 @@ int main(int argc, char** argv) {
     sim_time += simulation->get_dt();
 
     // compensate z-axis, since the frame origin of mug obj is at the bottom
-    x(2*ARM_GRIPPER_DIM+2) += 0.05;
+    // x(2*ARM_GRIPPER_DIM+2) += 0.05;
 
-    //ROS_INFO_STREAM("raw x : " << x.transpose());
-
-    // add noise
-    for(int i = 0; i < 2; i ++)
-    {
-      std::random_device rd{};
-      std::mt19937 gen{rd()};
-      std::normal_distribution<> d{x(2*ARM_GRIPPER_DIM+i), 0.01};
-      x(2*ARM_GRIPPER_DIM+i) = d(gen); 
+  
+    // Add Noise
+    if(add_noise){
+      //ROS_INFO_STREAM("raw x : " << x.transpose());
+      for(int i = 0; i < 2; i ++)
+      {
+        std::random_device rd{};
+        std::mt19937 gen{rd()};
+        std::normal_distribution<> d{x(2*ARM_GRIPPER_DIM+i), 0.01};
+        x(2*ARM_GRIPPER_DIM+i) = d(gen); 
+      }
+      //ROS_INFO_STREAM("noise x : " << x.transpose());    
     }
 
-    //ROS_INFO_STREAM("noise x : " << x.transpose());    
 
     controller.get_input_state(x, x_nom, u, sim_time);
 
-    manipulation::conversions::eigenToMsg_panda(x_nom, sim_time, x_nom_ros);
+    manipulation::conversions::eigenToMsg_panda(x, sim_time, x_nom_ros);
+    manipulation::conversions::eigenToMsg_panda(x_nom, sim_time, x_sim_ros);
     x_nom_publisher_.publish(x_nom_ros);
+    x_sim_publisher_.publish(x_sim_ros);
 
     stage_cost.data = controller.get_stage_cost(x, u, sim_time);
     stage_cost_publisher_.publish(stage_cost);

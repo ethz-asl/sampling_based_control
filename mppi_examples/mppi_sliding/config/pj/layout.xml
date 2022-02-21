@@ -1,188 +1,64 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
  <tabbed_widget parent="main_window" name="Main Window">
-  <Tab containers="1" tab_name="Position Measured">
+  <Tab containers="1" tab_name="tab1">
    <Container>
-    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
-     <DockSplitter orientation="|" sizes="0.202082;0.202949;0.202082;0.202082;0.190807" count="5">
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-     </DockSplitter>
-     <DockSplitter orientation="|" sizes="0.202082;0.202949;0.202082;0.202082;0.190807" count="5">
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-     </DockSplitter>
-    </DockSplitter>
-   </Container>
-  </Tab>
-  <Tab containers="1" tab_name="Velocity Measured">
-   <Container>
-    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
-     <DockSplitter orientation="|" sizes="0.201214;0.198612;0.200347;0.198612;0.201214" count="5">
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-     </DockSplitter>
-     <DockSplitter orientation="|" sizes="0.201214;0.198612;0.200347;0.198612;0.201214" count="5">
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-     </DockSplitter>
-    </DockSplitter>
-   </Container>
-  </Tab>
-  <Tab containers="1" tab_name="Object State">
-   <Container>
-    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+    <DockSplitter orientation="-" sizes="1" count="1">
      <DockSplitter orientation="|" sizes="0.333333;0.333333;0.333333" count="3">
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-     </DockSplitter>
-     <DockSplitter orientation="|" sizes="0.333333;0.333333;0.333333" count="3">
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot style="Lines" mode="TimeSeries">
-        <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
-        <limitY/>
-       </plot>
-      </DockArea>
+      <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries">
+         <range top="0.794165" left="0.000000" right="5.002351" bottom="0.674198"/>
+         <limitY/>
+         <curve color="#1f77b4" name="/observer/state/object_state/position.0"/>
+         <curve color="#17becf" name="/observer/sim_state/object_state/position.0"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries">
+         <range top="0.104608" left="0.000000" right="5.002351" bottom="-0.003187"/>
+         <limitY/>
+         <curve color="#1f77b4" name="/observer/sim_state/object_state/velocity.0"/>
+         <curve color="#d62728" name="/observer/state/object_state/velocity.0"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries">
+         <range top="0.163950" left="0.000000" right="5.002351" bottom="0.156042"/>
+         <limitY/>
+         <curve color="#d62728" name="/observer/state/object_state/position.1"/>
+         <curve color="#bcbd22" name="/observer/sim_state/object_state/position.1"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries">
+         <range top="0.080644" left="0.000000" right="5.002351" bottom="-0.008603"/>
+         <limitY/>
+         <curve color="#1ac938" name="/observer/sim_state/object_state/velocity.1"/>
+         <curve color="#ff7f0e" name="/observer/state/object_state/velocity.1"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries">
+         <range top="0.298938" left="0.000000" right="5.002351" bottom="0.296589"/>
+         <limitY/>
+         <curve color="#1ac938" name="/observer/state/object_state/position.2"/>
+         <curve color="#1f77b4" name="/observer/sim_state/object_state/position.2"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries">
+         <range top="0.005338" left="0.000000" right="5.002351" bottom="-0.151597"/>
+         <limitY/>
+         <curve color="#ff7f0e" name="/observer/sim_state/object_state/velocity.2"/>
+         <curve color="#f14cc1" name="/observer/state/object_state/velocity.2"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
      </DockSplitter>
     </DockSplitter>
    </Container>
@@ -192,15 +68,14 @@
     <DockSplitter orientation="-" sizes="1" count="1">
      <DockArea name="...">
       <plot style="Lines" mode="TimeSeries">
-       <range left="8.923562" top="191.400779" bottom="191.399504" right="13.922707"/>
+       <range top="1.000000" left="0.000000" right="1.000000" bottom="0.000000"/>
        <limitY/>
-       <curve color="#1f77b4" name="/mppi_sliding/stage_cost/data"/>
       </plot>
      </DockArea>
     </DockSplitter>
    </Container>
   </Tab>
-  <currentTabIndex index="3"/>
+  <currentTabIndex index="0"/>
  </tabbed_widget>
  <use_relative_time_offset enabled="1"/>
  <!-- - - - - - - - - - - - - - - -->
@@ -229,8 +104,18 @@
   <plugin ID="ROS Topic Re-Publisher" status="idle"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
- <previouslyLoaded_Datafiles/>
- <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
+ <previouslyLoaded_Datafiles>
+  <fileInfo prefix="" filename="../../../../../../../Desktop/2022-02-21-18-49-24.bag">
+   <selected_datasources value="/observer/sim_state;/observer/state"/>
+   <plugin ID="DataLoad ROS bags">
+    <use_header_stamp value="false"/>
+    <use_renaming_rules value="true"/>
+    <discard_large_arrays value="true"/>
+    <max_array_size value="100"/>
+   </plugin>
+  </fileInfo>
+ </previouslyLoaded_Datafiles>
+ <previouslyLoaded_Streamer name="UDP Server"/>
  <!-- - - - - - - - - - - - - - - -->
  <customMathEquations/>
  <snippets/>

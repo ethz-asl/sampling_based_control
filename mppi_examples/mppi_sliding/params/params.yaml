@@ -3,9 +3,9 @@ geometry:
   cylinder_radius: 0.05
   cylinder_mass: 1    # ideally equal to the object
   cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
-  table_position: [1.0,0.0,0.2]
-  target_pos: [0.75, 0.15, 0.3]
-  friction: 0.15  
+  table_position: [1.0,0.0,0.05]
+  target_pos: [0.5, -0.0, 0.15]
+  friction: 0.002
 
 setup_config:
   fixed_base: false
@@ -15,9 +15,9 @@ dynamics:
   object_handle_link: handle_link
   object_handle_joint: handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.02, 0.02,    # robot position 9
+  initial_state: [ 0.16, 0.18, -1.61, -2.78, 1.21, 1.82, -2.09, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.22, -0.26, 0.15, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
                    0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
@@ -32,8 +32,8 @@ dynamics:
       ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
-      kp: [ 100.0, 100.0 ]
-      kd: [ 50.0, 50.0 ]
+      kp: [ 100, 100]
+      kd: [ 50, 50 ]
       ki: [ 0.0, 0.0 ]
       i_max: [ 0.0, 0.0 ]
 
@@ -42,9 +42,9 @@ sim_dynamics:
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.15, -0.05, -0.02, -1.87, 0.06, 1.79, 0.0, 0.02, 0.02,    # robot position 9
+  initial_state: [ 0.16, 0.18, -1.61, -2.78, 1.21, 1.82, -2.09, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.22, -0.26, 0.15, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
                    0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
@@ -59,17 +59,17 @@ sim_dynamics:
       ki: [ 200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
-      kp: [ 100.0, 100.0 ]
-      kd: [ 50.0, 50.0 ]
+      kp: [ 100, 100 ]
+      kd: [ 50, 50 ]
       ki: [ 0.0, 0.0 ]
       i_max: [ 0.0, 0.0 ]
 
 cost:
   regularization: 0.0
-  linear_weight: 100.0
-  linear_weight_opening: 10.0
+  linear_weight: 500.0
+  linear_weight_opening: 2.0
 
-  angular_weight: 5.0
+  angular_weight: 15.0
   angular_weight_opening: 1.0
 
   min_dist: 0.0
@@ -83,7 +83,7 @@ cost:
 
   contact_weight: 10.0
 
-  object_weight: 1000
+  object_weight: 20
   object_tolerance: 0.01
 
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]

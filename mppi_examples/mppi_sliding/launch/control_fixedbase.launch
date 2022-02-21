@@ -10,6 +10,8 @@
 
     <arg name="experiment" default="false"/>
     <arg name="experiment_name" default="mppi_sliding"/>
+    <arg name="add_noise" default="False"/>
+
 
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
     <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
@@ -83,6 +85,7 @@
         <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/controller_panda.yaml"/>
         <param name="experiment_name" value="$(arg experiment_name)"/>
+        <param name="add_noise" value="$(arg add_noise)"/>
     </node>
 
     <include file="$(find mppi_sliding)/launch/common.launch">
