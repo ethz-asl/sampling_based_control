@@ -4,6 +4,9 @@
     <arg name="enable_obstacle" default="false"/>
 	<arg name="debug" default="false"/>
     <arg name="run_camera" default="true"/>
+    <arg name="depth" default="false"/>
+    <arg name="pointcloud" default="false"/>
+    <arg name="pub_handeye_trans" default="false"/>
 
 	<include file="$(find mppi_sliding)/launch/common.launch">
 	    <arg name="plot" default="$(arg plot)"/>
@@ -36,7 +39,11 @@
         <param name="frame_id" value="world"/>
     </node>
 
-    <include file="$(find realsense2_camera)/launch/rs_camera.launch" if="$(arg run_camera)"/>
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch" if="$(arg run_camera)">
+         <arg name="align_depth" value="$(arg depth)"/>
+         <arg name="enable_pointcloud" value="$(arg pointcloud)"/>
+         <arg name="allow_no_texture_points" value="false"/>
+    </include>
 
 	<group if="$(arg debug)">
 		<node name="robot_joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
@@ -45,8 +52,11 @@
         </node>
     </group>
 
-    <!-- <include file="$(find easy_handeye)/launch/publish.launch">
-    </include> -->
+    <group if="$(arg pub_handeye_trans)">
+        <include file="$(find easy_handeye)/launch/publish.launch">
+            <arg name="eye_on_hand" value="false"/>
+        </include>
+    </group>
 
 	<node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/>
 

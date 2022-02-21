@@ -290,7 +290,14 @@ void ManipulationController::update(const ros::Time& time,
   //                  << std::setprecision(2)
   //                  << manipulation::conversions::eigenToString_panda(x_));
 
+  const auto p0 = std::chrono::time_point<std::chrono::high_resolution_clock>{};
   man_interface_->get_input_state(x_, x_nom_, u_, run_time.toSec());
+  const auto p3 = std::chrono::high_resolution_clock::now();
+  auto tstamp = p3 - p0;
+  int32_t sec = std::chrono::duration_cast<std::chrono::microseconds>(tstamp).count();
+  ROS_INFO_STREAM("duration of get input state: " << sec);
+
+
 
   // samilar as before, modify the eigenToMsg to adapt to panda
   manipulation::conversions::eigenToMsg_panda(x_nom_, run_time.toSec(),

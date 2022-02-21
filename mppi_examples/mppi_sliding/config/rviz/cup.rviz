@@ -4,22 +4,18 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /TF1
         - /TF1/Frames1
-        - /World1
         - /World1/Panda1
         - /World1/cylinder1
         - /World1/mug1
         - /Observer1/Vicon Odometry1/Shape1
-        - /Controller1
         - /Controller1/Optimal Path1
-        - /predicted_object_state1
-        - /MarkerArray1
-        - /MarkerArray2
-        - /Image2
+        - /Perception1
+        - /Perception1/aligned_depth_image1
+        - /Perception1/PointCloud21
+        - /Perception1/april_tag_detect1
       Splitter Ratio: 0.49884527921676636
-    Tree Height: 494
+    Tree Height: 224
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -38,7 +34,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: keypoint_heatmap
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -69,6 +65,16 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        camera_color_frame:
+          Value: true
+        camera_color_optical_frame:
+          Value: true
+        camera_depth_frame:
+          Value: true
+        camera_depth_optical_frame:
+          Value: true
+        camera_link:
+          Value: true
         odom:
           Value: false
         panda_EE:
@@ -105,6 +111,8 @@ Visualization Manager:
           Value: true
         pivot:
           Value: false
+        primitive_frame:
+          Value: true
         table_frame:
           Value: true
         world:
@@ -126,6 +134,14 @@ Visualization Manager:
               y_slider:
                 pivot:
                   panda_link0:
+                    camera_link:
+                      camera_color_frame:
+                        camera_color_optical_frame:
+                          primitive_frame:
+                            {}
+                      camera_depth_frame:
+                        camera_depth_optical_frame:
+                          {}
                     panda_link1:
                       panda_link2:
                         panda_link3:
@@ -177,20 +193,27 @@ Visualization Manager:
     - Class: rviz/InteractiveMarkers
       Enable Transparency: true
       Enabled: false
-      Name: Interactive obstacle
+      Name: InteractiveMarkers
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
-      Update Topic: /obstacle_marker_server/update
+      Update Topic: /reference_marker_server/update
       Value: false
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /obstacle_marker
-      Name: Obstacle Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
+    - Alpha: 1
+      Arrow Width: 0.5
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.10000000149011612
+      Force Color: 204; 51; 51
+      Hide Small Values: true
+      History Length: 1
+      Name: WrenchStamped
+      Queue Size: 10
+      Topic: /external_force
+      Torque Arrow Scale: 0
+      Torque Color: 204; 204; 51
+      Unreliable: false
+      Value: true
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -571,80 +594,112 @@ Visualization Manager:
           Topic: /optimal_base_trajectory
           Unreliable: false
           Value: false
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /predicted_objects
+          Name: predicted_object_state
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: Controller
-    - Alpha: 1
-      Arrow Width: 0.5
-      Class: rviz/WrenchStamped
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/Image
+          Enabled: true
+          Image Topic: /object_keypoints_ros/result_img
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: keypoint_heatmap
+          Normalize Range: true
+          Queue Size: 2
+          Transport Hint: raw
+          Unreliable: false
+          Value: true
+        - Class: rviz/Image
+          Enabled: false
+          Image Topic: /camera/aligned_depth_to_color/image_raw
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: aligned_depth_image
+          Normalize Range: true
+          Queue Size: 2
+          Transport Hint: raw
+          Unreliable: false
+          Value: false
+        - Class: rviz/Image
+          Enabled: false
+          Image Topic: /camera/color/image_raw
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: raw_image
+          Normalize Range: true
+          Queue Size: 2
+          Transport Hint: raw
+          Unreliable: false
+          Value: false
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /mug/primitives_marker_array
+          Name: Primitives
+          Namespaces:
+            "": true
+          Queue Size: 100
+          Value: true
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: RGB8
+          Decay Time: 0
+          Enabled: false
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Min Color: 0; 0; 0
+          Name: PointCloud2
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 3
+          Size (m): 0.009999999776482582
+          Style: Flat Squares
+          Topic: /camera/depth/color/points
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: false
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /kp_markers
+          Name: 3D_keypoints
+          Namespaces:
+            "": true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Image
+          Enabled: false
+          Image Topic: /tag_detections_image
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: april_tag_detect
+          Normalize Range: true
+          Queue Size: 2
+          Transport Hint: raw
+          Unreliable: false
+          Value: false
       Enabled: true
-      Force Arrow Scale: 0.10000000149011612
-      Force Color: 204; 51; 51
-      Hide Small Values: true
-      History Length: 1
-      Name: WrenchStamped
-      Queue Size: 10
-      Topic: /external_force
-      Torque Arrow Scale: 0
-      Torque Color: 204; 204; 51
-      Unreliable: false
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /predicted_objects
-      Name: predicted_object_state
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/InteractiveMarkers
-      Enable Transparency: true
-      Enabled: false
-      Name: InteractiveMarkers
-      Show Axes: false
-      Show Descriptions: true
-      Show Visual Aids: false
-      Update Topic: /reference_marker_server/update
-      Value: false
-    - Class: rviz/Image
-      Enabled: false
-      Image Topic: /object_keypoints_ros/result_img
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Image
-      Normalize Range: true
-      Queue Size: 2
-      Transport Hint: raw
-      Unreliable: false
-      Value: false
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /mug/keypoints_marker_array
-      Name: MarkerArray
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /mug/primitives_marker_array
-      Name: MarkerArray
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Image
-      Enabled: false
-      Image Topic: /object_keypoints_ros/result_img
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Image
-      Normalize Range: true
-      Queue Size: 2
-      Transport Hint: raw
-      Unreliable: false
-      Value: false
+      Name: Perception
   Enabled: true
   Global Options:
     Background Color: 211; 215; 207
@@ -673,7 +728,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.2190802097320557
+      Distance: 1.0042511224746704
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -681,27 +736,25 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.41633933782577515
-        Y: -0.19201281666755676
-        Z: 0.047917574644088745
+        X: 0.26401451230049133
+        Y: -0.420343279838562
+        Z: 0.11227108538150787
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3097969591617584
+      Pitch: 0.15479624271392822
       Target Frame: <Fixed Frame>
-      Yaw: 0.4406674802303314
+      Yaw: 1.0456678867340088
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: true
-  Height: 1016
-  Hide Left Dock: true
-  Hide Right Dock: true
-  Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000015600000338fc020000000bfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000b0fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d0000022b000000c900fffffffb0000000a0049006d006100670065000000026e000001070000001600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065000000022a000001780000001600fffffffb0000000a0049006d00610067006501000002a9000000f90000000000000000000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000039c00000060fc0100000002fb0000000800540069006d006501000000000000039c000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000039c0000033800000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Height: 863
+  Hide Left Dock: false
+  Hide Right Dock: true
+  QMainWindow State: 000000ff00000000fd0000000400000000000001cc000002c6fc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000b0fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000011d000000c900fffffffb00000020006b006500790070006f0069006e0074005f0068006500610074006d006100700100000160000001a30000001600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000012007200610077005f0069006d006100670065000000010c000000990000001600fffffffb0000000a0049006d00610067006501000002a9000000f90000000000000000fb000000260061006c00690067006e00650064005f00640065007000740068005f0069006d00610067006500000001de000001250000001600fffffffb000000200061007000720069006c005f007400610067005f00640065007400650063007400000001b80000014b0000001600ffffff000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000005a000000039fc0100000002fb0000000800540069006d00650100000000000005a0000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000003ce000002c600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -710,6 +763,14 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 924
-  X: 1512
-  Y: 27
+  Width: 1440
+  X: 0
+  Y: 0
+  aligned_depth_image:
+    collapsed: false
+  april_tag_detect:
+    collapsed: false
+  keypoint_heatmap:
+    collapsed: false
+  raw_image:
+    collapsed: false

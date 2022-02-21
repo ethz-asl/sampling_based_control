@@ -17,7 +17,6 @@ find_package(orocos_kdl)
 set(PACKAGE_DEPENDENCIES
         sensor_msgs
         std_msgs
-        roscpp
         mppi
         mppi_ros
         mppi_pinocchio

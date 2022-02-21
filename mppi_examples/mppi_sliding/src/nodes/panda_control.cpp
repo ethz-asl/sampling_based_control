@@ -108,7 +108,15 @@ int main(int argc, char** argv) {
       controller.set_observation(x, sim_time);
     }
 
+    auto start_ = std::chrono::high_resolution_clock::now();
+
     x = simulation->step(u, simulation->get_dt());
+
+    auto end_ = std::chrono::high_resolution_clock::now();
+    auto tstamp = end_ - start_;
+    int32_t sec = std::chrono::duration_cast<std::chrono::microseconds>(tstamp).count();
+    //ROS_INFO_STREAM("duration of simulation step: " << sec << "microseconds");
+
     sim_time += simulation->get_dt();
 
     // compensate z-axis, since the frame origin of mug obj is at the bottom
