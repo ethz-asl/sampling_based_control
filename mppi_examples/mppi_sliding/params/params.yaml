@@ -3,21 +3,22 @@ geometry:
   cylinder_radius: 0.05
   cylinder_mass: 1    # ideally equal to the object
   cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
-  table_position: [1.0,0.0,0.05]
-  target_pos: [0.5, -0.0, 0.15]
-  friction: 0.002
+  table_position: [0.85,0.0,0.0]
+  target_pos: [0.8, -0.0, 0.1]
+  friction: 0.05
 
 setup_config:
-  fixed_base: false
+  fixed_base: true
+  update_geometry: true
 
 dynamics:
   dt: 0.015
   object_handle_link: handle_link
   object_handle_joint: handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.16, 0.18, -1.61, -2.78, 1.21, 1.82, -2.09, 0.04, 0.04,    # robot position 9
+  initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.22, -0.26, 0.15, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.4, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
                    0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
@@ -42,9 +43,9 @@ sim_dynamics:
   object_handle_link: sim_handle_link
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.16, 0.18, -1.61, -2.78, 1.21, 1.82, -2.09, 0.04, 0.04,    # robot position 9
+  initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.22, -0.26, 0.15, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.4, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
                    0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
@@ -67,7 +68,7 @@ sim_dynamics:
 cost:
   regularization: 0.0
   linear_weight: 500.0
-  linear_weight_opening: 2.0
+  linear_weight_opening: 50.0
 
   angular_weight: 15.0
   angular_weight_opening: 1.0
@@ -83,7 +84,7 @@ cost:
 
   contact_weight: 10.0
 
-  object_weight: 20
+  object_weight: 80
   object_tolerance: 0.01
 
   grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -99,7 +100,7 @@ cost:
   joint_limit_slope: 0 #100
 
   max_power: 0.0
-  power_weight: 0.0
+  power_weight: 5.0
 
   handle_frame: handle_link
   tracked_frame: panda_grasp

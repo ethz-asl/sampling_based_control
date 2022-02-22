@@ -39,7 +39,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
   
   // get robot EE pose
-  auto temp_pose = robot_model_.get_pose(params_.tracked_frame);
+  EE_pose = robot_model_.get_pose(params_.tracked_frame);
 
   // end effector reaching cost
   if (mode == 0) {
@@ -64,21 +64,19 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // handle reaching cost
   else if (mode == 1) {
     
-    // error_ = mppi_pinocchio::diff(
-    //     robot_model_.get_pose(params_.tracked_frame),
-    //     object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    // error_.resize(3);
+
     Eigen::Vector2d position_dist;
-    position_dist = temp_pose.translation.head<2>() - cylinder_position_.head<2>(); 
-    cost += (position_dist.norm() - 0.05) * params_.Qt;
-    cost += abs( temp_pose.translation(2) - (cylinder_position_(2) - 0.05) ) *params_.Qt;
+    position_dist = EE_pose.translation.head<2>() - cylinder_position_.head<2>(); 
+    cost += abs((position_dist.norm() - cylinder_radius)) * params_.Qt;
+    // cost += abs( EE_pose.translation(2) - cylinder_position_(2) ) *params_.Qt;
 
     // adjust ee pose ONLY the orientation, when manipulating cylinder
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+    // cost +=
+    //     (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+    cost += error_(2)*error_(2)* params_.Qt2;
 
     // contact cost
     if (x(2*BASE_ARM_GRIPPER_DIM + 2*OBJECT_DIMENSION) > 0) {  //check if this is contanct term
@@ -89,74 +87,33 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // object displacement cost
   else if (mode == 2) {
 
-    // error_ = mppi_pinocchio::diff(
-    //     robot_model_.get_pose(params_.tracked_frame),
-    //     object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    //error_.resize(3);
-    //ROS_INFO_STREAM("cylinder pose " << cylinder_position_);
+    Eigen::Vector3d ref_t = ref.head<3>();
+    Eigen::Quaterniond ref_q(ref.segment<4>(3));
     Eigen::Vector3d pose_diff_1;
     double pose_diff, pose_error;
   
-    pose_diff_1(0) = robot_model_.get_pose(params_.tracked_frame).translation(0) - cylinder_position_(0);
-    pose_diff_1(1) = robot_model_.get_pose(params_.tracked_frame).translation(1) - cylinder_position_(1);
+    pose_diff_1(0) = EE_pose.translation(0) - cylinder_position_(0);
+    pose_diff_1(1) = EE_pose.translation(1) - cylinder_position_(1);
     pose_diff = pose_diff_1(0)*pose_diff_1(0) + pose_diff_1(1)*pose_diff_1(1);
-    // pose_diff_1(2) = abs(robot_model_.get_pose(params_.tracked_frame).translation(2)-
-    //                   (cylinder_position_(2) - 0.058) );
-  
-    pose_diff_1(2) = abs(robot_model_.get_pose(params_.tracked_frame).translation(2) - params_.cylinder_z);
+    pose_diff_1(2) = abs(EE_pose.translation(2) - ref_t(2));
+    robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
 
-    // EE stay near the cylinder
+    // EE with desired orientation
+    cost += error_.tail<3>().norm() * params_.Qr ;
+
+    // EE stay near the cylinder and on desired height
     pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
-    // EE not stay ahead of cylinder
-    pose_error += (pose_diff_1(0) > 0) ? pose_diff_1(0) : 0;
-    pose_error += (pose_diff_1(1) > 0) ? pose_diff_1(1) : 0;
-
-    cost += (pose_error*pose_error + pose_diff_1(2)*pose_diff_1(2)) *params_.Qt2;
+    cost += (pose_error*pose_error + pose_diff_1(2) ) *params_.Qt2;
     
-    Eigen::Vector3d object_position_diff;
+    // object diff 
+    Eigen::Vector2d object_position_diff;
     object_position_diff(0) = x(2 * BASE_ARM_GRIPPER_DIM) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
     object_position_diff(1) = x(2 * BASE_ARM_GRIPPER_DIM+1) -
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE+1);
-    object_position_diff(2) = 0;
     double object_error = object_position_diff.norm();
-    cost += object_error * object_error * params_.Q_obj;
+    cost += log2(abs(object_error+1)) * params_.Q_obj;
     
-//     Eigen::Quaterniond ref_q(ref.segment<4>(3));
-//     Eigen::Vector3d ref_t = ref.head<3>();
-//     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
-    
-//     // robot EE keep orientation
-//     //cost += (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
-// //ROS_INFO_STREAM( "cost EE keep orien: " << (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr );
-//     // robot EE keep height
-//     cost += error_[2]*error_[2]*params_.Qt;
-// //ROS_INFO_STREAM( "cost EE keep height: " << error_[2]*error_[2]*params_.Qt );
-//     Eigen::Vector3d pose_diff_1;
-//     double pose_error;
-
-//     pose_diff_1 = temp_pose.translation - cylinder_position_;
-  
-//     // EE stay near the cylinder
-//     pose_diff_1(2) = 0;
-//     //pose_error = ( (pose_diff_1.transpose()*pose_diff_1) > cylinder_radius*cylinder_radius ) ? 1 : 0;
-
-//     // EE not stay ahead of cylinder
-//     // pose_error += (pose_diff_1(0) > 0) ? pose_diff_1(0) : 0;
-//     // pose_error += (pose_diff_1(1) > 0) ? pose_diff_1(1) : 0;
-
-//     cost += pose_error *params_.Qt2;
-// //ROS_INFO_STREAM( "cost EE near cylinder: " << pose_error * params_.Qt2 );
-//     // object diff
-//     Eigen::Vector3d object_position_diff;
-//     object_position_diff(0) = x(2 * BASE_ARM_GRIPPER_DIM) -
-//         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
-//     object_position_diff(1) = x(2 * BASE_ARM_GRIPPER_DIM+1) -
-//         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE+1);
-//     object_position_diff(2) = 0;
-//     double object_error = object_position_diff.norm();
-//     cost += object_error * object_error * params_.Q_obj;
-// //ROS_INFO_STREAM( "cost object diff: " << object_error * object_error * params_.Q_obj );
   }
   
   // // power cost

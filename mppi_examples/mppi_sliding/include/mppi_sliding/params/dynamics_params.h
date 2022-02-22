@@ -30,7 +30,7 @@ struct DynamicsParams {
   double friction;
 
   // controller config
-  bool fixed_base;
+  bool fixed_base,update_geometry;
 
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };

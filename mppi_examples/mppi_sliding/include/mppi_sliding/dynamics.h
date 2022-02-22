@@ -40,7 +40,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void initialize_pd();
   void set_collision();
   void display_state();
-  void update_model();
+  void update_geometry();
   
  protected:
   const bool if_sim_;

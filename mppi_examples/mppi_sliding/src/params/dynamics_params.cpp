@@ -138,6 +138,13 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  if (!nh.getParam("setup_config/update_geometry",update_geometry))
+  {
+    ROS_ERROR_STREAM("config params parsing: failed to parse setup_config/update_geometry or invalid!");
+    return false;
+  }
+
+
   // parse gains
   if (!gains.init_from_ros(nh, prefix + "dynamics/")) {
     ROS_ERROR("Failed to parse simulation gains.");

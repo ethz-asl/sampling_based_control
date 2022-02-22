@@ -21,10 +21,10 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
   if(!if_sim_)
   {
     std::cout << "this dynamics is as [MODEL ESTIMATED] dynamics" << std::endl;
-    if_update_ = false;
+    if_update_ = params_.update_geometry;
     if(if_update_)
     {
-      std::cout << "activate model updater " << std::endl;
+      std::cout << "activate model geometry updater " << std::endl;
     }
   }
   
@@ -83,7 +83,7 @@ void PandaRaisimDynamics::initialize_world(
   }
 
   // To simulate 2D sliding, we need a table 
-  table_ = sim_.addBox(2,2,0.1,10,"steel",
+  table_ = sim_.addBox(1.5,1.5,0.1,10,"steel",
           raisim::COLLISION(1), -1);
   table_->setBodyType(raisim::BodyType::STATIC); //no velocity, inf mass
   table_->setName("Table");
@@ -207,7 +207,7 @@ void PandaRaisimDynamics::advance() {
     raisim::Vec<3> obj_vel;
     mug_->getVelocity(0, obj_vel);
     object_v_.segment<3>(0) = obj_vel.e();
-    //TODO: update real trans and rot vel here
+    // //TODO: update real trans and rot vel here
 
     object_v_(4) = params_.cylinder_radius;
     object_v_(5) = params_.cylinder_height;
@@ -254,6 +254,8 @@ void PandaRaisimDynamics::advance() {
     // [Debug Feb. 2]: open in 3rd round
     object_v_(4) = cylinder_->getRadius();
     object_v_(5) = cylinder_->getHeight();
+    object_v_(4) = cylinder_->getRadius();
+    object_v_(5) = cylinder_->getHeight();
 
   }
 
@@ -268,46 +270,42 @@ void PandaRaisimDynamics::advance() {
 }
 
 // [Debug Feb. 2]: Never get called in all rounds
-void PandaRaisimDynamics::update_model()
+void PandaRaisimDynamics::update_geometry()
 {
 
-
   // save the current object's state
-  raisim::Mat<3,1> vel_c = {0,0,0};
-  raisim::Mat<3,1> pos_c = {0,0,0};
-  raisim::Mat<3,3> rot_c;
-  Eigen::Array<double,3,3> rot_c_e;
-  Eigen::Matrix3d rotr; 
-  cylinder_->getVelocity(cylinder_->getIndexInWorld(),vel_c);
-  vel_c = cylinder_->getLinearVelocity();
-  //pos_c = cylinder_->getPosition();
-  pos_c = x_.segment<3>(2* robot_dof_);
-  cylinder_->getOrientation(cylinder_->getIndexInWorld(),rot_c);
-  rotr = rot_c.e();
-  Eigen::AngleAxisd aa; 
-  aa = rotr;
-  Eigen::Quaternion<double> q;
-  //q=aa;
-  q.x() = x_(2* robot_dof_+3);
-  q.y() = x_(2* robot_dof_+4);
-  q.z() = x_(2* robot_dof_+5);
-  q.w() = x_(2* robot_dof_+6);
+  // raisim::Mat<3,1> vel_c = {0,0,0};
+  // raisim::Mat<3,1> pos_c = {0,0,0};
+  // raisim::Mat<3,3> rot_c;
+  // Eigen::Array<double,3,3> rot_c_e;
+  // Eigen::Matrix3d rotr; 
+  // cylinder_->getVelocity(cylinder_->getIndexInWorld(),vel_c);
+  // vel_c = cylinder_->getLinearVelocity();
+  // //pos_c = cylinder_->getPosition();
+  // pos_c = x_.segment<3>(2* robot_dof_);
+  // cylinder_->getOrientation(cylinder_->getIndexInWorld(),rot_c);
+  // rotr = rot_c.e();
+  // Eigen::AngleAxisd aa; 
+  // aa = rotr;
+  // Eigen::Quaternion<double> q;
+  // //q=aa;
+  // q.x() = x_(2* robot_dof_+3);
+  // q.y() = x_(2* robot_dof_+4);
+  // q.z() = x_(2* robot_dof_+5);
+  // q.w() = x_(2* robot_dof_+6);
 
   // remove and add
-  // sim_.removeObject(cylinder_);
-  // cylinder_ = sim_.addCylinder(x_(2 * robot_dof_ + OBJECT_DIMENSION +4), 
-  //                             x_(2 * robot_dof_ + OBJECT_DIMENSION +5), 
-  //                               0.5,"steel", raisim::COLLISION(1), -1); 
+  sim_.removeObject(cylinder_);
+  cylinder_ = sim_.addCylinder(x_(2 * robot_dof_ + OBJECT_DIMENSION +4), 
+                              x_(2 * robot_dof_ + OBJECT_DIMENSION +5), 
+                                0.5,"steel", raisim::COLLISION(1), -1); 
 
-  // set the dynamics state
-  // cylinder_->setMass(params_.cylinder_mass);
-  // cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
-  // cylinder_->setName("Cylinder");
-  cylinder_->setPosition(pos_c);
-  cylinder_->setOrientation(q);
-  cylinder_->setLinearVelocity(vel_c);  //todo:  add angular velocity
+  //set the geometry state
+  cylinder_->setMass(params_.cylinder_mass);
+  cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
+  cylinder_->setName("Cylinder");
 
-  // ROS_INFO_STREAM("model updated");
+  // ROS_INFO_STREAM("geometry updated");
 
 }
 
@@ -367,15 +365,14 @@ void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
    
   if(!if_sim_)
   { 
+    if(if_update_)     // update model depending on the flag
+    {
+      update_geometry();
+    }
     // [Debug Feb. 2]: open in 2nd round
     cylinder_->setPosition(x_(2* robot_dof_),x_(2* robot_dof_+1),x_(2* robot_dof_+2));
     cylinder_->setOrientation(x_(2* robot_dof_+3),x_(2* robot_dof_+4),x_(2* robot_dof_+5),x_(2* robot_dof_+6));
-    // update model depending on the flag
-    if(if_update_)
-    {
-      update_model();
-    }
-
+    cylinder_->setLinearVelocity(x_.segment<3>(2* robot_dof_+obj_dof_));
   }
 
 }
