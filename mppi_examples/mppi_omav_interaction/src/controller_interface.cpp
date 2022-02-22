@@ -214,7 +214,7 @@ void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
   ref_.rr.resize(1);
   ref_.tt.resize(1);
   ref_.rr[0](7) = ref_angle;
-  ref_.tt.[0] = ros::Time::now().toSec();
+  ref_.tt[0] = ros::Time::now().toSec();
   get_controller()->set_reference_trajectory(ref_);
 }
 

@@ -5,7 +5,7 @@
     <xacro:property name="manipulator_length" value="$(arg manipulator_length)"/>   <!-- [m] -->
     <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
 
-    <xacro:property name="tool_length" value="0.05"/>         <!-- [m] -->
+    <xacro:property name="tool_length" value="0.065"/>         <!-- [m] -->
     <xacro:property name="tool_radius" value="0.0075"/>         <!-- [m] -->
 
     <xacro:property name="mass_ouzel" value="4.337"/>
