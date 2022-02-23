@@ -13,18 +13,21 @@ Eigen::Vector3d Mug::get_pt_from_kpArray(int obj_idx, int pt_idx)
         obj_idx: the idx of the object
         pt_idx: the idx of the point in the object 
     */
+    Eigen::Vector3d pt_eigen;
+    geometry_msgs::Point pt_msg;
+
     if(obj_idx > this->obj_num)
     {
         ROS_WARN_ONCE("Trying to get object outside the given ObjectArray.msg range");
+        return pt_eigen;
     }
 
     if(pt_idx > keypoint_obj_array_msg->KeypointsArrays[obj_idx].PointSize)
     {
         ROS_WARN_ONCE("Trying to get keypoint outside the given KeypointsArray.msg range");
+        return pt_eigen;
     }
 
-    Eigen::Vector3d pt_eigen;
-    geometry_msgs::Point pt_msg;
     bool pt_validity = keypoint_obj_array_msg->KeypointsArrays[obj_idx].keypoints[pt_idx].valid;
 
     if(pt_validity)
@@ -88,7 +91,7 @@ bool Mug::primitive_estimate(int obj_idx)
     state_.position[5] = center_orien[2]; //z
     state_.position[6] = center_orien[3]; //w
 
-    //kptoPrimitive();   //TODO: comment this out for develop in local frame
+    kptoPrimitive();   //TODO: comment this out for develop in local frame
 
     return true;
 }
@@ -220,7 +223,7 @@ void Mug::update()
         ransac_fitting(i);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        ROS_INFO_STREAM("ransac takes: " <<duration.count() << "  micro secs");
+        //ROS_INFO_STREAM("ransac takes: " <<duration.count() << "  micro secs");
         update_TF();
         primitive_visualize();
         pub_state();
@@ -296,8 +299,8 @@ void Mug::ransac_fitting(int obj_idx)
     pcl::copyPointCloud(*cloud_filtered, *inliers_cylinder_idxPtr, *inliers_cylinder_Ptr);
 
     pcl_cloudXYZ = *inliers_cylinder_Ptr;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
-    std::cerr << "Cylinder coefficients: " << (*coefficients_cylinder) << std::endl;
-    std::cout << "extracted size: " << pcl_cloudXYZ.points.size() << std::endl;
+    // std::cerr << "Cylinder coefficients: " << (*coefficients_cylinder) << std::endl;
+    // std::cout << "extracted size: " << pcl_cloudXYZ.points.size() << std::endl;
 
     if(coefficients_cylinder->values.size() > 6)
     {
