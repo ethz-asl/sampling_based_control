@@ -4,8 +4,8 @@ geometry:
   cylinder_mass: 1    # ideally equal to the object
   cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
   table_position: [0.85,0.0,0.0]
-  target_pos: [0.8, -0.0, 0.1]
-  friction: 0.05
+  target_pos: [0.8, 0.0, 0.1]
+  friction: 0.001
 
 setup_config:
   fixed_base: true
@@ -18,7 +18,7 @@ dynamics:
   articulation_joint: articulation_joint
   initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.4, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.42, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
                    0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
@@ -45,7 +45,7 @@ sim_dynamics:
   articulation_joint: articulation_joint
   initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
-                   0.4, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
+                   0.42, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
                    0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                     # object joint velocity 7
                    0]            # contact flag
   gains:
@@ -100,7 +100,7 @@ cost:
   joint_limit_slope: 0 #100
 
   max_power: 0.0
-  power_weight: 5.0
+  power_weight: 0.0
 
   handle_frame: handle_link
   tracked_frame: panda_grasp

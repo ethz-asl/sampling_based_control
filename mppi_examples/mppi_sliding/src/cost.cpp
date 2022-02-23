@@ -15,6 +15,7 @@ using namespace manipulation;
 PandaCost::PandaCost(const CostParams& params) : params_(params) {
   robot_model_.init_from_xml(params_.robot_description);
   object_model_.init_from_xml(params_.object_description);
+
 }
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
@@ -24,15 +25,14 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   double cost = 0.0;
   
   int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
-  //ROS_INFO_STREAM("mode: " << mode);
-  robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-  //object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
-  cylinder_position_  <<  x(2*BASE_ARM_GRIPPER_DIM),
-                          x(2*BASE_ARM_GRIPPER_DIM+1),
-                          x(2*BASE_ARM_GRIPPER_DIM+2);
 
+  robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+
+  // get primitive state
+  cylinder_position_  = x.segment<3>(2*BASE_ARM_GRIPPER_DIM);
+  cylinder_linearVelocity_ = x.segment<3>(2*BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION);
   double cylinder_radius = x(2*BASE_ARM_GRIPPER_DIM+OBJECT_DIMENSION+4);
-  // ROS_INFO_STREAM("EE in world frame: " << robot_model_.get_pose(params_.tracked_frame).translation);
+  double cylinder_height = x(2*BASE_ARM_GRIPPER_DIM+OBJECT_DIMENSION+5);
 
   // regularization cost
   cost += params_.Qreg *
@@ -41,9 +41,10 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // get robot EE pose
   EE_pose = robot_model_.get_pose(params_.tracked_frame);
 
+
+
   // end effector reaching cost
   if (mode == 0) {
-
 
     // for original EE pose tracking
     Eigen::Vector3d ref_t = ref.head<3>();
@@ -61,7 +62,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
       cost += params_.Qc;
   }
 
-  // handle reaching cost
+  // object reaching cost
   else if (mode == 1) {
     
 
@@ -115,7 +116,43 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += log2(abs(object_error+1)) * params_.Q_obj;
     
   }
+
+  // object velocity control cost  
+  else if (mode == 3) 
+  { 
+    // get ref
+    Eigen::Vector3d ref_t = ref.head<3>();
+    Eigen::Quaterniond ref_q(ref.segment<4>(3));
+    Eigen::Vector3d ref_t_v = ref.segment<3>(7);
+
+    // get velocity diff
+    Eigen::Vector2d vel_diff;
+    double vel_diff_cost;
+    vel_diff = ref_t_v.segment<2>(0) - cylinder_linearVelocity_.segment<2>(0);
+    vel_diff_cost = vel_diff.norm();
   
+    // get EE pose diff
+    Eigen::Vector3d pose_diff_1;
+    double pose_diff, pose_error;
+    pose_diff_1(0) = EE_pose.translation(0) - cylinder_position_(0);
+    pose_diff_1(1) = EE_pose.translation(1) - cylinder_position_(1);
+    pose_diff = pose_diff_1(0)*pose_diff_1(0) + pose_diff_1(1)*pose_diff_1(1);
+    pose_diff_1(2) = abs(EE_pose.translation(2) - ref_t(2));
+    robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
+
+    // EE with desired orientation
+    cost += error_.tail<3>().norm() * params_.Qr;
+
+    // EE stay near the cylinder and on desired height
+    pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
+    cost += (pose_error*pose_error + pose_diff_1(2)) *params_.Qt2;
+
+    // object linear velocity cost
+    cost += log2(vel_diff_cost+1) * 300;
+
+  }
+
+
   // // power cost
   cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
 
