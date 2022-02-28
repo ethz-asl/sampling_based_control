@@ -61,10 +61,10 @@
 
     <!--  mug descriptor -->
     <param name="mug_description"
-           textfile="$(find mppi_sliding)/data/objects/mug_vis.urdf"/>
+           textfile="$(find mppi_sliding)/data/objects/mug_2_vis.urdf"/>
 
     <param name="mug_description_raisim"
-           textfile="$(find mppi_sliding)/data/objects/mug_dynamic.urdf"/>
+           textfile="$(find mppi_sliding)/data/objects/mug_2_dynamics.urdf"/>
 
     <!-- table descriptor -->
     <param name="table_description"
