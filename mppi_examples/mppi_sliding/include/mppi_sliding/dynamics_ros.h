@@ -29,10 +29,8 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
  private:
   ros::NodeHandle nh_;
   ros::Publisher state_publisher_;
-  ros::Publisher object_state_publisher_;
   ros::Publisher contact_forces_publisher_;
   ros::Publisher ee_publisher_;
-  ros::Publisher handle_publisher_;
   ros::Publisher tau_ext_publisher_;
   ros::Publisher power_publisher_;
 
@@ -57,7 +55,6 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   double tweak = 0;
 
   sensor_msgs::JointState joint_state_;
-  sensor_msgs::JointState object_state_;
   visualization_msgs::Marker force_marker_;
   std_msgs::Float64MultiArray tau_ext_msg_;
 

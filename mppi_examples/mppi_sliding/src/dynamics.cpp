@@ -29,8 +29,6 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
   }
   
   initialize_world(params_.robot_description, 
-                  params_.object_description, 
-                  params_.cylinder_description,
                   params_.mug_description);
   initialize_pd();
   set_collision();
@@ -42,8 +40,6 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
 
 void PandaRaisimDynamics::initialize_world(
     const std::string& robot_description,
-    const std::string& object_description,
-    const std::string& cylinder_description,
     const std::string& mug_description) {
 
   // Raisim world 

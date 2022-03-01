@@ -5,7 +5,7 @@ geometry:
   cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
   table_position: [0.85,0.0,0.0]
   target_pos: [0.8, 0.0, 0.1]
-  friction: 0.001
+  friction: 0.0001
 
 setup_config:
   fixed_base: true
@@ -13,9 +13,6 @@ setup_config:
 
 dynamics:
   dt: 0.015
-  object_handle_link: handle_link
-  object_handle_joint: handle_joint
-  articulation_joint: articulation_joint
   initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
                    0.42, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
@@ -40,9 +37,6 @@ dynamics:
 
 sim_dynamics:
   dt: 0.015
-  object_handle_link: sim_handle_link
-  object_handle_joint: sim_handle_joint
-  articulation_joint: articulation_joint
   initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04,    # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity 9
                    0.42, -0.26, 0.1, 0.0, 0.0, 0.0, 1,                        # object joint pose 7
@@ -93,16 +87,12 @@ cost:
   upper_joint_limits: [ 6.28, 2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973 ]
   lower_joint_limits: [ -6.28, -2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973 ]
 
-  # upper_joint_limits: [1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800 ]
-  # lower_joint_limits: [ -1800, -1800, -1800, -1800, -1800, -1800, -1800, -1800 ]
-
   joint_limit_cost: 0 #1000
   joint_limit_slope: 0 #100
 
   max_power: 0.0
   power_weight: 0.0
 
-  handle_frame: handle_link
   tracked_frame: panda_grasp
   arm_base_frame: panda_link0
 

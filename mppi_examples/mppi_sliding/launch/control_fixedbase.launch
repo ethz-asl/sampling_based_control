@@ -41,34 +41,7 @@
     <!--     .....................    -->
 
 
-    <!-- add cylinder for test -->>
-    <node name="sim_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <remap from="robot_description" to="cylinder_description_raisim_simulation"/>
-        <remap from="joint_states" to="/sim/cylinder/joint_states"/>
-    </node>
-
-    <node name="cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <param name="publish_frequency" value="100"/>
-        <remap from="robot_description" to="cylinder_description_raisim"/>
-        <remap from="joint_states" to="/cylinder/joint_state"/>
-    </node>
-
-    <!--       ..............         -->>
-    
-    <!-- cylinder target -->
-    <node name="target_cylinder_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <remap from="robot_description" to="target_cylinder_description"/>
-        <remap from="joint_states" to="/target_cylinder/joint_states"/>
-    </node>
-    <!--     .....................    -->
-
-    
     <!-- add table -->
-    <node name="sim_table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <remap from="robot_description" to="table_description_raisim_simulation"/>
-        <remap from="joint_states" to="/sim/table/joint_states"/>
-    </node>
-
     <node name="table_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="100"/>
         <remap from="robot_description" to="table_description_raisim"/>

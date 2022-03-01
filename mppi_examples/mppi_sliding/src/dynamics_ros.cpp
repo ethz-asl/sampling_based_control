@@ -16,17 +16,13 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
 
   state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/joint_states", 10);
-  object_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("/object/joint_state", 10);
   contact_forces_publisher_ =
       nh_.advertise<visualization_msgs::MarkerArray>("/contact_forces", 10);
   ee_publisher_ =
       nh_.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
-  handle_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/handle", 10);
   tau_ext_publisher_ =
       nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
   power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
-
 
   //target
   cylinder_target_publisher_ =
@@ -56,9 +52,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   joint_state_.position.resize(joint_state_.name.size());
   joint_state_.velocity.resize(joint_state_.name.size());
   joint_state_.header.frame_id = "world";
-
-  object_state_.name = {params_.articulation_joint};
-  object_state_.position.resize(1);
 
   force_marker_.type = visualization_msgs::Marker::ARROW;
   force_marker_.header.frame_id = "world";
@@ -99,11 +92,6 @@ void ManipulatorDynamicsRos::publish_ros() {
   }
 
   state_publisher_.publish(joint_state_);
-
-  // update object state visualization
-  object_state_.header.stamp = ros::Time::now();
-  object_state_.position[0] = x_(2 * robot_dof_);
-  object_state_publisher_.publish(object_state_);
 
   // update cylinder target state and its visulization
   cylinder_target_.header.stamp = ros::Time::now();

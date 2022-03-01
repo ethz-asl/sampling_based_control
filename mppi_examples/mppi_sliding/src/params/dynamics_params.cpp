@@ -15,23 +15,6 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  if (!nh.getParam(prefix + "dynamics/object_handle_link",
-                   object_handle_link)) {
-    ROS_ERROR("Failed to parse dynamics/object_handle_link or invalid!");
-    return false;
-  }
-
-  if (!nh.getParam(prefix + "dynamics/object_handle_joint",
-                   object_handle_joint)) {
-    ROS_ERROR("Failed to parse dynamics/object_handle_joint");
-  }
-
-  if (!nh.getParam(prefix + "dynamics/articulation_joint",
-                   articulation_joint)) {
-    ROS_ERROR("Failed to parse dynamics/articulation_joint or invalid!");
-    return false;
-  }
-
   std::vector<double> x0;
   if (!nh.param<std::vector<double>>(prefix + "dynamics/initial_state", x0,
                                      {}) ||
@@ -54,36 +37,13 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  std::string object_description_name =
-      (is_sim) ? "/object_description_raisim_simulation"
-               : "/object_description_raisim";
-
-  std::string cylinder_description_name =
-      (is_sim) ? "/cylinder_description_raisim_simulation"
-               : "/cylinder_description_raisim";
-
-
   std::string mug_description_name =
       (is_sim) ? "/mug_description_raisim"
                : "/mug_description_raisim";
 
-  if (!nh.getParam(object_description_name, object_description) ||
-      object_description.empty()) {
-    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << object_description_name
-                                        << " or invalid!");
-    return false;
-  }
-
-  if (!nh.getParam(cylinder_description_name, cylinder_description) ||
-      cylinder_description.empty()) {
-    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << cylinder_description_name
-                                        << " or invalid!");
-    return false;
-  }
-
   if (!nh.getParam(mug_description_name, mug_description) ||
       mug_description.empty()) {
-    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << cylinder_description_name
+    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << mug_description_name
                                         << " or invalid!");
     return false;
   }
@@ -161,9 +121,6 @@ std::ostream& operator<<(std::ostream& os,
   os << "dt=" << params.dt << std::endl;
   os << "dynamics gains: " << std::endl;
   os << params.gains;
-  os << "object handle link = " << params.object_handle_link << std::endl;
-  os << "object handle joint = " << params.object_handle_joint << std::endl;
-  os << "articulation joint = " << params.articulation_joint << std::endl;
   return os;
   // clang-format on
 }
