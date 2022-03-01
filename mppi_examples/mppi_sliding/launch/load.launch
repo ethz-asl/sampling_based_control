@@ -38,8 +38,17 @@
       fixed_base:=true"/>
 
     <!--  mug descriptors -->
-    <param name="mug_description_raisim"
-           textfile="$(find mppi_sliding)/data/objects/mug_2_dynamics.urdf"/>
+    <param name="mug_0_description_raisim"
+           textfile="$(find mppi_sliding)/data/objects/mug_0_dynamics.urdf"/>   <!-- for raisim-->
+    <param name="mug_0_description"
+           textfile="$(find mppi_sliding)/data/objects/mug_0_vis.urdf"/>        <!-- purely for rviz-->
+    <!-- !!! Here there have to be both vis and dynamics urdf, since RVIZ require a absolute file path as "file://" -->
+    <!-- But Raisim needs another format as "/home/..."-->
+    <param name="mug_1_description_raisim"
+           textfile="$(find mppi_sliding)/data/objects/mug_1_dynamics.urdf"/>   <!-- for raisim-->
+    <param name="mug_1_description"
+           textfile="$(find mppi_sliding)/data/objects/mug_1_vis.urdf"/>        <!-- purely for rviz-->
+
 
     <!-- table descriptor -->
     <param name="table_description_raisim"

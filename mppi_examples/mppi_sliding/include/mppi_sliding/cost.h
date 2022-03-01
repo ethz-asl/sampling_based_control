@@ -28,16 +28,11 @@ class PandaCost : public mppi::Cost {
   inline const mppi_pinocchio::RobotModel& robot() const {
     return robot_model_;
   }
-  inline const mppi_pinocchio::RobotModel& object() const {
-    return object_model_;
-  }
 
  private:
   CostParams params_;
 
   mppi_pinocchio::RobotModel robot_model_;
-  mppi_pinocchio::RobotModel object_model_;
-  mppi_pinocchio::RobotModel cylinder_model_;
   
   mppi_pinocchio::Pose EE_pose;
   Eigen::Vector3d cylinder_position_, cylinder_linearVelocity_;

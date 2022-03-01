@@ -2,7 +2,7 @@
 <!-- created with Phobos 1.0.1 "Capricious Choutengan" -->
   <robot name="mug_1">
 
-    <link name="mug_frame">
+    <link name="mug_frame_1">
       <inertial>
         <origin xyz="0 4e-05 0.00058" rpy="0 0 0"/>
         <mass value="0.1"/>

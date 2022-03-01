@@ -10,13 +10,9 @@ namespace manipulation {
 struct DynamicsParams {
   double dt;
   std::string robot_description;
-  std::string mug_description;
+  std::vector<std::string> mug_description;
   PIDGains gains;
   Eigen::VectorXd initial_state;
-
-  std::string articulation_joint;
-  std::string object_handle_link;
-  std::string object_handle_joint;
 
   //geometry
   double cylinder_height;

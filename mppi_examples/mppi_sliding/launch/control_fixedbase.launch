@@ -10,14 +10,8 @@
 
     <arg name="experiment" default="false"/>
     <arg name="experiment_name" default="mppi_sliding"/>
-    <arg name="add_noise" default="False"/>
+    <arg name="add_noise" default="false"/>
 
-
-    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'door')"/>
-    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'microwave')"/>
-    <arg name="object_reference_position" default="3.14" if="$(eval arg('object') == 'valve')"/>
-    <arg name="object_reference_position" default="0.50" if="$(eval arg('object') == 'drawer')"/>
-    <arg name="object_reference_position" default="1.57" if="$(eval arg('object') == 'shelf')"/>
 
     <include file="$(find mppi_sliding)/launch/load.launch">
         <arg name="debug" value="false"/>
@@ -34,9 +28,14 @@
     </node>
     
     <!-- mug -->
-    <node name="mug_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
-        <remap from="robot_description" to="mug_description"/>
-        <remap from="joint_states" to="/mug/joint_states"/>
+    <node name="mug_0_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="mug_0_description"/>
+        <remap from="joint_states" to="/mug_0/joint_states"/>
+    </node>
+
+    <node name="mug_1_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="robot_description" to="mug_1_description"/>
+        <remap from="joint_states" to="/mug_1/joint_states"/>
     </node>
     <!--     .....................    -->
 
@@ -52,7 +51,6 @@
     <param name="/config_file" value="$(find mppi_sliding)/params/controller_panda.yaml"/>
 
     <node name="manipulation_control" type="manipulation_control" pkg="mppi_sliding" output="screen" launch-prefix="$(arg launch_prefix)">
-        <param name="object_reference_position" value="$(arg object_reference_position)"/>
         <param name="activation_file" value="/home/user/.raisim/activation.raisim"/>
         <param name="references_file" value="$(find mppi_sliding)/config/experiments/references.yaml"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
@@ -68,6 +66,6 @@
     </include>
 
     <!-- Open Rviz (the sim config) -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_sliding)/config/rviz/cup_sim.rviz" output="screen"  respawn="true"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mppi_sliding)/config/rviz/cup_sim.rviz" output="screen" />
 
 </launch>

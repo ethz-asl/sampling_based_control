@@ -13,25 +13,6 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
-  if (!nh.getParam("/object_description", object_description) ||
-      object_description.empty()) {
-    ROS_ERROR("Failed to parse /object_description or invalid!");
-    return false;
-  }
-
-  if (!nh.getParam("/cylinder_description", cylinder_description) ||
-      cylinder_description.empty()) {
-    ROS_ERROR("Failed to parse /cylinder_description or invalid!");
-    return false;
-  }
-
-  if (!nh.getParam("/mug_description", mug_description) ||
-      cylinder_description.empty()) {
-    ROS_ERROR("Failed to parse /cylinder_description or invalid!");
-    return false;
-  }
-
-
     //parse geometry params
   if (!nh.getParam("geometry/cylinder_height",cylinder_height))
   {
@@ -178,11 +159,6 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
 
   if (!nh.getParam("cost/max_power", max_power) || max_power < 0) {
     ROS_ERROR("Failed to parse cost/max_power or invalid!");
-    return false;
-  }
-
-  if (!nh.getParam("cost/handle_frame", handle_frame) || handle_frame.empty()) {
-    ROS_ERROR("Failed to parse cost/handle_frame or invalid!");
     return false;
   }
 

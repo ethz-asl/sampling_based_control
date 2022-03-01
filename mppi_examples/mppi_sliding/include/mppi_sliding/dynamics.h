@@ -34,7 +34,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   ~PandaRaisimDynamics() = default;
  private:
   void initialize_world(const std::string& robot_description,
-                        const std::string& mug_description);
+                        std::vector<std::string>& mug_description);
   void initialize_pd();
   void set_collision();
   void display_state();

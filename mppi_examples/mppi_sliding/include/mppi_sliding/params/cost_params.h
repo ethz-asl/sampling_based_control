@@ -10,8 +10,6 @@ namespace manipulation {
 
 struct CostParams {
   std::string robot_description;
-  std::string object_description;
-  std::string cylinder_description;
   std::string mug_description;
 
   double Qreg;  // robot velocity regularization

@@ -32,7 +32,6 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   ros::Publisher contact_forces_publisher_;
   ros::Publisher ee_publisher_;
   ros::Publisher tau_ext_publisher_;
-  ros::Publisher power_publisher_;
 
   ros::Publisher cylinder_state_publisher_;
   sensor_msgs::JointState cylinder_state_;
@@ -43,9 +42,7 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
   sensor_msgs::JointState cylinder_target_;
   geometry_msgs::TransformStamped cylinder_target_trans;
 
-  ros::Publisher mug_state_publisher_;
-  sensor_msgs::JointState mug_state_;
-  geometry_msgs::TransformStamped mug_state_trans;
+  std::vector<geometry_msgs::TransformStamped> mug_frame_trans;
 
   ros::Publisher table_state_publisher_;
   sensor_msgs::JointState table_state_;
@@ -53,6 +50,7 @@ class ManipulatorDynamicsRos : public PandaRaisimDynamics {
 
 
   double tweak = 0;
+  int mugs_size;
 
   sensor_msgs::JointState joint_state_;
   visualization_msgs::Marker force_marker_;

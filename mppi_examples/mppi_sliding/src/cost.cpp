@@ -14,8 +14,6 @@ using namespace manipulation;
 
 PandaCost::PandaCost(const CostParams& params) : params_(params) {
   robot_model_.init_from_xml(params_.robot_description);
-  object_model_.init_from_xml(params_.object_description);
-
 }
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,

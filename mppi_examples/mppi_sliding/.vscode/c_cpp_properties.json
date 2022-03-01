@@ -1,44 +1,45 @@
 {
-  "configurations": [
-    {
-      "browse": {
-        "databaseFilename": "",
-        "limitSymbolsToIncludedHeaders": true
-      },
-      "includePath": [
-        "/opt/ros/noetic/include/**",
-        "/home/boyang/catkin_ws/devel/include/**",
-        "/home/boyang/raisim_ws/raisim_install/include/**",
-        "/home/boyang/raisim_ws/raisim_install/include/**",
-        "/home/boyang/catkin_ws/src/ros_control/combined_robot_hw/include/**",
-        "/home/boyang/catkin_ws/src/ros_control/controller_interface/include/**",
-        "/home/boyang/catkin_ws/src/ros_control/controller_manager/include/**",
-        "/home/boyang/catkin_ws/src/franka_ros/franka_hw/include/**",
-        "/home/boyang/catkin_ws/src/ros_control/hardware_interface/include/**",
-        "/home/boyang/catkin_ws/src/ros_control/joint_limits_interface/include/**",
-        "/home/boyang/catkin_ws/src/kindr/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/manipulation_msgs/include/**",
-        "/home/boyang/catkin_ws/src/message_logger/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_first_order_mass/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda_mobile/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_pinocchio/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_pole_cart/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_ros/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_tools/include/**",
-        "/home/boyang/catkin_ws/src/sampling_based_control/mppi_examples/object_modeling_playground/include/**",
-        "/home/boyang/catkin_ws/src/signal_logger/signal_logger/include/**",
-        "/home/boyang/catkin_ws/src/signal_logger/signal_logger_core/include/**",
-        "/home/boyang/catkin_ws/src/signal_logger/signal_logger_ros/include/**",
-        "/home/boyang/catkin_ws/src/signal_logger/signal_logger_std/include/**",
-        "/home/boyang/catkin_ws/src/vision_msgs/include/**",
-        "/usr/include/**"
-      ],
-      "name": "ROS"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/opt/ros/noetic/include/**",
+                "~/catkin_ws/devel/include/**",
+                "~/raisim_ws/raisim_install/include/**",
+                "~/raisim_ws/raisim_install/include/**",
+                "~/catkin_ws/src/ros_control/combined_robot_hw/include/**",
+                "~/catkin_ws/src/ros_control/controller_interface/include/**",
+                "~/catkin_ws/src/ros_control/controller_manager/include/**",
+                "~/catkin_ws/src/franka_ros/franka_hw/include/**",
+                "~/catkin_ws/src/ros_control/hardware_interface/include/**",
+                "~/catkin_ws/src/ros_control/joint_limits_interface/include/**",
+                "~/catkin_ws/src/kindr/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/manipulation_msgs/include/**",
+                "~/catkin_ws/src/message_logger/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/mppi_first_order_mass/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/mppi_manipulation/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/mppi_panda_mobile/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_pinocchio/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/mppi_pole_cart/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_ros/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_tools/include/**",
+                "~/catkin_ws/src/sampling_based_control/mppi_examples/object_modeling_playground/include/**",
+                "~/catkin_ws/src/signal_logger/signal_logger/include/**",
+                "~/catkin_ws/src/signal_logger/signal_logger_core/include/**",
+                "~/catkin_ws/src/signal_logger/signal_logger_ros/include/**",
+                "~/catkin_ws/src/signal_logger/signal_logger_std/include/**",
+                "~/catkin_ws/src/vision_msgs/include/**",
+                "/usr/include/**",
+                "${workspaceFolder}/include"
+            ],
+            "name": "ROS"
+        }
+    ],
+    "version": 4
 }

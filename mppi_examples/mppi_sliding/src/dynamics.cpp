@@ -40,7 +40,7 @@ PandaRaisimDynamics::PandaRaisimDynamics(const DynamicsParams& params, const boo
 
 void PandaRaisimDynamics::initialize_world(
     const std::string& robot_description,
-    const std::string& mug_description) {
+    std::vector<std::string>& mug_description) {
 
   // Raisim world 
   dt_ = params_.dt;
@@ -73,7 +73,7 @@ void PandaRaisimDynamics::initialize_world(
   // create mug 
   if(if_sim_)
   {
-    mug_description_ = mug_description;
+    mug_description_ = mug_description[0];
     mug_ = sim_.addArticulatedSystem(mug_description_, "/",{},
                       raisim::COLLISION(1), -1);
   }

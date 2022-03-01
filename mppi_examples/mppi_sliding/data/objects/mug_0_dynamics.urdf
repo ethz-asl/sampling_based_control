@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!-- created with Phobos 1.0.1 "Capricious Choutengan" -->
-  <robot name="mug_2">
+  <robot name="mug_0">
 
-    <link name="mug_frame">
+    <link name="mug_frame_0">
       <inertial>
         <origin xyz="0 4e-05 0.00058" rpy="0 0 0"/>
         <mass value="0.1"/>
@@ -11,14 +11,17 @@
       <visual name="body_vis">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="file:///home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/mug_2_vis.obj" scale="0.05 0.05 0.05"/>
+          <mesh filename="/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/mug_0_vis.obj" scale="0.05 0.05 0.05"/>
         </geometry>
       </visual>
       <collision name="body_col">
         <origin xyz="0 4e-05 0.00058" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="file:///home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/mug_2_collision.obj" scale="1.0 1.0 1.0"/>
+          <mesh filename="/home/user/catkin_ws/src/sampling_based_control/mppi_examples/mppi_sliding/data/meshes/mug_0_collision.obj" scale="1.0 1.0 1.0"/>
         </geometry>
+        <material name="">
+            <contact name="steel"/>
+        </material>
       </collision>
     </link>
 

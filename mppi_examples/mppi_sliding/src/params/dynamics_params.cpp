@@ -37,13 +37,26 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
-  std::string mug_description_name =
-      (is_sim) ? "/mug_description_raisim"
-               : "/mug_description_raisim";
+  mug_description.resize(2);
 
-  if (!nh.getParam(mug_description_name, mug_description) ||
+  std::string mug_0_description_name =
+      (is_sim) ? "/mug_0_description_raisim"
+               : "/mug_0_description_raisim";
+
+  if (!nh.getParam(mug_0_description_name, mug_description[0]) ||
       mug_description.empty()) {
-    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << mug_description_name
+    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << mug_0_description_name
+                                        << " or invalid!");
+    return false;
+  }
+
+  std::string mug_1_description_name =
+      (is_sim) ? "/mug_1_description_raisim"
+               : "/mug_1_description_raisim";
+
+  if (!nh.getParam(mug_1_description_name, mug_description[1]) ||
+      mug_description.empty()) {
+    ROS_ERROR_STREAM("Dynamics params parsing: failed to parse " << mug_1_description_name
                                         << " or invalid!");
     return false;
   }

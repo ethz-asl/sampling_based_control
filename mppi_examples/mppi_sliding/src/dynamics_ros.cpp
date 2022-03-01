@@ -22,7 +22,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
       nh_.advertise<geometry_msgs::PoseStamped>("/end_effector", 10);
   tau_ext_publisher_ =
       nh_.advertise<std_msgs::Float64MultiArray>("/tau_ext", 1);
-  power_publisher_ = nh_.advertise<std_msgs::Float64>("/power", 1);
 
   //target
   cylinder_target_publisher_ =
@@ -30,19 +29,21 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   cylinder_target_trans.header.frame_id = "world";
   cylinder_target_trans.child_frame_id = "cylinder_t_frame";
 
-  //mug
-  mug_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("/mug/joint_states", 10);
-  mug_state_trans.header.frame_id = "world";
-  mug_state_trans.child_frame_id = "mug_frame";
+  //mugs
+  mugs_size = 2;
+  mug_frame_trans.resize(mugs_size);
 
+  for(int i = 0 ; i < mugs_size; i++)
+  {
+    mug_frame_trans[i].header.frame_id = "world";
+    mug_frame_trans[i].child_frame_id = "mug_frame_" + std::to_string(i);
+  }
 
   //table 
   table_state_publisher_ =
       nh_.advertise<sensor_msgs::JointState>("/table/joint_state", 10);
   table_trans.header.frame_id = "world";
   table_trans.child_frame_id = "table_frame";
-
 
   joint_state_.name = {
       "panda_joint1", "panda_joint2",        "panda_joint3",
@@ -67,10 +68,6 @@ ManipulatorDynamicsRos::ManipulatorDynamicsRos(const ros::NodeHandle& nh,
   tau_ext_msg_.data.resize(get_panda()->getDOF());
   ff_tau_.setZero(get_panda()->getDOF());
   integral_term_.setZero(ARM_DIMENSION);
-
-
-  signal_logger::add(tau_ext_, "ground_truth_external_torque");
-  signal_logger::logger->updateLogger();
 }
 
 void ManipulatorDynamicsRos::reset_to_default() {
@@ -106,16 +103,24 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_target_trans.transform.rotation.z = q_cylinder_t.z();
   cylinder_target_trans.transform.rotation.w = q_cylinder_t.w();
 
-  // update mug state and its visulization
-  mug_state_.header.stamp = ros::Time::now();
-  mug_state_trans.header.stamp = ros::Time::now();
-  mug_state_trans.transform.translation.x = x_(2 * robot_dof_);
-  mug_state_trans.transform.translation.y = x_(2 * robot_dof_+1);
-  mug_state_trans.transform.translation.z = x_(2 * robot_dof_+2);
-  mug_state_trans.transform.rotation.x = x_(2* robot_dof_+3);
-  mug_state_trans.transform.rotation.y = x_(2* robot_dof_+4);
-  mug_state_trans.transform.rotation.z = x_(2* robot_dof_+5);
-  mug_state_trans.transform.rotation.w = x_(2* robot_dof_+6);
+  // update mug frames and its visulization
+  mug_frame_trans[0].header.stamp = ros::Time::now();
+  mug_frame_trans[0].transform.translation.x = x_(2 * robot_dof_);
+  mug_frame_trans[0].transform.translation.y = x_(2 * robot_dof_+1);
+  mug_frame_trans[0].transform.translation.z = x_(2 * robot_dof_+2);
+  mug_frame_trans[0].transform.rotation.x = x_(2* robot_dof_+3);
+  mug_frame_trans[0].transform.rotation.y = x_(2* robot_dof_+4);
+  mug_frame_trans[0].transform.rotation.z = x_(2* robot_dof_+5);
+  mug_frame_trans[0].transform.rotation.w = x_(2* robot_dof_+6);
+
+  mug_frame_trans[1].header.stamp = ros::Time::now();
+  mug_frame_trans[1].transform.translation.x = 0.5;
+  mug_frame_trans[1].transform.translation.y = -0.5;
+  mug_frame_trans[1].transform.translation.z = 0.1;
+  mug_frame_trans[1].transform.rotation.x = 0;
+  mug_frame_trans[1].transform.rotation.y = 0;
+  mug_frame_trans[1].transform.rotation.z = 0;
+  mug_frame_trans[1].transform.rotation.w = 1;
   
   // update table state and its visulization
   table_state_.header.stamp = ros::Time::now();
@@ -130,14 +135,16 @@ void ManipulatorDynamicsRos::publish_ros() {
   table_trans.transform.rotation.z = q_table.z();
   table_trans.transform.rotation.w = q_table.w();
   
-  //send the joint state and transform
+  //publish the joint state and transform
 
   cylinder_target_publisher_.publish(cylinder_target_);
   broadcaster.sendTransform(cylinder_target_trans);
 
-  mug_state_publisher_.publish(mug_state_);
-  broadcaster.sendTransform(mug_state_trans);
+  // publish mug frames
+  for(int i = 0 ; i < mugs_size; i++){
+    broadcaster.sendTransform(mug_frame_trans[i]);}
 
+  // publish table frame
   table_state_publisher_.publish(table_state_);
   broadcaster.sendTransform(table_trans);
 
@@ -162,11 +169,6 @@ void ManipulatorDynamicsRos::publish_ros() {
     tau_ext_msg_.data[i] = tau_ext_[i];
   }
   tau_ext_publisher_.publish(tau_ext_msg_);
-
-  // publish power exchanged
-  std_msgs::Float64 power;
-  power.data = tau_ext_.transpose() * joint_v_;
-  power_publisher_.publish(power);
 
   // publish end effector pose
   Eigen::Vector3d ee_position;
