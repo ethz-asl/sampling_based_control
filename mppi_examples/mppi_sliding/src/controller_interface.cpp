@@ -295,7 +295,10 @@ void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& 
   int obj_vel_idx = 2*BASE_ARM_GRIPPER_DIM+OBJECT_NUMBER*OBJECT_DIMENSION;
   
   for(int j = 0 ; j < OBJECT_NUMBER; j++)
-  {
+  { 
+    object_predict_marker_.color.g = 0.0 + j*0.5;
+    object_predict_marker_.color.b = 1.0 - j*0.5;
+
     //  update geometry info
     object_predict_marker_.scale.x = 2*x_opt_[0][obj_vel_idx + j*OBJECT_DIMENSION +4];
     object_predict_marker_.scale.y = 2*x_opt_[0][obj_vel_idx + j*OBJECT_DIMENSION +4];
@@ -312,10 +315,7 @@ void PandaControllerInterface::publish_ros_obj(const mppi::observation_array_t& 
       object_predict_marker_.pose.orientation.z = obj_state[j*OBJECT_DIMENSION + 5];
       object_predict_marker_.pose.orientation.w = obj_state[j*OBJECT_DIMENSION + 6];
       object_predict_marker_.id = i + j *step_num;
-      object_predict_marker_.color.a = 1.0 - 3*(i/step_num);
-      object_predict_marker_.color.r = 0.0; 
-      object_predict_marker_.color.g = 0.2;
-      object_predict_marker_.color.b = 0.8;
+      object_predict_marker_.color.a = 1.0 - (i/step_num);
       object_predict_markers.markers.push_back(object_predict_marker_);
     }
   }
