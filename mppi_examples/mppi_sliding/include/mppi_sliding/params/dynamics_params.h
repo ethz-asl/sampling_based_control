@@ -15,11 +15,11 @@ struct DynamicsParams {
   Eigen::VectorXd initial_state;
 
   //geometry
-  double cylinder_height;
-  double cylinder_radius;
+  std::vector<double> cylinder_height;
+  std::vector<double> cylinder_radius;
   double cylinder_z;
   std::vector<double> target_pos;
-  double cylinder_mass;
+  std::vector<double> cylinder_mass;
   std::vector<double> table_position;
   double friction;
 

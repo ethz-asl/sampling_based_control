@@ -101,7 +101,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += error_.tail<3>().norm() * params_.Qr ;
 
     // EE stay near the cylinder and on desired height
-    pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
+    //pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
     cost += (pose_error*pose_error + pose_diff_1(2) ) *params_.Qt2;
     
     // object diff 
@@ -142,7 +142,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     cost += error_.tail<3>().norm() * params_.Qr;
 
     // EE stay near the cylinder and on desired height
-    pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
+    //pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
     cost += (pose_error*pose_error + pose_diff_1(2)) *params_.Qt2;
 
     // object linear velocity cost

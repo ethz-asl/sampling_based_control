@@ -83,9 +83,9 @@ void ManipulatorDynamicsRos::publish_ros() {
 
   // update robot state visualization
   joint_state_.header.stamp = ros::Time::now();
-  for (size_t j = 0; j < robot_dof_; j++) {
+  for (size_t j = 0; j < BASE_ARM_GRIPPER_DIM; j++) {
     joint_state_.position[j] = x_(j);
-    joint_state_.velocity[j] = x_(j + robot_dof_);
+    joint_state_.velocity[j] = x_(j + BASE_ARM_GRIPPER_DIM);
   }
 
   state_publisher_.publish(joint_state_);
@@ -104,23 +104,17 @@ void ManipulatorDynamicsRos::publish_ros() {
   cylinder_target_trans.transform.rotation.w = q_cylinder_t.w();
 
   // update mug frames and its visulization
-  mug_frame_trans[0].header.stamp = ros::Time::now();
-  mug_frame_trans[0].transform.translation.x = x_(2 * robot_dof_);
-  mug_frame_trans[0].transform.translation.y = x_(2 * robot_dof_+1);
-  mug_frame_trans[0].transform.translation.z = x_(2 * robot_dof_+2);
-  mug_frame_trans[0].transform.rotation.x = x_(2* robot_dof_+3);
-  mug_frame_trans[0].transform.rotation.y = x_(2* robot_dof_+4);
-  mug_frame_trans[0].transform.rotation.z = x_(2* robot_dof_+5);
-  mug_frame_trans[0].transform.rotation.w = x_(2* robot_dof_+6);
-
-  mug_frame_trans[1].header.stamp = ros::Time::now();
-  mug_frame_trans[1].transform.translation.x = 0.5;
-  mug_frame_trans[1].transform.translation.y = -0.5;
-  mug_frame_trans[1].transform.translation.z = 0.1;
-  mug_frame_trans[1].transform.rotation.x = 0;
-  mug_frame_trans[1].transform.rotation.y = 0;
-  mug_frame_trans[1].transform.rotation.z = 0;
-  mug_frame_trans[1].transform.rotation.w = 1;
+  for(int i = 0 ; i < OBJECT_NUMBER; i ++){
+    mug_frame_trans[i].header.stamp = ros::Time::now();
+    int interval = i * OBJECT_DIMENSION;
+    mug_frame_trans[i].transform.translation.x = x_(2 * BASE_ARM_GRIPPER_DIM + interval);
+    mug_frame_trans[i].transform.translation.y = x_(2 * BASE_ARM_GRIPPER_DIM + interval +1);
+    mug_frame_trans[i].transform.translation.z = x_(2 * BASE_ARM_GRIPPER_DIM + interval +2);
+    mug_frame_trans[i].transform.rotation.x = x_(2* BASE_ARM_GRIPPER_DIM + interval +3);
+    mug_frame_trans[i].transform.rotation.y = x_(2* BASE_ARM_GRIPPER_DIM + interval +4);
+    mug_frame_trans[i].transform.rotation.z = x_(2* BASE_ARM_GRIPPER_DIM + interval +5);
+    mug_frame_trans[i].transform.rotation.w = x_(2* BASE_ARM_GRIPPER_DIM + interval +6);
+  }
   
   // update table state and its visulization
   table_state_.header.stamp = ros::Time::now();

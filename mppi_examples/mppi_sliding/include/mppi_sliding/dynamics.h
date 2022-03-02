@@ -85,8 +85,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   
   raisim::ArticulatedSystem* get_panda() { return panda_; }
   
-  raisim::ArticulatedSystem* get_object() { return object_; }
-  
   std::vector<force_t> get_contact_forces();
   
   void get_end_effector_pose(Eigen::Vector3d& position,
@@ -115,7 +113,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
 
  protected:
   size_t robot_dof_;
-  size_t obj_dof_;
+  size_t obj_dof_, obj_num_;
   size_t input_dimension_;
   size_t state_dimension_;
 
@@ -135,14 +133,11 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   raisim::World sim_;
 
   raisim::ArticulatedSystem* panda_;
-  raisim::ArticulatedSystem* object_;
-  raisim::ArticulatedSystem* mug_;
+  std::vector<raisim::ArticulatedSystem*> mug_;
   raisim::Box* table_;
-  raisim::Cylinder* cylinder_;
-  raisim::Cylinder* cylinder_2;
+  std::vector<raisim::Cylinder*> cylinder_;
 
   Eigen::VectorXd object_p_, object_v_;
-  Eigen::VectorXd box_p_, box_v_;
   Eigen::VectorXd cmd_, cmdv_;
   Eigen::VectorXd joint_p_gain_, joint_d_gain_;
   Eigen::VectorXd joint_p_desired_, joint_v_desired_;
