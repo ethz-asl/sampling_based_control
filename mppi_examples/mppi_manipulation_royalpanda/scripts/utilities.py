@@ -71,7 +71,10 @@ def get_object_from_name(name):
     return 'none'
 
 
-def get_data(root_dir, required_fields, log_prefix=""):
+def get_data(root_dir,
+             required_fields,
+             log_prefix="",
+             infer_time_from='cartesian_limits_violation'):
     LOG_FILES = get_files(root_dir, log_prefix)
     LOG_FILES_PRINT = '\n'.join(LOG_FILES)
     print(f"""
@@ -100,15 +103,15 @@ def get_data(root_dir, required_fields, log_prefix=""):
                 else:
                     data[key].append(value)
 
-    data_collection_step = 0.015
-    if 'sim_time' not in data.keys():
-        data['sim_time'] = []
-        print(f"No sim_time found: inferring from cartesian_limits_violation")
+    # data_collection_step = 0.015
+    # if 'sim_time' not in data.keys():
+    #     data['sim_time'] = []
+    #     print(f"No sim_time found: inferring from {infer_time_from}")
 
-        for experiment_idx in range(len(LOG_FILES)):
-            length = len(data['cartesian_limits_violation'][experiment_idx])
-            data['sim_time'].append(
-                np.arange(0.0, length) * data_collection_step)
+    #     for experiment_idx in range(len(LOG_FILES)):
+    #         length = len(data[infer_time_from][experiment_idx])
+    #         data['sim_time'].append(
+    #             np.arange(0.0, length) * data_collection_step)
     return data
 
 
