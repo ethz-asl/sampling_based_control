@@ -9,7 +9,7 @@
 
     <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
       resources_directory:='package://mppi_panda'
-      collision_links:=false
+      collision_links:=true
       collision_hand:=true
       add_finger:=true
       custom_fingers:=false
@@ -18,7 +18,7 @@
     <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
     <param name="robot_description_fixed_base" command="$(find xacro)/xacro $(arg description_file)
       resources_prefix:='file://'
-      collision_links:=false
+      collision_links:=true
       collision_hand:=true
       add_finger:=true
       custom_fingers:=false
@@ -26,7 +26,7 @@
 
     <param name="robot_description_raisim" command="$(find xacro)/xacro $(arg description_file)
       ridgeback_resources_prefix:='$(find mppi_sliding)/data/meshes/ridgeback/meshes'
-      collision_links:=false
+      collision_links:=true
       collision_hand:=true
       collision_finger:=true
       collision_format:='obj'

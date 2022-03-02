@@ -146,7 +146,16 @@ void PandaRaisimDynamics::initialize_pd() {
 void PandaRaisimDynamics::set_collision() {
   std::vector<int> pandaBodyIdxs;
   for (const auto& bodyName : panda_->getBodyNames())
+  {
     pandaBodyIdxs.push_back(panda_->getBodyIdx(bodyName));
+    ROS_INFO_STREAM("panda body idx: " << panda_->getBodyIdx(bodyName));
+  }
+  if(!if_sim_)
+  {
+  ROS_INFO_STREAM("cylinder idx: " << cylinder_[0]->getIndexInWorld());
+  ROS_INFO_STREAM("cylinder idx: " << cylinder_[1]->getIndexInWorld());
+  }
+  ROS_INFO_STREAM("panda idx: " << panda_->getIndexInWorld());
   for (const auto body_idx1 : pandaBodyIdxs)
     for (const auto body_idx2 : pandaBodyIdxs)
       panda_->ignoreCollisionBetween(body_idx1, body_idx2);
@@ -225,11 +234,11 @@ void PandaRaisimDynamics::advance() {
   if(!if_sim_)
   { 
     // get contact state
-    for (const auto& contact : cylinder_[0]->getContacts()) {
+    for (const auto& contact : cylinder_[1]->getContacts()) {
       if (!contact.skip() && !contact.isSelfCollision() 
           && (sim_.getObject(contact.getPairObjectIndex())->getIndexInWorld() == panda_idx) ) 
       { 
-        // std::cout << " in contact with panda " << std::endl;
+        //ROS_INFO_STREAM( " in contact with panda ");
         in_contact = 1;
         break;
       }

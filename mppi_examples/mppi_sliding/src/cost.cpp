@@ -48,15 +48,31 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
 
-    //ROS_INFO_STREAM( "ref EE  pose: " << ref_t.transpose() );
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
     //ROS_INFO_STREAM( "error is: " << error_.transpose() );
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
 
-    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) 
+    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION * OBJECT_NUMBER) > 0)
+    {
+      cost +=
+        (error_.head<2>().transpose() * error_.head<2>()).norm() * params_.Qt;
+    }
+
+    else
+    { 
+      if((error_.head<2>().transpose() * error_.head<2>()).norm()<1)
+        cost +=
+        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
+      else
+        cost +=
+        (error_.head<2>().transpose() * error_.head<2>()).norm() * params_.Qt;
+      
+      cost +=
+        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+    }
+
+
+
+    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION * OBJECT_NUMBER) > 0) 
       cost += params_.Qc;
   }
 
