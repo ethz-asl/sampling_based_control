@@ -7,3 +7,4 @@ cmake-build-debug/
 *.silo
 .ipynb_checkpoints/
 *.png
+*.pdf
