@@ -6,6 +6,5 @@ sensor_msgs/JointState arm_state
 float64 object_position
 float64 object_velocity
 bool in_contact
-float64 tank_state
 
-int64 SIZE = 50
+int64 SIZE = 49

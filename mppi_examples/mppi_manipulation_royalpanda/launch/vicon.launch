@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!-- Requires to set the vicon ip in hosts 10.10.10.5 -->
+    <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+        <arg name="object_name" value="panda_base"/>
+    </include>
+    <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+        <arg name="object_name" value="shelf_door"/>
+    </include>
+</launch>
