@@ -32,7 +32,6 @@ void toEigenState(const Eigen::Vector3d& base_pose,
                   const double& object_position,
                   const double& object_velocity,
                   const bool& contact_state,
-                  const double tank_state,
                   Eigen::VectorXd& x);
 
 void fromEigenState(Eigen::Vector3d& base_pose,
@@ -44,7 +43,6 @@ void fromEigenState(Eigen::Vector3d& base_pose,
                     double& object_position,
                     double& object_velocity,
                     bool& contact_state,
-                    double& tank_state,
                     const Eigen::VectorXd& x);
 
 void toMsg(const double& time,
@@ -57,7 +55,6 @@ void toMsg(const double& time,
            const double& object_position,
            const double& object_velocity,
            const bool& contact_state,
-           const double& tank_state,
            manipulation_msgs::State&);
 
 std::string eigenToString(const Eigen::VectorXd& x);

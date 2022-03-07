@@ -1,0 +1,40 @@
+solver:
+  rollouts: 40
+  lambda: 0.0001 #0.001
+  h: 10.0
+  step_size: 0.015
+  horizon: 1.0
+
+  cost_ratio: 0.2
+  caching_factor: 0.3
+  filtering: true
+  substeps: 1
+
+  gradient_step_size: 1.0
+  momentum_step_size: 0.0
+
+  filter_type: 1
+  filter_order: 1
+  filter_window: 10
+
+  filters_type: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  filters_order: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+  filters_window: [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+
+  bound_input: true
+  u_min: [-0.2, -0.2, -0.5, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+  u_max: [0.2, 0.2, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+  spline_degree: 3
+  spline_dt: 0.1
+  spline_step_size: 0.1
+
+  adaptive_sampling: false
+  input_variance: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+
+  discount_factor: 1.0
+  verbose: false
+  threads: 8
+  debug_print: false
+
+  logging: false

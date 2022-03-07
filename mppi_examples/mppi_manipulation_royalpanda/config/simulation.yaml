@@ -1,0 +1,51 @@
+# Topics
+base_odom_topic: /panda_base/vrpn_client/estimated_odometry
+base_twist_topic: /ridgeback_velocity_controller/odom
+base_twist_cmd_topic: /ridgeback_velocity_controller/cmd_vel
+handle_odom_topic: /shelf_door/vrpn_client/estimated_odometry
+arm_state_topic: /franka_state_controller/joint_states
+object_state_topic: /simulation/object_state
+finger_state_topic: /franka_gripper/joint_states
+wrench_topic: /ft_compensated
+
+# Window for median filtering of the wrench
+wrench_median_filter:
+  name: wrench_median_filter
+  type: MultiChannelMedianFilterDouble
+  params: {number_of_observations: 5}
+
+# Params
+pause_time: 0.0
+enforce_determinism: true
+arm_joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
+finger_joint_names: [ panda_finger_joint1, panda_finger_joint2 ]
+base_joint_names: [ world_x, world_y, theta ]
+
+sim_dynamics:
+  dt: 0.001
+  object_handle_link: sim_handle_link
+  object_handle_joint: sim_handle_joint
+  articulation_joint: articulation_joint
+
+  initial_state: [ -0.5, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
+                   0.0,                                                                    # object joint position
+                   0.0,                                                                    # object joint velocity
+                   0,                                                                      # contact flag
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]            # external torques
+  gains:
+    base_gains:
+      kp: [ 0.0, 0.0, 0.0 ]
+      kd: [ 1000.0, 1000.0, 1000.0 ]
+      ki: [ 0.0, 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0, 0.0 ]
+    arm_gains:
+      kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      kd: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      ki: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+    gripper_gains:
+      kp: [ 100.0, 100.0 ]
+      kd: [ 50.0, 50.0 ]
+      ki: [ 0.0, 0.0 ]
+      i_max: [ 0.0, 0.0 ]
