@@ -49,6 +49,7 @@ class Mug: public Object
                         const Eigen::Vector3d& pos_3);
 
     void ransac_fitting(int obj_idx);
+    void get3Dbbox_frompointcloud(int obj_idx);
 
     Eigen::Matrix3d rot_of_two_frame(const Eigen::Matrix3d& ref_rot, const Eigen::Matrix3d& rel_rot);
     Eigen::Vector3d get_pt_from_kpArray(int obj_idx, int pt_idx);
@@ -70,11 +71,11 @@ class Mug: public Object
     
     // ros 
     ros::NodeHandle nh_;
-    ros::Publisher inliers_pub;
+    ros::Publisher inliers_pub, bboxPCL_pub;
     ros::Publisher cyliner_line_marker_pub;
     geometry_msgs::Point p_center;
     geometry_msgs::Vector3 direction_;
 
     // PCL
-    pcl::PointCloud<pcl::PointXYZ> pcl_cloud_vis;  // pointcloud for visulization
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud_vis, pcl_could_3Dbbox;  // pointcloud for visulization
 };

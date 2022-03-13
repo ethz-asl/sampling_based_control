@@ -54,6 +54,7 @@ protected:
 
     // obj config vars
     std::string ref_frame;
+    std::string world_frame;
     std::string obj_frame;
     std::string prim_frame;
     std::string object_name;
@@ -93,8 +94,8 @@ protected:
 
 
     bool kp_msg_received = false;
-    ros::Time ros_time;
-    std::string kp_ref_frame;
+    ros::Time ros_time, pcl_time;
+    std::string kp_ref_frame, pcl_ref_frame;
 
     // PCL
     //pcl::PCLPointCloud2::Ptr pcl_pc2_ptr;

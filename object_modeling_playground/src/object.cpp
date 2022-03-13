@@ -32,6 +32,8 @@ void Object::kp_msg_callback(const keypoint_msgs::ObjectsArray::ConstPtr& msg)
 void Object::pcl_roi_callback(const sensor_msgs::PointCloud2::ConstPtr& pcl_msg)
 {
     pcl_ptr = pcl_msg;
+    pcl_time = pcl_msg->header.stamp;
+    pcl_ref_frame = pcl_msg->header.frame_id;
 
     if(pcl_ptr->data.size() > 0)
     {
@@ -178,7 +180,12 @@ bool Object::init_param()
     ROS_ERROR("Failed to parse /object/ref_frame or invalid!");
     return false;
   }
-      
+
+    if (!nh_.getParam("object/world_frame", world_frame)) {
+    ROS_ERROR("Failed to parse /object/world_frame or invalid!");
+    return false;
+  }
+
     if (!nh_.getParam("object/primitive_frame", prim_frame)) {
     ROS_ERROR("Failed to parse /object/primitive_frame or invalid!");
     return false;

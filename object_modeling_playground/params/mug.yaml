@@ -1,10 +1,11 @@
 
 kp_msg_topic: /object_keypoints_ros/keypoints_array
-pcl_msg_topic: /kp_msg_vis_node/pcl_roi
+pcl_msg_topic: /camera/depth/color/points #/kp_msg_vis_node/pcl_roi
 
 object:
   object_name: "mug"
   ref_frame: "camera_color_optical_frame"
+  world_frame:  "camera_color_optical_frame" # "world"
   object_frame: "mug_frame"
   primitive_frame: "primitive_frame"
   scale: [0.1,0.1,0.1]

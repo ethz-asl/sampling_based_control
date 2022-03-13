@@ -121,7 +121,7 @@ void Mug::kptoPrimitive()
 
     geometry_msgs::PoseStamped pri_pos_in_world;
 
-    transform = tf_buffer_.lookupTransform("world", "camera_color_optical_frame",  ros::Time(0), ros::Duration(1.0) );
+    transform = tf_buffer_.lookupTransform(world_frame, ref_frame,  ros::Time(0), ros::Duration(1.0) );
 
     tf2::doTransform(pri_pos_in_pri, pri_pos_in_world, transform); 
     // ROS_INFO_STREAM("transformed: " << pri_pos_in_world);
@@ -220,6 +220,7 @@ void Mug::update()
     {    
         primitive_estimate(i); 
         auto start = std::chrono::high_resolution_clock::now(); 
+        get3Dbbox_frompointcloud(i);
         ransac_fitting(i);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
@@ -229,6 +230,41 @@ void Mug::update()
         pub_state();
     }
 
+}
+
+void Mug::get3Dbbox_frompointcloud(int obj_idx)
+{   
+    if(pcl_cloudXYZ.size() ==0)
+    {
+        return;
+    }
+
+    pcl_could_3Dbbox.clear();
+
+    auto centerPointIdx = this->avg_idx;
+    Eigen::Vector3d kp_avg = get_pt_from_kpArray(obj_idx, this->avg_idx);
+
+    // PCL search for pt in a ball area
+    typedef pcl::PointXYZ PointT;
+    pcl::PointCloud<PointT>::Ptr input_cloud(new pcl::PointCloud<PointT>);
+    *input_cloud  = pcl_cloudXYZ;
+    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+    kdtree.setInputCloud(input_cloud);
+    pcl::PointXYZ searchPoint(kp_avg[0],kp_avg[1],kp_avg[2]);
+    float radius = 0.1;
+    std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points 
+    std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
+    kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance,2000);  // take 2000 from roughly 8000
+
+    if ( kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
+    {   
+        pcl_could_3Dbbox.header.frame_id = pcl_ref_frame;
+        pcl_could_3Dbbox.header.stamp = pcl_time.toNSec()/1e3;;
+        for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
+        {
+            pcl_could_3Dbbox.push_back(input_cloud->points[pointIdxRadiusSearch[i]]);
+        }
+    }
 }
 
 void Mug::ransac_fitting(int obj_idx)
@@ -267,6 +303,10 @@ void Mug::ransac_fitting(int obj_idx)
     //     ROS_INFO_STREAM("fitting result error :" << cylinder_fit_srv.response.fit_error);
     // }
 
+    if(pcl_could_3Dbbox.size() == 0)
+    {
+        return;
+    }
     // RANSAC Infinite Cylinder
     typedef pcl::PointXYZ PointT;
     pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
@@ -277,7 +317,7 @@ void Mug::ransac_fitting(int obj_idx)
     pcl::NormalEstimation<PointT, pcl::Normal> ne;
     pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
     
-    *cloud_filtered = pcl_cloudXYZ;
+    *cloud_filtered = pcl_could_3Dbbox;      // take from raw pcl
 
     ne.setSearchMethod(tree);
     ne.setInputCloud(cloud_filtered);
@@ -301,6 +341,7 @@ void Mug::ransac_fitting(int obj_idx)
     pcl_cloudXYZ = *inliers_cylinder_Ptr;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
     // std::cerr << "Cylinder coefficients: " << (*coefficients_cylinder) << std::endl;
     // std::cout << "extracted size: " << pcl_cloudXYZ.points.size() << std::endl;
+
 
     if(coefficients_cylinder->values.size() > 6)
     {
@@ -327,7 +368,9 @@ void Mug::ransac_fitting(int obj_idx)
         proj.filter(*cloud_projected);
 
         pcl_cloud_vis = pcl_cloudXYZ + *cloud_projected;
-
+        pcl_cloud_vis.header.frame_id = pcl_ref_frame;
+        pcl_cloud_vis.header.stamp = pcl_time.toNSec()/1e3;;
+        
         // get center point and height
            // simply compute the middle point of furthest two points
         pcl::PointXYZ p_1, p_2;
@@ -358,6 +401,7 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
     ROS_INFO("[Object: mug(ros::NodeHandle& nh)]");
     if(sim){}
 
+    // TODO: here is hardcode, move this to yaml params
     this->avg_idx = 0;
     this->handle_idx = 1;
     this->bottom_idx = 2;
@@ -371,6 +415,7 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
 
     // fitting-related pub
     inliers_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/inliers_points", 1);
+    bboxPCL_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/bbox_points", 1);
     cyliner_line_marker_pub = nh_.advertise<visualization_msgs::Marker>("/cylinder_centerline", 1);
 }
 
@@ -467,5 +512,7 @@ void Mug::pub_state()
         line_list.points.push_back(p2);
         cyliner_line_marker_pub.publish(line_list);
     }
+
+    bboxPCL_pub.publish(pcl_could_3Dbbox);
 
 }
