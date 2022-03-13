@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 //#include "object_modeling_playground/cylinder_fit.h"
 #include <manipulation_msgs/CylinderFit.h>
+#include <thread>
 
 // PCL
 #include <pcl/ModelCoefficients.h>

@@ -5,7 +5,6 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-
 Eigen::Vector3d Mug::get_pt_from_kpArray(int obj_idx, int pt_idx)
 {
     /* 
@@ -91,7 +90,7 @@ bool Mug::primitive_estimate(int obj_idx)
     state_.position[5] = center_orien[2]; //z
     state_.position[6] = center_orien[3]; //w
 
-    kptoPrimitive();   //TODO: comment this out for develop in local frame
+    //kptoPrimitive();   //TODO: comment this out for develop in local frame
 
     return true;
 }
@@ -220,7 +219,7 @@ void Mug::update()
     {    
         primitive_estimate(i); 
         auto start = std::chrono::high_resolution_clock::now(); 
-        get3Dbbox_frompointcloud(i);
+        //get3Dbbox_frompointcloud(i);
         ransac_fitting(i);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
@@ -234,37 +233,47 @@ void Mug::update()
 
 void Mug::get3Dbbox_frompointcloud(int obj_idx)
 {   
-    if(pcl_cloudXYZ.size() ==0)
-    {
-        return;
-    }
 
-    pcl_could_3Dbbox.clear();
-
-    auto centerPointIdx = this->avg_idx;
-    Eigen::Vector3d kp_avg = get_pt_from_kpArray(obj_idx, this->avg_idx);
-
-    // PCL search for pt in a ball area
-    typedef pcl::PointXYZ PointT;
-    pcl::PointCloud<PointT>::Ptr input_cloud(new pcl::PointCloud<PointT>);
-    *input_cloud  = pcl_cloudXYZ;
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    kdtree.setInputCloud(input_cloud);
-    pcl::PointXYZ searchPoint(kp_avg[0],kp_avg[1],kp_avg[2]);
     float radius = 0.1;
-    std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points 
-    std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
-    kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance,2000);  // take 2000 from roughly 8000
+    typedef pcl::PointXYZ PointT;
 
-    if ( kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
-    {   
-        pcl_could_3Dbbox.header.frame_id = pcl_ref_frame;
-        pcl_could_3Dbbox.header.stamp = pcl_time.toNSec()/1e3;;
-        for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
+    while (true)
+    {           
+        std::cout << " 0 " << std::endl;
+        if(pcl_cloudXYZ.points.size() == 0 || !kp_msg_received)
         {
-            pcl_could_3Dbbox.push_back(input_cloud->points[pointIdxRadiusSearch[i]]);
+            continue;
         }
-    }
+        
+        std::cout << " 1 " << std::endl;
+        pcl::PointCloud<PointT>::Ptr input_cloud(new pcl::PointCloud<PointT>);       
+        std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points 
+        std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
+        pcl::PointCloud<pcl::PointXYZ> pcl_could_3Dbbox_;
+
+        auto centerPointIdx = this->avg_idx;
+        Eigen::Vector3d kp_avg = get_pt_from_kpArray(obj_idx, this->avg_idx);  //TODO: add extra process to deal the missing kp situtations
+
+        // // PCL search for pt in a ball area
+        *input_cloud  = pcl_cloudXYZ;
+        pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+        kdtree.setInputCloud(input_cloud);
+        pcl::PointXYZ searchPoint(kp_avg[0],kp_avg[1],kp_avg[2]);
+        kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance,2000);  // take 2000 from roughly 8000
+   
+        if ( kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
+        {   
+            pcl_could_3Dbbox_.header.frame_id = pcl_ref_frame;
+            pcl_could_3Dbbox_.header.stamp = pcl_time.toNSec()/1e3;;
+            for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
+            {
+                pcl_could_3Dbbox_.points.push_back(input_cloud->points[pointIdxRadiusSearch[i]]);
+            }
+        }
+     
+        this->pcl_could_3Dbbox = pcl_could_3Dbbox_;
+    }   
+
 }
 
 void Mug::ransac_fitting(int obj_idx)
@@ -303,7 +312,7 @@ void Mug::ransac_fitting(int obj_idx)
     //     ROS_INFO_STREAM("fitting result error :" << cylinder_fit_srv.response.fit_error);
     // }
 
-    if(pcl_could_3Dbbox.size() == 0)
+    if(pcl_could_3Dbbox.points.size() == 0)
     {
         return;
     }
@@ -317,7 +326,8 @@ void Mug::ransac_fitting(int obj_idx)
     pcl::NormalEstimation<PointT, pcl::Normal> ne;
     pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
     
-    *cloud_filtered = pcl_could_3Dbbox;      // take from raw pcl
+    pcl::copyPointCloud(pcl_could_3Dbbox, *cloud_filtered);
+    // *cloud_filtered = pcl_could_3Dbbox;      // take from raw pcl
 
     ne.setSearchMethod(tree);
     ne.setInputCloud(cloud_filtered);
@@ -338,7 +348,7 @@ void Mug::ransac_fitting(int obj_idx)
     pcl::PointCloud<pcl::PointXYZ>::Ptr inliers_cylinder_Ptr(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::copyPointCloud(*cloud_filtered, *inliers_cylinder_idxPtr, *inliers_cylinder_Ptr);
 
-    pcl_cloudXYZ = *inliers_cylinder_Ptr;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
+    pcl_cloud_vis = *inliers_cylinder_Ptr;   //TODO: use a new pcl object to copy extracted_cloud, better to be a item in a vector
     // std::cerr << "Cylinder coefficients: " << (*coefficients_cylinder) << std::endl;
     // std::cout << "extracted size: " << pcl_cloudXYZ.points.size() << std::endl;
 
@@ -367,7 +377,7 @@ void Mug::ransac_fitting(int obj_idx)
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
         proj.filter(*cloud_projected);
 
-        pcl_cloud_vis = pcl_cloudXYZ + *cloud_projected;
+        pcl_cloud_vis += *cloud_projected;
         pcl_cloud_vis.header.frame_id = pcl_ref_frame;
         pcl_cloud_vis.header.stamp = pcl_time.toNSec()/1e3;;
         
@@ -417,6 +427,12 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
     inliers_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/inliers_points", 1);
     bboxPCL_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/bbox_points", 1);
     cyliner_line_marker_pub = nh_.advertise<visualization_msgs::Marker>("/cylinder_centerline", 1);
+
+    // multi-threading
+    {
+        std::thread thread_1(&Mug::get3Dbbox_frompointcloud, this, 0);
+        thread_1.detach();
+    }
 }
 
 
@@ -513,6 +529,8 @@ void Mug::pub_state()
         cyliner_line_marker_pub.publish(line_list);
     }
 
-    bboxPCL_pub.publish(pcl_could_3Dbbox);
-
+    if(pcl_could_3Dbbox.points.size()>0)
+    {
+        bboxPCL_pub.publish(pcl_could_3Dbbox);
+    }
 }

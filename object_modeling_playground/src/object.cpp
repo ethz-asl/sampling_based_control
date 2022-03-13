@@ -49,7 +49,7 @@ void Object::pcl_roi_callback(const sensor_msgs::PointCloud2::ConstPtr& pcl_msg)
       ROS_INFO_STREAM("filtered size: " << pcl_pc2_ptr->data.size());
 
       pcl::fromPCLPointCloud2(*pcl_pc2_ptr,pcl_cloudXYZ);
-      ROS_INFO_STREAM("filtered pclxyz size: " << pcl_cloudXYZ.size());
+      ROS_INFO_STREAM("filtered pclxyz size: " << pcl_cloudXYZ.points.size());
 
       // for(int i = 0 ; i < 10 ; i ++)
       // {
