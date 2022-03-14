@@ -3,11 +3,7 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
-        - /keypoint_heatmap1
-        - /primitive1
-        - /Marker1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 773
   - Class: rviz/Selection
@@ -206,17 +202,17 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.003000000026077032
       Style: Flat Squares
-      Topic: /inliers_points
+      Topic: /mug/inliers_points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /cylinder_centerline
+      Marker Topic: /mug/cylinder_centerline
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -242,7 +238,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.0020000000949949026
       Style: Flat Squares
-      Topic: /bbox_points
+      Topic: /mug/bbox_points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -275,7 +271,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.4587503969669342
+      Distance: 0.3995923399925232
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -291,9 +287,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.8697971701622009
+      Pitch: -1.1247965097427368
       Target Frame: <Fixed Frame>
-      Yaw: 4.5122528076171875
+      Yaw: 4.652254581451416
     Saved: ~
 Window Geometry:
   Displays:

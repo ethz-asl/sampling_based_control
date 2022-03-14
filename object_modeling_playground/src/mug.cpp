@@ -123,7 +123,9 @@ void Mug::kptoPrimitive()
     transform = tf_buffer_.lookupTransform(world_frame, ref_frame,  ros::Time(0), ros::Duration(1.0) );
 
     tf2::doTransform(pri_pos_in_pri, pri_pos_in_world, transform); 
-    // ROS_INFO_STREAM("transformed: " << pri_pos_in_world);
+    ROS_INFO_STREAM("transformed: " << pri_pos_in_world);
+    mug_primitive.pose.position = pri_pos_in_world.pose.position;
+    mug_primitive.pose.orientation = pri_pos_in_world.pose.orientation;
 
 
 }
@@ -227,6 +229,7 @@ void Mug::update()
         update_TF();
         primitive_visualize();
         pub_state();
+        kptoPrimitive();
     }
 
 }
@@ -424,9 +427,9 @@ Mug::Mug(const ros::NodeHandle& nh):nh_(nh),Object(nh)
     cylinder_fit_client = nh_.serviceClient<manipulation_msgs::CylinderFit>("/fit_cylinder_with_points");
 
     // fitting-related pub
-    inliers_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/inliers_points", 1);
-    bboxPCL_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/bbox_points", 1);
-    cyliner_line_marker_pub = nh_.advertise<visualization_msgs::Marker>("/cylinder_centerline", 1);
+    inliers_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/" + object_name + "/inliers_points", 1);
+    bboxPCL_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/"+ object_name + "/bbox_points", 1);
+    cyliner_line_marker_pub = nh_.advertise<visualization_msgs::Marker>("/"+object_name+"/cylinder_centerline", 1);
 
     // multi-threading
     {
