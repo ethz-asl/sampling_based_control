@@ -47,8 +47,13 @@ void PandaRaisimDynamics::initialize_world(
   gravity_.e() << 0.0, 0.0, -9.81;
   sim_.setGravity(gravity_);
 
-  // set friction properties
-  sim_.setMaterialPairProp("steel", "steel", 0.01, 0.15, 0.001);
+  // set friction properties (friction, restitution, restitution threshold)
+  // steel on steel should be friction 0.1 and restitution 0.56
+  double friction = 0.01;
+  double restitution = 0.15;
+  double restitution_threshold = 0.001;
+  sim_.setMaterialPairProp("steel", "steel", friction, restitution, restitution_threshold);
+  sim_.setDefaultMaterial(friction, restitution, restitution_threshold);
 
   robot_description_ = robot_description;
   panda_ = sim_.addArticulatedSystem(robot_description_, params_.raisim_robot_res_path);
@@ -173,6 +178,7 @@ mppi::observation_t PandaRaisimDynamics::step(const mppi::input_t& u,
 }
 
 void PandaRaisimDynamics::reset(const mppi::observation_t& x, const double t) {
+  // todo: this is the state reset function I am looking for...
   // internal eigen state
   t_ = t;
   x_ = x;
