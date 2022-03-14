@@ -27,15 +27,6 @@ using namespace manipulation;
 bool PandaControllerInterface::init_ros() {
   optimal_trajectory_publisher_ =
       nh_.advertise<nav_msgs::Path>("/optimal_trajectory", 10);
-  optimal_base_trajectory_publisher_ =
-      nh_.advertise<nav_msgs::Path>("/optimal_base_trajectory", 10);
-  obstacle_marker_publisher_ =
-      nh_.advertise<visualization_msgs::Marker>("/obstacle_marker", 10);
-  base_twist_from_path_publisher_ =
-      nh_.advertise<geometry_msgs::TwistStamped>("/twist_from_path", 10);
-  pose_handle_publisher_ =
-      nh_.advertise<geometry_msgs::PoseStamped>("/handle_from_model", 10);
-
   mode_subscriber_ = nh_.subscribe(
       "/mode", 10, &PandaControllerInterface::mode_callback, this);
   ee_pose_desired_subscriber_ =
@@ -47,10 +38,6 @@ bool PandaControllerInterface::init_ros() {
       default_pose.size() != 7) {
     ROS_ERROR("Failed to parse the default pose or wrong params.");
     return false;
-  }
-  default_pose_.setZero(7);
-  for (int i = 0; i < 7; i++) {
-    default_pose_[i] = default_pose[i];
   }
 
   if (!nh_.param<double>("object_tolerance", object_tolerance_, 0.0) ||
@@ -70,9 +57,7 @@ bool PandaControllerInterface::init_ros() {
   last_ee_ref_id_ = 0;
   ee_desired_pose_.header.seq = last_ee_ref_id_;
 
-
   optimal_path_.header.frame_id = "world";
-  optimal_base_path_.header.frame_id = "world";
   reference_set_ = false;
 
   // closed-loop object-related units
@@ -91,19 +76,13 @@ bool PandaControllerInterface::init_ros() {
   object_predict_marker_.color.g = 0.0;
   object_predict_marker_.color.a = 0.8;
 
-
   ROS_INFO("[PandaControllerInterface::init_ros] ok!");
   return true;
 }
 
 void PandaControllerInterface::init_model(
-    const std::string& robot_description,
-    const std::string& object_description,
-    const std::string& cylinder_description) {
+    const std::string& robot_description) {
   robot_model_.init_from_xml(robot_description);
-  object_model_.init_from_xml(object_description);
-  cylinder_model_.init_from_xml(cylinder_description);
-
   ROS_INFO("[PandaControllerInterface::init_model] ok!");
 }
 
@@ -112,28 +91,19 @@ bool PandaControllerInterface::set_controller(mppi::solver_ptr& controller) {
   // internal model
   // -------------------------------
   ROS_INFO("--------------setting controller---------------- ");
-  std::string robot_description, object_description, cylinder_description;
+  std::string robot_description;
   if (!nh_.param<std::string>("/robot_description", robot_description, "")) {
     throw std::runtime_error(
         "Could not parse robot description. Is the parameter set?");
   }
-  if (!nh_.param<std::string>("/object_description", object_description, "")) {
-    throw std::runtime_error(
-        "Could not parse object description. Is the parameter set?");
-  }
 
-  if (!nh_.param<std::string>("/cylinder_description", cylinder_description, "")) {
-    throw std::runtime_error(
-        "Could not parse object description. Is the parameter set?");
-  }
-
-  init_model(robot_description, object_description, cylinder_description);
+  init_model(robot_description);
 
   // -------------------------------
   // dynamics
   // -------------------------------
   ROS_INFO("setting controller dynamics ");
-  if (!dynamics_params_.init_from_ros(nh_)) {
+  if (!dynamics_params_.init_from_ros(nh_,true)) {
     ROS_ERROR("Failed to init dynamics parameters.");
     return false;
   };
@@ -303,12 +273,6 @@ mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
   return robot_model_.get_pose("panda_grasp");
 }
 
-mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(
-    const Eigen::VectorXd& x) {
-  object_model_.update_state(
-      x.tail<2 * OBJECT_DIMENSION + CONTACT_STATE>().head<1>());
-  return object_model_.get_pose(dynamics_params_.object_handle_link);
-}
 
 geometry_msgs::PoseStamped PandaControllerInterface::get_pose_base(
     const mppi::observation_t& x) {
@@ -335,15 +299,6 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
   return pose_ros;
 }
 
-geometry_msgs::PoseStamped PandaControllerInterface::get_pose_handle_ros(
-    const Eigen::VectorXd& x) {
-  geometry_msgs::PoseStamped pose_ros;
-  pose_ros.header.frame_id = "world";
-  pose_ros.header.stamp = ros::Time::now();
-  mppi_pinocchio::Pose pose = get_pose_handle(x);
-  mppi_pinocchio::to_msg(pose, pose_ros.pose);
-  return pose_ros;
-}
 
  void PandaControllerInterface::publish_ros_obj(const Eigen::VectorXd& state)
  {
@@ -408,15 +363,12 @@ void PandaControllerInterface::publish_ros() {
 
   for (const auto& x : x_opt_) {
     optimal_path_.poses.push_back(get_pose_end_effector_ros(x));
-    //optimal_base_path_.poses.push_back(get_pose_base(x));
   }
 
   obj_state.setZero(2*OBJECT_DIMENSION);
   obj_state = dynamics->get_primitive_state();
-  publish_ros_obj(obj_state);
+  // publish_ros_obj(obj_state);
   publish_ros_obj(x_opt_);
   optimal_trajectory_publisher_.publish(optimal_path_);
 
-  // for debug
-  // pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));
 }

@@ -8,7 +8,8 @@ geometry:
   friction: 0.15  
 
 setup_config:
-  fixed_base: false
+  fixed_base: true
+  update_geometry: true
 
 dynamics:
   dt: 0.015

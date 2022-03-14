@@ -10,8 +10,6 @@ namespace manipulation {
 struct DynamicsParams {
   double dt;
   std::string robot_description;
-  std::string object_description;
-  std::string cylinder_description;
   std::string mug_description;
   PIDGains gains;
   Eigen::VectorXd initial_state;
@@ -30,9 +28,7 @@ struct DynamicsParams {
   double friction;
 
   // controller config
-  bool fixed_base;
-
-  bool update_dynamics;
+  bool fixed_base,update_geometry;
 
   bool init_from_ros(ros::NodeHandle& nh, bool is_sim = false);
 };

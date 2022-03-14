@@ -34,14 +34,13 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   ~PandaRaisimDynamics() = default;
  private:
   void initialize_world(const std::string& robot_description,
-                        const std::string& object_description,
-                        const std::string& cylinder_description,
-                        const std::string& mug_description);
+                        const std::string& object_description);
+                        
   void initialize_pd();
   void set_collision();
   void display_state();
-  void update_model();
-  
+  void update_geometry();
+
  protected:
   const bool if_sim_;
   bool if_update_;
@@ -68,8 +67,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   }
 
   void reset(const mppi::observation_t& x, const double t) override;
-  
-  void reload(const mppi::observation_t& x, const double t);
   
   void advance();
   
@@ -116,7 +113,7 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   void release_object();
 
  protected:
-  size_t robot_dof_;
+  size_t robot_dof_, obj_dof_;
   size_t input_dimension_;
   size_t state_dimension_;
 
@@ -131,8 +128,6 @@ class PandaRaisimDynamics : public mppi::Dynamics {
   DynamicsParams params_;
   
   std::string robot_description_;
-  std::string object_description_;
-  std::string cylinder_description_;
   std::string mug_description_;
 
   raisim::World sim_;

@@ -39,7 +39,8 @@ class PandaCost : public mppi::Cost {
   mppi_pinocchio::RobotModel object_model_;
   mppi_pinocchio::RobotModel cylinder_model_;
   
-  Eigen::Vector3d cylinder_position_;
+  mppi_pinocchio::Pose EE_pose;
+  Eigen::Vector3d cylinder_position_, cylinder_linearVelocity_;
   Eigen::VectorXd mug_state_;
 
   int frame_id_;
