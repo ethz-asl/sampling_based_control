@@ -16,6 +16,7 @@
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Int64.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <visualization_msgs/Marker.h>
 
 namespace manipulation {
@@ -51,6 +52,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   void ee_pose_desired_callback(const geometry_msgs::PoseStampedConstPtr& msg);
   void mode_callback(const std_msgs::Int64ConstPtr& msg);
+  void reference_callback(const std_msgs::Float64MultiArray& msg);
 
  public:
   mppi::config_t config_;
@@ -83,6 +85,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   ros::Subscriber mode_subscriber_;
   ros::Subscriber ee_pose_desired_subscriber_;
+  ros::Subscriber ref_subscriber;
 
   nav_msgs::Path optimal_path_;
   nav_msgs::Path optimal_base_path_;

@@ -180,7 +180,7 @@ bool ManipulationController::init_interfaces(
       joint_handles_.push_back(
           effort_joint_interface->getHandle(joint_names_[i]));
     } catch (const hardware_interface::HardwareInterfaceException& ex) {
-      ROS_ERROR("Failed to get joint handles: ", ex.what());
+      ROS_ERROR_STREAM("Failed to get joint handles: " << ex.what());
       return false;
     }
   }
@@ -223,7 +223,7 @@ bool ManipulationController::init_interfaces(
     model_handle_ = std::make_unique<franka_hw::FrankaModelHandle>(
         model_interface->getHandle(arm_id_ + "_model"));
   } catch (hardware_interface::HardwareInterfaceException& ex) {
-    ROS_ERROR("Failed to get model handle from interface: ", ex.what());
+    ROS_ERROR_STREAM("Failed to get model handle from interface: " << ex.what());
     return false;
   }
 
@@ -238,7 +238,7 @@ bool ManipulationController::init_interfaces(
     state_handle_ = std::make_unique<franka_hw::FrankaStateHandle>(
         state_interface->getHandle(arm_id_ + "_robot"));
   } catch (hardware_interface::HardwareInterfaceException& ex) {
-    ROS_ERROR("Failed to get state handle from interface: ", ex.what());
+    ROS_ERROR_STREAM("Failed to get state handle from interface: " << ex.what());
     return false;
   }
 

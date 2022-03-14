@@ -93,7 +93,7 @@ void toEigenState(const Eigen::Vector3d &base_pose,
                   const double &object_velocity,
                   const bool &contact_state,
                   Eigen::VectorXd &state) {
-  state.resize(manipulation_msgs::State::SIZE);
+//  state.resize(manipulation_msgs::State::SIZE);
 
   state(0) = base_pose.x();
   state(1) = base_pose.y();

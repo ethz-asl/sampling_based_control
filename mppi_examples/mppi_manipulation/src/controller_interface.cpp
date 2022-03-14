@@ -41,7 +41,7 @@ bool PandaControllerInterface::init_ros() {
   ee_pose_desired_subscriber_ =
       nh_.subscribe("/end_effector_pose_desired", 10,
                     &PandaControllerInterface::ee_pose_desired_callback, this);
-
+  ref_subscriber = nh_.subscribe("/controller/set_mppi_reference", 10, &PandaControllerInterface::reference_callback, this);
   std::vector<double> default_pose;
   if (!nh_.param<std::vector<double>>("default_pose", default_pose, {}) ||
       default_pose.size() != 7) {
@@ -248,6 +248,21 @@ void PandaControllerInterface::ee_pose_desired_callback(
   ref_.rr[0].head<7>()(4) = msg->pose.orientation.y;
   ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
   ref_.rr[0].head<7>()(6) = msg->pose.orientation.w;
+  get_controller()->set_reference_trajectory(ref_);
+  local_cost_->set_reference_trajectory(ref_);
+  reference_set_ = true;
+}
+
+void PandaControllerInterface::reference_callback(const std_msgs::Float64MultiArray &msg) {
+  std::unique_lock<std::mutex> lock(reference_mutex_);
+  mppi::reference_trajectory_t reference_trajectory;
+  int size = msg.layout.dim[0].size;
+  Eigen::VectorXd reference_t(size);
+  for (int i = 0; i < size; i++) reference_t(i) = msg.data[i];
+  reference_trajectory.rr = std::vector<Eigen::VectorXd>{reference_t};
+  reference_trajectory.tt = std::vector<double>{0.};
+
+  ref_ = mppi::reference_trajectory_t(reference_trajectory);
   get_controller()->set_reference_trajectory(ref_);
   local_cost_->set_reference_trajectory(ref_);
   reference_set_ = true;

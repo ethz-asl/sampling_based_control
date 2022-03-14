@@ -67,6 +67,7 @@ public:
 
   manipulation_msgs::State state_ros_;
   ros::Publisher state_publisher_;
+  ros::Publisher state_publisher_serial;
 
   // time: will be the one received on the arm state
   double time_;

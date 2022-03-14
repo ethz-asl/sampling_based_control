@@ -73,6 +73,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 
   // ros publishing
   state_publisher_ =        nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
+  state_publisher_serial =  nh_.advertise<std_msgs::Float64MultiArray>("/observer/state_serialized", 1);
   base_pose_publisher_ =    nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
   base_twist_publisher_ =   nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
   object_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
@@ -440,12 +441,45 @@ void StateObserver::wrench_callback(
 
 void StateObserver::publish_state(){
   std::unique_lock<std::mutex> lock(state_mutex_);
-  manipulation::conversions::toMsg(
-      ros::Time::now().toSec(), base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
-      ext_tau_.tail<9>(), object_state_.position[0], object_state_.velocity[0],
-      contact_state_, state_ros_);
+
+  manipulation::conversions::toMsg(ros::Time::now().toSec(),
+                                   base_pose_,
+                                   base_twist_,
+                                   ext_tau_.head<3>(),
+                                   q_,
+                                   dq_,
+                                   ext_tau_.tail<9>(),
+                                   object_state_.position[0],
+                                   object_state_.velocity[0],
+                                   contact_state_,
+                                   state_ros_);
+
+  Eigen::VectorXd state_vector_eigen_(39);
+  manipulation::conversions::toEigenState(base_pose_,
+                                          base_twist_,
+                                          ext_tau_.head<3>(),
+                                          q_,
+                                          dq_,
+                                          ext_tau_.tail<9>(),
+                                          object_state_.position[0],
+                                          object_state_.velocity[0],
+                                          contact_state_,
+                                          state_vector_eigen_);
+  std::vector<float> vec1(state_vector_eigen_.data(), state_vector_eigen_.data() + state_vector_eigen_.size());
+  std_msgs::Float64MultiArray msg;
+
+  // set up dimensions
+  msg.layout.dim.push_back(std_msgs::MultiArrayDimension());
+  msg.layout.dim[0].size = vec1.size();
+  msg.layout.dim[0].stride = 1;
+  msg.layout.dim[0].label = "x"; // or whatever name you typically use to index vec1
+
+  // copy in the data
+  msg.data.clear();
+  msg.data.insert(msg.data.end(), vec1.begin(), vec1.end());
 
   state_publisher_.publish(state_ros_);
+  state_publisher_serial.publish(msg);
 
 }
 }  // namespace manipulation_royalpanda
