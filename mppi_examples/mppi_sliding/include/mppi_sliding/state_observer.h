@@ -45,8 +45,10 @@ class StateObserver {
   bool initialize();
   void publish_state();
 
+
  private:
   bool init_ros();
+  void init_target();
   // void base_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   // void base_twist_callback(const nav_msgs::OdometryConstPtr& msg);
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
@@ -103,7 +105,7 @@ class StateObserver {
   ros::Publisher table_state_publisher_;
   sensor_msgs::JointState table_state_;
 
-  geometry_msgs::TransformStamped table_trans;
+  geometry_msgs::TransformStamped table_trans, target_trans;
   geometry_msgs::TransformStamped object_state_trans;
   tf2_ros::TransformBroadcaster broadcaster;
 

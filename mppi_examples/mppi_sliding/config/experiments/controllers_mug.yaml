@@ -36,12 +36,12 @@ mppi_sliding:
 
   setup_config:
     fixed_base: true
-    update_geometry: false
+    update_geometry: true
 
 
   cost:
     regularization: 0.0
-    linear_weight: 100.0
+    linear_weight: 300.0
     angular_weight: 10.0
 
     linear_weight_opening: 100.0
@@ -61,7 +61,7 @@ mppi_sliding:
 
     contact_weight: 10.0
 
-    object_weight: 100
+    object_weight: 150
     object_tolerance: 0.01
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -98,12 +98,12 @@ mppi_sliding:
       i_max: []
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 15.0, 15.0, 15.0, 15.0, 10.0, 10.0, 1.0 ]
-      ki: [ 30.0, 30.0, 30.0, 30.0, 25.0, 20.0, 5.0 ]
-      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-      # kd: [ 60.0, 60.0, 60.0, 60.0, 30.0, 20.0, 1.0 ]
-      # ki: [ 80.0, 80.0, 80.0, 80.0, 40.0, 40.0, 2.0 ]
+      # kd: [ 15.0, 15.0, 15.0, 15.0, 10.0, 10.0, 1.0 ]
+      # ki: [ 30.0, 30.0, 30.0, 30.0, 25.0, 20.0, 5.0 ]
       # i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+      kd: [ 30.0, 30.0, 30.0, 30.0, 10.0, 10.0, 1.0 ]
+      ki: [ 40.0, 30.0, 40.0, 30.0, 30.0, 15.0, 2.0 ]
+      i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
       kd: [ 50.0, 50.0 ]
@@ -119,7 +119,7 @@ mppi_sliding:
     cylinder_radius: 0.02
     cylinder_mass: 1    # ideally equal to the object
     cylinder_z: 0.98 # table_z + 1/2(table_height+cylinder_height)
-    table_position: [1.2,0,-0.00] 
+    table_position: [1.2,0,0.04] 
     target_pos: [0.58, 0.65, 0.28]
     friction: 0.15  
 

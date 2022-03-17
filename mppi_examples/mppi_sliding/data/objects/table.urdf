@@ -6,7 +6,7 @@
         <visual>
             <origin xyz="0 0 0"/>
             <geometry>
-                <box size="3 3 0.2"/>
+                <box size="2 2 0.1"/>
             </geometry>
             <material name="steel">
                 <color rgba="0.5 0 0 1"/>
@@ -15,7 +15,7 @@
         <collision>
             <origin xyz="0 0 0"/>
             <geometry>
-                <box size="3 3 0.2"/>
+                <box size="2 2 0.1"/>
             </geometry>
             <material name="">
                 <contact name="steel"/>

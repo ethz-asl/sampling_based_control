@@ -64,15 +64,15 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
     Eigen::Vector2d position_dist;
     position_dist = EE_pose.translation.head<2>() - cylinder_position_.head<2>(); 
-    cost += abs((position_dist.norm() - cylinder_radius)) * params_.Qt;
-    // cost += abs( EE_pose.translation(2) - cylinder_position_(2) ) *params_.Qt;
+    cost += abs((position_dist.norm() - cylinder_radius * 1.5 ) ) * params_.Qt;
+    cost += abs( EE_pose.translation(2) - (cylinder_position_(2)- 0*cylinder_height) ) *params_.Qt;
 
     // adjust ee pose ONLY the orientation, when manipulating cylinder
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
-    // cost +=
-    //     (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+    cost +=
+        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
     cost += error_(2)*error_(2)* params_.Qt2;
 
     // contact cost
@@ -89,18 +89,19 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     Eigen::Vector3d pose_diff_1;
     double pose_diff, pose_error;
 
-    pose_diff_1(0) = EE_pose.translation(0) - cylinder_position_(0);
-    pose_diff_1(1) = EE_pose.translation(1) - cylinder_position_(1);
-    pose_diff = pose_diff_1(0)*pose_diff_1(0) + pose_diff_1(1)*pose_diff_1(1);
-    pose_diff_1(2) = abs(EE_pose.translation(2) - ref_t(2));
+    Eigen::Vector2d position_dist;
+    position_dist = EE_pose.translation.head<2>() - cylinder_position_.head<2>(); 
+    // cost += abs((position_dist.norm() - cylinder_radius * 1.2 ) ) * params_.Qt;
+    cost += abs((EE_pose.translation(2)- 0.12)) *params_.Qt;
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
 
     // EE with desired orientation
-    cost += error_.tail<3>().norm() * params_.Qr ;
+    // cost += error_.tail<3>().norm() * params_.Qr ;
 
     // EE stay near the cylinder and on desired height
-    pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
-    cost += (pose_error*pose_error + pose_diff_1(2) ) *params_.Qt2;
+    // pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
+    // cost += (pose_error*pose_error) *params_.Qt2;
+
     // pose_error = (pose_diff > params_.cylinder_radius * params_.cylinder_radius)
     //                  ? sqrt(pose_diff) * 1.5
     //                  : 0;
@@ -119,6 +120,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE+1);
     double object_error = object_position_diff.norm();
     cost += log2(abs(object_error+1)) * params_.Q_obj;
+
   }
 
 
@@ -165,7 +167,5 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
               params_.Q_joint_limit_slope *
                   std::pow(x(i) - params_.upper_joint_limits[i], 2);
   }
-
-  // ROS_INFO_STREAM("cost is: " << cost);
   return cost;
 }

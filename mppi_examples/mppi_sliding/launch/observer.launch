@@ -15,7 +15,7 @@
         <param name="arm_state_topic" value="/panda/joint_states"/>
         <param name="table_x" type="double" value="1.2"/>
         <param name="table_y" type="double" value="0"/>
-        <param name="table_z"  type="double" value="-0.00"/>  <!-- table_z should be half table height lower, due to frame stuff -->>
+        <param name="table_z"  type="double" value="0.04"/>  <!-- table_z should be half table height lower, due to frame stuff -->>
         <param name="observer_update_frequency" value="200"/>
     </node>
 

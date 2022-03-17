@@ -94,6 +94,18 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 
 }
 
+void StateObserver::init_target(){
+  target_trans.header.frame_id = "world";
+  target_trans.child_frame_id = "target_frame";
+  target_trans.transform.translation.x = 0.68;  // TODO (boyang): table state is hardcoded, good for now
+  target_trans.transform.translation.y = -0.08;
+  target_trans.transform.translation.z = 0.15;
+  target_trans.transform.rotation.x = 0;
+  target_trans.transform.rotation.y = 0;
+  target_trans.transform.rotation.z = 0;
+  target_trans.transform.rotation.w = 1;
+}
+
 bool StateObserver::init_ros() {
   // table
   table_state_publisher_ =
@@ -104,6 +116,9 @@ bool StateObserver::init_ros() {
   object_state_trans.header.frame_id = "world";
   object_state_trans.child_frame_id = "mug_frame";
 
+  table_trans.header.frame_id = "world";
+  table_trans.child_frame_id = "table_frame";
+
   return true;
 }
 bool StateObserver::initialize() {
@@ -111,6 +126,7 @@ bool StateObserver::initialize() {
     ROS_INFO("Failed to init ros in state observer");
     return false;
   }
+  init_target();
   return true;
 }
 
@@ -141,7 +157,8 @@ void StateObserver::publish_state() {
 
   table_state_publisher_.publish(table_state_);
   broadcaster.sendTransform(table_trans);
-  // broadcaster.sendTransform(object_state_trans);
+  target_trans.header.stamp = ros::Time::now();
+  broadcaster.sendTransform(target_trans);
   state_publisher_.publish(state_ros_);
 }
 
