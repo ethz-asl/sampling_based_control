@@ -29,13 +29,14 @@ mppi_sliding:
   static_optimization: false
   
   record_bag: false
-  bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
+  bag_path: ""
   
   # Cost parameters used by the controller
   rollouts: 20
 
   setup_config:
     fixed_base: true
+    update_geometry: false
 
 
   cost:

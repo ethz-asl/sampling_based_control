@@ -207,28 +207,28 @@ void PandaRaisimDynamics::advance() {
   if(!if_sim_)
   {
     // get contact state
-    for (const auto& contact : cylinder_->getContacts()) {
-      if (!contact.skip() && !contact.isSelfCollision() 
-          && (sim_.getObject(contact.getPairObjectIndex())->getIndexInWorld() == panda_idx) ) 
-      { 
-        // std::cout << " in contact with panda " << std::endl;
-        in_contact = 1;
-        break;
-      }
-    }
+    // for (const auto& contact : cylinder_->getContacts()) {
+    //   if (!contact.skip() && !contact.isSelfCollision() 
+    //       && (sim_.getObject(contact.getPairObjectIndex())->getIndexInWorld() == panda_idx) ) 
+    //   { 
+    //     // std::cout << " in contact with panda " << std::endl;
+    //     in_contact = 1;
+    //     break;
+    //   }
+    // }
     
     // [Debug Feb. 2]: open in 3rd round
-    object_p_.head<3>() = cylinder_->getPosition();
+    // object_p_.head<3>() = cylinder_->getPosition();
     
-    // [Debug Feb. 2]: open in 4th round
-    object_p_.tail<4>() = cylinder_->getQuaternion();
+    // // [Debug Feb. 2]: open in 4th round
+    // object_p_.tail<4>() = cylinder_->getQuaternion();
 
-    object_v_.head<3>(0) = cylinder_->getLinearVelocity();
+    // object_v_.head<3>(0) = cylinder_->getLinearVelocity();
 
-    // TODO: currently use velocity to pass geometry info, correct this after the experiment 
-    // [Debug Feb. 2]: open in 3rd round
-    object_v_(4) = cylinder_->getRadius();
-    object_v_(5) = cylinder_->getHeight();
+    // // TODO: currently use velocity to pass geometry info, correct this after the experiment 
+    // // [Debug Feb. 2]: open in 3rd round
+    // object_v_(4) = cylinder_->getRadius();
+    // object_v_(5) = cylinder_->getHeight();
 
   }
 
@@ -278,7 +278,7 @@ void PandaRaisimDynamics::update_geometry()
   cylinder_->setBodyType(raisim::BodyType::DYNAMIC);
   cylinder_->setName("Cylinder");
 
-  ROS_INFO_STREAM("geometry updated");
+  // ROS_INFO_STREAM("geometry updated");
 
 }
 

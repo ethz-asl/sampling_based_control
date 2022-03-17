@@ -8,7 +8,7 @@
 using namespace manipulation;
 
 bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
-  std::string prefix = (is_sim) ? "sim_" : "";
+  std::string prefix = (is_sim) ? "" : "";
 
   if (!nh.getParam(prefix + "dynamics/dt", dt) || dt <= 0) {
     ROS_ERROR("Failed to parse dynamics/dt or invalid!");
