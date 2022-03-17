@@ -6,140 +6,157 @@
 
 namespace object_observer {
 
-    StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
-        std::string object_pose_topic;
-        nh_.param<std::string>("object_pose_topic", object_pose_topic,
-                               "/object_pose");
-        object_pose_subscriber_ = nh_.subscribe(
-                object_pose_topic, 1, &StateObserver::object_pose_callback, this);
+StateObserver::StateObserver(const ros::NodeHandle& nh) : nh_(nh) {
+  std::string object_pose_topic;
+  nh_.param<std::string>("object_pose_topic", object_pose_topic,
+                         "/object_pose");
+  object_pose_subscriber_ = nh_.subscribe(
+      object_pose_topic, 1, &StateObserver::object_pose_callback, this);
 
-        // ros publishing
-        object_state_publisher_ =
-                nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
+  // ros publishing
+  object_state_publisher_ =
+      nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
+  jointStateCallback_ = nh_.subscribe("joint_state_in", 1,
+                                      &StateObserver::jointStateCallback, this);
 
-        object_state_.name.push_back("articulation_joint");
-        object_state_.position.push_back(0.0);
-        object_state_.velocity.push_back(0.0);
-        articulation_first_computation_ = true;
+  object_state_.name.push_back("articulation_joint");
+  object_state_.position.push_back(0.0);
+  object_state_.velocity.push_back(0.0);
+  articulation_first_computation_ = true;
+}
+
+bool StateObserver::initialize() {
+  KDL::Tree object_kinematics;
+  if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
+    ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
+    return false;
+  }
+
+  KDL::Chain chain;
+  object_kinematics.getChain("shelf", "handle_link", chain);
+  if (chain.getNrOfJoints() != 1) {
+    ROS_ERROR("The object has more then one joint. Only one joint supported!");
+    return false;
+  }
+
+  // at start-up door is closed
+  KDL::JntArray joint_pos(chain.getNrOfJoints());
+
+  // required to calibrate the initial shelf position
+  KDL::Frame T_shelf_handle_KDL;
+  KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
+  fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
+  tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
+
+  // required to now the origin hinge position
+  KDL::Frame T_door_handle_KDL;
+  object_kinematics.getChain("axis_link", "handle_link", chain);
+  KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
+  fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
+  tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
+
+  ROS_INFO_STREAM("Static transformations summary: "
+                  << std::endl
+                  << " T_shelf_handle:\n "
+                  << T_handle0_shelf_.inverse().matrix() << std::endl
+                  << " T_hinge_handle:\n "
+                  << T_handle0_hinge_.inverse().matrix() << std::endl);
+  ROS_INFO("Robot observer correctly initialized.");
+  return true;
+}
+
+void StateObserver::jointStateCallback(
+    const sensor_msgs::JointStateConstPtr& msg) {
+  double wrapped = std::fmod(msg->position[0], 2.0 * M_PI);
+  ROS_INFO_THROTTLE(
+      1.0,
+      "[state_observer_node] Using joint state as input for state observer. "
+      "This should only happen in debug mode. Door angle: %f",
+      wrapped);
+  // T_world_door_ = Eigen::AngleAxisd(wrapped, Eigen::Vector3d(0.0, 0.0, 1.0));
+  Eigen::Quaterniond door_angle(
+      Eigen::AngleAxisd(wrapped, Eigen::Vector3d(0.0, 0.0, 1.0)));
+  nav_msgs::Odometry door_odom;
+  tf::quaternionEigenToMsg(door_angle, door_odom.pose.pose.orientation);
+  object_pose_callback(boost::make_shared<nav_msgs::Odometry>(door_odom));
+}
+
+void StateObserver::object_pose_callback(
+    const nav_msgs::OdometryConstPtr& msg) {
+  tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
+  if (articulation_first_computation_) {
+    ROS_INFO("First computation of the shelf pose.");
+    T_world_shelf_ = T_world_handle_ * T_handle0_shelf_;
+    T_hinge_world_ = (T_world_handle_ * T_handle0_hinge_).inverse();
+    T_hinge_handle_init_ = T_hinge_world_ * T_world_handle_;
+
+    start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
+                                       T_hinge_handle_init_.translation().y());
+    articulation_first_computation_ = false;
+    previous_time_ = msg->header.stamp.toSec();
+
+    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    geometry_msgs::TransformStamped T_world_shelf_ros;
+    tf::transformEigenToMsg(T_world_shelf_, T_world_shelf_ros.transform);
+    T_world_shelf_ros.header.stamp = ros::Time::now();
+    T_world_shelf_ros.header.frame_id = "world";
+    T_world_shelf_ros.child_frame_id = "shelf";
+    static_broadcaster.sendTransform(T_world_shelf_ros);
+    ROS_INFO_STREAM("Published initial transform from world to shelf frame.");
+    std::cout << "Transform is:" << std::endl;
+    std::cout << "Translation: " << T_world_shelf_.translation().transpose()
+              << std::endl;
+    std::cout << "Rotation: " << std::endl
+              << T_world_shelf_.rotation() << std::endl;
+    return;
+  }
+
+  T_hinge_handle_ = T_hinge_world_ * T_world_handle_;
+  current_relative_angle_ = std::atan2(T_hinge_handle_.translation().x(),
+                                       T_hinge_handle_.translation().y());
+
+  double theta_new = current_relative_angle_ - start_relative_angle_;
+  double current_time = msg->header.stamp.toSec();
+
+  object_state_.velocity[0] =
+      (theta_new - object_state_.position[0]) / (current_time - previous_time_);
+  object_state_.position[0] = theta_new;
+  previous_time_ = current_time;
+}
+
+bool StateObserver::estimateCenter() {
+  tf::StampedTransform transform;
+
+  Eigen::MatrixXf regressor = Eigen::MatrixXf::Zero(20, 3);
+  Eigen::VectorXf y = Eigen::VectorXf::Zero(20);
+  Eigen::Vector3f params;
+  listener.waitForTransform("/world", "/handle_link", ros::Time(0),
+                            ros::Duration(3.0));
+  int i = 0;
+  while (i < 20) {
+    listener.lookupTransform("/world", "/handle_link", ros::Time(0), transform);
+    if (transform.getOrigin().y() > -0.9) {
+      regressor.row(i) << 2 * transform.getOrigin().x(),
+          2 * transform.getOrigin().y(), 1;
+      y(i) = transform.getOrigin().x() * transform.getOrigin().x() +
+             transform.getOrigin().y() * transform.getOrigin().y();
+      ros::Duration(0.2).sleep();
+      i += 1;
     }
+  }
+  params = regressor.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(y);
+  std::cout << "XM = " << params(0) << std::endl;
+  std::cout << "YM = " << params(1) << std::endl;
+  std::cout << "Param(2)" << params(2) << std::endl;
+  std::cout << "Radius = "
+            << std::sqrt(params(2) + pow(params(0), 2) + pow(params(1), 2))
+            << std::endl;
+  return true;
+}
 
-    bool StateObserver::initialize() {
-        KDL::Tree object_kinematics;
-        if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
-            ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
-            return false;
-        }
+void StateObserver::publish() {
+  object_state_.header.stamp = ros::Time(previous_time_);
+  object_state_publisher_.publish(object_state_);
+}
 
-        KDL::Chain chain;
-        object_kinematics.getChain("shelf", "handle_link", chain);
-        if (chain.getNrOfJoints() != 1) {
-            ROS_ERROR("The object has more then one joint. Only one joint supported!");
-            return false;
-        }
-
-        // at start-up door is closed
-        KDL::JntArray joint_pos(chain.getNrOfJoints());
-
-        // required to calibrate the initial shelf position
-        KDL::Frame T_shelf_handle_KDL;
-        KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
-        fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
-        tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
-
-        // required to now the origin hinge position
-        KDL::Frame T_door_handle_KDL;
-        object_kinematics.getChain("axis_link", "handle_link", chain);
-        KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
-        fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
-        tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
-
-
-        ROS_INFO_STREAM("Static transformations summary: "
-                                << std::endl
-                                << " T_shelf_handle:\n "
-                                << T_handle0_shelf_.inverse().matrix() << std::endl
-                                << " T_hinge_handle:\n "
-                                << T_handle0_hinge_.inverse().matrix() << std::endl);
-        ROS_INFO("Robot observer correctly initialized.");
-        return true;
-    }
-
-    void StateObserver::object_pose_callback(
-            const nav_msgs::OdometryConstPtr& msg) {
-        tf::poseMsgToEigen(msg->pose.pose, T_world_handle_);
-        if (articulation_first_computation_) {
-            ROS_INFO("First computation of the shelf pose.");
-            T_world_shelf_ = T_world_handle_ * T_handle0_shelf_;
-            T_hinge_world_ = (T_world_handle_ * T_handle0_hinge_).inverse();
-            T_hinge_handle_init_ = T_hinge_world_ * T_world_handle_;
-
-            start_relative_angle_ = std::atan2(T_hinge_handle_init_.translation().x(),
-                                               T_hinge_handle_init_.translation().y());
-            articulation_first_computation_ = false;
-            previous_time_ = msg->header.stamp.toSec();
-
-            static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-            geometry_msgs::TransformStamped T_world_shelf_ros;
-            tf::transformEigenToMsg(T_world_shelf_, T_world_shelf_ros.transform);
-            T_world_shelf_ros.header.stamp = ros::Time::now();
-            T_world_shelf_ros.header.frame_id = "world";
-            T_world_shelf_ros.child_frame_id = "shelf";
-            static_broadcaster.sendTransform(T_world_shelf_ros);
-            ROS_INFO_STREAM("Published initial transform from world to shelf frame.");
-            std::cout << "Transform is:" << std::endl;
-            std::cout << "Translation: " << T_world_shelf_.translation().transpose() << std::endl;
-            std::cout << "Rotation: " << std::endl << T_world_shelf_.rotation() << std::endl;
-            return;
-        }
-
-        T_hinge_handle_ = T_hinge_world_ * T_world_handle_;
-        current_relative_angle_ = std::atan2(T_hinge_handle_.translation().x(),
-                                             T_hinge_handle_.translation().y());
-
-        double theta_new = current_relative_angle_ - start_relative_angle_;
-        double current_time = msg->header.stamp.toSec();
-
-        object_state_.velocity[0] =
-                (theta_new - object_state_.position[0]) / (current_time - previous_time_);
-        object_state_.position[0] = theta_new;
-        previous_time_ = current_time;
-    }
-
-    bool StateObserver::estimateCenter() {
-      tf::StampedTransform transform;
-
-      Eigen::MatrixXf regressor = Eigen::MatrixXf::Zero(20, 3);
-      Eigen::VectorXf y = Eigen::VectorXf::Zero(20);
-      Eigen::Vector3f params;
-      listener.waitForTransform("/world", "/handle_link", ros::Time(0),
-                                ros::Duration(3.0));
-      int i = 0;
-      while (i < 20) {
-        listener.lookupTransform("/world", "/handle_link", ros::Time(0),
-                                 transform);
-        if (transform.getOrigin().y() > -0.9) {
-          regressor.row(i) << 2 * transform.getOrigin().x(),
-              2 * transform.getOrigin().y(), 1;
-          y(i) = transform.getOrigin().x() * transform.getOrigin().x() +
-                 transform.getOrigin().y() * transform.getOrigin().y();
-          ros::Duration(0.2).sleep();
-          i += 1;
-        }
-      }
-      params =
-          regressor.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(y);
-      std::cout << "XM = " << params(0) << std::endl;
-      std::cout << "YM = " << params(1) << std::endl;
-      std::cout << "Param(2)" << params(2) << std::endl;
-      std::cout << "Radius = "
-                << std::sqrt(params(2) + pow(params(0), 2) + pow(params(1), 2))
-                << std::endl;
-      return true;
-    }
-
-    void StateObserver::publish() {
-        object_state_.header.stamp = ros::Time(previous_time_);
-        object_state_publisher_.publish(object_state_);
-    }
-
-}  // namespace royalpanda
+}  // namespace object_observer

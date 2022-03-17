@@ -42,12 +42,6 @@
         </joint>
     </xacro:if>
 
-    <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/shelf</robotNamespace>
-            <robotParam>urdf_object </robotParam>
-        </plugin>
-    </gazebo>
     <link name="shelf">
         <xacro:box_inertia m="5" x="${corpus_width}" y="${corpus_length}" z="${shelf_z}"/>
         <visual>
@@ -260,6 +254,12 @@
         <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
     </joint>
 
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/shelf</robotNamespace>
+            <robotParam>urdf_gazebo</robotParam>
+        </plugin>
+    </gazebo>
     <transmission name="hinge">
         <type>transmission_interface/SimpleTransmission</type>
         <joint name="articulation_joint">
