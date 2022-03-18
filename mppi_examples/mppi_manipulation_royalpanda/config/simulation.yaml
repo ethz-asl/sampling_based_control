@@ -27,7 +27,7 @@ sim_dynamics:
   object_handle_joint: sim_handle_joint
   articulation_joint: articulation_joint
 
-  initial_state: [ -0.5, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+  initial_state: [ -1.5, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    0.0,                                                                    # object joint position
                    0.0,                                                                    # object joint velocity

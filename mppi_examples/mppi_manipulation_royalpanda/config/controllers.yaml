@@ -80,7 +80,8 @@ manipulation_controller:
     power_weight: 10.0
   
     handle_frame: handle_link
-    tracked_frame: panda_grasp
+    tracked_frame: panda_grasp_finger_edge
+#    tracked_frame: panda_grasp
     arm_base_frame: panda_link0
 
     collision_link_0: panda_link1

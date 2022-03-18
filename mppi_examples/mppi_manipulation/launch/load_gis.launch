@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="debug" default="false"/>
+    <arg name="object" default="11826"/>
+    <arg name="description_file" default="$(find mppi_manipulation)/data/panda_mobile.urdf.xacro"/>
+    <arg name="object_height" default="1.0"/>
+    <arg name="load_simulation_object" default="true"/>
+
+    <param name="robot_description"
+           textfile="$(find mppi_manipulation)/data/rd.urdf"
+    />
+
+    <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
+    <param name="robot_description_fixed_base" command="$(find xacro)/xacro $(arg description_file)
+      resources_prefix:='file://'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true
+      custom_fingers:=true
+      fixed_base:=true"/>
+
+    <param name="robot_description_raisim"
+           textfile="$(find mppi_manipulation)/data/rd_raisim_cylinder.urdf"
+    />
+
+    <!-- The robot description is NOT the problem     -->
+
+    <param name="object_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object)/mobility.urdf.xacro"
+    />
+
+    <param name="object_description_raisim"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object)/mobility.urdf.xacro"
+    />
+
+    <group if="$(arg load_simulation_object)">
+    <param name="object_description_raisim_simulation"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/$(arg object)/mobility.urdf.xacro
+                    prefix:='sim_'"
+    />
+    </group>
+
+    <param name="raisim_object_res_path"
+           value="$(find mppi_manipulation)/data/objects/$(arg object)"
+    />
+
+    <!-- The object description is NOT the problem     -->
+    
+    <param name="obstacle_description"
+           command="$(find xacro)/xacro $(find mppi_manipulation)/data/objects/box.urdf.xacro
+           obstacle_x:=10.3 obstacle_y:=-0.25 obstacle_z:=0.17"/>
+
+</launch>
