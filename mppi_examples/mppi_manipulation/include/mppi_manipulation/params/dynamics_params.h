@@ -14,7 +14,7 @@ struct DynamicsParams {
   std::string object_description;
   std::string raisim_object_res_path = "/";
   std::string raisim_robot_res_path = "/";
-  bool ignore_object_self_collision = false;
+  bool ignore_object_self_collision = true;
   bool ignore_panda_self_collision = true;
   PIDGains gains;
   Eigen::VectorXd initial_state;

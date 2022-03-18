@@ -28,6 +28,8 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
 
   man_interface_ = std::make_unique<PandaControllerInterface>(controller_nh);
   if (!man_interface_->init()) {
+    // this is mppi_ros/controller_interface.init(), which also calls mppi_manipulation/controller_interface.init_ros()
+    // the interesting bit is that it loads the robot description and object description (see mppi_manipulation/load.launch file)
     ROS_ERROR("[ManipulationController::init] Failed to initialize the manipulation interface");
     return false;
   }
@@ -54,6 +56,7 @@ bool ManipulationController::init(hardware_interface::RobotHW* robot_hw,
   return true;
 }
 
+// not of interest
 bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   if (!node_handle.getParam("arm_id", arm_id_)) {
     ROS_ERROR("Could not read parameter arm_id");
@@ -161,8 +164,8 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
   return true;
 }
 
-bool ManipulationController::init_interfaces(
-    hardware_interface::RobotHW* robot_hw) {
+// not of interest
+bool ManipulationController::init_interfaces(hardware_interface::RobotHW* robot_hw) {
   
   // get the effort interfaces from the robot
   // the ones we use to send torque commands to the arm
@@ -246,6 +249,7 @@ bool ManipulationController::init_interfaces(
   return true;
 }
 
+// not of interest
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   // initialize all ros publishers
   base_twist_publisher_.init(nh, base_twist_topic_, 1);
@@ -257,8 +261,7 @@ void ManipulationController::init_ros(ros::NodeHandle& nh) {
   position_desired_publisher_.init(nh, "pos_desired", 1);
   position_desired_publisher_.msg_.data.resize(10, 0.0);
 
-  state_subscriber_ = nh.subscribe(
-      state_topic_, 1, &ManipulationController::state_callback, this);
+  state_subscriber_ = nh.subscribe(state_topic_, 1, &ManipulationController::state_callback, this);
 
   ROS_INFO_STREAM("Sending base commands to: " << base_twist_topic_);
   ROS_INFO_STREAM("Receiving state at: " << state_topic_);

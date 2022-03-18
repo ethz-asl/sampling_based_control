@@ -47,7 +47,7 @@ bool Config::init_from_file(const std::string& file) {
   object_description_raisim = get_model(dynamics, "object_description_raisim");
   raisim_object_res_path = parse_key<std::string>(dynamics, "raisim_object_res_path", sf).value_or("");
   raisim_robot_res_path = parse_key<std::string>(dynamics, "raisim_robot_res_path", sf).value_or("");
-  ignore_object_self_collision = parse_key<bool>(dynamics, "ignore_object_self_collision", sf).value_or(false);
+  ignore_object_self_collision = parse_key<bool>(dynamics, "ignore_object_self_collision", sf).value_or(true);
   ignore_panda_self_collision = parse_key<bool>(dynamics, "ignore_panda_self_collision", sf).value_or(true);
 
   gains = PIDGains(); // initialize gains to default value, lets me skip another config parsing

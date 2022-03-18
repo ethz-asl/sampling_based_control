@@ -73,6 +73,11 @@ bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
     return false;
   }
 
+  if (!nh.getParam("/raisim_object_res_path", raisim_object_res_path) ||
+      raisim_object_res_path.empty()) {
+    ROS_WARN("Failed to parse /raisim_object_res_path or invalid!");
+  }
+
   std::string object_description_name =
       (is_sim) ? "/object_description_raisim_simulation"
                : "/object_description_raisim";
