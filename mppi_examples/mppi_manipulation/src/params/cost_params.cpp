@@ -99,6 +99,21 @@ bool CostParams::init_from_ros(const ros::NodeHandle& nh) {
     return false;
   }
 
+  if (!nh.getParam("cost/arm_joint_weight", Q_j) || Q_j < 0) {
+    ROS_WARN("Filed to parse cost/arm_joint_weight or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/robot_base_position_weight", Q_bp) || Q_bp < 0) {
+    ROS_WARN("Filed to parse cost/robot_base_position_weight or invalid!");
+    return false;
+  }
+
+  if (!nh.getParam("cost/robot_base_orientation_weight", Q_bo) || Q_bo < 0) {
+    ROS_WARN("Filed to parse cost/robot_base_orientation_weight or invalid!");
+    return false;
+  }
+
   if (!nh.getParam("cost/contact_weight", Qc) || Qc < 0) {
     ROS_ERROR("Filed to parse contact_weight or invalid!");
     return false;

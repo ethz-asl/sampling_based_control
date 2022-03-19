@@ -44,16 +44,22 @@ manipulation_controller:
   cost:
     regularization: 0.0
     linear_weight: 100.0
-    angular_weight: 100.0
+    linear_weight_opening: 10.0
 
-    linear_weight_opening: 100.0
-    angular_weight_opening: 100.0
+    angular_weight: 10.0
+    angular_weight_opening: 1.0
+    
+    
+    # joint controller cost (mode 3)
+    arm_joint_weight: 20
+    robot_base_position_weight: 20
+    robot_base_orientation_weight: 20
 
     linear_tolerance_manipulation: 0.0
     angular_tolerance_manipulation: 0.5
 
-    min_dist: 0.15
-    max_reach: 0.65
+    min_dist: 0.4
+    max_reach: 1.0
     reach_weight: 100
     reach_weight_slope: 10
 
@@ -63,15 +69,15 @@ manipulation_controller:
 
     contact_weight: 100.0
 
-    object_weight: 100
+    object_weight: 1000
     object_tolerance: 0.01
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
     grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068 ]    # -90deg around y
 
     # Safer joint limits (+10 deg safety margin ~0.17)
-    upper_joint_limits: [ 2.0, 2.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
-    lower_joint_limits: [ -2.0, -2.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
+    upper_joint_limits: [ 4.0, 4.0, 6.28, 2.72, 1.59, 2.72, -0.1, 2.72, 3.58, 2.72 ]
+    lower_joint_limits: [ -4.0, -4.0, -6.28, -2.72, -1.59, -2.72, -2.90, -2.55, 0.152, -2.72 ]
 
     joint_limit_cost: 1000 #1000
     joint_limit_slope: 100 #100
