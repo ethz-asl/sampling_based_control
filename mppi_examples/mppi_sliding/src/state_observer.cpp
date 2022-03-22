@@ -214,7 +214,8 @@ void StateObserver::object_state_callback(
   // TODO:(Boyang)  currently use velocity to pass geometry value
   object_state_.velocity[4] = msg->body_radius;
   object_state_.velocity[5] = msg->body_height;
-
+  object_state_.velocity[6] = msg->confidence;
+  
   object_state_publisher_.publish(object_state_);
 }
 
