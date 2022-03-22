@@ -65,6 +65,10 @@ add_executable(manipulation_control src/nodes/panda_control.cpp)
 target_link_libraries(manipulation_control ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_control ${PROJECT_NAME})
 
+add_executable(state_estimator src/nodes/state_estimator_node.cpp)
+target_link_libraries(state_estimator ${PROJECT_NAME} ${catkin_LIBRARIES} )
+add_dependencies(state_estimator ${PROJECT_NAME})
+
 add_executable(manipulation_raisim src/tests/panda_raisim.cpp)
 target_link_libraries(manipulation_raisim ${PROJECT_NAME} ${catkin_LIBRARIES} )
 add_dependencies(manipulation_raisim ${PROJECT_NAME})

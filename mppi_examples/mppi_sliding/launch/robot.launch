@@ -23,6 +23,13 @@
         <param name="robot_ip" value="$(arg robot_ip)" />
     </node>
 
+    <!-- state estimation node -->
+    <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
+    <node name="state_estimation_node" type="state_estimator" pkg="mppi_sliding" output="screen">
+        <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
+        <rosparam command="load" file="$(find mppi_sliding)/params/controller_panda.yaml"/>
+    </node>
+
     <!-- controller manager-->
     <rosparam command="load" file="$(find franka_control)/config/default_controllers.yaml" />
     <node name="state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="franka_state_controller"/>

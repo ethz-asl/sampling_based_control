@@ -10,18 +10,21 @@ using namespace manipulation;
 bool DynamicsParams::init_from_ros(ros::NodeHandle& nh, bool is_sim) {
   std::string prefix = (is_sim) ? "" : "";
 
+  std::cout << "reading from " << prefix + std::string("dynamics/dt") << std::endl;
   if (!nh.getParam(prefix + "dynamics/dt", dt) || dt <= 0) {
     ROS_ERROR("Failed to parse dynamics/dt or invalid!");
     return false;
   }
-
+  std::cout << "dt is:  " << dt << std::endl;
   std::vector<double> x0;
+  std::cout << "reading from " << prefix + std::string("dynamics/initial_state") << std::endl;
   if (!nh.param<std::vector<double>>(prefix + "dynamics/initial_state", x0,
                                      {}) ||
       x0.empty()) {
     ROS_ERROR("Failed to parse dynamics/initial_state or invalid");
     return false;
   }
+  
   if (x0.size() != STATE_DIMENSION) {
     ROS_ERROR_STREAM("Initial state with the wrong dimension: "
                      << initial_state.size() << "!=" << (int)STATE_DIMENSION);

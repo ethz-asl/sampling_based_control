@@ -92,11 +92,12 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     Eigen::Vector2d position_dist;
     position_dist = EE_pose.translation.head<2>() - cylinder_position_.head<2>(); 
     // cost += abs((position_dist.norm() - cylinder_radius * 1.2 ) ) * params_.Qt;
-    cost += abs((EE_pose.translation(2)- 0.12)) *params_.Qt;
+    cost += abs((EE_pose.translation(2)- 0.125)) *params_.Qt;
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
 
     // EE with desired orientation
-    // cost += error_.tail<3>().norm() * params_.Qr ;
+    robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
+    cost += error_.tail<3>().norm() * params_.Qr ;
 
     // EE stay near the cylinder and on desired height
     // pose_error = (pose_diff>params_.cylinder_radius*params_.cylinder_radius) ? sqrt(pose_diff)*1.5 : 0;
