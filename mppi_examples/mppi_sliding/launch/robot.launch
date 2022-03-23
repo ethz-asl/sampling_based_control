@@ -4,6 +4,7 @@
     <arg name="object" default="shelf"/>
     <arg name="experiment_name" default="panda_manipulation"/>
     <arg name="run_camera" default="false"/>
+    <arg name="enable_estimator" default="true"/>
 
     <include file="$(find realsense2_camera)/launch/rs_camera.launch" if="$(arg run_camera)"/>
 
@@ -26,6 +27,7 @@
     <!-- state estimation node -->
     <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
     <node name="state_estimation_node" type="state_estimator" pkg="mppi_sliding" output="screen">
+        <param name="enabled" value="$(arg enable_estimator)"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/params.yaml"/>
         <rosparam command="load" file="$(find mppi_sliding)/params/controller_panda.yaml"/>
     </node>

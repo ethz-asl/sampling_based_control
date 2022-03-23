@@ -11,7 +11,7 @@ mppi_sliding:
   arm_id: panda
   joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
 
-  state_topic: /observer/state    # modify into the topic of kp tracker
+  state_topic: /estimator/state  #/observer/state    # modify into the topic of kp tracker
   nominal_state_topic: /x_nom
   table_state_topic: /table/joint_state
 
@@ -42,7 +42,7 @@ mppi_sliding:
   cost:
     regularization: 0.0
     linear_weight: 200.0
-    angular_weight: 10.0
+    angular_weight: 5.0
 
     linear_weight_opening: 100.0
     angular_weight_opening: 100.0

@@ -157,6 +157,7 @@ bool ManipulationController::init_interfaces(
 
 void ManipulationController::init_ros(ros::NodeHandle& nh) {
   nominal_state_publisher_.init(nh, nominal_state_topic_, 1);
+  opt_input_publisher_.init(nh,"/opt_input",1);
   stage_cost_publisher_.init(nh, "/stage_cost", 1);
 
   state_subscriber_ = nh.subscribe(
@@ -213,6 +214,7 @@ void ManipulationController::starting(const ros::Time& time) {
   x_nom_ros_.arm_state.velocity.resize(9);
   x_nom_ros_.object_state.position.resize(7);
   x_nom_ros_.object_state.velocity.resize(7);
+  opt_u_ros_.joint_velocities.resize(PandaDim::INPUT_DIMENSION);
 
   velocity_measured_.setZero(PandaDim::INPUT_DIMENSION);
   velocity_filtered_.setZero(PandaDim::INPUT_DIMENSION);
@@ -326,6 +328,12 @@ void ManipulationController::update(const ros::Time& time,
   if (nominal_state_publisher_.trylock()) {
     nominal_state_publisher_.msg_ = x_nom_ros_;
     nominal_state_publisher_.unlockAndPublish();
+  }
+
+  manipulation::conversions::eigenToMsg_panda(u_opt_,opt_u_ros_);
+  if (opt_input_publisher_.trylock()) {
+    opt_input_publisher_.msg_ = opt_u_ros_;
+    opt_input_publisher_.unlockAndPublish();
   }
 
   {

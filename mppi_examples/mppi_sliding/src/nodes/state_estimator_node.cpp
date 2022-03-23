@@ -22,27 +22,46 @@ using namespace manipulation;
 mppi::input_t u;
 mppi::observation_t x_observe;
 double x_observe_t;
+bool getState = false;
+
 
 void inputCallback(const manipulation_msgs::Input::ConstPtr& input_ros)
 {   
     manipulation::conversions::msgToEigen_panda(*input_ros, u);
 }
 
-
 void stateCallback(const manipulation_msgs::State::ConstPtr& state_ros)
 { 
-  manipulation::conversions::msgToEigen_panda(*state_ros, x_observe, x_observe_t);  
+  manipulation::conversions::msgToEigen_panda(*state_ros, x_observe, x_observe_t); 
+  getState = true; 
   return;
 }
 
+// void publishEstimatedMarker(const Eigen::VectorXd &x_est)
+// {
+//     object_estimated_marker_.scale.x = 2*x_est[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +4];
+//     object_estimated_marker_.scale.y = 2*x_est[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +4];
+//     object_estimated_marker_.scale.z = x_est[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +5];
+
+//     object_estimated_marker_.pose.position.x = x_est[ 2 * BASE_ARM_GRIPPER_DIM ];
+//     object_estimated_marker_.pose.position.y = x_est[ 2 * BASE_ARM_GRIPPER_DIM +1];
+//     object_estimated_marker_.pose.position.z = x_est[ 2 * BASE_ARM_GRIPPER_DIM +2];
+//     object_estimated_marker_.pose.orientation.x = x_est[ 2 * BASE_ARM_GRIPPER_DIM +3];
+//     object_estimated_marker_.pose.orientation.y = x_est[ 2 * BASE_ARM_GRIPPER_DIM +4];
+//     object_estimated_marker_.pose.orientation.z = x_est[ 2 * BASE_ARM_GRIPPER_DIM +5];
+//     object_estimated_marker_.pose.orientation.w = x_est[ 2 * BASE_ARM_GRIPPER_DIM +6];
+//     object_estimated_marker_.id = 0;
+
+//     object_est_publisher_.publish(object_estimated_marker_);
+// }
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "state_estimation_node");
   ros::NodeHandle nh("~");
   std::string experiment_name;
-  bool add_noise;
+  bool enabled;
   nh.param<std::string>("experiment_name", experiment_name, "test");
-  
+  nh.param<bool>("enabled", enabled, true);
 
   DynamicsParams dynamics_params;     // init params (dynamics_param.cpp)
   if (!dynamics_params.init_from_ros(nh, true)) {
@@ -57,7 +76,7 @@ int main(int argc, char** argv) {
 
   ROS_INFO_STREAM("real world simulation initiated");
   ros::Subscriber u_subscriber_ = 
-    nh.subscribe<manipulation_msgs::Input>("/observer/panda_input", 1, inputCallback);
+    nh.subscribe<manipulation_msgs::Input>("/opt_input", 1, inputCallback);
 
   ros::Subscriber x_subscriber_ = 
     nh.subscribe<manipulation_msgs::State>("/observer/state", 1, stateCallback);
@@ -82,22 +101,59 @@ int main(int argc, char** argv) {
 
    // start with zero input
    u = simulation->get_zero_input(x_sim);
-
-
-  ros::Publisher object_est_publisher_; 
-  visualization_msgs::Marker object_estimated_marker_;
-  object_est_publisher_ = nh.advertise<visualization_msgs::Marker>("/observer/estiamted_object", 10);
-  object_estimated_marker_.type = visualization_msgs::Marker::CYLINDER;
-  object_estimated_marker_.header.frame_id = "world";
-  object_estimated_marker_.action = visualization_msgs::Marker::ADD;
-  object_estimated_marker_.color.r = 0.0;
-  object_estimated_marker_.color.b = 1.0;
-  object_estimated_marker_.color.g = 0.0;
-  object_estimated_marker_.color.a = 0.6;
+   
+   // state switcher-related stuff
+   double kp_confidence = 0.0;
+   bool first_switch_from_observation = true;
+   bool init_sim_x = false;
+   
+   ros::Publisher object_est_publisher_; 
+   visualization_msgs::Marker object_estimated_marker_;
+   object_est_publisher_ = nh.advertise<visualization_msgs::Marker>("/observer/estiamted_object", 10);
+   object_estimated_marker_.type = visualization_msgs::Marker::CYLINDER;
+   object_estimated_marker_.header.frame_id = "world";
+   object_estimated_marker_.action = visualization_msgs::Marker::ADD;
+   object_estimated_marker_.color.r = 0.0;
+   object_estimated_marker_.color.b = 1.0;
+   object_estimated_marker_.color.g = 0.0;
+   object_estimated_marker_.color.a = 0.6;
 
   while (ros::ok()) {
     
-    ROS_INFO_STREAM("Get the input: " << u.transpose());
+
+    if(!enabled)
+    {
+        x_sim = x_observe;
+        manipulation::conversions::eigenToMsg_panda(x_sim, sim_time, x_est_ros);
+        x_est_publisher_.publish(x_est_ros);
+        // publishEstimatedMarker(x_sim);
+        object_estimated_marker_.scale.x = 2*x_sim[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +4];
+        object_estimated_marker_.scale.y = 2*x_sim[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +4];
+        object_estimated_marker_.scale.z = x_sim[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +5];
+
+        object_estimated_marker_.pose.position.x = x_sim[ 2 * BASE_ARM_GRIPPER_DIM ];
+        object_estimated_marker_.pose.position.y = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +1];
+        object_estimated_marker_.pose.position.z = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +2];
+        object_estimated_marker_.pose.orientation.x = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +3];
+        object_estimated_marker_.pose.orientation.y = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +4];
+        object_estimated_marker_.pose.orientation.z = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +5];
+        object_estimated_marker_.pose.orientation.w = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +6];
+        object_estimated_marker_.id = 0;
+
+        object_est_publisher_.publish(object_estimated_marker_);
+
+        ros::spinOnce();
+        continue;
+    }
+
+    if(!init_sim_x && getState)
+    {
+        simulation->reset(x_observe,simulation->get_dt());
+        ROS_INFO_STREAM( "init as: " << x_observe.transpose());
+        x_sim = simulation->get_state();
+        init_sim_x = true;
+    }
+
 
     start = std::chrono::steady_clock::now();
     // auto start_ = std::chrono::high_resolution_clock::now();
@@ -106,16 +162,49 @@ int main(int argc, char** argv) {
     // x_sim = simulation->step(u, simulation->get_dt());
     // simulation->reset(x_fused,simulation->get_dt());
     // simulation->set_control(u);
-    simulation->advance();
-    x_sim = simulation->get_state();
-    x_fused.head<2*BASE_ARM_GRIPPER_DIM>() = x_observe.head<2*BASE_ARM_GRIPPER_DIM>(); // Panda state just take the observation
-    x_fused.tail<STATE_DIMENSION - 2*BASE_ARM_GRIPPER_DIM >() =  x_observe.tail<STATE_DIMENSION - 2*BASE_ARM_GRIPPER_DIM >(); 
-    simulation->reset(x_fused,simulation->get_dt());
+    
+    kp_confidence = x_observe(2*BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +6 );
+    if(kp_confidence > 25.5 && getState )
+    {   
+        first_switch_from_observation = true;
+        ROS_INFO_STREAM_THROTTLE(1.0, "I trust observation now");
+        // simulation->advance();
+        // x_sim = simulation->get_state();
+        x_fused.head<2*BASE_ARM_GRIPPER_DIM>() = x_observe.head<2*BASE_ARM_GRIPPER_DIM>(); // Panda state just take the observation
+        x_fused.tail<STATE_DIMENSION - 2*BASE_ARM_GRIPPER_DIM >() =  x_observe.tail<STATE_DIMENSION - 2*BASE_ARM_GRIPPER_DIM >(); 
+        x_sim = simulation->step(u, simulation->get_dt());
+        sim_time += simulation->get_dt();
+        x_sim = x_fused;
+        // simulation->reset(x_fused,simulation->get_dt());
+    }
+    else if(kp_confidence < 25.5 && getState)
+    {
+        if(first_switch_from_observation)
+        {
+            first_switch_from_observation = false;
+            ROS_INFO_STREAM("I just change my mind");
+            x_sim = simulation->step(u, simulation->get_dt());
+            // x_fused.head<2*BASE_ARM_GRIPPER_DIM>() = x_observe.head<2*BASE_ARM_GRIPPER_DIM>(); // Panda state just take the observation
+            // x_fused.segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM) = x_observe.segment<OBJECT_DIMENSION>(2*BASE_ARM_GRIPPER_DIM);
+            // simulation->reset(x_fused,simulation->get_dt());
+            sim_time += simulation->get_dt();
+    
+        }
+        else{
+            ROS_INFO_STREAM_THROTTLE(1.0, "I trust prediction now");
+            x_sim = simulation->step(u, simulation->get_dt());
+            sim_time += simulation->get_dt();
+        }
+        // x_fused.head<2*BASE_ARM_GRIPPER_DIM>() = x_sim.head<2*BASE_ARM_GRIPPER_DIM>(); // Panda state just take the observation
+        // x_fused.segment<OBJECT_DIMENSION+3>(2*BASE_ARM_GRIPPER_DIM) = x_sim.segment<OBJECT_DIMENSION+3>(2*BASE_ARM_GRIPPER_DIM);
+        // simulation->reset(x_fused,simulation->get_dt());
+    }
+
     // x_sim = simulation->get_state();
     // simulation x and observation x Fusion
     
 
-    ROS_INFO_STREAM("Get the obj state: " << x_fused.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM).transpose());
+    //ROS_INFO_STREAM("Get the obj state: " << x_fused.segment<OBJECT_DIMENSION>(2 * BASE_ARM_GRIPPER_DIM).transpose());
     // auto end_ = std::chrono::high_resolution_clock::now();
     // auto tstamp = end_ - start_;
 
@@ -123,11 +212,12 @@ int main(int argc, char** argv) {
 
     // //ROS_INFO_STREAM("duration of simulation step: " << sec << "microseconds");
 
-    sim_time += simulation->get_dt();
+    // sim_time += simulation->get_dt();
 
     manipulation::conversions::eigenToMsg_panda(x_sim, sim_time, x_est_ros);
     x_est_publisher_.publish(x_est_ros);
 
+    // publishEstimatedMarker(x_sim);
     object_estimated_marker_.scale.x = 2*x_sim[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +4];
     object_estimated_marker_.scale.y = 2*x_sim[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +4];
     object_estimated_marker_.scale.z = x_sim[ 2 * BASE_ARM_GRIPPER_DIM + OBJECT_DIMENSION +5];
@@ -140,12 +230,13 @@ int main(int argc, char** argv) {
     object_estimated_marker_.pose.orientation.z = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +5];
     object_estimated_marker_.pose.orientation.w = x_sim[ 2 * BASE_ARM_GRIPPER_DIM +6];
     object_estimated_marker_.id = 0;
-
     object_est_publisher_.publish(object_estimated_marker_);
+
+
 
     end = steady_clock::now();
     elapsed = duration_cast<microseconds>(end - start).count() / (1000.0*1000.0);
-    ROS_INFO_STREAM("one loop takes: " << elapsed << " sec");
+    //ROS_INFO_STREAM("one loop takes: " << elapsed << " sec");
 
     if (simulation->get_dt() - elapsed > 0)
       ros::Duration(simulation->get_dt() - elapsed).sleep();

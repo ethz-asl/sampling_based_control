@@ -16,7 +16,10 @@
         <param name="table_x" type="double" value="1.2"/>
         <param name="table_y" type="double" value="0"/>
         <param name="table_z"  type="double" value="0.04"/>  <!-- table_z should be half table height lower, due to frame stuff -->>
-        <param name="observer_update_frequency" value="200"/>
+        <param name="target_x" type="double" value="0.64"/>
+        <param name="target_y" type="double" value="-0.085"/>
+        <param name="target_z"  type="double" value="0.15"/>  
+        <param name="observer_update_frequency" value="150"/>
     </node>
 
     <!-- <node pkg="mppi_sliding" name="object_state_publisher_node" type="object_state_publisher_node" output="screen">

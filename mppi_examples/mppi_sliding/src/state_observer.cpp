@@ -51,6 +51,10 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   nh_.param<double>("table_y",table_y,0);
   nh_.param<double>("table_z",table_z,0);
 
+  nh_.param<double>("target_x",target_x,0);
+  nh_.param<double>("target_y",target_y,0);
+  nh_.param<double>("target_z",target_z,0.15);
+
   // normal subscribers
   arm_state_subscriber_ = nh_.subscribe(
       arm_state_topic, 1, &StateObserver::arm_state_callback, this);
@@ -85,6 +89,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   object_state_.position[1] = 0;
   object_state_.position[2] = 0.15;
   object_state_.position[6] = 1.0;  // quat w = 1
+  
   // TODO:(Boyang)  currently use velocity to pass geometry value
   object_state_.velocity[4] = 0.02;  // set the geometry to a non-zero default value
   object_state_.velocity[5] = 0.11; 
@@ -97,9 +102,9 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 void StateObserver::init_target(){
   target_trans.header.frame_id = "world";
   target_trans.child_frame_id = "target_frame";
-  target_trans.transform.translation.x = 0.68;  // TODO (boyang): table state is hardcoded, good for now
-  target_trans.transform.translation.y = -0.08;
-  target_trans.transform.translation.z = 0.15;
+  target_trans.transform.translation.x = target_x;  
+  target_trans.transform.translation.y = target_y;
+  target_trans.transform.translation.z = target_z;
   target_trans.transform.rotation.x = 0;
   target_trans.transform.rotation.y = 0;
   target_trans.transform.rotation.z = 0;
@@ -112,9 +117,6 @@ bool StateObserver::init_ros() {
       nh_.advertise<sensor_msgs::JointState>("/table/joint_state", 10);
   table_trans.header.frame_id = "world";
   table_trans.child_frame_id = "table_frame";
-  // object
-  object_state_trans.header.frame_id = "world";
-  object_state_trans.child_frame_id = "mug_frame";
 
   table_trans.header.frame_id = "world";
   table_trans.child_frame_id = "table_frame";
@@ -136,7 +138,7 @@ void StateObserver::publish_state() {
 
   table_state_.header.stamp = ros::Time::now();
   table_trans.header.stamp = ros::Time::now();
-  table_trans.transform.translation.x = table_x;  // TODO (boyang): table state is hardcoded, good for now
+  table_trans.transform.translation.x = table_x;  
   table_trans.transform.translation.y = table_y;
   table_trans.transform.translation.z = table_z;
   tf2::Quaternion q_table;
@@ -145,15 +147,6 @@ void StateObserver::publish_state() {
   table_trans.transform.rotation.y = q_table.y();
   table_trans.transform.rotation.z = q_table.z();
   table_trans.transform.rotation.w = q_table.w();
-
-  object_state_trans.header.stamp = ros::Time::now();
-  // object_state_trans.transform.translation.x = object_state_.position[0];
-  // object_state_trans.transform.translation.y = object_state_.position[1];
-  // object_state_trans.transform.translation.z = object_state_.position[2];
-  // object_state_trans.transform.rotation.x = object_state_.position[4];
-  // object_state_trans.transform.rotation.y = object_state_.position[5];
-  // object_state_trans.transform.rotation.z = object_state_.position[6];
-  // object_state_trans.transform.rotation.w = object_state_.position[3];
 
   table_state_publisher_.publish(table_state_);
   broadcaster.sendTransform(table_trans);
@@ -215,7 +208,7 @@ void StateObserver::object_state_callback(
   object_state_.velocity[4] = msg->body_radius;
   object_state_.velocity[5] = msg->body_height;
   object_state_.velocity[6] = msg->confidence;
-  
+
   object_state_publisher_.publish(object_state_);
 }
 

@@ -3,20 +3,20 @@ geometry:
   cylinder_radius: 0.05
   cylinder_mass: 1    # ideally equal to the object
   cylinder_z: 0.25 # table_z + 1/2(table_height+cylinder_height)
-  table_position: [0.85,0.0,0.0]
+  table_position: [1.2,0,0.04] 
   target_pos: [0.8, 0.0, 0.1]
-  friction: 0.005
+  friction: 0.5
 
 setup_config:
   fixed_base: true
-  update_geometry: true
+  update_geometry: false
 
 dynamics:
   dt: 0.015
   initial_state: [ -1.13, 0.39, -0.05, -2.61, 1.26, 1.94, -2.34, 0.04, 0.04, # robot position 9
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,              # robot velocity 9
                    0.42, -0.24, 0.1, 0.0, 0.0, 0.0, 1,                       # mug 0 pose 7
-                   0.0, 0.0, 0.0, 0.0, 0.025, 0.5, 0.0,                      # mug 0 velocity 7
+                   0.0, 0.0, 0.0, 0.0, 0.05, 0.1, 0.0,                      # mug 0 velocity 7
                    0]                                                    # contact flag
   gains:
     base_gains:

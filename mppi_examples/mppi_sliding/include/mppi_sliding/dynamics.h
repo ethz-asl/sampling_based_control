@@ -66,8 +66,8 @@ class PandaRaisimDynamics : public mppi::Dynamics {
     return mppi::dynamics_ptr();
   }
 
-  void reset(const mppi::observation_t& x, const double t) override;
-  
+  void reset(const mppi::observation_t& x, const double t) override; 
+
   void advance();
   
   void set_control(const mppi::input_t& u);

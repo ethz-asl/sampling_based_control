@@ -88,6 +88,7 @@ class StateObserver {
 
   // env objects
   double table_x, table_y, table_z;
+  double target_x, target_y, target_z;
 
   // arm
   Eigen::Matrix<double, 9, 1> dq_;

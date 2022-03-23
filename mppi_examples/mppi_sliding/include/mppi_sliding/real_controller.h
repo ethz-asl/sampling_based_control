@@ -118,6 +118,7 @@ class ManipulationController
 
   ros::Subscriber state_subscriber_;
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
+  RTPublisher<manipulation_msgs::Input> opt_input_publisher_;
   RTPublisher<sensor_msgs::JointState> table_state_publisher_;
   RTPublisher<std_msgs::Float64> stage_cost_publisher_;
 
@@ -139,7 +140,8 @@ class ManipulationController
 
   manipulation_msgs::State x_ros_;
   manipulation_msgs::State x_nom_ros_;
-
+  manipulation_msgs::Input opt_u_ros_;
+  
   Eigen::Matrix<double, 7, 1> arm_torque_command_;
 
   // metrics
