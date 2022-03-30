@@ -35,7 +35,8 @@ void OMAVVelocityDynamics::initialize_world(
   object_ = sim_.addArticulatedSystem(object_description_, "/");
   ground = sim_.addGround(0.0, "steel");
 
-  // Material properties: friction, bounciness (restitution), restitution threshold
+  // Material properties: friction, bounciness (restitution), restitution
+  // threshold
   // sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
   // sim_.setMaterialPairProp("steel", "steel", 0.001, 0.001, 0.5);
   sim_.setMaterialPairProp("steel", "steel", 0.001, 0.5, 0.001);
@@ -93,7 +94,7 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   cmdv_ = x_.segment<6>(26);
   omav_->setPdTarget(cmd_, cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
-  nonLinearities_ = omav_->getNonlinearities().e();
+  nonLinearities_ = omav_->getNonlinearities(sim_.getGravity()).e();
   feedforward_force_ =
       feedforward_acceleration_ * settings_.mass + nonLinearities_;
   // feedforward_force_ = nonLinearities_;
@@ -144,7 +145,7 @@ force_t OMAVVelocityDynamics::get_contact_forces(double &unwanted_contact) {
                  // 'skip'
     if (contact.isSelfCollision()) continue;
     Eigen::Vector3d this_contact_force =
-        contact.getContactFrame().e().transpose() * contact.getImpulse()->e() /
+        contact.getContactFrame().e().transpose() * contact.getImpulse().e() /
         sim_.getTimeStep();
     // force.position = contact.getPosition().e();
     // Compute contact point in body frame:
@@ -158,11 +159,11 @@ force_t OMAVVelocityDynamics::get_contact_forces(double &unwanted_contact) {
         q_IB.inverse() * (contact.getPosition().e() - omav_pose_.head(3));
     // Check position of contact: If not at end effector, set to true.
     if (contact_point_B(0) < 0.55) {
-    //   // Adding the norm leads to noisy values, does not work in optimizer:
-    //   // unwanted_contact += this_contact_force.norm();
-       unwanted_contact = 1.0;
-    }// else {
-      force.force += this_contact_force;
+      //   // Adding the norm leads to noisy values, does not work in optimizer:
+      //   // unwanted_contact += this_contact_force.norm();
+      unwanted_contact = 1.0;
+    }  // else {
+    force.force += this_contact_force;
     // }
   }
   return force;
@@ -178,12 +179,12 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   double max_force = 0.0;
   for (const auto contact : omav_->getContacts()) {
     if (contact.skip())
-      continue;  /// if the contact is internal, one contact point is set to
-    /// 'skip'
+      continue;  // if the contact is internal, one contact point is set to
+                 // 'skip'
     if (contact.isSelfCollision()) continue;
     // Get the contact force
     current_force = contact.getContactFrame().e().transpose() *
-                    contact.getImpulse()->e() / sim_.getTimeStep();
+                    contact.getImpulse().e() / sim_.getTimeStep();
     // Function only returns the maximum force, checks if current force is
     // bigger than the on before
     if (current_force.norm() > max_force) {
