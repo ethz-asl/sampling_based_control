@@ -5,7 +5,8 @@
     <arg name="use_base_odometry" default="false"/>
     <arg name="debug" default="false"/>
 
-    <arg name="base_odometry_topic" default="/panda_base/vrpn_client/estimated_odometry" 
+    <!--  todo: this topic needs to be changed-->
+    <arg name="base_odometry_topic" default="/gis/optitracktopic_something"
         unless="$(arg use_base_odometry)"/>
     <arg name="base_odometry_topic" default="/ridgeback_velocity_controller/odom" 
         if="$(arg use_base_odometry)"/>
@@ -60,9 +61,9 @@
         <param name="base_alpha" value="0.7"/>
         <param name="base_pose_topic" value="$(arg base_odometry_topic)"/>
         <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
-        <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
+        <param name="object_pose_topic" value="/gis/notopic"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
-        <param name="object_state_topic" value="/simulation/object_state"/> <!-- only in sim -->
+        <param name="object_state_topic" value="/oven/articulation_state"/> <!-- get oven state msg from gyro -->
         <param name="wrench_topic" value="/ft_compensated"/>
         <param name="observer_update_frequency" value="200"/>
         <param name="exact_sync" value="false"/>

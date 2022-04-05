@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='ASCII'?>
+<robot name="partnet_b5ca6cded4b23f2455b2aedb5bd199c6">
+  <link name="world"/>
+  <link name="base"/>
+  <link name="handle_link_2"/>
+  <link name="handle_link">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 -0.0 0.0"/>
+      <mass value="3.0"/>
+      <inertia ixx="0.4333886585" ixy="0.0" ixz="0.0" iyy="0.39146708384" iyz="0.0" izz="0.042168942339999994"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="textured_objs/original-4.obj" scale="0.4538303702144554 0.4538303702144554 0.4538303702144554"/>
+      </geometry>
+      <origin xyz="0.23330056661655543 0.2226204113200439 -0.19163586347627987" rpy="0.0 -0.0 0.0"/>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="textured_objs/original-3.obj" scale="0.4538303702144554 0.4538303702144554 0.4538303702144554"/>
+      </geometry>
+      <origin xyz="0.23330056661655543 0.2226204113200439 -0.19163586347627987" rpy="0.0 -0.0 0.0"/>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="textured_objs/original-2.obj" scale="0.4538303702144554 0.4538303702144554 0.4538303702144554"/>
+      </geometry>
+      <origin xyz="0.23330056661655543 0.2226204113200439 -0.19163586347627987" rpy="0.0 -0.0 0.0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="consolidated_collision_meshes/link_2.obj" scale="0.4538303702144554 0.4538303702144554 0.4538303702144554"/>
+      </geometry>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 -0.0 0.0"/>
+    </collision>
+  </link>
+  <link name="link_3">
+    <!--
+    <visual>
+      <geometry>
+        <mesh filename="consolidated_collision_meshes/link_3.obj" scale="0.4538303702144554 0.4538303702144554 0.4538303702144554"/>
+      </geometry>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 -0.0 0.0"/>
+    </visual>
+    -->
+    <collision>
+      <geometry>
+        <mesh filename="consolidated_collision_meshes/link_3.obj" scale="0.4538303702144554 0.4538303702144554 0.4538303702144554"/>
+      </geometry>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 -0.0 0.0"/>
+    </collision>
+  </link>
+  <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="base"/>
+    <origin xyz="0.0 -0.07044640523565884 0.7743112142292514" rpy="0.0 -0.0 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+  </joint>
+  <joint name="articulation_joint" type="revolute">
+    <parent link="link_3"/>
+    <child link="handle_link"/>
+    <origin xyz="-0.23330056661655543 -0.2226204113200439 0.19163586347627987" rpy="0.0 -0.0 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <limit effort="1000.0" velocity="1.0" lower="0.0" upper="1.5707963267948966"/>
+    <dynamics damping="20.0" friction="40.0"/>
+  </joint>
+  <joint name="handle_joint" type="fixed">
+    <parent link="handle_link"/>
+    <child link="handle_link_2"/>
+    <origin xyz="0 0 0" rpy="0.0 0.0 0.0"/>
+  </joint>
+  <joint name="joint_3" type="fixed">
+    <parent link="base"/>
+    <child link="link_3"/>
+    <origin xyz="0.0 0.0 0.0" rpy="1.570796326794897 -0.0 -1.570796326794897"/>
+    <axis xyz="1.0 0.0 0.0"/>
+  </joint>
+</robot>

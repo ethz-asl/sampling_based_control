@@ -100,43 +100,43 @@ bool StateObserver::initialize() {
     ROS_ERROR("Failed to parse base_alpha param or invalid.");
     return false;
   }
-
-  if (!simulation_) {
-    KDL::Tree object_kinematics;
-    if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
-      ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
-      return false;
-    }
-
-    KDL::Chain chain;
-    object_kinematics.getChain("shelf", "handle_link", chain);
-    if (chain.getNrOfJoints() > 1) {
-      ROS_ERROR(
-          "The object has more then one joint. Only one joint supported!");
-      return false;
-    }
-    if (chain.getNrOfJoints() == 0) {
-      ROS_ERROR("Failed to parse the object kinematic chain.");
-      return false;
-    }
-
-    // at start-up door is closed
-    KDL::JntArray joint_pos(chain.getNrOfJoints());
-    
-
-    // required to calibrate the initial shelf position
-    KDL::Frame T_shelf_handle_KDL;
-    KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
-    fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
-    tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
-
-    // required to now the origin hinge position
-    KDL::Frame T_door_handle_KDL;
-    object_kinematics.getChain("axis_link", "handle_link", chain);
-    KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
-    fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
-    tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
-  }
+//  todo: this should not be necessary since the object state is measured directly
+//  if (!simulation_) {
+//    KDL::Tree object_kinematics;
+//    if (!kdl_parser::treeFromParam("object_description", object_kinematics)) {
+//      ROS_ERROR("Failed to create KDL::Tree from 'object_description'");
+//      return false;
+//    }
+//
+//    KDL::Chain chain;
+//    object_kinematics.getChain("shelf", "handle_link", chain);
+//    if (chain.getNrOfJoints() > 1) {
+//      ROS_ERROR(
+//          "The object has more then one joint. Only one joint supported!");
+//      return false;
+//    }
+//    if (chain.getNrOfJoints() == 0) {
+//      ROS_ERROR("Failed to parse the object kinematic chain.");
+//      return false;
+//    }
+//
+//    // at start-up door is closed
+//    KDL::JntArray joint_pos(chain.getNrOfJoints());
+//
+//
+//    // required to calibrate the initial shelf position
+//    KDL::Frame T_shelf_handle_KDL;
+//    KDL::ChainFkSolverPos_recursive fk_solver_shelf(chain);
+//    fk_solver_shelf.JntToCart(joint_pos, T_shelf_handle_KDL);
+//    tf::transformKDLToEigen(T_shelf_handle_KDL.Inverse(), T_handle0_shelf_);
+//
+//    // required to now the origin hinge position
+//    KDL::Frame T_door_handle_KDL;
+//    object_kinematics.getChain("axis_link", "handle_link", chain);
+//    KDL::ChainFkSolverPos_recursive fk_solver_hinge(chain);
+//    fk_solver_hinge.JntToCart(joint_pos, T_door_handle_KDL);
+//    tf::transformKDLToEigen(T_door_handle_KDL.Inverse(), T_handle0_hinge_);
+//  }
 
   // get the relative pose of base to reference frame
   KDL::Tree robot_kinematics;

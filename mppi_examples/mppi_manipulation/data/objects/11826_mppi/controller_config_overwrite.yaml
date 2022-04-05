@@ -1,0 +1,7 @@
+dynamics:
+  ignore_object_self_collision: true
+  ref1: [0.25, 0.42, 0.02, 0, 1, 0, 0, 0, 0, 0, 0, 1]
+  ref2: [0.25, 0.42, 0.02, 0, 1, 0, 0, 0, 0, 0, 1.57, 2]
+
+cost:
+  tracked_frame: panda_grasp_finger_edge

@@ -38,10 +38,14 @@ manipulation_controller:
   cost:
     regularization: 0.0
     linear_weight: 100.0
-    angular_weight: 100.0
 
-    linear_weight_opening: 100.0
-    angular_weight_opening: 100.0
+    angular_weight: 10.0
+    angular_weight_opening: 1.0
+
+    # joint controller cost (mode 3)
+    arm_joint_weight: 20
+    robot_base_position_weight: 20
+    robot_base_orientation_weight: 20
 
     linear_tolerance_manipulation: 0.0
     angular_tolerance_manipulation: 0.3
@@ -74,7 +78,8 @@ manipulation_controller:
     power_weight: 0.0
   
     handle_frame: handle_link
-    tracked_frame: panda_grasp
+    tracked_frame: panda_grasp_finger_edge
+    #    tracked_frame: panda_grasp
     arm_base_frame: panda_link0
 
     collision_link_0: panda_link1

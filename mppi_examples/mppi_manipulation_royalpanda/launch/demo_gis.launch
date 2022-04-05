@@ -4,12 +4,12 @@
 	<arg name="experiment_name" default="mppi_manipulation"/>
 
 	<!-- Launch state observer -->
-	<include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch">
+	<include file="$(find mppi_manipulation_royalpanda)/launch/observer_gis.launch">
 	</include>
 
 	<!-- Launch robot state controller -->
-	<include file="$(find mppi_manipulation_royalpanda)/launch/robot.launch">
-		<arg name="object"  value="new_shelf"/>
+	<include file="$(find mppi_manipulation_royalpanda)/launch/robot_gis.launch">
+		<arg name="object"  value="11826_mppi"/>
 		<arg name="experiment_name" value="$(arg experiment_name)"/>
 	</include>
 
