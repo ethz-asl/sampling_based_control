@@ -8,9 +8,9 @@
 	~/catkin_ws/src$ git clone --recursive https://github.com/ethz-asl/sampling_based_control.git
 	```
 
-2. Install some system dependenices
+2. Install some system dependencies
 	```
-	sudo apt-get install libyaml-cpp-dev libglfw3-dev`
+	sudo apt-get install libyaml-cpp-dev libglfw3-dev
 	```
 
 3. Install ROS dependencies. We manage them with [`rosdep`](http://wiki.ros.org/rosdep). In the root of you catkin workspace do:
