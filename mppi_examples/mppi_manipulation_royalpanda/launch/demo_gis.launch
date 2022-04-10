@@ -7,7 +7,7 @@
 	<include file="$(find mppi_manipulation_royalpanda)/launch/observer_gis.launch">
 	</include>
 
-	<!-- Launch robot state controller -->
+    <!-- Launch robot state controller -->
 	<include file="$(find mppi_manipulation_royalpanda)/launch/robot_gis.launch">
 		<arg name="object"  value="11826_mppi"/>
 		<arg name="experiment_name" value="$(arg experiment_name)"/>

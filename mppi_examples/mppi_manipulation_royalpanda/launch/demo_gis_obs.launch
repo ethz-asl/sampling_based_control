@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<!-- Experiment settings -->
+	<arg name="experiment_name" default="mppi_manipulation"/>
+
+    Load all the robot and world descriptions
+    <include file="$(find mppi_manipulation)/launch/load_gis.launch">
+        <arg name="debug" value="false"/>
+        <arg name="object" value="11826_mppi"/>
+        <arg name="load_simulation_object" value="true"/>
+    </include>
+
+	<!-- Launch state observer -->
+	<include file="$(find mppi_manipulation_royalpanda)/launch/observer_gis.launch">
+	</include>
+
+</launch>

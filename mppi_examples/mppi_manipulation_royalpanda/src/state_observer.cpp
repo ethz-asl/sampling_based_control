@@ -37,6 +37,9 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   std::string base_pose_topic;
   nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
 
+  std::string base_odom_type;
+  nh_.param<std::string>("base_odom_type", base_odom_type, "pose");
+
   std::string base_twist_topic;
   nh_.param<std::string>("base_twist_topic", base_twist_topic, "/base_twist");
 
@@ -65,7 +68,11 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 
   //clang-format off
   arm_subscriber_ =          nh_.subscribe(arm_state_topic, 1, &StateObserver::arm_state_callback, this);
-  base_pose_subscriber_ =    nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback, this);
+  if (base_odom_type == "pose"){
+    base_pose_subscriber_ =    nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback_geom, this);
+  }else{
+    base_pose_subscriber_ =    nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback, this);
+  }
   base_twist_subscriber_ =   nh_.subscribe(base_twist_topic, 1, &StateObserver::base_twist_callback, this);
   object_subscriber_ =       nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
   wrench_subscriber_ =       nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
@@ -212,6 +219,54 @@ void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
 
   {
     std::unique_lock<std::mutex> lock(state_mutex_);  
+    base_pose_.x() = T_world_base_.translation().x();
+    base_pose_.y() = T_world_base_.translation().y();
+    base_pose_.z() = std::atan2(ix.y(), ix.x());
+    time_ =
+        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
+  }
+
+  // publish to ros
+  geometry_msgs::PoseStamped base_pose;
+  base_pose.header.stamp = ros::Time::now();
+  base_pose.header.frame_id = "world";
+  base_pose.pose.position.x = base_pose_.x();
+  base_pose.pose.position.y = base_pose_.y();
+  base_pose.pose.position.z = 0.0;
+  Eigen::Quaterniond q(
+      Eigen::AngleAxisd(base_pose_.z(), Eigen::Vector3d::UnitZ()));
+  base_pose.pose.orientation.x = q.x();
+  base_pose.pose.orientation.y = q.y();
+  base_pose.pose.orientation.z = q.z();
+  base_pose.pose.orientation.w = q.w();
+  base_pose_publisher_.publish(base_pose);
+
+  robot_state_.header.stamp = msg->header.stamp;
+  robot_state_.position[0] = base_pose_.x();
+  robot_state_.position[1] = base_pose_.y();
+  robot_state_.position[2] = base_pose_.z();
+
+  robot_state_publisher_.publish(robot_state_);
+}
+
+void StateObserver::base_pose_callback_geom(const geometry_msgs::PoseStampedConstPtr & msg) {
+  // code by G Schiavi for testing affordance manipulation
+  tf::poseMsgToEigen(msg->pose, T_world_reference_);
+  Eigen::Matrix4d gis_offset;
+  gis_offset << 0., 0., 1., 0.,
+                1., 0., 0., 0.,
+                0., 1., 0., 0.,
+                0., 0., 0., 1.;
+  Eigen::Affine3d T_gis_offset;
+  T_gis_offset.matrix() = gis_offset;
+  T_world_base_ = T_gis_offset * T_world_reference_ * T_reference_base_;
+  // 2d projection of forward motion axis
+  Eigen::Vector3d ix = T_world_base_.rotation().col(0);
+  std::string sep = "\n----------------------------------------\n";
+//  std::cout << T_world_base_.matrix() << sep;
+
+  {
+    std::unique_lock<std::mutex> lock(state_mutex_);
     base_pose_.x() = T_world_base_.translation().x();
     base_pose_.y() = T_world_base_.translation().y();
     base_pose_.z() = std::atan2(ix.y(), ix.x());

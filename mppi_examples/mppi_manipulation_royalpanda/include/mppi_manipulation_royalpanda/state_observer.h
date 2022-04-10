@@ -49,6 +49,7 @@ class StateObserver {
 
  private:
   void base_pose_callback(const nav_msgs::OdometryConstPtr& msg);
+  void base_pose_callback_geom(const geometry_msgs::PoseStampedConstPtr& msg);
   void base_twist_callback(const nav_msgs::OdometryConstPtr& msg);
   void object_pose_callback(const nav_msgs::OdometryConstPtr& msg);
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
