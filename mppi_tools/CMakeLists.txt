@@ -7,7 +7,7 @@ find_package(Eigen3 REQUIRED 3.3)
 set(PACKAGE_DEPENDENCIES mppi)
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
-find_package(glfw3 3.3 REQUIRED)
+find_package(glfw3 3.2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 catkin_package(
