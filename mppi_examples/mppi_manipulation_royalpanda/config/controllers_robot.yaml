@@ -38,6 +38,7 @@ manipulation_controller:
   cost:
     regularization: 0.0
     linear_weight: 100.0
+    linear_weight_opening: 10.0
 
     angular_weight: 10.0
     angular_weight_opening: 1.0
