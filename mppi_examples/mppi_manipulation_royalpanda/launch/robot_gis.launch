@@ -8,7 +8,6 @@
         <arg name="debug" value="false"/>
         <arg name="object" value="$(arg object)"/>
         <arg name="load_simulation_object" value="true"/>
-        <arg name="wrench_sensor" value="true"/>
     </include>
 
     <!-- Controller configuration -->
