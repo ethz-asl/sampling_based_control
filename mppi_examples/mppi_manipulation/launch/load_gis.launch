@@ -6,9 +6,17 @@
     <arg name="object_height" default="1.0"/>
     <arg name="load_simulation_object" default="true"/>
 
-    <param name="robot_description"
-           textfile="$(find mppi_manipulation)/data/rd.urdf"
-    />
+    <param name="robot_description" command="$(find xacro)/xacro $(arg description_file)
+      resources_directory:='package://mppi_panda'
+      collision_links:=false
+      collision_hand:=true
+      add_finger:=true
+      custom_fingers:=true
+      fixed_base:=false"/>
+
+<!--     <param name="robot_description" -->
+<!--            textfile="$(find mppi_manipulation)/data/rd.urdf" -->
+<!--     /> -->
 
     <!-- Required by the joint publisher of the arm and gripper joints only, otherwise it will also publish the joints of the base -->
     <param name="robot_description_fixed_base" command="$(find xacro)/xacro $(arg description_file)
