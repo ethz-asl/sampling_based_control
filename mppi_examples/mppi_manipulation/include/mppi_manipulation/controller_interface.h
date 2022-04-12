@@ -44,6 +44,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   std::map<std::string, double> get_cost_map(const mppi::observation_t& x, const mppi::input_t& u, const double t);
   bool init_reference_to_current_pose(const mppi::observation_t& x,
                                       const double t);
+  void print_reference() const;
 
  private:
   void init_model(const std::string& robot_description,

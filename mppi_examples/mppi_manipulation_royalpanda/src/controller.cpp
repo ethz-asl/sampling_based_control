@@ -285,6 +285,8 @@ void ManipulationController::state_callback(
       position_initial_.head<3>() = position_desired_.head<3>();
       if (!man_interface_->init_reference_to_current_pose(x_, 0.0)) {
         ROS_WARN("Failed to set the controller reference to current state.");
+    }else{
+      ROS_INFO("I have set the reference to the current pose");
     }
   }
 
@@ -498,21 +500,28 @@ void ManipulationController::update(const ros::Time& time,
         (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
   }
   update_position_reference(period);
-//  send_command_arm(period);
-//  send_command_base(period);
+  send_command_arm(period);
+  send_command_base(period);
   publish_ros();
   
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_, current_time_);
+    /*
     auto cost_map_all = man_interface_->get_cost_map(x_, u_, current_time_);
+    man_interface_->print_reference();
     std::stringstream ss;
+    ss << "Current time:     " << current_time_ << std::endl;
+    ss << "Current state:    " << x_.transpose() << std::endl;
+    ss << "Current input:    " << u_.transpose() << std::endl;
+    ss << "Total stage cost: " << stage_cost_ << std::endl;
     for (auto const &pair: cost_map_all) {
       ss << "{" << pair.first << ": " << pair.second << "}  ";
     }
     ss << "\n" << std::endl;
 
     ROS_INFO_STREAM_THROTTLE(0.5, ss.str());
+    */
   }
 
   if (logging_ && log_counter_ == log_every_steps_){
