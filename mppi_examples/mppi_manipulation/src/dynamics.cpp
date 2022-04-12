@@ -123,8 +123,6 @@ void PandaRaisimDynamics::set_collision() {
     for (const auto body_idx1 : pandaBodyIdxs)
       for (const auto body_idx2 : pandaBodyIdxs)
         panda_->ignoreCollisionBetween(body_idx1, body_idx2);
-  }else{
-    ROS_INFO_STREAM("ignoring panda self-collision is False");
   }
 }
 
