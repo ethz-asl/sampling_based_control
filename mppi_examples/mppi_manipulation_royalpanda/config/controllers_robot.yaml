@@ -12,7 +12,7 @@ manipulation_controller:
   ros_publish_rate: 10.0
   static_optimization: false
 
-  logging: true
+  logging: false
   log_file_path: $(find mppi_manipulation_royalpanda)/logs/$(arg experiment_name)
   fixed_base: false
   arm_id: panda

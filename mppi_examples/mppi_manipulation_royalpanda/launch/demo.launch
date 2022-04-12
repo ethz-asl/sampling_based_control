@@ -9,7 +9,7 @@
 
 	<!-- Launch robot state controller -->
 	<include file="$(find mppi_manipulation_royalpanda)/launch/robot.launch">
-		<arg name="object"  value="new_shelf"/>
+		<arg name="object"  value="11826_mppi"/>
 		<arg name="experiment_name" value="$(arg experiment_name)"/>
 	</include>
 

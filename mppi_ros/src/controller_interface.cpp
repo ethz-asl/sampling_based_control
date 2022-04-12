@@ -128,7 +128,10 @@ bool ControllerRos::update_reference_thread(
 bool ControllerRos::update_policy_thread(
     const mppi::threading::WorkerEvent &event) {
   if (!observation_set_) return true;
+  auto start = std::chrono::high_resolution_clock::now();
   controller_->update_policy();
+  auto end = std::chrono::high_resolution_clock::now();
+  ROS_INFO_STREAM_THROTTLE(1.0, "Update took "  << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1e6 << "ms.");
 
   if (controller_->config_.logging) {
     mppi_ros::to_msg(controller_->get_data(), data_ros_);

@@ -498,8 +498,8 @@ void ManipulationController::update(const ros::Time& time,
         (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
   }
   update_position_reference(period);
-  send_command_arm(period);
-  send_command_base(period);
+//  send_command_arm(period);
+//  send_command_base(period);
   publish_ros();
   
   {

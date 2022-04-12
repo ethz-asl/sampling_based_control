@@ -105,11 +105,11 @@ dynamics:
   - 0.0
   - 0.0
   - 0.0
-  object_description: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_royalpanda/mobility.urdf
-  object_description_raisim: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_royalpanda/mobility.urdf
+  object_description: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_mppi/mobility.urdf
+  object_description_raisim: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_mppi/mobility.urdf
   object_handle_joint: handle_joint
   object_handle_link: handle_link
-  raisim_object_res_path: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_royalpanda
+  raisim_object_res_path: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_mppi
   raisim_robot_res_path: /home/giulio/Git/affordances_for_manipulation/src/robot_models
   ref1:
   - 0.25
@@ -139,7 +139,7 @@ dynamics:
   - 2
   robot_description: /home/giulio/Git/affordances_for_manipulation/src/robot_models/rd.urdf
   robot_description_raisim: /home/giulio/Git/affordances_for_manipulation/src/robot_models/rd_raisim_cylinder.urdf
-fpath: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_royalpanda/controller_config_full_generated.yaml
+fpath: /home/giulio/Git/affordances_for_manipulation/data/objects/all/royalpanda/11826_mppi/controller_config_full_generated.yaml
 options:
   debug_prints: false
   default_pose:
