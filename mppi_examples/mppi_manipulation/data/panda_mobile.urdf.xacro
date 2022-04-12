@@ -50,6 +50,22 @@
             <axis xyz="0 1 0"/>
             <origin xyz="0 0 0.095" rpy="0 0 0"/> <!-- 0.106-->
         </joint>
+        <link name="panda_grasp_finger"/>
+          <joint name="panda_grasp__finger_joint" type="fixed">
+            <parent link="panda_hand"/>
+            <child link="panda_grasp_finger"/>
+            <axis xyz="0 1 0"/>
+            <origin rpy="0 0 0" xyz="0 0.025 0.125"/>
+            <!-- 0.106-->
+          </joint>
+          <link name="panda_grasp_finger_edge"/>
+          <joint name="panda_grasp__finger_edge_joint" type="fixed">
+            <parent link="panda_hand"/>
+            <child link="panda_grasp_finger_edge"/>
+            <axis xyz="0 1 0"/>
+            <origin rpy="0 0 0" xyz="0 0.04 0.15"/>
+            <!-- 0.106-->
+          </joint>
     </xacro:if>
 
 </robot>

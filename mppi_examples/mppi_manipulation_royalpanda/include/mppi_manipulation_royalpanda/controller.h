@@ -115,6 +115,7 @@ class ManipulationController
   bool debug_ = false;
   bool simulation_;
   bool started_;
+  bool connect_controller_ = false;
   bool started_twice_;
   bool sequential_;
   bool state_ok_;

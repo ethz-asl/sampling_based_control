@@ -300,7 +300,7 @@ void PandaControllerInterface::update_reference(const mppi::observation_t& x,
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-  return robot_model_.get_pose("panda_grasp");
+  return robot_model_.get_pose("panda_grasp_finger_edge");
 }
 
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(

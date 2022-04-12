@@ -100,6 +100,10 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam("/connect_controller", connect_controller_)) {
+    ROS_ERROR("connect_controller rosparam not found: set to false by defaul");
+  }
+
   if (!node_handle.getParam("fixed_base", fixed_base_)) {
     ROS_ERROR("fixed_base not found");
     return false;
@@ -500,8 +504,12 @@ void ManipulationController::update(const ros::Time& time,
         (1 - alpha) * velocity_filtered_[i + 3] + alpha * robot_state_.dq[i];
   }
   update_position_reference(period);
-  send_command_arm(period);
-  send_command_base(period);
+  if (connect_controller_){
+    send_command_arm(period);
+    send_command_base(period);
+  }else{
+    ROS_INFO_STREAM_THROTTLE(1.0, "Controller is currently disconnected, you can see desired trajectory in rviz");
+  }
   publish_ros();
   
   {

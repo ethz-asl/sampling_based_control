@@ -2,11 +2,14 @@
 <launch>
 	<!-- Experiment settings -->
 	<arg name="experiment_name" default="mppi_manipulation"/>
+	<arg name="connect_controller" default="true"/>
+
 
 	<!-- Launch state observer -->
 	<include file="$(find mppi_manipulation_royalpanda)/launch/observer.launch">
 	</include>
 
+	<param name="connect_controller" value="$(arg connect_controller)"/>
 	<!-- Launch robot state controller -->
 	<include file="$(find mppi_manipulation_royalpanda)/launch/robot.launch">
 		<arg name="object"  value="11826_mppi"/>
