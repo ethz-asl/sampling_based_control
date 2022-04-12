@@ -505,6 +505,14 @@ void ManipulationController::update(const ros::Time& time,
   {
     std::unique_lock<std::mutex> lock(observation_mutex_);
     stage_cost_ = man_interface_->get_stage_cost(x_, u_, current_time_);
+    auto cost_map_all = man_interface_->get_cost_map(x_, u_, current_time_);
+    std::stringstream ss;
+    for (auto const &pair: cost_map_all) {
+      ss << "{" << pair.first << ": " << pair.second << "}  ";
+    }
+    ss << "\n" << std::endl;
+
+    ROS_INFO_STREAM_THROTTLE(0.5, ss.str());
   }
 
   if (logging_ && log_counter_ == log_every_steps_){

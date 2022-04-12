@@ -268,6 +268,13 @@ void PandaControllerInterface::reference_callback(const std_msgs::Float64MultiAr
   reference_set_ = true;
 }
 
+std::map<std::string, double> PandaControllerInterface::
+    get_cost_map(const mppi::observation_t& x, const mppi::input_t& u, const double t) {
+  if (!reference_set_) return std::map<std::string, double>{};
+  local_cost_->get_stage_cost(x, u, t);
+  return local_cost_->get_cost_map();
+}
+
 void PandaControllerInterface::mode_callback(
     const std_msgs::Int64ConstPtr& msg) {
   std::unique_lock<std::mutex> lock(reference_mutex_);
