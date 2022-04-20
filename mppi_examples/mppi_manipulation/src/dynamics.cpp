@@ -67,7 +67,6 @@ void PandaRaisimDynamics::initialize_world(
   object_ = sim_.addArticulatedSystem(object_description_, params_.raisim_object_res_path);
 
   if(params_.ignore_object_self_collision){
-    ROS_INFO_STREAM("ignoring object self-collision is True");
     std::vector<int> objBodyIdxs;
     for (const auto& bodyName : object_->getBodyNames())
       objBodyIdxs.push_back(object_->getBodyIdx(bodyName));
@@ -118,15 +117,12 @@ void PandaRaisimDynamics::initialize_pd() {
 
 void PandaRaisimDynamics::set_collision() {
   if (params_.ignore_panda_self_collision) {
-    ROS_INFO_STREAM("ignoring panda self-collision is True");
     std::vector<int> pandaBodyIdxs;
     for (const auto& bodyName : panda_->getBodyNames())
       pandaBodyIdxs.push_back(panda_->getBodyIdx(bodyName));
     for (const auto body_idx1 : pandaBodyIdxs)
       for (const auto body_idx2 : pandaBodyIdxs)
         panda_->ignoreCollisionBetween(body_idx1, body_idx2);
-  }else{
-    ROS_INFO_STREAM("ignoring panda self-collision is False");
   }
 }
 
