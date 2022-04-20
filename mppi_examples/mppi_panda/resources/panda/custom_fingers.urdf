@@ -11,21 +11,15 @@
         </inertial>
 
         <visual>
-            <origin rpy="0.0 0 3.14159265359" xyz="0 0.022 0.039"/>
-            <geometry>
-                <box size="0.021 0.009 0.070"/>
-            </geometry>
-            <material name="">
-                <color rgba="1 1 1 1"/>
-            </material>
-        </visual>
-
-        <visual>
-            <origin rpy="0.0 0 3.14159265359" xyz="0 0.014 0.0665"/>
-            <geometry>
-                <box size="0.021 0.025 0.015"/>
-            </geometry>
-        </visual>
+      <origin rpy="0.0 0 3.14159265359" xyz="0 0.022 0.039"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.07"/>
+        <!--<box size="0.021 0.009 0.070"/>-->
+      </geometry>
+      <material name="steel">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
 
         <collision>
             <origin rpy="0.0 0 3.14159265359" xyz="0 0.022 0.039"/>

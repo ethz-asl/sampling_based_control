@@ -47,7 +47,7 @@
     <parent link="world"/>
     <child link="base"/>
     <!--<origin xyz="-1.156 1.46 1.01" rpy="0.0 0.0 1.57"/>-->
-    <origin xyz="-0.73 1.16 1.01" rpy="0.0 0.0 2.496"/>
+    <origin xyz="-0.727 1.18 1.005" rpy="0.0 0.0 2.525"/>
     <axis xyz="1.0 0.0 0.0"/>
   </joint>
   <joint name="articulation_joint" type="revolute">

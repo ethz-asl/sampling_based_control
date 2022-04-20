@@ -2,7 +2,7 @@
 <launch>
 	<!-- Experiment settings -->
 	<arg name="experiment_name" default="mppi_manipulation"/>
-	<arg name="connect_controller" default="false"/>
+	<arg name="connect_controller" default="true"/>
 
 
 	<!-- Launch state observer -->
