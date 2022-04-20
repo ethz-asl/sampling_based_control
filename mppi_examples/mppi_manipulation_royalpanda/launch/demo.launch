@@ -2,7 +2,7 @@
 <launch>
 	<!-- Experiment settings -->
 	<arg name="experiment_name" default="mppi_manipulation"/>
-	<arg name="connect_controller" default="true"/>
+	<arg name="connect_controller" default="false"/>
 
 
 	<!-- Launch state observer -->
@@ -12,7 +12,7 @@
 	<param name="connect_controller" value="$(arg connect_controller)"/>
 	<!-- Launch robot state controller -->
 	<include file="$(find mppi_manipulation_royalpanda)/launch/robot.launch">
-		<arg name="object"  value="11826_mppi"/>
+		<arg name="object"  value="zanussi"/>
 		<arg name="experiment_name" value="$(arg experiment_name)"/>
 	</include>
 

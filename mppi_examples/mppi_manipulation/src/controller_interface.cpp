@@ -390,6 +390,8 @@ void PandaControllerInterface::publish_ros() {
   pose_handle_publisher_.publish(get_pose_handle_ros(x_opt_[0]));
 }
 
-void PandaControllerInterface::print_reference() const {
-  ROS_INFO_STREAM_THROTTLE(0.5, "First ref entry: " << ref_.rr[0].transpose());
+std::string PandaControllerInterface::print_reference() const {
+  std::stringstream ss;
+  ss << ref_.rr[0].transpose();
+  return ss.str();
 }
