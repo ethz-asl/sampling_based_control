@@ -118,7 +118,7 @@
     <collision>
         <origin rpy="0 0 0" xyz="0 0 0.40"/>
         <geometry>
-            <box size="0.90 0.75 0.65"/>
+            <box size="1.0 0.75 0.65"/>
         </geometry>
         <material name="steel">
             <contact name="steel"/>
