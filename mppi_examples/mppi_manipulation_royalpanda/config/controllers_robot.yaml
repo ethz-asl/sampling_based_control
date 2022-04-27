@@ -27,6 +27,7 @@ manipulation_controller:
 
   gaussian_policy: true
   sequential: false
+  # this parameter prevents windup in the integral controller
   max_position_error: [0.02, 0.02, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
 
   log_every_steps: 15
@@ -35,7 +36,7 @@ manipulation_controller:
   bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
   
   # Cost parameters used by the controller
-  rollouts: 12
+  rollouts: 20
   cost:
     regularization: 0.0
     linear_weight: 100.0
