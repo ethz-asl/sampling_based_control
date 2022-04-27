@@ -11,6 +11,7 @@ manipulation_controller:
   publish_ros: true
   ros_publish_rate: 10.0
   static_optimization: false
+  direct_control: true
 
   logging: false
   log_file_path: $(find mppi_manipulation_royalpanda)/logs/$(arg experiment_name)
@@ -26,7 +27,7 @@ manipulation_controller:
 
   gaussian_policy: true
   sequential: false
-  max_position_error: [0.2, 0.2, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  max_position_error: [0.02, 0.02, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
 
   log_every_steps: 15
 
@@ -34,7 +35,7 @@ manipulation_controller:
   bag_path: "/media/giuseppe/My Passport/Work/bags/test.bag"
   
   # Cost parameters used by the controller
-  rollouts: 40
+  rollouts: 12
   cost:
     regularization: 0.0
     linear_weight: 100.0
@@ -44,7 +45,7 @@ manipulation_controller:
     #angular_weight_opening: 1.0
 
     angular_weight: 10.0
-    angular_weight_opening: 1.0
+    angular_weight_opening: 0.0
 
     # joint controller cost (mode 3)
     arm_joint_weight: 20
@@ -65,7 +66,7 @@ manipulation_controller:
 
     contact_weight: 100.0
 
-    object_weight: 100
+    object_weight: 1000
     object_tolerance: 0.01
 
     grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
@@ -101,8 +102,9 @@ manipulation_controller:
       i_max: [ 0.0, 0.0, 0.0 ]
     arm_gains:
       kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-      kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
-      ki: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
+      kd: [ 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0 ]
+      ki: [ 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 ] 
+      #ki: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
       i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
     gripper_gains:
       kp: [ 100.0, 100.0 ]
@@ -134,11 +136,31 @@ manipulation_controller:
         i_max: [ 0.0, 0.0, 0.0 ]
       arm_gains:
         kp: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-        kd: [ 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 ]
-        ki: [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+        kd: [ 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0 ]
+        #ki: [ 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 ] 
+        ki: [ 30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0 ] 
         i_max: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
       gripper_gains:
         kp: [ 100.0, 100.0 ]
         kd: [ 50.0, 50.0 ]
         ki: [ 0.0, 0.0 ]
         i_max: [ 0.0, 0.0 ]
+
+moma_cartesian_impedance_controller:
+  type: moma_controllers/CartesianImpedanceController
+  arm_id: panda
+  tool_link: panda_grasp_finger_edge
+  joint_names:
+    - panda_joint1
+    - panda_joint2
+    - panda_joint3
+    - panda_joint4
+    - panda_joint5
+    - panda_joint6
+    - panda_joint7
+  filter_params: 0.05
+  safety_margin: 0.087 # ~5 degrees
+  q_nullspace: [0.0, 0.0, 0.0, -1.5, 0.0, 1.5, 0.0]
+  lower_limit: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
+  upper_limit: [2.8973, 1.7628, 2.8973, -0.0698, 2.8973, 3.7525, 2.8973]
+  limits_gains: [500.0, 500.0, 500.0, 300.0, 100.0, 50.0, 50.0]

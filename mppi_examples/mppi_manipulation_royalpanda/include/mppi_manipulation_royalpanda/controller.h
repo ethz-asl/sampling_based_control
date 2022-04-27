@@ -120,6 +120,7 @@ class ManipulationController
   bool sequential_;
   bool state_ok_;
   bool state_received_;
+  bool direct_control_ = true;
 
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
@@ -148,6 +149,7 @@ class ManipulationController
   RTPublisher<manipulation_msgs::State> nominal_state_publisher_;
   RTPublisher<std_msgs::Float64MultiArray> input_publisher_;
   RTPublisher<std_msgs::Float64MultiArray> position_desired_publisher_;
+  RTPublisher<geometry_msgs::PoseStamped> ee_pose_desired_publisher_;
   
   // the actual sampling-based controller
   std::unique_ptr<manipulation::PandaControllerInterface> man_interface_;

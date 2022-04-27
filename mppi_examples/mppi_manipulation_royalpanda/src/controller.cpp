@@ -68,6 +68,11 @@ bool ManipulationController::init_parameters(ros::NodeHandle& node_handle) {
     return false;
   }
 
+  if (!node_handle.getParam("direct_control", direct_control_)) {
+    ROS_ERROR("direct_control not found");
+    return false;
+  }
+
   if (!node_handle.getParam("joint_names", joint_names_) ||
       joint_names_.size() != 7) {
     ROS_ERROR("Invalid or no joint_names parameters provided");
@@ -173,24 +178,27 @@ bool ManipulationController::init_interfaces(hardware_interface::RobotHW* robot_
   
   // get the effort interfaces from the robot
   // the ones we use to send torque commands to the arm
-  auto* effort_joint_interface =
-      robot_hw->get<hardware_interface::EffortJointInterface>();
-  if (effort_joint_interface == nullptr) {
-    ROS_ERROR("Failed to get effort joint interface.");
-    return false;
-  }
-
-  // get the joint handles interfaces from the robot 
-  // the ones we use to read the current robot state
-  for (size_t i = 0; i < 7; ++i) {
-    try {
-      joint_handles_.push_back(
-          effort_joint_interface->getHandle(joint_names_[i]));
-    } catch (const hardware_interface::HardwareInterfaceException& ex) {
-      ROS_ERROR_STREAM("Failed to get joint handles: " << ex.what());
+  if(direct_control_){
+    auto* effort_joint_interface =
+        robot_hw->get<hardware_interface::EffortJointInterface>();
+    if (effort_joint_interface == nullptr) {
+      ROS_ERROR("Failed to get effort joint interface.");
       return false;
     }
+  
+    // get the joint handles interfaces from the robot 
+    // the ones we use to read the current robot state
+    for (size_t i = 0; i < 7; ++i) {
+      try {
+        joint_handles_.push_back(
+            effort_joint_interface->getHandle(joint_names_[i]));
+      } catch (const hardware_interface::HardwareInterfaceException& ex) {
+        ROS_ERROR_STREAM("Failed to get joint handles: " << ex.what());
+        return false;
+      }
+    }
   }
+    
 
   // the velocity joint interface
   // this will eventually be used only to control the simulated robot
@@ -265,6 +273,8 @@ void ManipulationController::init_ros(ros::NodeHandle& nh) {
   position_desired_publisher_.init(nh, "pos_desired", 1);
   position_desired_publisher_.msg_.data.resize(10, 0.0);
 
+  ee_pose_desired_publisher_.init(nh, "equilibrium_pose", 1);
+
   state_subscriber_ = nh.subscribe(state_topic_, 1, &ManipulationController::state_callback, this);
 
   ROS_INFO_STREAM("Sending base commands to: " << base_twist_topic_);
@@ -328,10 +338,13 @@ void ManipulationController::starting(const ros::Time& time) {
     }
   }
 
+  robot_state_ = state_handle_->getRobotState();
+
   for (size_t i = 0; i < 7; i++) {
-    position_desired_[i + 3] = joint_handles_[i].getPosition();
-    position_initial_[i + 3] = joint_handles_[i].getPosition();
+    position_desired_[i + 3] = robot_state_.q[i];
+    position_initial_[i + 3] = robot_state_.q[i];
   }
+
   position_measured_ = position_desired_;
 
   // metrics
@@ -442,11 +455,29 @@ void ManipulationController::send_command_arm(const ros::Duration& period) {
   }
   
 
-  // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
-  // saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, torque_desired_);
-  // torque_desired_.setZero();
-  for (size_t i = 0; i < 7; ++i) {
-    joint_handles_[i].setCommand(tau_d_calculated[i]/*torque_desired_[i]*/);
+
+  if(direct_control_){
+    // max torque diff with sampling rate of 1 kHz is 1000 * (1 / sampling_time).
+    // saturateTorqueRate(tau_d_calculated, robot_state_.tau_J_d, torque_desired_);
+    // torque_desired_.setZero();
+    for (size_t i = 0; i < 7; ++i) {
+      joint_handles_[i].setCommand(tau_d_calculated[i]/*torque_desired_[i]*/);
+    }
+  }else{
+    Eigen::VectorXd robot_state_desired(39);
+    for (int i=0; i < 39; ++i){
+      robot_state_desired[i] = x_[i];
+    }
+    for (int i=0; i < 10; ++i){
+      robot_state_desired[i] = position_desired_[i];
+    }
+    geometry_msgs::PoseStamped pos_des_msg = man_interface_->get_panda_pose_end_effector_ros(robot_state_desired);
+
+    if (ee_pose_desired_publisher_.trylock()) {
+      ee_pose_desired_publisher_.msg_ = pos_des_msg;
+      ee_pose_desired_publisher_.unlockAndPublish();
+    }
+    ROS_INFO_STREAM_THROTTLE(0.5, "CURRENTLY CONTROLLED IN TASK SPACE, NO JOINT HANDLES");
   }
   // clang-format on
 }
