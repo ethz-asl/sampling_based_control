@@ -303,6 +303,12 @@ mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
   return robot_model_.get_pose("panda_grasp_finger_edge");
 }
 
+mppi_pinocchio::Pose PandaControllerInterface::get_panda_origin_pose(
+    const Eigen::VectorXd& x) {
+    robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+  return robot_model_.get_pose("panda_link0");
+}
+
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(
     const Eigen::VectorXd& x) {
   object_model_.update_state(
@@ -332,6 +338,19 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
   pose_ros.header.stamp = ros::Time::now();
   mppi_pinocchio::Pose pose = get_pose_end_effector(x);
   mppi_pinocchio::to_msg(pose, pose_ros.pose);
+  return pose_ros;
+}
+
+geometry_msgs::PoseStamped PandaControllerInterface::get_panda_pose_end_effector_ros(
+    const Eigen::VectorXd& x) {
+  geometry_msgs::PoseStamped pose_ros;
+  pose_ros.header.frame_id = "panda_link0";
+  pose_ros.header.stamp = ros::Time::now();
+  mppi_pinocchio::Pose finger_to_world = get_pose_end_effector(x);
+  mppi_pinocchio::Pose origin_to_world = get_panda_origin_pose(x);
+
+  mppi_pinocchio::Pose res = origin_to_world - finger_to_world;
+  mppi_pinocchio::to_msg(res, pose_ros.pose);
   return pose_ros;
 }
 

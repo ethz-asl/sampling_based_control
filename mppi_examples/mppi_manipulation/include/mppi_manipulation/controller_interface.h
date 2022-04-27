@@ -34,10 +34,11 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
 
   mppi_pinocchio::Pose get_pose_handle(const mppi::observation_t& x);
   mppi_pinocchio::Pose get_pose_end_effector(const mppi::observation_t& x);
+  mppi_pinocchio::Pose get_panda_origin_pose(const mppi::observation_t& x);
 
   geometry_msgs::PoseStamped get_pose_handle_ros(const mppi::observation_t& x);
-  geometry_msgs::PoseStamped get_pose_end_effector_ros(
-      const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_pose_end_effector_ros(const mppi::observation_t& x);
+  geometry_msgs::PoseStamped get_panda_pose_end_effector_ros(const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
   double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u,
                         const double t);
