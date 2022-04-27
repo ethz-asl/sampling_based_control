@@ -28,6 +28,15 @@ Pose operator*(const Pose& p1, const Pose& p2) {
   return res;
 }
 
+Pose operator-(const Pose& p1, const Pose& p2) {
+  Pose res;
+  SE3 temp(
+      SE3(p1.rotation, p1.translation).actInv(SE3(p2.rotation, p2.translation)));
+  res.translation = temp.translation();
+  res.rotation = temp.rotation();
+  return res;
+}
+
 RobotModel::~RobotModel() {
   delete model_;
   delete data_;

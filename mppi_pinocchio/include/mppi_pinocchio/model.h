@@ -21,6 +21,7 @@ struct Pose {
 };
 
 Pose operator*(const Pose&, const Pose&);
+Pose operator-(const Pose&, const Pose&);
 Eigen::Matrix<double, 6, 1> diff(const Pose&, const Pose&);
 
 class RobotModel {
