@@ -91,7 +91,6 @@ def get_data(root_dir,
         print(f"{experiment_idx} processed out of {len(LOG_FILES)}")
         experiment_name = file.split('/')[-1].replace('.silo', '')
         silo = signal_logger.Silo(file)
-
         silo_dict = to_dictionary(silo, required_fields)
 
         data['experiment_name'].append(experiment_name)
