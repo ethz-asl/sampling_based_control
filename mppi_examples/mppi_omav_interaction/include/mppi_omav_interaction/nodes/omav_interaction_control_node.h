@@ -11,13 +11,13 @@
 #define OMAV_MPPI_INTERACTION_CONTROL_NODE_H
 
 #include <mppi_omav_interaction/controller_interface.h>
-#include <mppi_omav_interaction/omav_trajectory_generator.h>
 
 #include <mppi_omav_interaction/MPPIOmavCostShelfConfig.h>
 #include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>
 #include <mppi_omav_interaction/MPPIOmavReferenceConfig.h>
 #include <mppi_omav_interaction/MPPIOmavSettingsConfig.h>
 // ros
+#include <dynamic_reconfigure/server.h>
 #include <ros/ros.h>
 
 namespace omav_interaction {

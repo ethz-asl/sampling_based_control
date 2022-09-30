@@ -6,9 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
-find_package(catkin REQUIRED dynamic_reconfigure)
-
-generate_dynamic_reconfigure_options(cfg/mppi_omav_reference.cfg cfg/mppi_omav_cost_shelf.cfg cfg/mppi_omav_cost_valve.cfg cfg/mppi_settings.cfg)
 
 set(PACKAGE_DEPENDENCIES
         std_msgs
@@ -28,6 +25,8 @@ set(PACKAGE_DEPENDENCIES
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
+generate_dynamic_reconfigure_options(cfg/mppi_omav_reference.cfg cfg/mppi_omav_cost_shelf.cfg cfg/mppi_omav_cost_valve.cfg cfg/mppi_settings.cfg)
+
 catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
@@ -35,6 +34,7 @@ catkin_package(
         DEPENDS raisim)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
         src/dynamics_ros.cpp
@@ -44,21 +44,16 @@ add_library(${PROJECT_NAME}
         src/ros_conversions.cpp
         src/state_observer.cpp
         src/state_observer_valve.cpp
-        src/omav_trajectory_generator.cpp
         )
-
 target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 
-add_executable(omav_interaction_control src/nodes/omav_interaction_control.cpp)
 add_executable(omav_interaction_control_node src/nodes/omav_interaction_control_node.cpp)
-target_link_libraries(omav_interaction_control ${PROJECT_NAME} ${catkin_LIBRARIES})
 target_link_libraries(omav_interaction_control_node ${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(omav_interaction_control ${PROJECT_NAME})
-add_dependencies(omav_interaction_control ${PROJECT_NAME}_gencfg)
+add_dependencies(omav_interaction_control_node ${PROJECT_NAME}_gencfg)
 
 add_executable(state_observer_node src/nodes/state_observer_node.cpp)
 target_link_libraries(state_observer_node ${PROJECT_NAME} ${catkin_LIBRARIES})
-
 
 add_definitions("-DBOOST_MPL_LIMIT_LIST_SIZE=30")
 
