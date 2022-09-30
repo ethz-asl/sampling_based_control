@@ -20,5 +20,6 @@
     <depend>tf</depend>
     <depend>kdl_parser</depend>
     <depend>dynamic_reconfigure</depend>
+    <depend>raisim</depend>
 
 </package>
