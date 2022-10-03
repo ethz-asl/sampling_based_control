@@ -215,14 +215,6 @@ void InterpolateTrajectoryPoints(
       (angular_acceleration_2 - angular_acceleration_1) * t;
 }
 
-/**
- * @brief      Transforms state and input to trajectory point. Input containts
- *             accelerations, state containts pose and velocities.
- *
- * @param[in]  state            The state
- * @param[in]  input            The input
- * @param      trajectorypoint  The trajectorypoint
- */
 void EigenTrajectoryPointFromState(
     const observation_t &state, const input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
@@ -264,14 +256,6 @@ void MultiDofJointTrajectoryPointFromState(
   pos.rotation.y = state(24);
   pos.rotation.z = state(25);
   point.transforms.push_back(pos);
-}
-
-// ToDo: Remove this as soon as possible, because it is crazy ugly @Matthias
-void PoseMsgForVelocityFromVector(const Eigen::Vector3d &velocity,
-                                  geometry_msgs::Pose &pose_msg) {
-  pose_msg.position.x = velocity(0);
-  pose_msg.position.y = velocity(1);
-  pose_msg.position.z = velocity(2);
 }
 
 }  // namespace omav_interaction::conversions

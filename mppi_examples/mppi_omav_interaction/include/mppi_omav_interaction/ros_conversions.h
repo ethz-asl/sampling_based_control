@@ -35,15 +35,27 @@ void EigenTrajectoryPointFromStates(
     const double &dt);
 
 /**
- * @brief      Transforms omav_interaction state to reference point
+ * @brief      Transforms state and input to reference trajectory point. Input
+ *             contains accelerations, state contains pose and velocities.
  *
  * @param[in]  state            The state
  * @param[in]  input            The input
- * @param      trajectorypoint  The trajectorypoint
+ * @param[out] trajectorypoint  The trajectory point
  */
 void EigenTrajectoryPointFromState(
     const mppi::observation_t &state, const mppi::input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint);
+
+/**
+ * @brief      Transforms state and input to reference trajectory point. Input
+ *             contains accelerations, state contains pose and velocities.
+ *
+ * @param[in]  state              The state
+ * @param[in]  input              The input
+ * @param[in]  time_from_start_ns Time in nanoseconds after first trajectory
+ *                                point
+ * @param[out] trajectorypoint    The trajectory point
+ */
 void EigenTrajectoryPointFromState(
     const observation_t &state, const input_t &input,
     const int64_t &time_from_start_ns,
@@ -53,8 +65,6 @@ void PoseStampedMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                               geometry_msgs::PoseStamped &pose_msg);
 void PoseMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                        geometry_msgs::Pose &pose_msg);
-void PoseMsgForVelocityFromVector(const Eigen::Vector3d &velocity,
-                                  geometry_msgs::Pose &pose_msg);
 
 void arrow_initialization(visualization_msgs::Marker &arrow_marker);
 // Roll, Pitch and Yaw in deg
