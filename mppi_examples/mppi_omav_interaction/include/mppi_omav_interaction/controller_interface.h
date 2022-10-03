@@ -12,6 +12,7 @@
 #include <mppi_omav_interaction/cost_shelf.h>
 #include <mppi_omav_interaction/cost_valve.h>
 #include <mppi_omav_interaction/dynamics.h>
+#include <mppi_omav_interaction/omav_interaction_parameters.h>
 #include <mppi_omav_interaction/ros_conversions.h>
 #include <mppi_ros/controller_interface.h>
 

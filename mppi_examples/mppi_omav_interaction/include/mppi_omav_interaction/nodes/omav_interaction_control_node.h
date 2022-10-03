@@ -11,6 +11,7 @@
 #define OMAV_MPPI_INTERACTION_CONTROL_NODE_H
 
 #include <mppi_omav_interaction/controller_interface.h>
+#include <mppi_omav_interaction/omav_interaction_parameters.h>
 
 #include <mppi_omav_interaction/MPPIOmavCostShelfConfig.h>
 #include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>
@@ -23,8 +24,8 @@
 namespace omav_interaction {
 
 // Simulation timestep that is used inside the mppi simulation.
-const double kSim_dt = 0.015;
-const int64_t kSim_dt_ns = 15e6;
+constexpr double kSim_dt = 0.015;
+constexpr int64_t kSim_dt_ns = 15e6;
 // Rate at which the controller checks for new odom updates and - if available -
 // updates the mppi state (currently deprecated, only used with timed control)
 // const double kControl_rate = 250.0;

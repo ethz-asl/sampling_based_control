@@ -39,7 +39,7 @@ bool InteractionControlNode::InitializeNodeParams() {
                         "");
   getParam<std::vector<double>>(private_nh_, "initial_configuration", x0, {});
   // getParam<bool>(private_nh_, "sequential", sequential_, false);
-  if (x0.size() != 32) {
+  if (x0.size() != omav_state_description::SIZE_OMAV_STATE) {
     ROS_ERROR(
         "[mppi_omav_interaction] Wrong size of initial state. Shutting down.");
     ros::shutdown();
@@ -52,7 +52,8 @@ bool InteractionControlNode::InitializeNodeParams() {
 
   // set initial state
   // state_ = observation_t::Zero(simulation_->get_state_dimension());
-  state_ = Eigen::Matrix<double, 32, 1>(x0.data());
+  state_ = Eigen::Matrix<double, omav_state_description::SIZE_OMAV_STATE, 1>(
+      x0.data());
   // simulation_->reset(state_);
 
   // init the controller
@@ -138,8 +139,10 @@ void InteractionControlNode::odometryCallback(
 void InteractionControlNode::objectCallback(
     const sensor_msgs::JointState &object_msg) {
   object_state_time_ = object_msg.header.stamp;
-  object_state_(0) = object_msg.position[0];
-  object_state_(1) = object_msg.velocity[0];
+  object_state_(object_state_description::OBJECT_POSITION) =
+      object_msg.position[0];
+  object_state_(object_state_description::OBJECT_VELOCITY) =
+      object_msg.velocity[0];
   object_valid_ = true;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object state message");
 }
@@ -156,15 +159,18 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
   }
 
   if (controller_.getTask() == InteractionTask::Valve) {
-    // if (state_(13) + cost_valve_params_.ref_p > last_ref) {
-    // last_ref = state_(13) + cost_valve_params_.ref_p;
-    // controller_.updateValveReference(last_ref);
-    // Use dynamic updating of the valve reference: Reference angle increases
+    // if (state_(omav_state_description::OBJECT_POSITION) +
+    // cost_valve_params_.ref_p > last_ref) { last_ref =
+    // state_(omav_state_description::OBJECT_POSITION) +
+    // cost_valve_params_.ref_p; controller_.updateValveReference(last_ref); Use
+    // dynamic updating of the valve reference: Reference angle increases
     // throughout the horizon
     if (cost_valve_params_.cost_mode == 0) {
       controller_.updateValveReferenceDynamic(
-          state_(13) + cost_valve_params_.ref_p,
-          state_(13) + cost_valve_params_.ref_p + cost_valve_params_.ref_v,
+          state_(omav_state_description::OBJECT_POSITION) +
+              cost_valve_params_.ref_p,
+          state_(omav_state_description::OBJECT_POSITION) +
+              cost_valve_params_.ref_p + cost_valve_params_.ref_v,
           t_now.toSec());
     } else {
       controller_.updateValveReference(cost_valve_params_.ref_angle);
@@ -195,16 +201,25 @@ bool InteractionControlNode::getState(observation_t &x) {
   getTargetStateFromTrajectory();
 
   x.head<3>() = current_odometry_.position_W;
-  x(3) = current_odometry_.orientation_W_B.w();
-  x.segment<3>(4) = current_odometry_.orientation_W_B.vec();
-  x.segment<3>(7) = current_odometry_.getVelocityWorld();
-  x.segment<3>(10) = current_odometry_.angular_velocity_B;
-  x.segment<2>(13) = object_state_;
-  x.segment<3>(19) = target_state_.position_W;
-  x(22) = target_state_.orientation_W_B.w();
-  x.segment<3>(23) = target_state_.orientation_W_B.vec();
-  x.segment<3>(26) = target_state_.velocity_W;
-  x.segment<3>(29) = target_state_.angular_velocity_W;
+  x(omav_state_description::MAV_ORIENTATION_W) =
+      current_odometry_.orientation_W_B.w();
+  x.segment<3>(omav_state_description::MAV_ORIENTATION_X) =
+      current_odometry_.orientation_W_B.vec();
+  x.segment<3>(omav_state_description::MAV_LINEAR_VELOCITY_X) =
+      current_odometry_.getVelocityWorld();
+  x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X) =
+      current_odometry_.angular_velocity_B;
+  x.segment<2>(omav_state_description::OBJECT_POSITION) = object_state_;
+  x.segment<3>(omav_state_description::MAV_POSITION_X_DESIRED) =
+      target_state_.position_W;
+  x(omav_state_description::MAV_ORIENTATION_W_DESIRED) =
+      target_state_.orientation_W_B.w();
+  x.segment<3>(omav_state_description::MAV_ORIENTATION_X_DESIRED) =
+      target_state_.orientation_W_B.vec();
+  x.segment<3>(omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED) =
+      target_state_.velocity_W;
+  x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED) =
+      target_state_.angular_velocity_W;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
   if (ros::Time::now() - object_state_time_ > ros::Duration(0.5)) {
     ROS_WARN_THROTTLE(0.5,
@@ -286,11 +301,16 @@ bool InteractionControlNode::initialize_integrators(observation_t &x) {
   if (!odometry_valid_) {
     return false;
   }
-  x.segment<3>(19) = current_odometry_.position_W;
-  x(22) = current_odometry_.orientation_W_B.w();
-  x.segment<3>(23) = current_odometry_.orientation_W_B.vec();
-  x.segment<3>(26) = current_odometry_.getVelocityWorld();
-  x.segment<3>(29) = current_odometry_.angular_velocity_B;
+  x.segment<3>(omav_state_description::MAV_POSITION_X_DESIRED) =
+      current_odometry_.position_W;
+  x(omav_state_description::MAV_ORIENTATION_W_DESIRED) =
+      current_odometry_.orientation_W_B.w();
+  x.segment<3>(omav_state_description::MAV_ORIENTATION_X_DESIRED) =
+      current_odometry_.orientation_W_B.vec();
+  x.segment<3>(omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED) =
+      current_odometry_.getVelocityWorld();
+  x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED) =
+      current_odometry_.angular_velocity_B;
 
   target_state_.position_W = current_odometry_.position_W;
   target_state_.orientation_W_B = current_odometry_.orientation_W_B;
@@ -325,7 +345,7 @@ void InteractionControlNode::referenceParamCallback(
 
   if (config.reset_object) {
     config.reset_object = false;
-    state_(13) = 0;
+    state_(omav_state_description::OBJECT_POSITION) = 0;
     // simulation_->reset(state_);
     ROS_INFO("[mppi_omav_interaction] Reset Object");
   }
@@ -449,9 +469,9 @@ void InteractionControlNode::costValveParamCallback(
     cost_valve_params_.ref_angle = config.ref_angle;
     cost_valve_params_.Q_handle_hookV = config.Q_handle_hookV;
     if (config.int_mode == true) {
-      controller_.setInteractionMode(1);
+      controller_.setInteractionMode(interaction_mode::INTERACTION);
     } else {
-      controller_.setInteractionMode(0);
+      controller_.setInteractionMode(interaction_mode::FREE_FLIGHT);
     }
     controller_.update_cost_param_valve(cost_valve_params_);
   } else {

@@ -1,0 +1,112 @@
+#ifndef MPPI_OMAV_INTERACTION_OMAV_INTERACTION_PARAMETERS_H
+#define MPPI_OMAV_INTERACTION_OMAV_INTERACTION_PARAMETERS_H
+
+namespace omav_interaction {
+
+namespace omav_state_description {
+/**
+ * @brief Full state vector of OMAV.
+ */
+enum OmavStateDescription {
+  MAV_POSITION_X,
+  MAV_POSITION_Y,
+  MAV_POSITION_Z,
+  MAV_ORIENTATION_W,
+  MAV_ORIENTATION_X,
+  MAV_ORIENTATION_Y,
+  MAV_ORIENTATION_Z,
+  MAV_LINEAR_VELOCITY_X,
+  MAV_LINEAR_VELOCITY_Y,
+  MAV_LINEAR_VELOCITY_Z,
+  MAV_ANGULAR_VELOCITY_X,
+  MAV_ANGULAR_VELOCITY_Y,
+  MAV_ANGULAR_VELOCITY_Z,
+  OBJECT_POSITION,
+  OBJECT_VELOCITY,
+  INTERACTION_FORCE_X,
+  INTERACTION_FORCE_Y,
+  INTERACTION_FORCE_Z,
+  CONTACT_STATE,
+  MAV_POSITION_X_DESIRED,
+  MAV_POSITION_Y_DESIRED,
+  MAV_POSITION_Z_DESIRED,
+  MAV_ORIENTATION_W_DESIRED,
+  MAV_ORIENTATION_X_DESIRED,
+  MAV_ORIENTATION_Y_DESIRED,
+  MAV_ORIENTATION_Z_DESIRED,
+  MAV_LINEAR_VELOCITY_X_DESIRED,
+  MAV_LINEAR_VELOCITY_Y_DESIRED,
+  MAV_LINEAR_VELOCITY_Z_DESIRED,
+  MAV_ANGULAR_VELOCITY_X_DESIRED,
+  MAV_ANGULAR_VELOCITY_Y_DESIRED,
+  MAV_ANGULAR_VELOCITY_Z_DESIRED,
+  SIZE_OMAV_STATE
+};
+}  // namespace omav_state_description
+
+namespace omav_state_description_simulation {
+/**
+ * @brief Full extended state vector of OMAV with additional state of unwanted
+ *        contact. This additional unwanted contact state is needed to
+ *        calculate the cost for the simulated rollouts.
+ */
+enum OmavStateDescriptionSimulation {
+  MAV_POSITION_X,
+  MAV_POSITION_Y,
+  MAV_POSITION_Z,
+  MAV_ORIENTATION_W,
+  MAV_ORIENTATION_X,
+  MAV_ORIENTATION_Y,
+  MAV_ORIENTATION_Z,
+  MAV_LINEAR_VELOCITY_X,
+  MAV_LINEAR_VELOCITY_Y,
+  MAV_LINEAR_VELOCITY_Z,
+  MAV_ANGULAR_VELOCITY_X,
+  MAV_ANGULAR_VELOCITY_Y,
+  MAV_ANGULAR_VELOCITY_Z,
+  OBJECT_POSITION,
+  OBJECT_VELOCITY,
+  INTERACTION_FORCE_X,
+  INTERACTION_FORCE_Y,
+  INTERACTION_FORCE_Z,
+  CONTACT_STATE,
+  MAV_POSITION_X_DESIRED,
+  MAV_POSITION_Y_DESIRED,
+  MAV_POSITION_Z_DESIRED,
+  MAV_ORIENTATION_W_DESIRED,
+  MAV_ORIENTATION_X_DESIRED,
+  MAV_ORIENTATION_Y_DESIRED,
+  MAV_ORIENTATION_Z_DESIRED,
+  MAV_LINEAR_VELOCITY_X_DESIRED,
+  MAV_LINEAR_VELOCITY_Y_DESIRED,
+  MAV_LINEAR_VELOCITY_Z_DESIRED,
+  MAV_ANGULAR_VELOCITY_X_DESIRED,
+  MAV_ANGULAR_VELOCITY_Y_DESIRED,
+  MAV_ANGULAR_VELOCITY_Z_DESIRED,
+  UNWANTED_CONTACT,
+  SIZE_OMAV_STATE
+};
+}  // namespace omav_state_description_simulation
+
+namespace object_state_description {
+/**
+ * @brief Full state vector of the object (door, valve, etc.).
+ */
+enum ObjectStateDescription {
+  OBJECT_POSITION,
+  OBJECT_VELOCITY,
+  SIZE_OBJECT_STATE
+};
+}  // namespace object_state_description
+
+namespace interaction_mode {
+/**
+ * @brief Interaction control mode.
+ *        1 Interaction on (object manipulation),
+ *        0 Interaction off (free flight).
+ */
+enum InteractionMode { FREE_FLIGHT = 0, INTERACTION };
+}  // namespace interaction_mode
+
+}  // namespace omav_interaction
+#endif  // MPPI_OMAV_INTERACTION_OMAV_INTERACTION_PARAMETERS_H
