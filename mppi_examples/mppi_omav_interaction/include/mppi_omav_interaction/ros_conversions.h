@@ -20,13 +20,10 @@ namespace omav_interaction::conversions {
  *
  * @param[in]  x_opt           States of optimal rollout
  * @param[in]  u_opt           Inputs of optimal rollout
- * @param[in]  x0_opt          Initial state
- * @param      trajectory_msg  The trajectory message
+ * @param[in]  tt              Time instances of optimal rollout
+ * @param[in]  damping         Damping factor used for integrating inputs
+ * @param[out] trajectory_msg  The trajectory message
  */
-void to_trajectory_msg(
-    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const mppi::observation_t &x0_opt,
-    trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg);
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     const std::vector<double> &tt, const double &damping,

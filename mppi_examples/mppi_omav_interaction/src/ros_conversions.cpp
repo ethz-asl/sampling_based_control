@@ -8,27 +8,6 @@ namespace omav_interaction::conversions {
 
 void to_trajectory_msg(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const mppi::observation_t &x0_opt,
-    trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
-  const double dt = 0.015;
-  mav_msgs::EigenTrajectoryPoint current_trajectory_point;
-
-  // TODO: WHY 5*VELOCITY?? REMOVE IF WRONG!
-  EigenTrajectoryPointFromState(x0_opt, u_opt[0] - 5 * x0_opt.segment<6>(26),
-                                current_trajectory_point);
-
-  mav_msgs::EigenTrajectoryPointVector current_trajectory;
-  current_trajectory.push_back(current_trajectory_point);
-  for (size_t i = 0; i < (x_opt.size() - 6); i++) {
-    EigenTrajectoryPointFromStates(x_opt, u_opt, i, current_trajectory_point,
-                                   dt);
-    current_trajectory.push_back(current_trajectory_point);
-  }
-  mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
-                                                &trajectory_msg);
-}
-void to_trajectory_msg(
-    const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
     const std::vector<double> &tt, const double &damping,
     trajectory_msgs::MultiDOFJointTrajectory &trajectory_msg) {
   mav_msgs::EigenTrajectoryPointVector current_trajectory;
@@ -42,6 +21,7 @@ void to_trajectory_msg(
   mav_msgs::msgMultiDofJointTrajectoryFromEigen(current_trajectory,
                                                 &trajectory_msg);
   trajectory_msg.header.stamp = ros::Time(tt[0]);
+  trajectory_msg.header.frame_id = "world";
 }
 
 void EigenTrajectoryPointFromStates(
