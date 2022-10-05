@@ -7,7 +7,6 @@
  */
 
 #include "mppi_omav_interaction/dynamics.h"
-#include <string>
 
 namespace omav_interaction {
 OMAVVelocityDynamics::OMAVVelocityDynamics(
@@ -16,8 +15,9 @@ OMAVVelocityDynamics::OMAVVelocityDynamics(
     : dt_(dt),
       robot_description_(robot_description),
       object_description_(object_description),
-      input_dimension_(6),
-      state_dimension_(33),
+      input_dimension_(control_input_description::SIZE_CONTROL_INPUT),
+      state_dimension_(
+          omav_state_description_simulation::SIZE_OMAV_STATE_SIMULATION),
       derivative_dimension_(12),
       robot_dof_(6) {
   initialize_world(robot_description, object_description);
@@ -35,34 +35,9 @@ void OMAVVelocityDynamics::initialize_world(
   object_ = sim_.addArticulatedSystem(object_description_, "/");
   ground = sim_.addGround(0.0, "steel");
 
-  // Material properties: friction, bounciness (restitution), restitution
-  // threshold
-  // sim_.setMaterialPairProp("rubber", "rubber", 0.001, 0.5, 0.001);
-  // sim_.setMaterialPairProp("steel", "steel", 0.001, 0.001, 0.5);
+  // Material properties: friction, bounciness, restitution threshold
   sim_.setMaterialPairProp("steel", "steel", 0.001, 0.5, 0.001);
   sim_.setDefaultMaterial(0.001, 0.001, 0.001);
-  // raisim::CollisionSet omav_c = omav_->getCollisionBodies();
-  // std::cout << "Collision bodies omav: ";
-  // for (auto c : omav_c) {
-  //   std::cout << c.name << ", ";
-  // }
-  // robot_dof_ = omav_->getDOF();
-  // Set dimensions
-  // state_dimension_ = 32;
-  // I_position(3), 0
-  // orientation(4), 3
-  // I_velocity(3), 7
-  // B_omega(3), 10
-  // position_object(1), 13
-  // velocity_object(1), 14
-  // forces(3), 15
-  // contact_state(1), 18
-  // I_position_desired(3), 19
-  // orientation_desired(4), 23
-  // I_velocity_desired(3), 26
-  // B_omega_desired(3) 29
-  // input_dimension_ = 6;  // linear_acceleration_(3) angular_acceleration(3)
-  // derivative_dimension_ = 12;
 
   x_ = observation_t::Zero(state_dimension_);
   xd_ = observation_t::Zero(derivative_dimension_);
@@ -90,8 +65,10 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   integrate_internal(u, dt_);
 
   // Simulate system that is reset with odometry
-  cmd_ = x_.segment<7>(19);
-  cmdv_ = x_.segment<6>(26);
+  cmd_ = x_.segment<7>(
+      omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD);
+  cmdv_ = x_.segment<6>(
+      omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
   omav_->setPdTarget(cmd_, cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
   nonLinearities_ = omav_->getNonlinearities(sim_.getGravity()).e();
@@ -114,12 +91,17 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
 
   // Assemble state
   x_.head<7>() = omav_pose_;
-  x_.segment<6>(7) = omav_velocity_;
-  x_.segment<1>(13) = object_pose_;
-  x_.segment<1>(14) = object_velocity_;
-  x_.segment<3>(15) = contact_force_.force;
-  x_(18) = in_contact;
-  x_(32) = unwanted_contact;
+  x_.segment<6>(
+      omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD) =
+      omav_velocity_;
+  x_.segment<1>(omav_state_description_simulation::OBJECT_POSITION) =
+      object_pose_;
+  x_.segment<1>(omav_state_description_simulation::OBJECT_VELOCITY) =
+      object_velocity_;
+  x_.segment<3>(omav_state_description_simulation::INTERACTION_FORCE_X) =
+      contact_force_.force;
+  x_(omav_state_description_simulation::CONTACT_STATE) = in_contact;
+  x_(omav_state_description_simulation::UNWANTED_CONTACT) = unwanted_contact;
   return x_;
 }
 
@@ -127,8 +109,13 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   // internal eigen state
   x_ = x;
   // reset omav and object in raisim
-  omav_->setState(x_.head<7>(), x_.segment<6>(7));
-  object_->setState(x_.segment<1>(13), x_.segment<1>(14));
+  omav_->setState(
+      x_.head<7>(),
+      x_.segment<6>(
+          omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD));
+  object_->setState(
+      x_.segment<1>(omav_state_description_simulation::OBJECT_POSITION),
+      x_.segment<1>(omav_state_description_simulation::OBJECT_VELOCITY));
 }
 
 mppi::DynamicsBase::input_t OMAVVelocityDynamics::get_zero_input(
@@ -216,13 +203,13 @@ void OMAVVelocityDynamics::compute_velocities(
   // xd_ contains the derivatives of the reference trajectory, i.e. reference
   // velocities and accelerations The input u contains the accelerations of the
   // reference trajectory
-  xd_.head<6>() = x_.segment<6>(26);
-  // TODO: Time derivative of the reference velocity is the input acceleration -
-  // 5*reference velocity? It seems like this is done to damp the input
-  // commands.
-  // xd_.segment<6>(6) = u - 5 * x_.segment<6>(26);
-  xd_.segment<6>(6) = u - settings_.damping * x_.segment<6>(26);
-  // xd_.segment<6>(6) = u;
+  xd_.head<6>() = x_.segment<6>(
+      omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
+
+  xd_.segment<6>(6) =
+      u - settings_.damping *
+              x_.segment<6>(omav_state_description_simulation::
+                                MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
 }
 
 void OMAVVelocityDynamics::integrate_internal(
@@ -236,12 +223,28 @@ void OMAVVelocityDynamics::integrate_internal(
   compute_velocities(u);
 
   // Integrate position and Quaternion
-  x_.segment<3>(19) += xd_.head<3>() * dt;
-  Eigen::Quaterniond quat_n(x_(22), x_(23), x_(24), x_(25)), quat_n_plus_one;
+  x_.segment<3>(
+      omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD) +=
+      xd_.head<3>() * dt;
+
+  Eigen::Quaterniond quat_n(
+      x_(omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD),
+      x_(omav_state_description_simulation::MAV_ORIENTATION_X_DESIRED_WORLD),
+      x_(omav_state_description_simulation::MAV_ORIENTATION_Y_DESIRED_WORLD),
+      x_(omav_state_description_simulation::MAV_ORIENTATION_Z_DESIRED_WORLD));
+  Eigen::Quaterniond quat_n_plus_one;
+
   integrate_quaternion(xd_.segment<3>(3), quat_n, quat_n_plus_one, dt);
-  x_.segment<4>(22) << quat_n_plus_one.w(), quat_n_plus_one.vec();
+
+  x_.segment<4>(
+      omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD)
+      << quat_n_plus_one.w(),
+      quat_n_plus_one.vec();
+
   // Integrate velocities
-  x_.segment<6>(26) += xd_.segment<6>(6) * dt;
+  x_.segment<6>(
+      omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD) +=
+      xd_.segment<6>(6) * dt;
 }
 
 }  // namespace omav_interaction

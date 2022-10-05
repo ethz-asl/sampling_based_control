@@ -8,12 +8,6 @@
 
 #pragma once
 
-#include <raisim/World.hpp>
-#include <raisim/configure.hpp>
-#include "raisim/object/ArticulatedSystem/ArticulatedSystem.hpp"
-
-#include <mppi/dynamics/dynamics_base.h>
-#include <ros/package.h>
 #include <Eigen/Core>
 #include <cmath>
 #include <iostream>
@@ -21,6 +15,13 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+
+#include <raisim/World.hpp>
+#include <raisim/configure.hpp>
+#include <raisim/object/ArticulatedSystem/ArticulatedSystem.hpp>
+
+#include <mppi/dynamics/dynamics_base.h>
+#include <mppi_omav_interaction/omav_interaction_parameters.h>
 
 namespace omav_interaction {
 
@@ -121,7 +122,7 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
   std::string robot_description_;
   std::string object_description_;
 
-  // Objects in odometry simulation
+  // Objects in raisim simulation
   raisim::ArticulatedSystem *omav_;
   raisim::ArticulatedSystem *object_;
   raisim::Ground *ground;
@@ -137,7 +138,6 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
   Eigen::VectorXd object_pose_, object_velocity_;
   force_t contact_force_;
 
-  // double damping_ = 5.0;
   OmavDynamicsSettings settings_;
 };
 }  // namespace omav_interaction
