@@ -158,17 +158,25 @@ bool OMAVControllerInterface::set_controller(
   nh_.param<double>("goal_quaternion_y", y_goal_quaternion, 0.0);
   nh_.param<double>("goal_quaternion_z", z_goal_quaternion, 0.0);
 
-  ref_.rr.resize(1, mppi::observation_t::Zero(9));
-  ref_.rr[0](0) = x_goal_position;
-  ref_.rr[0](1) = y_goal_position;
-  ref_.rr[0](2) = z_goal_position;
-  ref_.rr[0](3) = w_goal_quaternion;
-  ref_.rr[0](4) = x_goal_quaternion;
-  ref_.rr[0](5) = y_goal_quaternion;
-  ref_.rr[0](6) = z_goal_quaternion;
-  ref_.rr[0](7) = 0.0;
-  // Initialize mode
-  ref_.rr[0](8) = 0;
+  ref_.rr.resize(
+      1, mppi::observation_t::Zero(reference_description::SIZE_REFERENCE));
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_X_WORLD) =
+      x_goal_position;
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_Y_WORLD) =
+      y_goal_position;
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_Z_WORLD) =
+      z_goal_position;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_W_WORLD) =
+      w_goal_quaternion;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_X_WORLD) =
+      x_goal_quaternion;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Y_WORLD) =
+      y_goal_quaternion;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Z_WORLD) =
+      z_goal_quaternion;
+  ref_.rr[0](reference_description::OBJECT_GOAL_ORIENTATION) = 0.0;
+  ref_.rr[0](reference_description::INTERACTION_MODE) =
+      interaction_mode::FREE_FLIGHT;
 
   ROS_INFO_STREAM("Reference initialized with: " << ref_.rr[0].transpose());
   return true;
@@ -198,13 +206,20 @@ void OMAVControllerInterface::desired_pose_callback(
   // std::unique_lock<std::mutex> lock(reference_mutex_);
   ref_.rr.resize(1);
   ref_.tt.resize(1);
-  ref_.rr[0](0) = msg->pose.position.x;
-  ref_.rr[0](1) = msg->pose.position.y;
-  ref_.rr[0](2) = msg->pose.position.z;
-  ref_.rr[0](3) = msg->pose.orientation.w;
-  ref_.rr[0](4) = msg->pose.orientation.x;
-  ref_.rr[0](5) = msg->pose.orientation.y;
-  ref_.rr[0](6) = msg->pose.orientation.z;
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_X_WORLD) =
+      msg->pose.position.x;
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_Y_WORLD) =
+      msg->pose.position.y;
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_Z_WORLD) =
+      msg->pose.position.z;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_W_WORLD) =
+      msg->pose.orientation.w;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_X_WORLD) =
+      msg->pose.orientation.x;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Y_WORLD) =
+      msg->pose.orientation.y;
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Z_WORLD) =
+      msg->pose.orientation.z;
   ref_.tt[0] = msg->header.stamp.toSec();
   std::cout << "Desired Pose Callback..." << std::endl;
   get_controller()->set_reference_trajectory(ref_);
@@ -213,7 +228,7 @@ void OMAVControllerInterface::desired_pose_callback(
 void OMAVControllerInterface::updateValveReference(const double &ref_angle) {
   ref_.rr.resize(1);
   ref_.tt.resize(1);
-  ref_.rr[0](7) = ref_angle;
+  ref_.rr[0](reference_description::OBJECT_GOAL_ORIENTATION) = ref_angle;
   ref_.tt[0] = ros::Time::now().toSec();
   get_controller()->set_reference_trajectory(ref_);
 }
@@ -228,7 +243,7 @@ void OMAVControllerInterface::updateValveReferenceDynamic(
   for (size_t i = 0; i < kN; i++) {
     ref_.tt[i] = t_start + static_cast<double>(i) / kN * kHorizon_time;
     ref_.rr[i] = ref0;
-    ref_.rr[i](7) =
+    ref_.rr[i](reference_description::OBJECT_GOAL_ORIENTATION) =
         start_angle + static_cast<double>(i) / kN * (end_angle - start_angle);
   }
   get_controller()->set_reference_trajectory(ref_);
@@ -242,7 +257,7 @@ void OMAVControllerInterface::mode_callback(
 
 void OMAVControllerInterface::setInteractionMode(const int &mode) {
   for (size_t i = 0; i < ref_.rr.size(); i++) {
-    ref_.rr[i](8) = mode;
+    ref_.rr[i](reference_description::INTERACTION_MODE) = mode;
   }
   ROS_INFO_STREAM("Switching to mode: " << mode);
   get_controller()->set_reference_trajectory(ref_);
@@ -252,7 +267,8 @@ void OMAVControllerInterface::object_reference_callback(
     const geometry_msgs::PoseStampedConstPtr &msg) {
   // std::unique_lock<std::mutex> lock(reference_mutex_);
   for (size_t i = 0; i < ref_.rr.size(); i++) {
-    ref_.rr[i](7) = msg->pose.position.x;
+    ref_.rr[i](reference_description::OBJECT_GOAL_ORIENTATION) =
+        msg->pose.position.x;
   }
   get_controller()->set_reference_trajectory(ref_);
 }
@@ -287,14 +303,21 @@ bool OMAVControllerInterface::update_cost_param_valve(
 
 bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
   ref_.tt.resize(1, 0.0);
-  ref_.rr.resize(1, observation_t::Zero(9));
-  ref_.rr[0](0) = x(0);
-  ref_.rr[0](1) = x(1);
-  ref_.rr[0](2) = x(2);
-  ref_.rr[0](3) = x(3);
-  ref_.rr[0](4) = x(4);
-  ref_.rr[0](5) = x(5);
-  ref_.rr[0](6) = x(6);
+  ref_.rr.resize(1, observation_t::Zero(reference_description::SIZE_REFERENCE));
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_X_WORLD) =
+      x(omav_state_description::MAV_POSITION_X_WORLD);
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_Y_WORLD) =
+      x(omav_state_description::MAV_POSITION_Y_WORLD);
+  ref_.rr[0](reference_description::MAV_GOAL_POSITION_Z_WORLD) =
+      x(omav_state_description::MAV_POSITION_Z_WORLD);
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_W_WORLD) =
+      x(omav_state_description::MAV_ORIENTATION_W_WORLD);
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_X_WORLD) =
+      x(omav_state_description::MAV_ORIENTATION_X_WORLD);
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Y_WORLD) =
+      x(omav_state_description::MAV_ORIENTATION_Y_WORLD);
+  ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Z_WORLD) =
+      x(omav_state_description::MAV_ORIENTATION_Z_WORLD);
   get_controller()->set_reference_trajectory(ref_);
   return true;
 }
@@ -325,7 +348,8 @@ void OMAVControllerInterface::publish_ros() {
     }
     // update object state visualization
     object_state_.header.stamp = t_now;
-    object_state_.position[0] = xx_opt_[0](13);
+    object_state_.position[0] =
+        xx_opt_[0](omav_state_description::OBJECT_POSITION);
     object_state_publisher_.publish(object_state_);
   }
 
@@ -397,13 +421,20 @@ void OMAVControllerInterface::publish_optimal_rollout() {
 
   // Publish single pose reference:
   geometry_msgs::Pose mppi_reference;
-  mppi_reference.position.x = ref_.rr[0](0);
-  mppi_reference.position.y = ref_.rr[0](1);
-  mppi_reference.position.z = ref_.rr[0](2);
-  mppi_reference.orientation.w = ref_.rr[0](3);
-  mppi_reference.orientation.x = ref_.rr[0](4);
-  mppi_reference.orientation.y = ref_.rr[0](5);
-  mppi_reference.orientation.z = ref_.rr[0](6);
+  mppi_reference.position.x =
+      ref_.rr[0](reference_description::MAV_GOAL_POSITION_X_WORLD);
+  mppi_reference.position.y =
+      ref_.rr[0](reference_description::MAV_GOAL_POSITION_Y_WORLD);
+  mppi_reference.position.z =
+      ref_.rr[0](reference_description::MAV_GOAL_POSITION_Z_WORLD);
+  mppi_reference.orientation.w =
+      ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_W_WORLD);
+  mppi_reference.orientation.x =
+      ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_X_WORLD);
+  mppi_reference.orientation.y =
+      ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Y_WORLD);
+  mppi_reference.orientation.z =
+      ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Z_WORLD);
   mppi_reference_publisher_.publish(mppi_reference);
 
   // Compute cost components and publish
@@ -441,28 +472,54 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
     tf::vectorEigenToMsg(xx_opt_[i].head<3>(), tf.translation);
     tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(3)),
                              tf.rotation);
-    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(7), vel.linear);
-    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(10), vel.angular);
-    tf::vectorEigenToMsg(uu_opt_[i].segment<3>(0), acc.linear);
-    tf::vectorEigenToMsg(uu_opt_[i].segment<3>(3), acc.angular);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(
+            omav_state_description::MAV_LINEAR_VELOCITY_X_WORLD),
+        vel.linear);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(
+            omav_state_description::MAV_ANGULAR_VELOCITY_X_BODY),
+        vel.angular);
+    tf::vectorEigenToMsg(
+        uu_opt_[i].segment<3>(
+            control_input_description::MAV_LINEAR_ACCELERATION_X_DESIRED_WORLD),
+        acc.linear);
+    tf::vectorEigenToMsg(
+        uu_opt_[i].segment<3>(
+            control_input_description::MAV_ANGULAR_ACCELERATION_X_DESIRED_BODY),
+        acc.angular);
     trajectory_msgs::MultiDOFJointTrajectoryPoint point;
     point.transforms.push_back(tf);
     point.velocities.push_back(vel);
     point.accelerations.push_back(acc);
-    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(19), tf.translation);
-    tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(22)),
-                             tf.rotation);
-    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(26), vel.linear);
-    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(29), vel.angular);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(
+            omav_state_description::MAV_POSITION_X_DESIRED_WORLD),
+        tf.translation);
+    tf::quaternionEigenToMsg(
+        Eigen::Quaterniond(xx_opt_[i].segment<4>(
+            omav_state_description::MAV_ORIENTATION_W_DESIRED_WORLD)),
+        tf.rotation);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(
+            omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
+        vel.linear);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(
+            omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY),
+        vel.angular);
     point.transforms.push_back(tf);
     point.velocities.push_back(vel);
     // Contact force:
-    tf::vectorEigenToMsg(xx_opt_[i].segment<3>(15), vel.linear);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(omav_state_description::INTERACTION_FORCE_X),
+        vel.linear);
     point.velocities.push_back(vel);
     tf = geometry_msgs::Transform();
-    tf.translation.x = xx_opt_[i](13);  // Object position / rotation
-    tf.translation.y = xx_opt_[i](14);  // Object velocity
-    tf.translation.z = ref_interpolated_[i](7);  // Object reference
+    tf.translation.x = xx_opt_[i](omav_state_description::OBJECT_POSITION);
+    tf.translation.y = xx_opt_[i](omav_state_description::OBJECT_VELOCITY);
+    tf.translation.z =
+        ref_interpolated_[i](reference_description::OBJECT_GOAL_ORIENTATION);
     point.transforms.push_back(tf);
     t.points.push_back(point);
   }
@@ -530,7 +587,8 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
     ref_interpolated_[i] = cost->r_;
     cost_vector += cost->cost_vector_;
 
-    Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(15);//.normalized();
+    Eigen::Vector3d force_normed =
+        xx_opt_[i].segment<3>(omav_state_description::INTERACTION_FORCE_X);
 
     force_marker.points[0].x = cost->hook_pos_(0);
     force_marker.points[0].y = cost->hook_pos_(1);
@@ -551,22 +609,8 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
     cost_array_message.array.push_back(static_cast<float>(cost_vector(i)));
   }
   cost_array_message.array.push_back(cost_vector.sum());
-  // Current object reference:
-  // cost_array_message.array.push_back(ref_.rr[0](7));
-  // Current mode (free flight vs. interaction):
-  cost_array_message.array.push_back(ref_.rr[0](8));
-  // cost_array_message.array.push_back(xx_opt_[0].segment<3>(15).norm());
-  // cost_array_message.array.push_back(
-  //     xx_opt_[1].segment<3>(15).cross(com_hook_)(0));
-  // cost_array_message.array.push_back(
-  //     xx_opt_[1].segment<3>(15).cross(com_hook_)(1));
-  // cost_array_message.array.push_back(
-  //     xx_opt_[1].segment<3>(15).cross(com_hook_)(2));
-  // cost_array_message.array.push_back(
-  //     xx_opt_[1].segment<3>(15).cross(com_hook_).norm());
-  // cost_array_message.array.push_back(
-  //     acos(xx_opt_[1].segment<3>(15).normalized().dot(com_hook_.normalized())) *
-  //     180.0 / M_PI);
+  cost_array_message.array.push_back(
+      ref_.rr[0](reference_description::INTERACTION_MODE));
 
   cost_publisher_.publish(cost_array_message);
 }
