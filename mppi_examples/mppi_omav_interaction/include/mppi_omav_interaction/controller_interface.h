@@ -65,8 +65,6 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   bool set_initial_reference(const observation_t &x);
 
-  void manually_shift_input(const int &index);
-
   void updateValveReference(const double &ref_angle);
   void updateValveReferenceDynamic(
     const double &start_angle, const double &end_angle, const double &t_start);

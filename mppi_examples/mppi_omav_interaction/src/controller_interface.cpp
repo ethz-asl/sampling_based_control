@@ -615,14 +615,4 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
   cost_publisher_.publish(cost_array_message);
 }
 
-void OMAVControllerInterface::manually_shift_input(const int &index) {
-  // deprecated
-  if (index != 0) {
-    get_controller()->shift_input_ = true;
-  }
-  // Set the shift variable of the MPPI
-  get_controller()->shift_int_ = index;
-  get_controller()->first_mppi_iteration_ = false;
-}
-
 // namespace omav_interaction
