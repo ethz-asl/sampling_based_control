@@ -37,7 +37,6 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
         src/dynamics.cpp
-        src/dynamics_ros.cpp
         src/cost_shelf.cpp
         src/cost_valve.cpp
         src/controller_interface.cpp
