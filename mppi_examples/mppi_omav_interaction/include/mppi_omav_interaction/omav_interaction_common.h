@@ -1,5 +1,7 @@
-#ifndef MPPI_OMAV_INTERACTION_OMAV_INTERACTION_PARAMETERS_H
-#define MPPI_OMAV_INTERACTION_OMAV_INTERACTION_PARAMETERS_H
+#ifndef MPPI_OMAV_INTERACTION_OMAV_INTERACTION_COMMON_H
+#define MPPI_OMAV_INTERACTION_OMAV_INTERACTION_COMMON_H
+
+#include <string>
 
 namespace omav_interaction {
 
@@ -138,5 +140,44 @@ namespace interaction_mode {
 enum InteractionMode { FREE_FLIGHT = 0, INTERACTION };
 }  // namespace interaction_mode
 
+/**
+ * @brief Names of the different frames used.
+ */
+struct Frames {
+  std::string omav;         //!< Frame positioned at center of omav
+  std::string tip;          //!< Frame positioned at the end of the rod
+  std::string hook;         //!< Frame positioned in the middle of the hook
+  std::string handle_link;  //!< Frame positioned on the handle
+  std::string handle_ref;   //!< Frame positioned inside the handle (open space)
+  Frames()
+      : omav("omav"),
+        tip("tip"),
+        hook("hook"),
+        handle_link("handle_link"),
+        handle_ref("handle_ref") {}
+};
+
+namespace cost_description {
+/**
+ * @brief Full cost vector with entries for the different used costs.
+ */
+enum CostDescription {
+  FLOOR_COST = 0,
+  POSE_COST,
+  OBJECT_COST,
+  HANDLE_HOOK_COST,
+  TIP_VELOCITY_COST,
+  TORQUE_COST,
+  EFFICIENCY_COST,
+  VELOCITY_COST,
+  FORCE_COST,
+  LEAVING_FIELD_COST,
+  CONTACT_COST,
+  UNWANTED_CONTACT_COST,
+  OBJECT_DISTANCE_COST,
+  SIZE_COST_VECTOR
+};
+}  // namespace cost_description
+
 }  // namespace omav_interaction
-#endif  // MPPI_OMAV_INTERACTION_OMAV_INTERACTION_PARAMETERS_H
+#endif  // MPPI_OMAV_INTERACTION_OMAV_INTERACTION_COMMON_H

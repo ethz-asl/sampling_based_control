@@ -21,7 +21,7 @@
 #include <raisim/object/ArticulatedSystem/ArticulatedSystem.hpp>
 
 #include <mppi/dynamics/dynamics_base.h>
-#include <mppi_omav_interaction/omav_interaction_parameters.h>
+#include <mppi_omav_interaction/omav_interaction_common.h>
 
 namespace omav_interaction {
 

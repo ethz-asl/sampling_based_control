@@ -569,7 +569,7 @@ template <class T>
 void OMAVControllerInterface::publishCostInfo(const T &cost,
                                               const std_msgs::Header &header) {
   // Info about costs:
-  Eigen::VectorXd cost_vector(kN_costs);
+  Eigen::Matrix<double, cost_description::SIZE_COST_VECTOR, 1> cost_vector;
   cost_vector.setZero();
 
   visualization_msgs::MarkerArray force_marker_array;
@@ -605,7 +605,7 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
 
   mppi_ros::Array cost_array_message;
   cost_array_message.header = header;
-  for (size_t i = 0; i < kN_costs; i++) {
+  for (size_t i = 0; i < cost_description::SIZE_COST_VECTOR; i++) {
     cost_array_message.array.push_back(static_cast<float>(cost_vector(i)));
   }
   cost_array_message.array.push_back(cost_vector.sum());

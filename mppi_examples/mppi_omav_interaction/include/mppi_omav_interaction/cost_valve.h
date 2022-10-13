@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <mppi_omav_interaction/cost_common.h>
+#include <mppi_omav_interaction/omav_interaction_common.h>
 
 #include <mppi/cost/cost_base.h>
 #include <ros/ros.h>
@@ -124,7 +124,7 @@ class OMAVInteractionCostValve : public mppi::CostBase {
   double distance_hook_handle_;
 
  public:
-  Eigen::Matrix<double, kN_costs, 1> cost_vector_;
+  Eigen::Matrix<double, cost_description::SIZE_COST_VECTOR, 1> cost_vector_;
   double cost_;
   Eigen::Vector3d hook_pos_;
 

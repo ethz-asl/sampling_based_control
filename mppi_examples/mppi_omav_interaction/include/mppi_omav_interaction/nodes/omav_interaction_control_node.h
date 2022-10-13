@@ -11,7 +11,7 @@
 #define OMAV_MPPI_INTERACTION_CONTROL_NODE_H
 
 #include <mppi_omav_interaction/controller_interface.h>
-#include <mppi_omav_interaction/omav_interaction_parameters.h>
+#include <mppi_omav_interaction/omav_interaction_common.h>
 
 #include <mppi_omav_interaction/MPPIOmavCostShelfConfig.h>
 #include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>

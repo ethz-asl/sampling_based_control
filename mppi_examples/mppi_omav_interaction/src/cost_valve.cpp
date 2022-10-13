@@ -20,7 +20,7 @@ OMAVInteractionCostValve::OMAVInteractionCostValve(
   // robot model
   robot_model_.init_from_xml(robot_description_pinocchio_);
   object_model_.init_from_xml(object_description_);
-  cost_vector_.resize(kN_costs);
+  cost_vector_.resize(cost_description::SIZE_COST_VECTOR);
 }
 
 // double OMAVInteractionCostValve::distance_from_obstacle_cost(
@@ -64,7 +64,7 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
     compute_pose_cost(x, ref);
     // Unwanted contact cost
     if (param_ptr_->contact_bool) {
-      cost_vector_(CostIdx::contact) = 100 * x(18);
+      cost_vector_(cost_description::CONTACT_COST) = 100 * x(18);
     }
   }
 
@@ -82,10 +82,11 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
     // Minimize force
     // double force = x.segment<3>(15).norm();
     // cost_vector_(CostIdx::force) = param_ptr_->Q_force * force * force;
-    cost_vector_(CostIdx::force) = (x.segment<3>(15)
-                                        .cwiseProduct(param_ptr_->Q_forcev)
-                                        .cwiseProduct(x.segment<3>(15)))
-                                       .sum();
+    cost_vector_(cost_description::FORCE_COST) =
+        (x.segment<3>(15)
+             .cwiseProduct(param_ptr_->Q_forcev)
+             .cwiseProduct(x.segment<3>(15)))
+            .sum();
   }
   double cost = cost_vector_.sum();
   cost_ = cost;
@@ -97,7 +98,7 @@ void OMAVInteractionCostValve::compute_distance_to_object_cost(
     const mppi::observation_t &x) {
   double d = r_omav_handle_I_.norm() - param_ptr_->object_distance_thresh;
   if (d < 0) {
-    cost_vector_(CostIdx::objectDistance) =
+    cost_vector_(cost_description::OBJECT_DISTANCE_COST) =
         param_ptr_->Q_object_distance * d * d;
   }
 }
@@ -106,13 +107,14 @@ void OMAVInteractionCostValve::compute_field_cost(
   if (x(0) > param_ptr_->x_limit_max || x(1) > param_ptr_->y_limit_max ||
       x(2) > param_ptr_->z_limit_max || x(0) < param_ptr_->x_limit_min ||
       x(1) < param_ptr_->y_limit_min) {
-    cost_vector_(CostIdx::leaving_field) = param_ptr_->Q_leaving_field;
+    cost_vector_(cost_description::LEAVING_FIELD_COST) =
+        param_ptr_->Q_leaving_field;
   }
 }
 
 void OMAVInteractionCostValve::compute_floor_cost(const double &omav_z) {
   if ((omav_z - param_ptr_->floor_thresh) < 0) {
-    cost_vector_(CostIdx::floor) =
+    cost_vector_(cost_description::FLOOR_COST) =
         -param_ptr_->Q_floor / param_ptr_->floor_thresh * omav_z +
         param_ptr_->Q_floor;
   }
@@ -129,10 +131,10 @@ void OMAVInteractionCostValve::compute_pose_cost(
                              omav_reference(5), omav_reference(6)};
   delta_pose_ = mppi_pinocchio::get_delta(current_pose, reference_pose);
   if (mode_ == 0) {
-    cost_vector_(CostIdx::pose) =
+    cost_vector_(cost_description::POSE_COST) =
         delta_pose_.transpose() * param_ptr_->Q_pose * delta_pose_;
   } else {
-    cost_vector_(CostIdx::pose) =
+    cost_vector_(cost_description::POSE_COST) =
         delta_pose_.transpose() * param_ptr_->Q_pose_int * delta_pose_;
   }
 }
@@ -141,15 +143,15 @@ void OMAVInteractionCostValve::compute_handle_hook_cost() {
   // Calculate distance between hook and handle
   distance_hook_handle_ = hook_handle_vector_.norm();
   if (distance_hook_handle_ > param_ptr_->handle_hook_thresh) {
-    cost_vector_(CostIdx::handle_hook) =
+    cost_vector_(cost_description::HANDLE_HOOK_COST) =
         param_ptr_->Q_handle_hook *
         (distance_hook_handle_ - param_ptr_->handle_hook_thresh);
   }
-  cost_vector_(CostIdx::handle_hook) += hook_handle_vector_(2) *
-                                        hook_handle_vector_(2) *
-                                        param_ptr_->Q_handle_hookV;
+  cost_vector_(cost_description::HANDLE_HOOK_COST) +=
+      hook_handle_vector_(2) * hook_handle_vector_(2) *
+      param_ptr_->Q_handle_hookV;
   // Handle Hook distance cost
-  // cost_vector_(CostIdx::handle_hook) = std::max(
+  // cost_vector_(cost_description::HANDLE_HOOK_COST) = std::max(
   //     0.0, param_ptr_->Q_handle_hook / (1 - param_ptr_->handle_hook_thresh) *
   //              (distance_hook_handle_ - param_ptr_->handle_hook_thresh));
 }
@@ -159,7 +161,7 @@ void OMAVInteractionCostValve::compute_object_cost(
   // ROS_INFO_STREAM_THROTTLE(0.5, "state: " << omav_state(13)
   //                                         << ", vel: " << omav_state(14)
   //                                         << ", ref: " << omav_reference(7));
-  cost_vector_(CostIdx::object) =
+  cost_vector_(cost_description::OBJECT_COST) =
       param_ptr_->Q_object * abs((omav_state(13) - omav_reference(7)));  // *
   // (omav_state(13) - omav_reference(7));
   // ROS_INFO_STREAM(omav_state(13) << " - " << omav_reference(7));
@@ -167,7 +169,7 @@ void OMAVInteractionCostValve::compute_object_cost(
 
 void OMAVInteractionCostValve::compute_unwanted_contact_cost(
     const Eigen::VectorXd &omav_state) {
-  cost_vector_(CostIdx::unwantedContact) =
+  cost_vector_(cost_description::UNWANTED_CONTACT_COST) =
       param_ptr_->Q_unwanted_contact * omav_state(32) * omav_state(32);
 }
 
@@ -198,9 +200,9 @@ void OMAVInteractionCostValve::compute_tip_velocity_cost(
       omav_state.segment<3>(7) + ang_vel_I.cross(-r_tip_omav_I_);
   // tip_velocity_ << tip_lin_velocity_, omav_state.segment<3>(10);
 
-  cost_vector_(CostIdx::tip_velocity) = tip_lin_velocity_.transpose() *
-                                        param_ptr_->Q_vel.block<3, 3>(0, 0) *
-                                        tip_lin_velocity_;
+  cost_vector_(cost_description::TIP_VELOCITY_COST) =
+      tip_lin_velocity_.transpose() * param_ptr_->Q_vel.block<3, 3>(0, 0) *
+      tip_lin_velocity_;
 }
 
 // void OMAVInteractionCostValve::compute_torque_cost(
@@ -208,7 +210,7 @@ void OMAVInteractionCostValve::compute_tip_velocity_cost(
 //   torque_angle_ =
 //       handle_orthogonal_vector_.normalized().dot(r_tip_omav_I_.normalized());
 
-//   cost_vector_(CostIdx::torque) = std::min(
+//   cost_vector_(cost_description::torque) = std::min(
 //       param_ptr_->Q_torque, param_ptr_->Q_torque * (1 - torque_angle_));
 // }
 
@@ -216,7 +218,7 @@ void OMAVInteractionCostValve::compute_tip_velocity_cost(
 //     const Eigen::VectorXd &omav_state) {
 //   double power_normed = handle_orthogonal_vector_.normalized().dot(
 //       tip_lin_velocity_.normalized());
-//   cost_vector_(CostIdx::efficiency) =
+//   cost_vector_(cost_description::efficiency) =
 //       std::min(param_ptr_->Q_efficiency,
 //                param_ptr_->Q_efficiency * (1.0 - power_normed));
 // }
@@ -226,7 +228,7 @@ void OMAVInteractionCostValve::compute_velocity_cost(
     const Eigen::Vector3d &angular_velocity) {
   Eigen::Matrix<double, 6, 1> velocity_vector;
   velocity_vector << linear_velocity, angular_velocity;
-  cost_vector_(CostIdx::velocity) =
+  cost_vector_(cost_description::VELOCITY_COST) =
       velocity_vector.transpose() * param_ptr_->Q_vel * velocity_vector;
 }
 
