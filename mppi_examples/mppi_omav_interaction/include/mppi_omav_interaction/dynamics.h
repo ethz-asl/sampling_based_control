@@ -70,6 +70,8 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
   void setPDGains(const Eigen::Matrix<double, 6, 1> &p,
                   const Eigen::Matrix<double, 6, 1> &d) {
     omav_->setPdGains(p, d);
+    settings_.pGains = p;
+    settings_.dGains = d;
   }
 
   void setDampingFactor(const double &k) { settings_.damping = k; }
