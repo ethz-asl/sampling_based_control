@@ -400,11 +400,7 @@ void InteractionControlNode::costShelfParamCallback(
 
 void InteractionControlNode::mppiSettingsParamCallback(
     mppi_omav_interaction::MPPIOmavSettingsConfig &config, uint32_t level) {
-  // Update OMAV pose cost
-  Eigen::Matrix<double, 6, 1> pGains;
   Eigen::Matrix<double, 6, 1> dGains;
-  pGains << config.p_gain_pos * Eigen::Vector3d::Ones(),
-      config.p_gain_ang * Eigen::Vector3d::Ones();
   dGains << config.d_gain_pos * Eigen::Vector3d::Ones(),
       config.d_gain_ang * Eigen::Vector3d::Ones();
 
@@ -412,7 +408,7 @@ void InteractionControlNode::mppiSettingsParamCallback(
   controller_.getDynamicsPtr(omav_dynamics_v);
   size_t n = omav_dynamics_v.size();
   for (size_t i = 0; i < n; i++) {
-    omav_dynamics_v.at(i)->setPDGains(pGains, dGains);
+    omav_dynamics_v.at(i)->setDGains(dGains);
     omav_dynamics_v.at(i)->setDampingFactor(config.damping);
     omav_dynamics_v.at(i)->setMass(config.mass);
   }

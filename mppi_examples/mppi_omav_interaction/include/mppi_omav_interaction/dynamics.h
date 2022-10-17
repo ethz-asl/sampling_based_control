@@ -53,10 +53,6 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
 
   void initialize_pd();
 
-  inline void integrate_quaternion(const Eigen::Vector3d &omega_B,
-                                   const Eigen::Quaterniond &q_WB_n,
-                                   Eigen::Quaterniond &q_WB_n_plus_one,
-                                   const double &dt) const;
   void compute_velocities(const input_t &u);
   void integrate_internal(const input_t &u, double dt);
 
@@ -67,11 +63,11 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
 
   size_t get_state_dimension() override { return state_dimension_; }
 
-  void setPDGains(const Eigen::Matrix<double, 6, 1> &p,
-                  const Eigen::Matrix<double, 6, 1> &d) {
-    omav_->setPdGains(p, d);
-    settings_.pGains = p;
+  void setDGains(const Eigen::Matrix<double, 6, 1> &d) {
+    settings_.pGains.setZero();
     settings_.dGains = d;
+
+    omav_->setPdGains(settings_.pGains, settings_.dGains);
   }
 
   void setDampingFactor(const double &k) { settings_.damping = k; }
@@ -131,7 +127,7 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
 
   raisim::World sim_;
 
-  Eigen::VectorXd cmd_, cmdv_;
+  Eigen::VectorXd cmdv_;
   Eigen::Matrix<double, 6, 1> feedforward_force_;
   Eigen::Matrix<double, 6, 1> feedforward_acceleration_;
   Eigen::Matrix<double, 6, 1> feedforward_gravity_;
