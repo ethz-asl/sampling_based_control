@@ -94,7 +94,7 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   x_.segment<6>(
       omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD) =
       omav_velocity_;
-  x_.segment<1>(omav_state_description_simulation::OBJECT_POSITION) =
+  x_.segment<1>(omav_state_description_simulation::OBJECT_ORIENTATION) =
       object_pose_;
   x_.segment<1>(omav_state_description_simulation::OBJECT_VELOCITY) =
       object_velocity_;
@@ -114,7 +114,7 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
       x_.segment<6>(
           omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD));
   object_->setState(
-      x_.segment<1>(omav_state_description_simulation::OBJECT_POSITION),
+      x_.segment<1>(omav_state_description_simulation::OBJECT_ORIENTATION),
       x_.segment<1>(omav_state_description_simulation::OBJECT_VELOCITY));
 }
 

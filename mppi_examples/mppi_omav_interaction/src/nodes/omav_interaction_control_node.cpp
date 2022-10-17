@@ -139,7 +139,7 @@ void InteractionControlNode::odometryCallback(
 void InteractionControlNode::objectCallback(
     const sensor_msgs::JointState &object_msg) {
   object_state_time_ = object_msg.header.stamp;
-  object_state_(object_state_description::OBJECT_POSITION) =
+  object_state_(object_state_description::OBJECT_ORIENTATION) =
       object_msg.position[0];
   object_state_(object_state_description::OBJECT_VELOCITY) =
       object_msg.velocity[0];
@@ -159,17 +159,17 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
   }
 
   if (controller_.getTask() == InteractionTask::Valve) {
-    // if (state_(omav_state_description::OBJECT_POSITION) +
+    // if (state_(omav_state_description::OBJECT_ORIENTATION) +
     // cost_valve_params_.ref_p > last_ref) { last_ref =
-    // state_(omav_state_description::OBJECT_POSITION) +
+    // state_(omav_state_description::OBJECT_ORIENTATION) +
     // cost_valve_params_.ref_p; controller_.updateValveReference(last_ref); Use
     // dynamic updating of the valve reference: Reference angle increases
     // throughout the horizon
     if (cost_valve_params_.cost_mode == 0) {
       controller_.updateValveReferenceDynamic(
-          state_(omav_state_description::OBJECT_POSITION) +
+          state_(omav_state_description::OBJECT_ORIENTATION) +
               cost_valve_params_.ref_p,
-          state_(omav_state_description::OBJECT_POSITION) +
+          state_(omav_state_description::OBJECT_ORIENTATION) +
               cost_valve_params_.ref_p + cost_valve_params_.ref_v,
           t_now.toSec());
     } else {
@@ -209,7 +209,7 @@ bool InteractionControlNode::getState(observation_t &x) {
       current_odometry_.getVelocityWorld();
   x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_BODY) =
       current_odometry_.angular_velocity_B;
-  x.segment<2>(omav_state_description::OBJECT_POSITION) = object_state_;
+  x.segment<2>(omav_state_description::OBJECT_ORIENTATION) = object_state_;
   x.segment<3>(omav_state_description::MAV_POSITION_X_DESIRED_WORLD) =
       target_state_.position_W;
   x(omav_state_description::MAV_ORIENTATION_W_DESIRED_WORLD) =
@@ -345,7 +345,7 @@ void InteractionControlNode::referenceParamCallback(
 
   if (config.reset_object) {
     config.reset_object = false;
-    state_(omav_state_description::OBJECT_POSITION) = 0;
+    state_(omav_state_description::OBJECT_ORIENTATION) = 0;
     // simulation_->reset(state_);
     ROS_INFO("[mppi_omav_interaction] Reset Object");
   }
