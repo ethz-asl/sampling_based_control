@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "mppi_omav_interaction/omav_interaction_common.h"
 #include "mppi_ros/controller_interface.h"
 
 #include <mav_msgs/conversions.h>

@@ -14,7 +14,10 @@ void to_trajectory_msg(
   mav_msgs::EigenTrajectoryPoint current_trajectory_point;
   for (size_t i = 0; i < x_opt.size(); i++) {
     EigenTrajectoryPointFromState(
-        x_opt[i], u_opt[i] - damping * x_opt[i].segment<6>(26),
+        x_opt[i],
+        u_opt[i] - damping * x_opt[i].segment<6>(
+                                 omav_state_description::
+                                     MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
         static_cast<int64_t>((tt[i] - tt[0]) * 1e9), current_trajectory_point);
     current_trajectory.push_back(current_trajectory_point);
   }
@@ -22,65 +25,6 @@ void to_trajectory_msg(
                                                 &trajectory_msg);
   trajectory_msg.header.stamp = ros::Time(tt[0]);
   trajectory_msg.header.frame_id = "world";
-}
-
-void EigenTrajectoryPointFromStates(
-    const observation_array_t &states, const input_array_t &inputs,
-    const size_t &i, mav_msgs::EigenTrajectoryPoint &trajectorypoint,
-    const double &dt) {
-  bool use_input = true;
-
-  trajectorypoint.position_W = states[i].segment<3>(19);
-  trajectorypoint.orientation_W_B = Eigen::Quaternion(
-      states[i](22), states[i](23), states[i](24), states[i](25));
-  trajectorypoint.velocity_W = states[i].segment<3>(26);
-  // Angular velocities and accelerations need to be represented in body frame
-  trajectorypoint.angular_velocity_W = states[i].segment<3>(29);
-  if (!use_input) {
-    // Filter the velocities to calculate the desired accelerations
-    // Window size is 2*m+1
-    const size_t m = 3;
-    // Polynomial Order
-    const size_t n = 2;
-    // Initial Point Smoothing (ie evaluate polynomial at first point in the
-    // window)
-    // Points are defined in range [-m;m]
-    const size_t t = m;
-    // Derivation order? 0: no derivation, 1: first derivative, 2: second
-    // derivative...
-    const int d = 1;
-    gram_sg::SavitzkyGolayFilter filter(m, t, n, d);
-
-    std::vector<double> lin_vel_x, lin_vel_y, lin_vel_z, ang_vel_x, ang_vel_y,
-        ang_vel_z;
-    OptimalRollouttoVelocityVector(i, 26, states, lin_vel_x);
-    OptimalRollouttoVelocityVector(i, 27, states, lin_vel_y);
-    OptimalRollouttoVelocityVector(i, 28, states, lin_vel_z);
-    OptimalRollouttoVelocityVector(i, 29, states, ang_vel_x);
-    OptimalRollouttoVelocityVector(i, 30, states, ang_vel_y);
-    OptimalRollouttoVelocityVector(i, 31, states, ang_vel_z);
-
-    double lin_acc_x = filter.filter(lin_vel_x) / dt;
-    double lin_acc_y = filter.filter(lin_vel_y) / dt;
-    double lin_acc_z = filter.filter(lin_vel_z) / dt;
-    double ang_acc_x = filter.filter(ang_vel_x) / dt;
-    double ang_acc_y = filter.filter(ang_vel_y) / dt;
-    double ang_acc_z = filter.filter(ang_vel_z) / dt;
-
-    Eigen::Matrix<double, 3, 1> linear_acceleration;
-    linear_acceleration << lin_acc_x, lin_acc_y, lin_acc_z;
-
-    Eigen::Matrix<double, 3, 1> angular_acceleration_W;
-    angular_acceleration_W << ang_acc_x, ang_acc_y, ang_acc_z;
-    trajectorypoint.acceleration_W = linear_acceleration;
-    trajectorypoint.angular_acceleration_W = angular_acceleration_W;
-  } else {
-    trajectorypoint.acceleration_W =
-        inputs[i + 1].head<3>() - 5 * states[i].segment<3>(26);
-    trajectorypoint.angular_acceleration_W =
-        inputs[i + 1].segment<3>(3) - 5 * states[i].segment<3>(29);
-  }
-  trajectorypoint.time_from_start_ns = ros::Duration((i + 1) * dt).toNSec();
 }
 
 void PoseStampedMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
@@ -218,13 +162,21 @@ void InterpolateTrajectoryPoints(
 void EigenTrajectoryPointFromState(
     const observation_t &state, const input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
-  trajectorypoint.position_W = state.segment<3>(19);
-  trajectorypoint.orientation_W_B =
-      Eigen::Quaternion(state(22), state(23), state(24), state(25));
-  trajectorypoint.velocity_W = state.segment<3>(26);
-  trajectorypoint.angular_velocity_W = state.segment<3>(29);
-  trajectorypoint.acceleration_W = input.head(3);
-  trajectorypoint.angular_acceleration_W = input.segment<3>(3);
+  trajectorypoint.position_W =
+      state.segment<3>(omav_state_description::MAV_POSITION_X_DESIRED_WORLD);
+  trajectorypoint.orientation_W_B = Eigen::Quaternion(
+      state(omav_state_description::MAV_ORIENTATION_W_DESIRED_WORLD),
+      state(omav_state_description::MAV_ORIENTATION_X_DESIRED_WORLD),
+      state(omav_state_description::MAV_ORIENTATION_Y_DESIRED_WORLD),
+      state(omav_state_description::MAV_ORIENTATION_Z_DESIRED_WORLD));
+  trajectorypoint.velocity_W = state.segment<3>(
+      omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
+  trajectorypoint.angular_velocity_W = state.segment<3>(
+      omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY);
+  trajectorypoint.acceleration_W = input.segment<3>(
+      control_input_description::MAV_LINEAR_ACCELERATION_X_DESIRED_WORLD);
+  trajectorypoint.angular_acceleration_W = input.segment<3>(
+      control_input_description::MAV_ANGULAR_ACCELERATION_X_DESIRED_BODY);
 }
 
 void EigenTrajectoryPointFromState(
@@ -240,21 +192,28 @@ void MultiDofJointTrajectoryPointFromState(
     trajectory_msgs::MultiDOFJointTrajectoryPoint &point) {
   point.transforms.clear();
   geometry_msgs::Transform pos;
-  pos.translation.x = state(0);
-  pos.translation.y = state(1);
-  pos.translation.z = state(2);
-  pos.rotation.w = state(3);
-  pos.rotation.x = state(4);
-  pos.rotation.y = state(5);
-  pos.rotation.z = state(6);
+  pos.translation.x = state(omav_state_description::MAV_POSITION_X_WORLD);
+  pos.translation.y = state(omav_state_description::MAV_POSITION_Y_WORLD);
+  pos.translation.z = state(omav_state_description::MAV_POSITION_Z_WORLD);
+  pos.rotation.w = state(omav_state_description::MAV_ORIENTATION_W_WORLD);
+  pos.rotation.x = state(omav_state_description::MAV_ORIENTATION_X_WORLD);
+  pos.rotation.y = state(omav_state_description::MAV_ORIENTATION_Y_WORLD);
+  pos.rotation.z = state(omav_state_description::MAV_ORIENTATION_Z_WORLD);
   point.transforms.push_back(pos);
-  pos.translation.x = state(19);
-  pos.translation.y = state(20);
-  pos.translation.z = state(21);
-  pos.rotation.w = state(22);
-  pos.rotation.x = state(23);
-  pos.rotation.y = state(24);
-  pos.rotation.z = state(25);
+  pos.translation.x =
+      state(omav_state_description::MAV_POSITION_X_DESIRED_WORLD);
+  pos.translation.y =
+      state(omav_state_description::MAV_POSITION_Y_DESIRED_WORLD);
+  pos.translation.z =
+      state(omav_state_description::MAV_POSITION_Z_DESIRED_WORLD);
+  pos.rotation.w =
+      state(omav_state_description::MAV_ORIENTATION_W_DESIRED_WORLD);
+  pos.rotation.x =
+      state(omav_state_description::MAV_ORIENTATION_X_DESIRED_WORLD);
+  pos.rotation.y =
+      state(omav_state_description::MAV_ORIENTATION_Y_DESIRED_WORLD);
+  pos.rotation.z =
+      state(omav_state_description::MAV_ORIENTATION_Z_DESIRED_WORLD);
   point.transforms.push_back(pos);
 }
 
