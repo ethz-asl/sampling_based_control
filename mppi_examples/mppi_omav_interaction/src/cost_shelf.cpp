@@ -88,7 +88,6 @@ mppi::CostBase::cost_t OMAVInteractionCostShelf::compute_cost(
   }
 
   cost_ = cost_vector_.sum();
-  ;
 
   return cost_;
 }
