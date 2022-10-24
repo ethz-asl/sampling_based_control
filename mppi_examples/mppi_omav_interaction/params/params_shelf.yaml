@@ -58,7 +58,5 @@ initial_configuration: [ 0.0, 0.0, 1.0,        # Position OMAV - 0
                          0.0, 0.0,             # Position & Velocity Object - 13
                          0.0, 0.0, 0.0,        # Force - 15
                          0.0,                  # Contact State - 18
-                         0.0, 0.0, 0.3,        # Position OMAV_des - 19
-                         1.0, 0.0, 0.0, 0.0,   # Orientation OMAV_des - 22
-                         0.0, 0.0, 0.0,        # Linear Velocity OMAV_des - 26
-                         0.0, 0.0, 0.0]        # Angular Velocity OMAV_des - 29
+                         0.0, 0.0, 0.0,        # Linear Velocity OMAV_des - 19
+                         0.0, 0.0, 0.0]        # Angular Velocity OMAV_des - 22

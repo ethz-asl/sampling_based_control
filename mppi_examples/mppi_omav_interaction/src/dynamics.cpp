@@ -59,11 +59,9 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   // Integrate the linear and angular accelerations and velocities
   integrate_internal(u, dt_);
 
-  // Simulate system that is reset with odometry
-  Eigen::VectorXd cmd = Eigen::VectorXd::Zero(7);
   cmdv_ = x_.segment<6>(
       omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
-  omav_->setPdTarget(cmd, cmdv_);
+  omav_->setPdTarget(Eigen::VectorXd::Zero(7), cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
   nonLinearities_ = omav_->getNonlinearities(sim_.getGravity()).e();
   feedforward_force_ =
