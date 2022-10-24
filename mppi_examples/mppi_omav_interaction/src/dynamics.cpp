@@ -100,8 +100,10 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
 }
 
 void OMAVVelocityDynamics::reset(const observation_t &x) {
-  // internal eigen state
-  x_ = x;
+  // reset internal simulation state vector with real state vector
+  x_.head<omav_state_description::SIZE_OMAV_STATE>() = x;
+  x_(omav_state_description_simulation::UNWANTED_CONTACT) = 0.0;
+
   // reset omav and object in raisim
   omav_->setState(
       x_.head<7>(),
