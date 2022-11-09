@@ -2,8 +2,13 @@
 <robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:arg name="fixed" default="true"/>
     <xacro:arg name="height" default="0.0"/>
-    <xacro:property name="height" default="$(arg height)"/>
+    <xacro:arg name="shelf_x" default="-0.242"/>
+    <xacro:arg name="shelf_y" default="-0.595"/>
+    <xacro:arg name="shelf_z" default="0.834"/>
+    <xacro:arg name="shelf_orientation" default="0.0 0.0 1.645"/>
+    
 
+    <xacro:property name="height" default="$(arg height)"/>
     <xacro:property name="door_length" default="0.359"/>
     <xacro:property name="door_height" default="0.748"/>
     <xacro:property name="door_width" default="0.018"/>
@@ -16,9 +21,11 @@
     <xacro:property name="handle_offset_y" default="0.338"/>
     <xacro:property name="handle_offset_z" default="-0.024"/>
 
-    <xacro:property name="shelf_x" default="-0.242"/>
-    <xacro:property name="shelf_y" default="-0.595"/>
-    <xacro:property name="shelf_z" default="0.834"/>
+    <xacro:property name="shelf_x" default="$(arg shelf_x)"/>
+    <xacro:property name="shelf_y" default="$(arg shelf_y)"/>
+    <xacro:property name="shelf_z" default="$(arg shelf_z)"/>
+    <xacro:property name="shelf_orientation" default="$(arg shelf_orientation)"/>
+
 
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
@@ -38,7 +45,7 @@
         <joint name="fixed" type="fixed">
             <parent link="world"/>
             <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="0.0 0.0 1.645"/>
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="${shelf_orientation}"/>
         </joint>
     </xacro:if>
 
