@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="valve" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+    <xacro:arg name="resource_directory" default="$(find mppi_omav_interaction)/data/meshes"/>
+    <xacro:arg name="object_position" default="-1 0 1"/>
+    <xacro:arg name="object_rpy" default="1.5708 0 0"/>
+
+    <xacro:arg name="valve_type" default="lee_thin"/>
+
+    <link name="world"/>
+
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="valve_base"/>
+        <!-- <origin xyz="${base_position_x} ${base_position_y} ${base_height/2.0}" rpy="0 0 0"/> -->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="valve_base">
+    </link>
+
+    <link name="handle_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+        <!-- <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="$(arg resource_directory)/valve_${valve_type}visual.obj" scale="1 1 1"/>
+            </geometry>
+        </visual> -->
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+	       <geometry>
+                <mesh  filename="$(arg resource_directory)/valve_$(arg valve_type)_collision.obj" scale="1 1 1"/>
+            </geometry>
+            <material name="">
+                <contact name="steel"/>
+            </material>
+        </collision>
+    </link>
+
+    <joint name="articulation_joint" type="revolute">
+        <parent link="valve_base"/>
+        <child link="handle_link"/>
+        <!--<origin xyz="0 0 ${base_height/2.0+0.2}" rpy="0 0 0"/> <!- 1.5708 0 0 -->
+        <origin xyz="$(arg object_position)" rpy="$(arg object_rpy)"/>
+        <dynamics damping="0" friction="0.002"/>
+        <axis xyz="0 0 1"/>
+        <limit upper="300.14" lower="-300.14" effort="100" velocity="1.0"/>
+    </joint>
+</robot>
