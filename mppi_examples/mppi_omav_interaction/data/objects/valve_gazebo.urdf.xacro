@@ -74,7 +74,6 @@
     <joint name="articulation_joint" type="revolute">
         <parent link="world"/>
         <child link="handle_link"/>
-        <!--<origin xyz="0 0 ${base_height/2.0+0.2}" rpy="1.5708 0 0"/> <!- 1.5708 0 0 -->
         <origin xyz="$(arg object_position)" rpy="$(arg object_rpy)"/>
         <dynamics damping="0.0" friction="0.002"/>
         <axis xyz="0 0 1"/>
@@ -91,10 +90,10 @@
     <transmission name="hinge">
         <type>transmission_interface/SimpleTransmission</type>
         <joint name="articulation_joint">
-            <hardwareInterface>EffortJointInterface</hardwareInterface>
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor1">
-            <hardwareInterface>EffortJointInterface</hardwareInterface>
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             <mechanicalReduction>1</mechanicalReduction>
         </actuator>
     </transmission>

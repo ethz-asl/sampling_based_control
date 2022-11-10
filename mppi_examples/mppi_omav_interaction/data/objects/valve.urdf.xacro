@@ -11,7 +11,6 @@
     <joint name="fixed" type="fixed">
         <parent link="world"/>
         <child link="valve_base"/>
-        <!-- <origin xyz="${base_position_x} ${base_position_y} ${base_height/2.0}" rpy="0 0 0"/> -->
         <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
@@ -24,12 +23,6 @@
             <mass value="0.1"/>
             <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
         </inertial>
-        <!-- <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <geometry>
-                <mesh filename="$(arg resource_directory)/valve_${valve_type}visual.obj" scale="1 1 1"/>
-            </geometry>
-        </visual> -->
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	       <geometry>
@@ -44,7 +37,6 @@
     <joint name="articulation_joint" type="revolute">
         <parent link="valve_base"/>
         <child link="handle_link"/>
-        <!--<origin xyz="0 0 ${base_height/2.0+0.2}" rpy="0 0 0"/> <!- 1.5708 0 0 -->
         <origin xyz="$(arg object_position)" rpy="$(arg object_rpy)"/>
         <dynamics damping="0" friction="0.002"/>
         <axis xyz="0 0 1"/>
