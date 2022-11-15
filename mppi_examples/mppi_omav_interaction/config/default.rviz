@@ -71,9 +71,9 @@ Visualization Manager:
           Value: false
         omav_base:
           Value: false
-        ouzel/base_link:
+        kea/base_link:
           Value: false
-        ouzel/odometry_sensor1:
+        kea/odometry_sensor1:
           Value: false
         rod:
           Value: false
@@ -94,12 +94,12 @@ Visualization Manager:
         world:
           handle_link:
             {}
-          ouzel/base_link:
+          kea/base_link:
             imu:
               {}
             odom_omav:
               {}
-          ouzel/odometry_sensor1:
+          kea/odometry_sensor1:
             {}
           state:
             omav_base:
@@ -205,12 +205,12 @@ Visualization Manager:
       Shaft Length: 0.23000000417232513
       Shaft Radius: 0.009999999776482582
       Shape: Axes
-      Topic: /ouzel/reference_trajectory_poses
+      Topic: /kea/reference_trajectory_poses
       Unreliable: false
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /ouzel/omav_mppi_interaction/debug/hook_pos
+      Marker Topic: /kea/omav_mppi_interaction/debug/hook_pos
       Name: Marker
       Namespaces:
         {}
@@ -243,7 +243,7 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /ouzel/mppi_omav_interaction/debug/hook_pos
+      Marker Topic: /kea/mppi_omav_interaction/debug/hook_pos
       Name: Marker
       Namespaces:
         "": true
@@ -251,7 +251,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /ouzel/mppi_omav_interaction/debug/normalized_forces
+      Marker Topic: /kea/mppi_omav_interaction/debug/normalized_forces
       Name: MarkerArray
       Namespaces:
         "": true
