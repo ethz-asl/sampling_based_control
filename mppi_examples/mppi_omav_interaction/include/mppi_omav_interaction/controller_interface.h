@@ -95,10 +95,9 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   void object_reference_callback(const geometry_msgs::PoseStampedConstPtr &msg);
 
-  void publish_trajectory(const mppi::observation_array_t &x_opt,
-                          const mppi::input_array_t &u_opt,
-                          const mppi::observation_t &x0_opt,
-                          const std::vector<double> &tt);
+  void publish_command_trajectory(const mppi::observation_array_t &x_opt,
+                                  const mppi::input_array_t &u_opt,
+                                  const std::vector<double> &tt);
   template <class T>
   void publishCostInfo(const T &cost, const std_msgs::Header &header);
   void publishHookPos(const std_msgs::Header &header) const;
@@ -145,7 +144,6 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   observation_array_t xx_opt_;
   input_array_t uu_opt_;
   std::vector<double> tt_opt_;
-  observation_t x0_;
   Eigen::Vector3d com_hook_;
 
   sensor_msgs::JointState object_state_;

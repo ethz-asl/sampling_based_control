@@ -17,24 +17,30 @@ bool OMAVControllerInterface::init_ros() {
   detailed_publishing_rate_ = nh_.param<double>("detailed_publishing_rate", 10);
 
   // Initialize publisher
-  optimal_rollout_publisher_ =
-      nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
-          "debug/optimal_rollout", 1);
   cmd_multi_dof_joint_trajectory_pub_ =
       nh_public_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
           mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
-  // Publish current pose reference used by mppi
-  mppi_reference_publisher_ =
-      nh_.advertise<geometry_msgs::Pose>("debug/mppi_reference", 1);
-  // Publish current object state used by mppi
-  object_state_publisher_ =
-      nh_.advertise<sensor_msgs::JointState>("object/joint_state", 1);
 
-  if (detailed_publishing_) {
-    ROS_INFO("[mppi_omav_interaction] Detailed publishing enabled.");
+  if (publish_all_trajectories_) {
     trajectory_publisher_ =
         nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
             "debug/all_rollouts", 1);
+  }
+
+  if (detailed_publishing_) {
+    ROS_INFO("[mppi_omav_interaction] Detailed publishing enabled.");
+
+    optimal_rollout_publisher_ =
+        nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
+            "debug/optimal_rollout", 1);
+
+    // Publish current pose reference used by mppi
+    mppi_reference_publisher_ =
+        nh_.advertise<geometry_msgs::PoseStamped>("debug/mppi_reference", 1);
+
+    // Publish current object state used by mppi
+    object_state_publisher_ =
+        nh_.advertise<sensor_msgs::JointState>("debug/object/joint_state", 1);
 
     cost_publisher_ =
         nh_.advertise<mppi_ros::Array>("debug/cost_components", 1);
@@ -324,52 +330,38 @@ bool OMAVControllerInterface::set_initial_reference(const observation_t &x) {
 
 void OMAVControllerInterface::publish_ros() {
   const ros::Time t_now = ros::Time::now();
+  static ros::Time t_last_published = ros::Time::now();
+
   if (!get_controller()->get_optimal_rollout_for_trajectory(
           xx_opt_, uu_opt_, tt_opt_, t_now.toSec())) {
     ROS_ERROR("Error getting optimal rollout.");
     return;
   }
-  x0_ = get_controller()->get_current_observation();
 
-  publish_trajectory(xx_opt_, uu_opt_, x0_, tt_opt_);
+  publish_command_trajectory(xx_opt_, uu_opt_, tt_opt_);
 
-  static ros::Time last_published = ros::Time::now();
-  if (detailed_publishing_ &&
-      (t_now - last_published).toSec() >= 1. / detailed_publishing_rate_) {
-    publish_optimal_rollout();
-    last_published = t_now;
-    if (publish_all_trajectories_) {
-      static int counter = 0;
-      counter++;
-      if (counter == 1) {
-        publish_all_trajectories();
-        counter = 0;
-      }
+  if ((t_now - t_last_published).toSec() >= 1. / detailed_publishing_rate_) {
+    if (detailed_publishing_) {
+      publish_optimal_rollout();
+
+      // update object state visualization
+      object_state_.header.stamp = t_now;
+      object_state_.position[0] =
+          xx_opt_[0](omav_state_description::OBJECT_ORIENTATION);
+      object_state_publisher_.publish(object_state_);
     }
-    // update object state visualization
-    object_state_.header.stamp = t_now;
-    object_state_.position[0] =
-        xx_opt_[0](omav_state_description::OBJECT_ORIENTATION);
-    object_state_publisher_.publish(object_state_);
-  }
 
-  // static tf::TransformBroadcaster odom_broadcaster;
-  // tf::Transform omav_odom;
-  // omav_odom.setOrigin(tf::Vector3(x0_(0), x0_(1), x0_(2)));
-  // omav_odom.setRotation(tf::Quaternion(x0_(4), x0_(5), x0_(6), x0_(3)));
-  // odom_broadcaster.sendTransform(
-  //     tf::StampedTransform(omav_odom, t_now, "world", "odom_omav"));
+    if (publish_all_trajectories_) {
+      publish_all_trajectories();
+    }
+
+    t_last_published = t_now;
+  }
 }
 
-/**
- * @brief      Publish optimal trajectory
- *
- * @param[in]  x_opt   Optimal states
- * @param[in]  u_opt   Optimal inputs
- */
-void OMAVControllerInterface::publish_trajectory(
+void OMAVControllerInterface::publish_command_trajectory(
     const mppi::observation_array_t &x_opt, const mppi::input_array_t &u_opt,
-    const mppi::observation_t &x0_opt, const std::vector<double> &tt) {
+    const std::vector<double> &tt) {
   conversions::to_trajectory_msg(x_opt, u_opt, tt, damping_,
                                  current_trajectory_msg_);
   cmd_multi_dof_joint_trajectory_pub_.publish(current_trajectory_msg_);
@@ -420,20 +412,21 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   header.stamp = ros::Time(tt_opt_.front());
 
   // Publish single pose reference:
-  geometry_msgs::Pose mppi_reference;
-  mppi_reference.position.x =
+  geometry_msgs::PoseStamped mppi_reference;
+  mppi_reference.header.frame_id = "world";
+  mppi_reference.pose.position.x =
       ref_.rr[0](reference_description::MAV_GOAL_POSITION_X_WORLD);
-  mppi_reference.position.y =
+  mppi_reference.pose.position.y =
       ref_.rr[0](reference_description::MAV_GOAL_POSITION_Y_WORLD);
-  mppi_reference.position.z =
+  mppi_reference.pose.position.z =
       ref_.rr[0](reference_description::MAV_GOAL_POSITION_Z_WORLD);
-  mppi_reference.orientation.w =
+  mppi_reference.pose.orientation.w =
       ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_W_WORLD);
-  mppi_reference.orientation.x =
+  mppi_reference.pose.orientation.x =
       ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_X_WORLD);
-  mppi_reference.orientation.y =
+  mppi_reference.pose.orientation.y =
       ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Y_WORLD);
-  mppi_reference.orientation.z =
+  mppi_reference.pose.orientation.z =
       ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Z_WORLD);
   mppi_reference_publisher_.publish(mppi_reference);
 

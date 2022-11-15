@@ -49,6 +49,8 @@ sequential: false
 static_optimization: false
 running_rotors: true
 detailed_publishing: true
+detailed_publishing_rate: 10
+publish_all_trajectories: false
 sim_dt: 0.015
 
 initial_configuration: [ 0.0, 0.0, 1.0,        # Position OMAV - 0
