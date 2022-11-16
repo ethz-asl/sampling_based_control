@@ -33,6 +33,8 @@ bool OMAVControllerInterface::init_ros() {
     optimal_rollout_publisher_ =
         nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
             "debug/optimal_rollout", 1);
+    optimal_rollout_pose_publisher_ = nh_.advertise<geometry_msgs::PoseArray>(
+        "debug/optimal_rollout/pose_array", 1);
 
     // Publish current pose reference used by mppi
     mppi_reference_publisher_ =
@@ -413,7 +415,7 @@ void OMAVControllerInterface::publish_optimal_rollout() {
 
   // Publish single pose reference:
   geometry_msgs::PoseStamped mppi_reference;
-  mppi_reference.header.frame_id = "world";
+  mppi_reference.header = header;
   mppi_reference.pose.position.x =
       ref_.rr[0](reference_description::MAV_GOAL_POSITION_X_WORLD);
   mppi_reference.pose.position.y =
@@ -429,6 +431,26 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   mppi_reference.pose.orientation.z =
       ref_.rr[0](reference_description::MAV_GOAL_ORIENTATION_Z_WORLD);
   mppi_reference_publisher_.publish(mppi_reference);
+
+  // Publish optimal rollout trajectory for rviz
+  geometry_msgs::PoseArray optimal_pose_array_msg;
+  optimal_pose_array_msg.header = header;
+  for (auto optimal_state : xx_opt_) {
+    geometry_msgs::Pose optimal_pose_msg;
+    mav_msgs::pointEigenToMsg(
+        optimal_state.segment<3>(omav_state_description::MAV_POSITION_X_WORLD),
+        &optimal_pose_msg.position);
+    optimal_pose_msg.orientation.w =
+        optimal_state(omav_state_description::MAV_ORIENTATION_W_WORLD);
+    optimal_pose_msg.orientation.x =
+        optimal_state(omav_state_description::MAV_ORIENTATION_X_WORLD);
+    optimal_pose_msg.orientation.y =
+        optimal_state(omav_state_description::MAV_ORIENTATION_Y_WORLD);
+    optimal_pose_msg.orientation.z =
+        optimal_state(omav_state_description::MAV_ORIENTATION_Z_WORLD);
+    optimal_pose_array_msg.poses.push_back(optimal_pose_msg);
+  }
+  optimal_rollout_pose_publisher_.publish(optimal_pose_array_msg);
 
   // Compute cost components and publish
   if (task_ == InteractionTask::Shelf) {

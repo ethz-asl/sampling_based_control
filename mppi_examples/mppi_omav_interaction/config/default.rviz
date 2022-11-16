@@ -5,8 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /mppi_reference_pose(input to mppi)1/Status1
-        - /impedance_control_input_ref_pose(deprecated)1/Status1
       Splitter Ratio: 0.5
     Tree Height: 1522
   - Class: rviz/Selection
@@ -333,6 +331,23 @@ Visualization Manager:
       Axes Length: 0.30000001192092896
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
+      Color: 252; 175; 62
+      Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
+      Name: mppi_optimal_rollout_pose_trajectory
+      Queue Size: 10
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Arrow (3D)
+      Topic: /kea/mppi_omav_interaction/debug/optimal_rollout/pose_array
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz/PoseArray
       Color: 255; 25; 0
       Enabled: true
       Head Length: 0.07000000029802322
@@ -373,7 +388,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.864778995513916
+      Distance: 5.351834774017334
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -381,17 +396,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.22382502257823944
-        Y: -0.6829478740692139
-        Z: -0.046427369117736816
+        X: 0.049638889729976654
+        Y: -0.5837776064872742
+        Z: -0.04874252527952194
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5653982758522034
+      Pitch: 0.6903983950614929
       Target Frame: <Fixed Frame>
-      Yaw: 1.5453985929489136
+      Yaw: 0.760397732257843
     Saved: ~
 Window Geometry:
   Displays:

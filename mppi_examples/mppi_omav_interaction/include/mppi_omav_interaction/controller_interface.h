@@ -26,6 +26,7 @@
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <Eigen/Core>
 #include <memory>
 
 #include <eigen_conversions/eigen_msg.h>
@@ -128,6 +129,7 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
   ros::Publisher normalized_force_publisher_;
   ros::Publisher mppi_reference_publisher_;
   ros::Publisher pub_marker_hook_;
+  ros::Publisher optimal_rollout_pose_publisher_;
 
   ros::Subscriber reference_subscriber_;
   ros::Subscriber mode_subscriber_;
