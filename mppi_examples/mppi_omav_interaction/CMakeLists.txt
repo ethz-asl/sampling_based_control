@@ -54,6 +54,11 @@ add_dependencies(omav_interaction_control_node ${PROJECT_NAME}_gencfg)
 add_executable(state_observer_node src/nodes/state_observer_node.cpp)
 target_link_libraries(state_observer_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+# Unit Tests
+if(CATKIN_ENABLE_TESTING)
+        add_subdirectory(tests)
+endif(CATKIN_ENABLE_TESTING)
+
 add_definitions("-DBOOST_MPL_LIMIT_LIST_SIZE=30")
 
 install(DIRECTORY launch resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
