@@ -384,9 +384,9 @@ void InteractionControlNode::mppiSettingsParamCallback(
   Eigen::Matrix<double, 6, 1> pGains;
   Eigen::Matrix<double, 6, 1> dGains;
   pGains << config.p_gain_pos * Eigen::Vector3d::Ones(),
-      config.p_gain_ang * Eigen::Vector3d::Ones();
+      config.p_gain_ang * Eigen::Vector2d::Ones(), config.p_gain_yaw;
   dGains << config.d_gain_pos * Eigen::Vector3d::Ones(),
-      config.d_gain_ang * Eigen::Vector3d::Ones();
+      config.d_gain_ang * Eigen::Vector2d::Ones(), config.d_gain_yaw;
 
   std::vector<std::shared_ptr<OMAVVelocityDynamics>> omav_dynamics_v;
   controller_.getDynamicsPtr(omav_dynamics_v);

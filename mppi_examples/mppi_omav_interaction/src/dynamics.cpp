@@ -75,8 +75,8 @@ void OMAVVelocityDynamics::initialize_pd() {
 
   Eigen::VectorXd pGain(robot_dof_), dGain(robot_dof_);
   // TODO: Set gains according to real values.
-  pGain << 20.0, 20.0, 20.0, 35.0, 35.0, 35.0;
-  dGain << 5.0, 5.0, 5.0, 12.0, 12.0, 12.0;
+  pGain << 16.0, 16.0, 16.0, 50.0, 50.0, 30.0;
+  dGain << 4.0, 4.0, 4.0, 7.0, 7.0, 9.0;
   settings_.pGains = pGain;
   settings_.dGains = dGain;
 
