@@ -2,71 +2,75 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omav_hook_visualization">
 
     <!-- Properties -->
-    <xacro:property name="manipulator_length" value="$(arg manipulator_length)"/>   <!-- [m] -->
-    <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
+    <xacro:property name="manipulator_length" value="$(arg manipulator_length)" />
+    <!-- [m] -->
+    <xacro:property name="manipulator_radius" value="0.0075" />
+    <!-- [m] -->
 
-    <xacro:property name="tool_length" value="0.04"/>         <!-- [m] -->
-    <xacro:property name="tool_radius" value="0.0075"/>         <!-- [m] -->
+    <xacro:property name="tool_length" value="0.04" />
+    <!-- [m] -->
+    <xacro:property name="tool_radius" value="0.0075" />
+    <!-- [m] -->
 
-    <xacro:property name="radius_ouzel" value="0.2"/>
-    <xacro:property name="height_ouzel" value="0.3"/>
+    <xacro:property name="radius_ouzel" value="0.48" />
+    <xacro:property name="height_ouzel" value="0.3" />
 
-    <link name="state"/>
+    <link name="state" />
 
     <joint name="state_to_omav_base" type="fixed">
-        <parent link="state"/>
-        <child link="omav_base"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <parent link="state" />
+        <child link="omav_base" />
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
     </joint>
 
     <link name="omav_base">
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
+                <cylinder radius="${radius_ouzel}" length="${height_ouzel}" />
             </geometry>
         </collision>
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
+                <cylinder radius="${radius_ouzel}" length="${height_ouzel}" />
             </geometry>
             <material name="">
-                <color rgba="1 1 1 1.0"/>
+                <color rgba="1 1 1 1.0" />
             </material>
         </visual>
     </link>
 
     <joint name="omav_to_rod" type="fixed">
-        <parent link="omav_base"/>
-        <child link="rod"/>
-        <origin rpy="$(arg omav_to_rod_angle) 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
+        <parent link="omav_base" />
+        <child link="rod" />
+        <origin rpy="$(arg omav_to_rod_angle) 0 0" xyz="${manipulator_length/2} 0.0 0.0" />
     </joint>
 
     <link name="rod">
         <collision>
-            <origin rpy="0 1.5708 0" xyz="0 0 0"/>
+            <origin rpy="0 1.5708 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
+                <cylinder radius="${manipulator_radius}" length="${manipulator_length}" />
                 <!-- <box size="${manipulator_radius*2} ${manipulator_radius*2} ${manipulator_length}"/> -->
             </geometry>
         </collision>
         <visual>
-            <origin rpy="0 1.5708 0" xyz="0 0 0"/>
+            <origin rpy="0 1.5708 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
+                <cylinder radius="${manipulator_radius}" length="${manipulator_length}" />
                 <!-- <box size="${manipulator_radius*2} ${manipulator_radius*2} ${manipulator_length}"/> -->
             </geometry>
             <material name="">
-                <color rgba="1 1 1 1"/>
+                <color rgba="1 1 1 1" />
             </material>
         </visual>
     </link>
 
     <joint name="rod_to_hook" type="fixed">
-        <parent link="rod"/>
-        <child link="hook"/>
-        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 -${tool_length/2}"/>
+        <parent link="rod" />
+        <child link="hook" />
+        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 -${tool_length/2}" />
     </joint>
     <!--
         <joint name="tip_to_thick" type="fixed">
@@ -96,7 +100,7 @@
             </visual>
         </link>
 -->
-        <!-- <link name="tip">
+    <!-- <link name="tip">
             <collision>
                 <origin rpy="0 0 0" xyz="0 0 0"/>
                 <geometry>
@@ -117,32 +121,32 @@
             </visual>
         </link> -->
 
-        <!-- <joint name="tip_to_hook" type="fixed">
+    <!-- <joint name="tip_to_hook" type="fixed">
             <parent link="tip"/>
             <child link="hook"/>
             <origin rpy="0 0 0" xyz="0.0 0.0 -${tool_length/2}"/>
         </joint> -->
 
-        <link name="hook">
-            <collision>
-                <origin rpy="0 0 0" xyz="0 0 0"/>
-                <geometry>
-                    <cylinder radius="${tool_radius}" length="${tool_length}"/>
-                </geometry>
-                <material name="">
-                    <contact name="rubber"/>
-                </material>
-            </collision>
-            <visual>
-                <origin rpy="0 0 0" xyz="0 0 0"/>
-                <geometry>
-                    <cylinder radius="${tool_radius}" length="${tool_length}"/>
-                    <!-- <box size="${tool_radius*2} ${tool_radius*2} ${tool_length}"/> -->
-                </geometry>
-                <material name="">
-                    <color rgba="1 1 1 1"/>
-                </material>
-            </visual>
-        </link>
+    <link name="hook">
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <cylinder radius="${tool_radius}" length="${tool_length}" />
+            </geometry>
+            <material name="">
+                <contact name="rubber" />
+            </material>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <cylinder radius="${tool_radius}" length="${tool_length}" />
+                <!-- <box size="${tool_radius*2} ${tool_radius*2} ${tool_length}"/> -->
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+    </link>
 
-    </robot>
+</robot>
