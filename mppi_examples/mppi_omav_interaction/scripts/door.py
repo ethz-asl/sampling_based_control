@@ -44,7 +44,7 @@ if __name__ == "__main__":
     reference_pose.pose.orientation.x = 0.002
     reference_pose.pose.orientation.y = 0.003
     reference_pose.pose.orientation.z = -0.7328431
-    mode.data = 0.0
+    mode.data = 0
 
     rospy.loginfo("Setting reference as target")
     reference_publisher.publish(reference_pose)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     object_pose.pose.orientation.x = 0.0
     object_pose.pose.orientation.y = 0.0
     object_pose.pose.orientation.z = 0.0
-    mode.data = 1.0
+    mode.data = 1
 
     rospy.loginfo("Setting Object Target")
     object_reference_publisher.publish(object_pose)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     reference_pose.pose.orientation.x = 0.002
     reference_pose.pose.orientation.y = 0.003
     reference_pose.pose.orientation.z = -0.7328431
-    mode.data = 0.0
+    mode.data = 0
     rospy.loginfo("Setting reference as target")
     reference_publisher.publish(reference_pose)
     mode_publisher.publish(mode)
