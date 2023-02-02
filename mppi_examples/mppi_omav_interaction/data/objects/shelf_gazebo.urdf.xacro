@@ -1,262 +1,274 @@
 <?xml version="1.0" ?>
-<robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:arg name="fixed" default="true"/>
-    <xacro:arg name="height" default="0.0"/>
-    <xacro:arg name="shelf_x" default="-0.242"/>
-    <xacro:arg name="shelf_y" default="-0.595"/>
-    <xacro:arg name="shelf_z" default="0.834"/>
-    <xacro:arg name="shelf_orientation" default="0.0 0.0 1.645"/>
+<robot name="shelf"
+    xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:arg name="fixed" default="true" />
+    <xacro:arg name="height" default="0.0" />
+    <xacro:arg name="shelf_x" default="-0.242" />
+    <xacro:arg name="shelf_y" default="-0.595" />
+    <xacro:arg name="shelf_z" default="0.834" />
+    <xacro:arg name="shelf_orientation" default="0.0 0.0 1.645" />
 
-    <xacro:property name="height" default="$(arg height)"/>
-    <xacro:property name="door_length" default="0.359"/>
-    <xacro:property name="door_height" default="0.748"/>
-    <xacro:property name="door_width" default="0.018"/>
-    <xacro:property name="corpus_door_gap" default="0.004"/>
-    <xacro:property name="corpus_length" default="0.4"/>
-    <xacro:property name="corpus_height" default="0.827"/>
-    <xacro:property name="corpus_width" default="0.018"/>
-    <xacro:property name="handle_height" default="0.057"/> <!-- 0.026 -->
-    <xacro:property name="handle_length" default="0.16"/>
-    <xacro:property name="handle_offset_y" default="0.338"/>
-    <xacro:property name="handle_offset_z" default="-0.024"/>
+    <xacro:property name="height" default="$(arg height)" />
+    <xacro:property name="door_length" default="0.359" />
+    <xacro:property name="door_height" default="0.748" />
+    <xacro:property name="door_width" default="0.018" />
+    <xacro:property name="corpus_door_gap" default="0.004" />
+    <xacro:property name="corpus_length" default="0.4" />
+    <xacro:property name="corpus_height" default="0.827" />
+    <xacro:property name="corpus_width" default="0.018" />
+    <xacro:property name="handle_height" default="0.057" />
+    <!-- 0.026 -->
+    <xacro:property name="handle_length" default="0.16" />
+    <xacro:property name="handle_offset_y" default="0.338" />
+    <xacro:property name="handle_offset_z" default="-0.024" />
 
-    <xacro:property name="shelf_x" default="$(arg shelf_x)"/>
-    <xacro:property name="shelf_y" default="$(arg shelf_y)"/>
-    <xacro:property name="shelf_z" default="$(arg shelf_z)"/>
-    <xacro:property name="shelf_orientation" default="$(arg shelf_orientation)"/>
+    <xacro:property name="shelf_x" default="$(arg shelf_x)" />
+    <xacro:property name="shelf_y" default="$(arg shelf_y)" />
+    <xacro:property name="shelf_z" default="$(arg shelf_z)" />
+    <xacro:property name="shelf_orientation" default="$(arg shelf_orientation)" />
 
     <xacro:macro name="box_inertia" params="m x y z">
         <inertial>
-            <origin rpy="0 0 0" xyz="0 ${-y/2} 0"/>
-            <mass value="${m}"/>
-            <inertia ixx="${0.0833 * m * (y**2 + z**2)}"
-                     ixy="0"
-                     ixz="0"
-                     iyy="${0.0833 * m * (x**2 + z**2)}"
-                     iyz="0"
-                     izz="${0.0833 * m * (x**2 + y**2)}"/>
+            <origin rpy="0 0 0" xyz="0 ${-y/2} 0" />
+            <mass value="${m}" />
+            <inertia ixx="${0.0833 * m * (y**2 + z**2)}" ixy="0" ixz="0" iyy="${0.0833 * m * (x**2 + z**2)}" iyz="0" izz="${0.0833 * m * (x**2 + y**2)}" />
         </inertial>
     </xacro:macro>
 
     <xacro:if value="$(arg fixed)">
-        <link name="world"/>
+        <link name="world" />
         <joint name="fixed" type="fixed">
-            <parent link="world"/>
-            <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="${shelf_orientation}"/>
+            <parent link="world" />
+            <child link="shelf" />
+            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="${shelf_orientation}" />
         </joint>
     </xacro:if>
 
     <link name="shelf">
-        <xacro:box_inertia m="5" x="${corpus_width}" y="${corpus_length}" z="${shelf_z}"/>
+        <xacro:box_inertia m="5" x="${corpus_width}" y="${corpus_length}" z="${shelf_z}" />
         <visual>
-            <origin rpy="0 0 0" xyz="0 -${corpus_length/2} ${-shelf_z/2}"/>
+            <origin rpy="0 0 0" xyz="0 -${corpus_length/2} ${-shelf_z/2}" />
             <geometry>
-                <box size="${corpus_width} ${corpus_length} ${shelf_z}"/>
+                <box size="${corpus_width} ${corpus_length} ${shelf_z}" />
             </geometry>
             <material name="shelf_material">
-                <color rgba="0.0 1.0 1.0 1"/>
+                <color rgba="0.0 1.0 1.0 1" />
             </material>
         </visual>
     </link>
 
     <link name="door">
-        <xacro:box_inertia m="3.0" x="${door_width}" y="${door_length}" z="${door_height}"/>
+        <xacro:box_inertia m="3.0" x="${door_width}" y="${door_length}" z="${door_height}" />
         <visual>
-            <origin rpy="0 0 0" xyz="${-door_width/2} ${door_length/2} 0"/>
+            <origin rpy="0 0 0" xyz="${-door_width/2} ${door_length/2} 0" />
             <geometry>
-                <box size="${door_width} ${door_length} ${door_height}"/>
+                <box size="${door_width} ${door_length} ${door_height}" />
             </geometry>
             <material name="door_material">
-                <color rgba="1.0 1.0 1.0 1"/>
+                <color rgba="1.0 1.0 1.0 1" />
             </material>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0 ${door_length/2} 0"/>
+            <origin rpy="0 0 0" xyz="0 ${door_length/2} 0" />
             <geometry>
-                <box size="${door_width} ${door_length} ${door_height}"/>
+                <box size="${door_width} ${door_length} ${door_height}" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
     </link>
 
     <link name="door_hinge">
         <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0.0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            <mass value="0.01" />
+            <origin rpy="0 0 0" xyz="0.0 0 0" />
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
         </inertial>
     </link>
 
     <joint name="door_hinge_joint" type="fixed">
-        <parent link="shelf"/>
-        <child link="door_hinge"/>
-        <origin xyz="${door_width/2+0.012} -${door_length + corpus_width +corpus_door_gap} ${door_height/2}"/>
+        <parent link="shelf" />
+        <child link="door_hinge" />
+        <origin xyz="${door_width/2+0.012} -${door_length + corpus_width +corpus_door_gap} ${door_height/2}" />
     </joint>
 
     <link name="axis_link">
         <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            <mass value="0.01" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
         </inertial>
     </link>
 
     <joint name="axis_joint" type="fixed">
-        <parent link="door_hinge"/>
-        <child link="axis_link"/>
-        <origin xyz="0.0 0.0 0.0"/>
+        <parent link="door_hinge" />
+        <child link="axis_link" />
+        <origin xyz="0.0 0.0 0.0" />
     </joint>
 
     <joint name="articulation_joint" type="revolute">
-        <parent link="axis_link"/>
-        <child link="measured_joint_link"/>
-        <dynamics damping="0.0" friction="0.0"/>
-        <origin xyz="0 0 0"/>
-        <axis xyz="0 0 -1"/>
-        <limit effort="100" lower="0" upper="1.8" velocity="10.0"/>
+        <parent link="axis_link" />
+        <child link="measured_joint_link" />
+        <dynamics damping="0.0" friction="0.0" />
+        <origin xyz="0 0 0" />
+        <axis xyz="0 0 -1" />
+        <limit effort="100" lower="0" upper="1.8" velocity="10.0" />
     </joint>
 
 
     <joint name="door_link" type="fixed">
-        <parent link="measured_joint_link"/>
-        <child link="door"/>
-        <origin xyz="0.0 0.0 0.0"/>
+        <parent link="measured_joint_link" />
+        <child link="door" />
+        <origin xyz="0.0 0.0 0.0" />
     </joint>
 
     <link name="handle_link">
         <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="0.1"/>
-            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.1" />
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
         </inertial>
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <box size="0.01 0.01 ${handle_length+0.01}"/>
+                <box size="0.01 0.01 ${handle_length+0.01}" />
             </geometry>
             <material name="handle_material">
-                <color rgba="0.0 0.0 0.0 1"/>
+                <color rgba="0.0 0.0 0.0 1" />
             </material>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <box size="0.01 0.01 ${handle_length+0.01}"/>
+                <box size="0.01 0.01 ${handle_length+0.01}" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
     </link>
 
+    <link name="handle_odom_link">
+        <inertial>
+            <mass value="0.001" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+        </inertial>
+    </link>
+
     <link name="handle_support_left">
         <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="0.1"/>
-            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.1" />
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
         </inertial>
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <box size="${handle_height} 0.01 0.01"/>
+                <box size="${handle_height} 0.01 0.01" />
             </geometry>
             <material name="handle_material">
-                <color rgba="0.0 0.0 0.0 1"/>
+                <color rgba="0.0 0.0 0.0 1" />
             </material>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <box size="${handle_height} 0.01 0.01"/>
+                <box size="${handle_height} 0.01 0.01" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
     </link>
 
     <link name="handle_support_right">
         <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="0.1"/>
-            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.1" />
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
         </inertial>
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <box size="${handle_height} 0.01 0.01"/>
+                <box size="${handle_height} 0.01 0.01" />
             </geometry>
             <material name="handle_material">
-                <color rgba="0.0 0.0 0.0 1"/>
+                <color rgba="0.0 0.0 0.0 1" />
             </material>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <box size="${handle_height} 0.01 0.01"/>
+                <box size="${handle_height} 0.01 0.01" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
     </link>
 
     <joint name="handle_joint" type="fixed">
-        <parent link="door"/>
-        <child link="handle_link"/>
-        <origin xyz="${handle_height + 0.012} ${handle_offset_y} ${handle_offset_z}"
-                rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
+        <parent link="door" />
+        <child link="handle_link" />
+        <origin xyz="${handle_height + 0.012} ${handle_offset_y} ${handle_offset_z}" rpy="0 0 0" />
+        <!-- height handle + half the width door, 0.30 minus some offset -->
     </joint>
 
     <joint name="handle_ref" type="fixed">
-        <parent link="handle_link"/>
-        <child link="handle_ref"/>
-        <origin xyz="${-handle_height/2} 0 0"
-                rpy="0 0 0"/> <!-- height handle + half the width door, 0.30 minus some offset -->
+        <parent link="handle_link" />
+        <child link="handle_ref" />
+        <origin xyz="${-handle_height/2} 0 0" rpy="0 0 0" />
+        <!-- height handle + half the width door, 0.30 minus some offset -->
     </joint>
 
     <link name="handle_ref">
         <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            <mass value="0.01" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
         </inertial>
     </link>
 
     <joint name="handle_support_left_joint" type="fixed">
-        <parent link="handle_link"/>
-        <child link="handle_support_left"/>
-        <origin xyz="-${handle_height/2} 0 -${handle_length/2}" rpy="0 0 0"/>
+        <parent link="handle_link" />
+        <child link="handle_support_left" />
+        <origin xyz="-${handle_height/2} 0 -${handle_length/2}" rpy="0 0 0" />
     </joint>
 
     <joint name="handle_support_right_joint" type="fixed">
-        <parent link="handle_link"/>
-        <child link="handle_support_right"/>
-        <origin xyz="-${handle_height/2} 0 ${handle_length/2}" rpy="0 0 0"/>
+        <parent link="handle_link" />
+        <child link="handle_support_right" />
+        <origin xyz="-${handle_height/2} 0 ${handle_length/2}" rpy="0 0 0" />
     </joint>
 
     <link name="measured_joint_link">
         <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            <mass value="0.01" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
         </inertial>
     </link>
 
     <link name="measured_joint_link_test">
         <inertial>
-            <mass value="0.01"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            <mass value="0.01" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
         </inertial>
     </link>
     <joint name="measured_test_handle_joint" type="fixed">
-        <parent link="handle_link"/>
-        <child link="measured_joint_link_test"/>
-        <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
+        <parent link="handle_link" />
+        <child link="measured_joint_link_test" />
+        <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0" />
+    </joint>
+
+    <joint name="handle_odom_joint" type="revolute">
+        <parent link="handle_link" />
+        <child link="handle_odom_link" />
+        <origin xyz="-0.05 0.0 0.0" rpy="0 0 0" />
+        <limit effort="0" lower="0" upper="0" velocity="0" />
     </joint>
 
     <gazebo>
@@ -265,6 +277,33 @@
             <robotParam>urdf_gazebo</robotParam>
         </plugin>
     </gazebo>
+
+    <gazebo>
+        <plugin filename= "librotors_gazebo_odometry_plugin.so " name= "handle_odometry_sensorgt ">
+            <linkName>shelf::handle_odom_link</linkName>
+            <robotNamespace>shelf</robotNamespace>
+            <poseTopic>ground_truth/pose</poseTopic>
+            <poseWithCovarianceTopic>ground_truth/pose_with_covariance</poseWithCovarianceTopic>
+            <positionTopic>ground_truth/position</positionTopic>
+            <transformTopic>ground_truth/transform</transformTopic>
+            <odometryTopic>ground_truth/odometry</odometryTopic>
+            <parentFrameId>world</parentFrameId>
+            <!-- Use the scoped link name here. e.g. Model::link. -->
+            <childFrameId>shelf/handle_odom_link</childFrameId>
+            <measurementDivisor>1</measurementDivisor>            <!-- only every (seq % measurementDivisor) == 0 measurement is published [int] -->
+            <measurementDelay>0</measurementDelay>            <!-- time that measurement gets held back before it's published in [simulation cycles (int)] -->
+            <unknownDelay>0.0</unknownDelay>            <!-- additional delay, that just gets added to the timestamp [s] -->
+            <noiseNormalPosition>0 0 0</noiseNormalPosition>            <!-- standard deviation of additive white gaussian noise [m] -->
+            <noiseNormalQuaternion>0 0 0</noiseNormalQuaternion>            <!-- standard deviation white gaussian noise [rad]: q_m = q*quaternionFromSmallAngleApproximation(noiseNormalQ) -->
+            <noiseNormalLinearVelocity>0 0 0</noiseNormalLinearVelocity>            <!-- standard deviation of additive white gaussian noise [m/s] -->
+            <noiseNormalAngularVelocity>0 0 0</noiseNormalAngularVelocity>            <!-- standard deviation of additive white gaussian noise [rad/s] -->
+            <noiseUniformPosition>0 0 0</noiseUniformPosition>            <!-- symmetric bounds of uniform noise [m] -->
+            <noiseUniformQuaternion>0 0 0</noiseUniformQuaternion>            <!-- symmetric bounds of uniform noise [rad], computation see above -->
+            <noiseUniformLinearVelocity>0 0 0</noiseUniformLinearVelocity>            <!-- symmetric bounds of uniform noise [m/s] -->
+            <noiseUniformAngularVelocity>0 0 0</noiseUniformAngularVelocity>
+        </plugin>
+    </gazebo>
+
     <transmission name="hinge">
         <type>transmission_interface/SimpleTransmission</type>
         <joint name="articulation_joint">
