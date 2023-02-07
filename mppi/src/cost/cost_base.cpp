@@ -18,16 +18,9 @@ CostBase::CostBase(const CostBase &cost_base) {
 }
 
 void CostBase::set_reference_trajectory(const reference_trajectory_t &traj) {
-  if (traj.rr.size() > 0 && traj.tt.size() > 0) {
+  if (!traj.rr.empty() && !traj.tt.empty()) {
     std::scoped_lock lock(timed_reference_mutex_);
-
-    timed_ref_.tt.clear();
-    timed_ref_.tt.reserve(traj.tt.size());
-    timed_ref_.rr.clear();
-    for (size_t i = 0; i < traj.tt.size(); i++) {
-      timed_ref_.rr.push_back(traj.rr[i]);
-      timed_ref_.tt.push_back(traj.tt[i]);
-    }
+    timed_ref_ = traj;
   }
 }
 
