@@ -33,6 +33,15 @@ class DynamicsBase {
   virtual observation_t step(const input_t& u, const double dt) = 0;
   virtual const observation_t get_state() const = 0;
 
+  /**
+   * @brief Convert an actual observed state to the extended state vector used
+   * in the implementation specific dynamics simulation.
+   * @param x: current actual observation
+   * @return extended state vector
+   */
+  virtual observation_t get_extended_state_from_observation(
+      const observation_t& x) const = 0;
+
   // TODO(giuseppe): param x is never used!
   virtual input_t get_zero_input(const observation_t& x) {
     return input_t::Zero(this->get_input_dimension());

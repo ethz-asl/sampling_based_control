@@ -93,6 +93,8 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
   input_t get_zero_input(const observation_t &x) override;
 
   const observation_t get_state() const override { return x_; }
+  observation_t get_extended_state_from_observation(
+      const observation_t &x) const override;
 
   force_t get_contact_forces(double &unwanted_contact);
   force_t get_contact_forces() {

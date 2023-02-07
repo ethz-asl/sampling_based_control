@@ -256,7 +256,7 @@ void PathIntegral::set_observation(const observation_t& x, const double t) {
 
 void PathIntegral::copy_observation() {
   std::unique_lock<std::shared_mutex> lock(state_mutex_);
-  x0_internal_ = x0_;
+  x0_internal_ = dynamics_->get_extended_state_from_observation(x0_);
   t0_internal_ = reset_time_;
   hold_time_end_internal_ = hold_time_end_;
   lock.unlock();

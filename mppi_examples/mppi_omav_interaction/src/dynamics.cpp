@@ -98,9 +98,7 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
 }
 
 void OMAVVelocityDynamics::reset(const observation_t &x) {
-  // reset internal simulation state vector with real state vector
-  x_.head<omav_state_description::SIZE_OMAV_STATE>() = x;
-  x_(omav_state_description_simulation::UNWANTED_CONTACT) = 0.0;
+  x_ = x;
 
   // reset omav and object in raisim
   omav_->setState(
@@ -110,6 +108,16 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   object_->setState(
       x_.segment<1>(omav_state_description_simulation::OBJECT_ORIENTATION),
       x_.segment<1>(omav_state_description_simulation::OBJECT_VELOCITY));
+}
+
+OMAVVelocityDynamics::observation_t
+OMAVVelocityDynamics::get_extended_state_from_observation(
+    const observation_t &x) const {
+  observation_t extended_state(static_cast<int>(
+      omav_state_description_simulation::SIZE_OMAV_STATE_SIMULATION));
+  extended_state.setZero();
+  extended_state.head<omav_state_description::SIZE_OMAV_STATE>() = x;
+  return extended_state;
 }
 
 mppi::DynamicsBase::input_t OMAVVelocityDynamics::get_zero_input(
