@@ -15,7 +15,6 @@
 
 #include <mppi_omav_interaction/MPPIOmavCostShelfConfig.h>
 #include <mppi_omav_interaction/MPPIOmavCostValveConfig.h>
-#include <mppi_omav_interaction/MPPIOmavReferenceConfig.h>
 #include <mppi_omav_interaction/MPPIOmavSettingsConfig.h>
 // ros
 #include <dynamic_reconfigure/server.h>
@@ -48,13 +47,10 @@ class InteractionControlNode {
   bool setTarget(const mav_msgs::EigenTrajectoryPoint& target_state);
 
   void initializeSubscribers();
-  void initializePublishers();
   bool initialize_integrators(observation_t& x);
   void odometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
   void objectCallback(const sensor_msgs::JointState& object_msg);
 
-  void referenceParamCallback(
-      mppi_omav_interaction::MPPIOmavReferenceConfig& config, uint32_t level);
   void costShelfParamCallback(mppi_omav_interaction::MPPIOmavCostShelfConfig& config,
                          uint32_t level);
   void costValveParamCallback(
@@ -76,8 +72,6 @@ class InteractionControlNode {
 
   ros::Subscriber odometry_sub_;
   ros::Subscriber object_state_sub_;
-  // publishers
-  ros::Publisher reference_publisher_;
 
   observation_t state_;
 
@@ -96,8 +90,6 @@ class InteractionControlNode {
   ros::Time object_state_time_;
   
   // Dynamics Reconfigure
-  dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavReferenceConfig>
-      reference_param_server_;
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostShelfConfig>
       cost_shelf_param_server_;
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostValveConfig>

@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME}
         src/cost_shelf.cpp
         src/cost_valve.cpp
         src/controller_interface.cpp
+        src/reference_pose_publisher.cpp
         src/ros_conversions.cpp
         src/state_observer.cpp
         src/state_observer_valve.cpp
@@ -50,6 +51,10 @@ add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 add_executable(omav_interaction_control_node src/nodes/omav_interaction_control_node.cpp)
 target_link_libraries(omav_interaction_control_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(omav_interaction_control_node ${PROJECT_NAME}_gencfg)
+
+add_executable(reference_pose_publisher_node src/nodes/reference_pose_publisher_node.cpp)
+target_link_libraries(reference_pose_publisher_node ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(reference_pose_publisher_node ${PROJECT_NAME}_gencfg)
 
 add_executable(state_observer_node src/nodes/state_observer_node.cpp)
 target_link_libraries(state_observer_node ${PROJECT_NAME} ${catkin_LIBRARIES})

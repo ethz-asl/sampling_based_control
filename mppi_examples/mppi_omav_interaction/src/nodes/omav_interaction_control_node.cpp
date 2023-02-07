@@ -8,8 +8,6 @@ InteractionControlNode::InteractionControlNode(ros::NodeHandle &nh,
     : nh_(nh),
       private_nh_(private_nh),
       controller_(private_nh, nh),
-      reference_param_server_(
-          ros::NodeHandle(private_nh, "reference_parameters")),
       cost_shelf_param_server_(
           ros::NodeHandle(private_nh, "cost_shelf_parameters")),
       cost_valve_param_server_(
@@ -69,20 +67,13 @@ bool InteractionControlNode::InitializeNodeParams() {
     initialize_integrators(state_);
   }
 
-  // Initialize values for the manual timing
   initializeSubscribers();
-  initializePublishers();
 
   // setup dynamic reconfigure
   dynamic_reconfigure::Server<
-      mppi_omav_interaction::MPPIOmavReferenceConfig>::CallbackType f;
-  dynamic_reconfigure::Server<
       mppi_omav_interaction::MPPIOmavSettingsConfig>::CallbackType k;
-  f = boost::bind(&InteractionControlNode::referenceParamCallback, this, _1,
-                  _2);
   k = boost::bind(&InteractionControlNode::mppiSettingsParamCallback, this, _1,
                   _2);
-  reference_param_server_.setCallback(f);
   mppiSettingsParamServer_.setCallback(k);
 
   if (controller_.getTask() == InteractionTask::Shelf) {
@@ -120,11 +111,6 @@ void InteractionControlNode::initializeSubscribers() {
     ros::shutdown();
   }
   ROS_INFO("[mppi_omav_interaction] Subscribers initialized");
-}
-
-void InteractionControlNode::initializePublishers() {
-  reference_publisher_ =
-      nh_.advertise<geometry_msgs::PoseStamped>("/mppi_pose_desired", 1);
 }
 
 void InteractionControlNode::odometryCallback(
@@ -305,38 +291,6 @@ bool InteractionControlNode::initialize_integrators(observation_t &x) {
   target_state_.velocity_W = current_odometry_.getVelocityWorld();
   target_state_.angular_velocity_W = current_odometry_.angular_velocity_B;
   return true;
-}
-
-void InteractionControlNode::referenceParamCallback(
-    mppi_omav_interaction::MPPIOmavReferenceConfig &config, uint32_t level) {
-  if (config.reset) {
-    config.reset = false;
-    config.ref_pos_x = current_odometry_.position_W.x();
-    config.ref_pos_y = current_odometry_.position_W.y();
-    config.ref_pos_z = current_odometry_.position_W.z();
-    Eigen::Vector3d euler_angles;
-    current_odometry_.getEulerAngles(&euler_angles);
-    config.ref_roll = euler_angles(0) * 360 / (2 * M_PI);
-    config.ref_pitch = euler_angles(1) * 360 / (2 * M_PI);
-    config.ref_yaw = euler_angles(2) * 360 / (2 * M_PI);
-  }
-  geometry_msgs::PoseStamped rqt_pose_msg;
-  Eigen::VectorXd rqt_pose(7);
-  Eigen::Quaterniond q;
-  omav_interaction::conversions::RPYtoQuaterniond(
-      config.ref_roll, config.ref_pitch, config.ref_yaw, q);
-  rqt_pose << config.ref_pos_x, config.ref_pos_y, config.ref_pos_z, q.w(),
-      q.x(), q.y(), q.z();
-  omav_interaction::conversions::PoseStampedMsgFromVector(rqt_pose,
-                                                          rqt_pose_msg);
-  reference_publisher_.publish(rqt_pose_msg);
-
-  if (config.reset_object) {
-    config.reset_object = false;
-    state_(omav_state_description::OBJECT_ORIENTATION) = 0;
-    // simulation_->reset(state_);
-    ROS_INFO("[mppi_omav_interaction] Reset Object");
-  }
 }
 
 void InteractionControlNode::costShelfParamCallback(
