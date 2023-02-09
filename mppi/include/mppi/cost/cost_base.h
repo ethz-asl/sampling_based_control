@@ -23,7 +23,7 @@ class CostBase {
 
   CostBase() = default;
   CostBase(const CostBase& cost_base);
-  ~CostBase() = default;
+  virtual ~CostBase() = default;
 
   virtual cost_ptr create() = 0;       // virtual constructor
   virtual cost_ptr clone() const = 0;  // virtual copy constructor

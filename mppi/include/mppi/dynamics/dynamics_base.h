@@ -19,7 +19,7 @@ class DynamicsBase {
   using input_t = Eigen::VectorXd;
   using input_array_t = Eigen::VectorXd;
   DynamicsBase() = default;
-  ~DynamicsBase() = default;
+  virtual ~DynamicsBase() = default;
 
  public:
   virtual size_t get_input_dimension() = 0;
