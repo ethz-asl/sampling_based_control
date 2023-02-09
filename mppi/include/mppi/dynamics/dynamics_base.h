@@ -35,12 +35,15 @@ class DynamicsBase {
 
   /**
    * @brief Convert an actual observed state to the extended state vector used
-   * in the implementation specific dynamics simulation.
+   * in the implementation specific dynamics simulation. Needs to be implemented
+   * accordingly in the derived dynamics class if these two vectors differ.
    * @param x: current actual observation
-   * @return extended state vector
+   * @return extended state vector used in the dynamics simulation
    */
   virtual observation_t get_extended_state_from_observation(
-      const observation_t& x) const = 0;
+      const observation_t& x) const {
+    return x;
+  }
 
   // TODO(giuseppe): param x is never used!
   virtual input_t get_zero_input(const observation_t& x) {
