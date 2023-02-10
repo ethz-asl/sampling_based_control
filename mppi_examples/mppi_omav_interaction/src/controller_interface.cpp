@@ -349,7 +349,7 @@ void OMAVControllerInterface::publish_ros() {
       // update object state visualization
       object_state_.header.stamp = t_now;
       object_state_.position[0] =
-          xx_opt_[0](omav_state_description::OBJECT_ORIENTATION);
+          xx_opt_[0](omav_state_description_simulation::OBJECT_ORIENTATION);
       object_state_publisher_.publish(object_state_);
     }
 
@@ -435,19 +435,20 @@ void OMAVControllerInterface::publish_optimal_rollout() {
   // Publish optimal rollout trajectory for rviz
   geometry_msgs::PoseArray optimal_pose_array_msg;
   optimal_pose_array_msg.header = header;
-  for (auto optimal_state : xx_opt_) {
+  for (const auto &optimal_state : xx_opt_) {
     geometry_msgs::Pose optimal_pose_msg;
     mav_msgs::pointEigenToMsg(
-        optimal_state.segment<3>(omav_state_description::MAV_POSITION_X_WORLD),
+        optimal_state.segment<3>(
+            omav_state_description_simulation::MAV_POSITION_X_WORLD),
         &optimal_pose_msg.position);
-    optimal_pose_msg.orientation.w =
-        optimal_state(omav_state_description::MAV_ORIENTATION_W_WORLD);
-    optimal_pose_msg.orientation.x =
-        optimal_state(omav_state_description::MAV_ORIENTATION_X_WORLD);
-    optimal_pose_msg.orientation.y =
-        optimal_state(omav_state_description::MAV_ORIENTATION_Y_WORLD);
-    optimal_pose_msg.orientation.z =
-        optimal_state(omav_state_description::MAV_ORIENTATION_Z_WORLD);
+    optimal_pose_msg.orientation.w = optimal_state(
+        omav_state_description_simulation::MAV_ORIENTATION_W_WORLD);
+    optimal_pose_msg.orientation.x = optimal_state(
+        omav_state_description_simulation::MAV_ORIENTATION_X_WORLD);
+    optimal_pose_msg.orientation.y = optimal_state(
+        omav_state_description_simulation::MAV_ORIENTATION_Y_WORLD);
+    optimal_pose_msg.orientation.z = optimal_state(
+        omav_state_description_simulation::MAV_ORIENTATION_Z_WORLD);
     optimal_pose_array_msg.poses.push_back(optimal_pose_msg);
   }
   optimal_rollout_pose_publisher_.publish(optimal_pose_array_msg);
@@ -483,16 +484,21 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
   // tf[2] = object information
 
   for (size_t i = 0; i < xx_opt_.size(); i++) {
-    tf::vectorEigenToMsg(xx_opt_[i].head<3>(), tf.translation);
-    tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(3)),
-                             tf.rotation);
     tf::vectorEigenToMsg(
         xx_opt_[i].segment<3>(
-            omav_state_description::MAV_LINEAR_VELOCITY_X_WORLD),
+            omav_state_description_simulation::MAV_POSITION_X_WORLD),
+        tf.translation);
+    tf::quaternionEigenToMsg(
+        Eigen::Quaterniond(xx_opt_[i].segment<4>(
+            omav_state_description_simulation::MAV_ORIENTATION_W_WORLD)),
+        tf.rotation);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(
+            omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD),
         vel.linear);
     tf::vectorEigenToMsg(
         xx_opt_[i].segment<3>(
-            omav_state_description::MAV_ANGULAR_VELOCITY_X_BODY),
+            omav_state_description_simulation::MAV_ANGULAR_VELOCITY_X_BODY),
         vel.angular);
     tf::vectorEigenToMsg(
         uu_opt_[i].segment<3>(
@@ -507,22 +513,25 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
     point.velocities.push_back(vel);
     point.accelerations.push_back(acc);
     tf::vectorEigenToMsg(
-        xx_opt_[i].segment<3>(
-            omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
+        xx_opt_[i].segment<3>(omav_state_description_simulation::
+                                  MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
         vel.linear);
     tf::vectorEigenToMsg(
-        xx_opt_[i].segment<3>(
-            omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY),
+        xx_opt_[i].segment<3>(omav_state_description_simulation::
+                                  MAV_ANGULAR_VELOCITY_X_DESIRED_BODY),
         vel.angular);
     point.velocities.push_back(vel);
     // Contact force:
     tf::vectorEigenToMsg(
-        xx_opt_[i].segment<3>(omav_state_description::INTERACTION_FORCE_X),
+        xx_opt_[i].segment<3>(
+            omav_state_description_simulation::INTERACTION_FORCE_X),
         vel.linear);
     point.velocities.push_back(vel);
     tf = geometry_msgs::Transform();
-    tf.translation.x = xx_opt_[i](omav_state_description::OBJECT_ORIENTATION);
-    tf.translation.y = xx_opt_[i](omav_state_description::OBJECT_VELOCITY);
+    tf.translation.x =
+        xx_opt_[i](omav_state_description_simulation::OBJECT_ORIENTATION);
+    tf.translation.y =
+        xx_opt_[i](omav_state_description_simulation::OBJECT_VELOCITY);
     tf.translation.z =
         ref_interpolated_[i](reference_description::OBJECT_GOAL_ORIENTATION);
     point.transforms.push_back(tf);
@@ -592,8 +601,8 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
     ref_interpolated_[i] = cost->r_;
     cost_vector += cost->cost_vector_;
 
-    Eigen::Vector3d force_normed =
-        xx_opt_[i].segment<3>(omav_state_description::INTERACTION_FORCE_X);
+    Eigen::Vector3d force_normed = xx_opt_[i].segment<3>(
+        omav_state_description_simulation::INTERACTION_FORCE_X);
 
     force_marker.points[0].x = cost->hook_pos_(0);
     force_marker.points[0].y = cost->hook_pos_(1);
