@@ -53,12 +53,14 @@ detailed_publishing_rate: 10
 publish_all_trajectories: false
 sim_dt: 0.015
 
-initial_configuration: [ 0.0, 0.0, 1.0,        # Position OMAV - 0
-                         1.0, 0.0, 0.0, 0.0,   # Orientation OMAV - 3
-                         0.0, 0.0, 0.0,        # Linear Velocity OMAV - 7
-                         0.0, 0.0, 0.0,        # Angular Velocity OMAV - 10
-                         0.0, 0.0,             # Position & Velocity Object - 13
-                         0.0, 0.0, 0.0,        # Force - 15
-                         0.0,                  # Contact State - 18
-                         0.0, 0.0, 0.0,        # Linear Velocity OMAV_des - 19
-                         0.0, 0.0, 0.0]        # Angular Velocity OMAV_des - 22
+initial_configuration: [ 0.0, 0.0, 1.0,      # Position OMAV
+                         1.0, 0.0, 0.0, 0.0, # Orientation OMAV
+                         0.0, 0.0, 0.0,      # Linear Velocity OMAV
+                         0.0, 0.0, 0.0,      # Angular Velocity OMAV
+                         0.0, 0.0,           # Position & Velocity Object Hinge
+                         0.0, 0.0, 0.0,      # Force
+                         0.0,                # Contact State
+                         0.0, 0.0, 0.0,      # Linear Velocity OMAV_des
+                         0.0, 0.0, 0.0,      # Angular Velocity OMAV_des
+                         0.0, 0.0, 0.0,      # Position Object
+                         1.0, 0.0, 0.0, 0.0] # Orientation Object

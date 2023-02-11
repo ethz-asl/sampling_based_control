@@ -51,12 +51,14 @@ running_rotors: true
 detailed_publishing: true
 sim_dt: 0.015
 
-initial_configuration: [ 0.0, 0.0, 1.0,     # Position OMAV
+initial_configuration: [ 0.0, 0.0, 1.0,      # Position OMAV
                          1.0, 0.0, 0.0, 0.0, # Orientation OMAV
-                         0.0, 0.0, 0.0, # Linear Velocity OMAV
-                         0.0, 0.0, 0.0, # Angular Velocity OMAV
-                         0.0, 0.0, # Position & Velocity Object
-                         0.0, 0.0, 0.0, # Force
-                         0.0, # Contact State
-                         0.0, 0.0, 0.0, # Linear Velocity OMAV_des
-                         0.0, 0.0, 0.0] # Angular Velocity OMAV_des
+                         0.0, 0.0, 0.0,      # Linear Velocity OMAV
+                         0.0, 0.0, 0.0,      # Angular Velocity OMAV
+                         0.0, 0.0,           # Position & Velocity Object Hinge
+                         0.0, 0.0, 0.0,      # Force
+                         0.0,                # Contact State
+                         0.0, 0.0, 0.0,      # Linear Velocity OMAV_des
+                         0.0, 0.0, 0.0,      # Angular Velocity OMAV_des
+                         0.0, 0.0, 0.0,      # Position Object
+                         1.0, 0.0, 0.0, 0.0] # Orientation Object
