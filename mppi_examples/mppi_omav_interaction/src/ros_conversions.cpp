@@ -195,4 +195,14 @@ void MultiDofJointTrajectoryPointFromState(
   point.transforms.push_back(pos);
 }
 
+void vectorFromPoseMsg(const geometry_msgs::Pose &pose_msg,
+                       Eigen::Matrix<double, 7, 1> &pose) {
+  pose.head<3>() = mav_msgs::vector3FromPointMsg(pose_msg.position);
+  Eigen::Vector4d orientation = {pose_msg.orientation.w, pose_msg.orientation.x,
+                                 pose_msg.orientation.y,
+                                 pose_msg.orientation.z};
+
+  pose.segment<4>(3) = orientation;
+}
+
 }  // namespace omav_interaction::conversions

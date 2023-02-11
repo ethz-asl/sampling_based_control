@@ -67,6 +67,15 @@ void PoseStampedMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
 void PoseMsgFromVector(const Eigen::Matrix<double, 7, 1> &pose,
                        geometry_msgs::Pose &pose_msg);
 
+/**
+ * @brief      Convert ros pose msg to plain eigen vector.
+ *
+ * @param[in]   pose_msg     ros pose message
+ * @param[out]  pose         eigen vector stacking position and quaternion
+ */
+void vectorFromPoseMsg(const geometry_msgs::Pose &pose_msg,
+                       Eigen::Matrix<double, 7, 1> &pose);
+
 void arrow_initialization(visualization_msgs::Marker &arrow_marker);
 // Roll, Pitch and Yaw in deg
 void RPYtoQuaterniond(const double &roll, const double &pitch,
