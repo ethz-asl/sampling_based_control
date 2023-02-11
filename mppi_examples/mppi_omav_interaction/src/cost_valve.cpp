@@ -39,7 +39,7 @@ mppi::CostBase::cost_t OMAVInteractionCostValve::compute_cost(
 
   // Update object_model for kinematic calculations
   Eigen::VectorXd q_object(1);
-  q_object << x(omav_state_description_simulation::OBJECT_ORIENTATION);
+  q_object << x(omav_state_description_simulation::OBJECT_HINGE_ORIENTATION);
   object_model_.update_state(q_object);
   compute_vectors();
 
@@ -123,7 +123,7 @@ void OMAVInteractionCostValve::compute_handle_hook_cost() {
 void OMAVInteractionCostValve::compute_object_cost(
     const Eigen::VectorXd &omav_state, const Eigen::VectorXd &omav_reference) {
   double object_orientation_error =
-      omav_state(omav_state_description_simulation::OBJECT_ORIENTATION) -
+      omav_state(omav_state_description_simulation::OBJECT_HINGE_ORIENTATION) -
       omav_reference(reference_description::OBJECT_GOAL_ORIENTATION);
   cost_vector_(cost_description::OBJECT_COST) =
       param_ptr_->Q_object * abs(object_orientation_error);

@@ -97,9 +97,11 @@ void InteractionControlNode::initializeSubscribers() {
   odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
                                 &InteractionControlNode::odometryCallback, this,
                                 ros::TransportHints().tcpNoDelay());
-  object_state_sub_ = nh_.subscribe("object_joint_states", 1,
-                                    &InteractionControlNode::objectCallback,
-                                    this, ros::TransportHints().tcpNoDelay());
+  object_state_sub_ = nh_.subscribe(
+      "object_joint_states", 1, &InteractionControlNode::objectStateCallback,
+      this, ros::TransportHints().tcpNoDelay());
+  object_pose_subscriber_ = nh_.subscribe(
+      "object_pose", 1, &InteractionControlNode::objectPoseCallback, this);
   int i = 0;
   while (object_state_sub_.getNumPublishers() <= 0 && i < 10) {
     ros::Duration(1.0).sleep();
@@ -122,15 +124,20 @@ void InteractionControlNode::odometryCallback(
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got odometry message");
 }
 
-void InteractionControlNode::objectCallback(
+void InteractionControlNode::objectStateCallback(
     const sensor_msgs::JointState &object_msg) {
   object_state_time_ = object_msg.header.stamp;
-  object_state_(object_state_description::OBJECT_ORIENTATION) =
+  object_state_(object_state_description::OBJECT_HINGE_ORIENTATION) =
       object_msg.position[0];
-  object_state_(object_state_description::OBJECT_VELOCITY) =
+  object_state_(object_state_description::OBJECT_HINGE_VELOCITY) =
       object_msg.velocity[0];
   object_valid_ = true;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object state message");
+}
+
+void InteractionControlNode::objectPoseCallback(
+    const geometry_msgs::Pose &pose_msg) {
+  conversions::vectorFromPoseMsg(pose_msg, object_pose_);
 }
 
 // void InteractionControlNode::TimedCommandCallback(const ros::TimerEvent &e) {
@@ -145,17 +152,17 @@ bool InteractionControlNode::computeCommand(const ros::Time &t_now) {
   }
 
   if (controller_.getTask() == InteractionTask::Valve) {
-    // if (state_(omav_state_description::OBJECT_ORIENTATION) +
+    // if (state_(omav_state_description::OBJECT_HINGE_ORIENTATION) +
     // cost_valve_params_.ref_p > last_ref) { last_ref =
-    // state_(omav_state_description::OBJECT_ORIENTATION) +
+    // state_(omav_state_description::OBJECT_HINGE_ORIENTATION) +
     // cost_valve_params_.ref_p; controller_.updateValveReference(last_ref); Use
     // dynamic updating of the valve reference: Reference angle increases
     // throughout the horizon
     if (cost_valve_params_.cost_mode == 0) {
       controller_.updateValveReferenceDynamic(
-          state_(omav_state_description::OBJECT_ORIENTATION) +
+          state_(omav_state_description::OBJECT_HINGE_ORIENTATION) +
               cost_valve_params_.ref_p,
-          state_(omav_state_description::OBJECT_ORIENTATION) +
+          state_(omav_state_description::OBJECT_HINGE_ORIENTATION) +
               cost_valve_params_.ref_p + cost_valve_params_.ref_v,
           t_now.toSec());
     } else {
@@ -195,7 +202,8 @@ bool InteractionControlNode::getState(observation_t &x) {
       current_odometry_.getVelocityWorld();
   x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_BODY) =
       current_odometry_.angular_velocity_B;
-  x.segment<2>(omav_state_description::OBJECT_ORIENTATION) = object_state_;
+  x.segment<2>(omav_state_description::OBJECT_HINGE_ORIENTATION) =
+      object_state_;
   x.segment<3>(omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD) =
       target_state_.velocity_W;
   x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY) =

@@ -348,8 +348,8 @@ void OMAVControllerInterface::publish_ros() {
 
       // update object state visualization
       object_state_.header.stamp = t_now;
-      object_state_.position[0] =
-          xx_opt_[0](omav_state_description_simulation::OBJECT_ORIENTATION);
+      object_state_.position[0] = xx_opt_[0](
+          omav_state_description_simulation::OBJECT_HINGE_ORIENTATION);
       object_state_publisher_.publish(object_state_);
     }
 
@@ -529,9 +529,9 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
     point.velocities.push_back(vel);
     tf = geometry_msgs::Transform();
     tf.translation.x =
-        xx_opt_[i](omav_state_description_simulation::OBJECT_ORIENTATION);
+        xx_opt_[i](omav_state_description_simulation::OBJECT_HINGE_ORIENTATION);
     tf.translation.y =
-        xx_opt_[i](omav_state_description_simulation::OBJECT_VELOCITY);
+        xx_opt_[i](omav_state_description_simulation::OBJECT_HINGE_VELOCITY);
     tf.translation.z =
         ref_interpolated_[i](reference_description::OBJECT_GOAL_ORIENTATION);
     point.transforms.push_back(tf);

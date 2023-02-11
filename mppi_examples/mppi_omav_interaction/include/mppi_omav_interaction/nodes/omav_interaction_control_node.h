@@ -49,7 +49,8 @@ class InteractionControlNode {
   void initializeSubscribers();
   bool initialize_integrators(observation_t& x);
   void odometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
-  void objectCallback(const sensor_msgs::JointState& object_msg);
+  void objectStateCallback(const sensor_msgs::JointState& object_msg);
+  void objectPoseCallback(const geometry_msgs::Pose& pose_msg);
 
   void costShelfParamCallback(mppi_omav_interaction::MPPIOmavCostShelfConfig& config,
                          uint32_t level);
@@ -72,6 +73,7 @@ class InteractionControlNode {
 
   ros::Subscriber odometry_sub_;
   ros::Subscriber object_state_sub_;
+  ros::Subscriber object_pose_subscriber_;
 
   observation_t state_;
 
@@ -88,7 +90,8 @@ class InteractionControlNode {
   mav_msgs::EigenTrajectoryPoint target_state_;
   Eigen::Vector2d object_state_;
   ros::Time object_state_time_;
-  
+  Eigen::Matrix<double, 7, 1> object_pose_;
+
   // Dynamics Reconfigure
   dynamic_reconfigure::Server<mppi_omav_interaction::MPPIOmavCostShelfConfig>
       cost_shelf_param_server_;
