@@ -16,7 +16,7 @@ void to_trajectory_msg(
     EigenTrajectoryPointFromState(
         x_opt[i],
         u_opt[i] - damping * x_opt[i].segment<6>(
-                                 omav_state_description::
+                                 omav_state_description_simulation::
                                      MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
         static_cast<int64_t>((tt[i] - tt[0]) * 1e9), current_trajectory_point);
     current_trajectory.push_back(current_trajectory_point);
@@ -163,9 +163,9 @@ void EigenTrajectoryPointFromState(
     const observation_t &state, const input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
   trajectorypoint.velocity_W = state.segment<3>(
-      omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
+      omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
   trajectorypoint.angular_velocity_W = state.segment<3>(
-      omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY);
+      omav_state_description_simulation::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY);
   trajectorypoint.acceleration_W = input.segment<3>(
       control_input_description::MAV_LINEAR_ACCELERATION_X_DESIRED_WORLD);
   trajectorypoint.angular_acceleration_W = input.segment<3>(
@@ -185,13 +185,20 @@ void MultiDofJointTrajectoryPointFromState(
     trajectory_msgs::MultiDOFJointTrajectoryPoint &point) {
   point.transforms.clear();
   geometry_msgs::Transform pos;
-  pos.translation.x = state(omav_state_description::MAV_POSITION_X_WORLD);
-  pos.translation.y = state(omav_state_description::MAV_POSITION_Y_WORLD);
-  pos.translation.z = state(omav_state_description::MAV_POSITION_Z_WORLD);
-  pos.rotation.w = state(omav_state_description::MAV_ORIENTATION_W_WORLD);
-  pos.rotation.x = state(omav_state_description::MAV_ORIENTATION_X_WORLD);
-  pos.rotation.y = state(omav_state_description::MAV_ORIENTATION_Y_WORLD);
-  pos.rotation.z = state(omav_state_description::MAV_ORIENTATION_Z_WORLD);
+  pos.translation.x =
+      state(omav_state_description_simulation::MAV_POSITION_X_WORLD);
+  pos.translation.y =
+      state(omav_state_description_simulation::MAV_POSITION_Y_WORLD);
+  pos.translation.z =
+      state(omav_state_description_simulation::MAV_POSITION_Z_WORLD);
+  pos.rotation.w =
+      state(omav_state_description_simulation::MAV_ORIENTATION_W_WORLD);
+  pos.rotation.x =
+      state(omav_state_description_simulation::MAV_ORIENTATION_X_WORLD);
+  pos.rotation.y =
+      state(omav_state_description_simulation::MAV_ORIENTATION_Y_WORLD);
+  pos.rotation.z =
+      state(omav_state_description_simulation::MAV_ORIENTATION_Z_WORLD);
   point.transforms.push_back(pos);
 }
 
