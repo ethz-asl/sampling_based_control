@@ -20,6 +20,10 @@
 #include <raisim/configure.hpp>
 #include <raisim/object/ArticulatedSystem/ArticulatedSystem.hpp>
 
+#ifndef NDEBUG
+#include <raisim/RaisimServer.hpp>
+#endif
+
 #include <mppi/dynamics/dynamics_base.h>
 #include <mppi_omav_interaction/omav_interaction_common.h>
 
@@ -128,6 +132,10 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
   raisim::Ground *ground;
 
   raisim::World sim_;
+
+#ifndef NDEBUG
+  raisim::RaisimServer server{&sim_};
+#endif
 
   Eigen::VectorXd cmdv_;
   Eigen::Matrix<double, 6, 1> feedforward_force_;

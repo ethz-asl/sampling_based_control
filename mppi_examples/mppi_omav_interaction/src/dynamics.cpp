@@ -22,6 +22,10 @@ OMAVVelocityDynamics::OMAVVelocityDynamics(
       robot_dof_(6) {
   initialize_world(robot_description, object_description);
   initialize_pd();
+
+#ifndef NDEBUG
+  server.launchServer();
+#endif
 }
 
 void OMAVVelocityDynamics::initialize_world(
