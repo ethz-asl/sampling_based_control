@@ -9,6 +9,7 @@
 #pragma once
 #include <Eigen/Core>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include "mppi/typedefs.h"
 
@@ -21,9 +22,9 @@ class CostBase {
   using cost_vector_t = Eigen::VectorXd;
 
   CostBase() = default;
+  CostBase(const CostBase& cost_base);
   ~CostBase() = default;
 
- public:
   virtual cost_ptr create() = 0;       // virtual constructor
   virtual cost_ptr clone() const = 0;  // virtual copy constructor
 
@@ -68,6 +69,7 @@ class CostBase {
  // private:
   reference_t r_;
   reference_trajectory_t timed_ref_;
+  mutable std::shared_mutex timed_reference_mutex_;
 };
 
 }  // end of namespace mppi
