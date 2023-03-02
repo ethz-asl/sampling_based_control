@@ -25,16 +25,10 @@ InteractionControlNode::~InteractionControlNode() {}
 
 bool InteractionControlNode::InitializeNodeParams() {
   // Load ROS parameters
-  std::string robot_description_raisim;
-  std::string object_description;
   std::vector<double> x0;
   std::string object_name;
   getParam<bool>(private_nh_, "running_rotors", running_rotors_, true);
   getParam<std::string>(private_nh_, "object_name", object_name, "shelf");
-  getParam<std::string>(private_nh_, "/robot_description_raisim",
-                        robot_description_raisim, "");
-  getParam<std::string>(private_nh_, "/object_description", object_description,
-                        "");
   getParam<std::vector<double>>(private_nh_, "initial_configuration", x0, {});
   // getParam<bool>(private_nh_, "sequential", sequential_, false);
   if (x0.size() != omav_state_description::SIZE_OMAV_STATE) {

@@ -106,9 +106,13 @@ bool OMAVControllerInterface::set_controller(
     throw std::runtime_error(
         "Could not parse robot_description_raisim. Is the parameter set?");
   }
-  if (!nh_.param<std::string>("/object_description", object_description_, "")) {
+  if (!nh_.param<std::string>("/object_description_raisim", object_description_raisim_, "")) {
     throw std::runtime_error(
-        "Could not parse object_description. Is the parameter set?");
+        "Could not parse object_description_raisim. Is the parameter set?");
+  }
+  if (!nh_.param<std::string>("/object_description_pinocchio", object_description_pinocchio_, "")) {
+    throw std::runtime_error(
+        "Could not parse object_description_pinocchio. Is the parameter set?");
   }
   if (!nh_.param<std::string>("/robot_description_pinocchio",
                               robot_description_pinocchio_, "")) {
@@ -121,7 +125,7 @@ bool OMAVControllerInterface::set_controller(
   // -------------------------------
   OMAVVelocityDynamics::omav_dynamics_ptr dynamics =
       std::make_shared<OMAVVelocityDynamics>(
-          robot_description_raisim_, object_description_, config_.step_size);
+          robot_description_raisim_, object_description_raisim_, config_.step_size);
 
   // -------------------------------
   // cost
@@ -134,7 +138,7 @@ bool OMAVControllerInterface::set_controller(
     }
     ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_shelf_);
     cost_shelf_ = std::make_shared<OMAVInteractionCostShelf>(
-        robot_description_pinocchio_, object_description_, &cost_param_shelf_);
+        robot_description_pinocchio_, object_description_pinocchio_, &cost_param_shelf_);
     controller =
         std::make_shared<mppi::PathIntegral>(dynamics, cost_shelf_, config_);
   } else if (task_ == InteractionTask::Valve) {
@@ -145,7 +149,7 @@ bool OMAVControllerInterface::set_controller(
     }
     ROS_INFO_STREAM("Successfully parsed cost params: \n" << cost_param_valve_);
     cost_valve_ = std::make_shared<OMAVInteractionCostValve>(
-        robot_description_pinocchio_, object_description_, &cost_param_valve_);
+        robot_description_pinocchio_, object_description_pinocchio_, &cost_param_valve_);
     controller =
         std::make_shared<mppi::PathIntegral>(dynamics, cost_valve_, config_);
   } else {

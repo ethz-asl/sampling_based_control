@@ -1,6 +1,5 @@
 <?xml version="1.0" ?>
 <robot name="shelf" xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:arg name="fixed" default="true"/>
     <xacro:arg name="height" default="0.0"/>
     <xacro:arg name="shelf_x" default="-0.242"/>
     <xacro:arg name="shelf_y" default="-0.595"/>
@@ -40,21 +39,14 @@
         </inertial>
     </xacro:macro>
 
-    <xacro:if value="$(arg fixed)">
-        <link name="world"/>
-        <joint name="fixed" type="fixed">
-            <parent link="world"/>
-            <child link="shelf"/>
-            <origin xyz="${shelf_x} ${shelf_y} ${shelf_z}" rpy="${shelf_orientation}"/>
-        </joint>
-    </xacro:if>
+    <link name="world"/>
 
-    <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/shelf</robotNamespace>
-            <robotParam>urdf_object </robotParam>
-        </plugin>
-    </gazebo>
+    <joint name="world_to_shelf" type="floating">
+        <parent link="world"/>
+        <child link="shelf"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    </joint>
+
     <link name="shelf">
         <xacro:box_inertia m="5" x="${corpus_width}" y="${corpus_length}" z="${shelf_z}"/>
         <visual>
@@ -266,16 +258,5 @@
         <child link="measured_joint_link_test"/>
         <origin xyz="-0.06 -0.243 0.0" rpy="0 0 0"/>
     </joint>
-
-    <transmission name="hinge">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="articulation_joint">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="motor1">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
 
 </robot>

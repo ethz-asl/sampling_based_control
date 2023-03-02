@@ -137,7 +137,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   std::string robot_description_raisim_;
   std::string robot_description_pinocchio_;
-  std::string object_description_;
+  std::string object_description_raisim_;
+  std::string object_description_pinocchio_;
 
   std::mutex reference_mutex_;
   mppi::reference_trajectory_t ref_;
