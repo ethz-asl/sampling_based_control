@@ -41,40 +41,10 @@
 
     <link name="world"/>
 
-    <link name="shelf_x" />
-    <link name="shelf_y" />
-    <link name="shelf_z" />
-
-    <joint name="world_to_shelf_x" type="prismatic">
+    <joint name="fixed" type="fixed">
         <parent link="world"/>
-        <child link="shelf_x"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="1 0 0"/>
-        <limit effort="1000.0" velocity="0.0" lower="-100" upper="100"/>
-    </joint>
-
-    <joint name="shelf_x_to_shelf_y" type="prismatic">
-        <parent link="shelf_x"/>
-        <child link="shelf_y"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="0 1 0"/>
-        <limit effort="1000.0" velocity="0.0" lower="-100" upper="100"/>
-    </joint>
-
-    <joint name="shelf_y_to_shelf_z" type="prismatic">
-        <parent link="shelf_y"/>
-        <child link="shelf_z"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="0 0 1"/>
-        <limit effort="1000.0" velocity="0.0" lower="-100" upper="100"/>
-    </joint>
-
-    <joint name="shelf_z_to_shelf" type="spherical">
-        <parent link="shelf_z"/>
         <child link="shelf"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-        <axis xyz="1 0 0"/>
-        <limit effort="1000.0" velocity="0.0" lower="0" upper="10" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
     <link name="shelf">
