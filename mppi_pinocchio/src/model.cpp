@@ -64,10 +64,17 @@ RobotModel::RobotModel(const RobotModel &rhs) {
   data_ = new pinocchio::Data(*rhs.data_);
 }
 
-bool RobotModel::init_from_xml(const std::string &robot_description) {
+bool RobotModel::init_from_xml(const std::string &robot_description,
+                               bool floating_base) {
   try {
     model_ = new Model();
-    pinocchio::urdf::buildModelFromXML(robot_description, *model_);
+    if (floating_base) {
+      pinocchio::urdf::buildModelFromXML(
+          robot_description, pinocchio::JointModelFreeFlyer(), *model_);
+    } else {
+      pinocchio::urdf::buildModelFromXML(robot_description, *model_);
+    }
+
     data_ = new Data(*model_);
   } catch (std::runtime_error &exc) {
     std::cout << exc.what();

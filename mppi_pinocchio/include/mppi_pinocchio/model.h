@@ -38,7 +38,8 @@ public:
    * @param robot_description
    * @return
    */
-  bool init_from_xml(const std::string &robot_description);
+  bool init_from_xml(const std::string &robot_description,
+                     bool floating_base = false);
 
   /**
    *
