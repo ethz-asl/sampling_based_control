@@ -132,6 +132,7 @@ void InteractionControlNode::objectStateCallback(
 void InteractionControlNode::objectPoseCallback(
     const geometry_msgs::Pose &pose_msg) {
   conversions::vectorFromPoseMsg(pose_msg, object_pose_);
+  ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object pose message");
 }
 
 // void InteractionControlNode::TimedCommandCallback(const ros::TimerEvent &e) {
