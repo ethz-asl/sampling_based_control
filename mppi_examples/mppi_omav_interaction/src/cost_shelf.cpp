@@ -49,8 +49,14 @@ mppi::CostBase::cost_t OMAVInteractionCostShelf::compute_cost(
   robot_model_.update_state(q_omav);
 
   // Update object_model for kinematic calculations
-  Eigen::VectorXd q_object(1);
-  q_object << x(omav_state_description_simulation::OBJECT_HINGE_ORIENTATION);
+  Eigen::VectorXd q_object(8);
+  q_object.head<3>() = x.segment<3>(
+      omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD);
+  q_object.segment<3>(3) = x.segment<3>(
+      omav_state_description_simulation::OBJECT_BASE_ORIENTATION_X_WORLD);
+  q_object(6) =
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_W_WORLD);
+  q_object(7) = x(omav_state_description_simulation::OBJECT_HINGE_ORIENTATION);
   object_model_.update_state(q_object);
 
   // Compute costs

@@ -109,6 +109,18 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
       x_.head<7>(),
       x_.segment<6>(
           omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD));
+
+  Eigen::Vector3d base_position = x_.segment<3>(
+      omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD);
+  raisim::Vec<4> base_orientation = {
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_W_WORLD),
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_X_WORLD),
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Y_WORLD),
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Z_WORLD)};
+
+  object_->setBasePos_e(base_position);
+  object_->setBaseOrientation(base_orientation);
+
   object_->setState(
       x_.segment<1>(
           omav_state_description_simulation::OBJECT_HINGE_ORIENTATION),
@@ -122,6 +134,20 @@ OMAVVelocityDynamics::get_extended_state_from_observation(
       omav_state_description_simulation::SIZE_OMAV_STATE_SIMULATION));
   extended_state.setZero();
   extended_state.head<omav_state_description::SIZE_OMAV_STATE>() = x;
+
+  // possible to reset raisim object here to get correct transforms
+  Eigen::Vector3d base_position;
+  base_position << -0.242, -0.595, 0.834;
+  Eigen::Vector4d base_orientation;
+  base_orientation << 0.680391212677159, 0, 0.0, 0.7328490961389699;
+
+  extended_state.segment<3>(
+      omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD) =
+      base_position;
+  extended_state.segment<4>(
+      omav_state_description_simulation::OBJECT_BASE_ORIENTATION_W_WORLD) =
+      base_orientation;
+
   return extended_state;
 }
 
