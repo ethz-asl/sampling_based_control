@@ -3,6 +3,7 @@ project(mppi_omav_interaction)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_CXX_STANDARD 17)
+option(BUILD_RAISIM_VISUALIZATION "Build the raisim visualization server." OFF)
 
 find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
@@ -37,6 +38,11 @@ catkin_package(
         DEPENDS raisim)
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
+
+if(BUILD_RAISIM_VISUALIZATION)
+        add_compile_definitions(RAISIM_VISUALIZATION_SERVER)
+endif()
 
 add_library(${PROJECT_NAME}
         src/dynamics.cpp

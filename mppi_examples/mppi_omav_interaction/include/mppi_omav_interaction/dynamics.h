@@ -20,7 +20,7 @@
 #include <raisim/configure.hpp>
 #include <raisim/object/ArticulatedSystem/ArticulatedSystem.hpp>
 
-#ifndef NDEBUG
+#ifdef RAISIM_VISUALIZATION_SERVER
 #include <raisim/RaisimServer.hpp>
 #endif
 
@@ -133,7 +133,7 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
 
   raisim::World sim_;
 
-#ifndef NDEBUG
+#ifdef RAISIM_VISUALIZATION_SERVER
   raisim::RaisimServer server{&sim_};
 #endif
 

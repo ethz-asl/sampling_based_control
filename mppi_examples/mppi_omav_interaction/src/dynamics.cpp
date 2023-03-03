@@ -23,7 +23,7 @@ OMAVVelocityDynamics::OMAVVelocityDynamics(
   initialize_world(robot_description, object_description);
   initialize_pd();
 
-#ifndef NDEBUG
+#ifdef RAISIM_VISUALIZATION_SERVER
   server.launchServer();
 #endif
 }
