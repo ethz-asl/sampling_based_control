@@ -105,11 +105,6 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   x_ = x;
 
   // reset omav and object in raisim
-  omav_->setState(
-      x_.head<7>(),
-      x_.segment<6>(
-          omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD));
-
   Eigen::Vector3d base_position = x_.segment<3>(
       omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD);
   raisim::Vec<4> base_orientation = {
@@ -120,6 +115,11 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
 
   object_->setBasePos_e(base_position);
   object_->setBaseOrientation(base_orientation);
+
+  omav_->setState(
+      x_.head<7>(),
+      x_.segment<6>(
+          omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD));
 
   object_->setState(
       x_.segment<1>(
@@ -135,18 +135,65 @@ OMAVVelocityDynamics::get_extended_state_from_observation(
   extended_state.setZero();
   extended_state.head<omav_state_description::SIZE_OMAV_STATE>() = x;
 
-  // possible to reset raisim object here to get correct transforms
-  Eigen::Vector3d base_position;
-  base_position << -0.242, -0.595, 0.834;
-  Eigen::Vector4d base_orientation;
-  base_orientation << 0.680391212677159, 0, 0.0, 0.7328490961389699;
+  Eigen::Affine3d transform_world_object;
+  transform_world_object.translation() =
+      x.segment<3>(omav_state_description::OBJECT_POSITION_X_WORLD);
+  Eigen::Quaterniond q_world_object = {
+      x(omav_state_description::OBJECT_ORIENTATION_W_WORLD),
+      x(omav_state_description::OBJECT_ORIENTATION_X_WORLD),
+      x(omav_state_description::OBJECT_ORIENTATION_Y_WORLD),
+      x(omav_state_description::OBJECT_ORIENTATION_Z_WORLD),
+  };
+
+  // extract yaw angle
+  double siny_cosp = 2 * (q_world_object.w() * q_world_object.z() +
+                          q_world_object.x() * q_world_object.y());
+  double cosy_cosp = 1 - 2 * (q_world_object.y() * q_world_object.y() +
+                              q_world_object.z() * q_world_object.z());
+  double yaw_world_object = std::atan2(siny_cosp, cosy_cosp);
+  Eigen::Quaterniond q_world_object_aligned = {
+      std::cos(yaw_world_object / 2.0), 0.0, 0.0,
+      std::sin(yaw_world_object / 2.0)};
+  transform_world_object.linear() = q_world_object_aligned.toRotationMatrix();
+
+  // reset object (hinge angle)
+  object_->setBasePos_e(Eigen::Vector3d::Zero());
+  object_->setBaseOrientation(raisim::Mat<3, 3>::getIdentity());
+  object_->setState(
+      x.segment<1>(omav_state_description::OBJECT_HINGE_ORIENTATION),
+      x.segment<1>(omav_state_description::OBJECT_HINGE_VELOCITY));
+
+  auto object_frame_index = object_->getFrameIdxByName(frames_.handle_ref);
+  raisim::Vec<3> translation_base_object_sim;
+  object_->getFramePosition(object_frame_index, translation_base_object_sim);
+  raisim::Mat<3, 3> orientation_base_object_sim;
+  object_->getFrameOrientation(object_frame_index, orientation_base_object_sim);
+
+  Eigen::Affine3d transform_base_object_sim;
+  transform_base_object_sim.translation() = translation_base_object_sim.e();
+  transform_base_object_sim.linear() = orientation_base_object_sim.e();
+
+  Eigen::Affine3d transform_world_base =
+      transform_world_object * transform_base_object_sim.inverse();
+
+  Eigen::Vector3d base_position = transform_world_base.translation();
+  Eigen::Quaterniond base_orientation(transform_world_base.linear());
 
   extended_state.segment<3>(
       omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD) =
       base_position;
-  extended_state.segment<4>(
+  extended_state(
       omav_state_description_simulation::OBJECT_BASE_ORIENTATION_W_WORLD) =
-      base_orientation;
+      base_orientation.w();
+  extended_state(
+      omav_state_description_simulation::OBJECT_BASE_ORIENTATION_X_WORLD) =
+      base_orientation.x();
+  extended_state(
+      omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Y_WORLD) =
+      base_orientation.y();
+  extended_state(
+      omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Z_WORLD) =
+      base_orientation.z();
 
   return extended_state;
 }
