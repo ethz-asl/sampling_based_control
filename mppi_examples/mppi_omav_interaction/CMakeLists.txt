@@ -65,8 +65,8 @@ add_executable(reference_pose_publisher_node src/nodes/reference_pose_publisher_
 target_link_libraries(reference_pose_publisher_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(reference_pose_publisher_node ${PROJECT_NAME}_gencfg)
 
-add_executable(object_pose_mock_publisher_node src/nodes/object_pose_mock_publisher_node.cpp)
-target_link_libraries(object_pose_mock_publisher_node ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_executable(object_pose_filter_node src/nodes/object_pose_filter_node.cpp)
+target_link_libraries(object_pose_filter_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(state_observer_node src/nodes/state_observer_node.cpp)
 target_link_libraries(state_observer_node ${PROJECT_NAME} ${catkin_LIBRARIES})

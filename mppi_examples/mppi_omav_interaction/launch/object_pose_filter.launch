@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <node name="object_pose_filter_node" type="object_pose_filter_node" pkg="mppi_omav_interaction" output="screen">
+        <param name="target_frame" value="world" />
+        <param name="object_pose_topic" value="/object_pose_estimation_node/object_pose" />
+    </node>
+</launch>
