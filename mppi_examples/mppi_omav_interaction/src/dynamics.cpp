@@ -52,7 +52,8 @@ void OMAVVelocityDynamics::initialize_pd() {
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
 
   settings_.pGains.setZero();
-  settings_.dGains << 5.0, 5.0, 5.0, 12.0, 12.0, 12.0;
+  dGain << 4.0, 4.0, 4.0, 7.0, 7.0, 9.0;
+  settings_.dGains = dGain;
 
   omav_->setPdGains(settings_.pGains, settings_.dGains);
 }
