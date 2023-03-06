@@ -267,7 +267,7 @@
     <joint name="handle_odom_joint" type="revolute">
         <parent link="handle_link" />
         <child link="handle_odom_link" />
-        <origin xyz="${-handle_height/2} 0.0 0.0" rpy="${pi/2} ${-pi/2} 0" />
+        <origin xyz="${-handle_height/2} 0.0 0.0" rpy="0 0 0" />
         <limit effort="0" lower="0" upper="0" velocity="0" />
     </joint>
 
