@@ -125,6 +125,7 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
   const double dt_;
   std::string robot_description_;
   std::string object_description_;
+  const Frames frames_;
 
   // Objects in raisim simulation
   raisim::ArticulatedSystem *omav_;
