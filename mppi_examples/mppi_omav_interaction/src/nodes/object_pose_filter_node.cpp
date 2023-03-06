@@ -32,7 +32,7 @@ class ObjectPoseFilter {
       tf2_buffer_.transform(*pose_msg_ptr_in, pose_msg_out, target_frame_);
       object_pose_publisher_.publish(pose_msg_out);
     } catch (tf2::TransformException &ex) {
-      ROS_WARN("[object_pose_filter] Failure %s\n", ex.what());
+      ROS_WARN("[object_pose_filter] Failure: %s\n", ex.what());
     }
   }
 
