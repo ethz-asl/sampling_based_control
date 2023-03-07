@@ -5,6 +5,10 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /hook_position1
+        - /normalized_interaction_forces1
+        - /mppi_reference_pose(input to mppi)1
+        - /mppi_optimal_rollout_pose_trajectory1
       Splitter Ratio: 0.5
     Tree Height: 1522
   - Class: rviz/Selection
@@ -71,25 +75,31 @@ Visualization Manager:
           Value: true
         hook:
           Value: true
-        imu:
-          Value: true
-        kea/base_link:
-          Value: true
-        kea/odometry_sensor:
-          Value: true
         measured_joint_link:
           Value: true
         measured_joint_link_test:
           Value: true
-        odom_omav:
+        msf_wv:
+          Value: true
+        oak-d-center:
+          Value: true
+        odom:
           Value: true
         omav_base:
+          Value: true
+        pico_flexx_link:
+          Value: true
+        pico_flexx_optical_frame:
           Value: true
         rod:
           Value: true
         shelf:
           Value: true
         state:
+          Value: true
+        stork:
+          Value: true
+        vicon:
           Value: true
         world:
           Value: true
@@ -100,33 +110,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          kea/base_link:
-            imu:
-              {}
-            odom_omav:
-              {}
-          kea/odometry_sensor:
-            {}
-          shelf:
-            door_hinge:
-              axis_link:
-                measured_joint_link:
-                  door:
-                    handle_link:
-                      handle_ref:
-                        {}
-                      handle_support_left:
-                        {}
-                      handle_support_right:
-                        {}
-                      measured_joint_link_test:
-                        {}
-          state:
-            omav_base:
-              rod:
-                hook:
-                  {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 0.5
@@ -296,7 +280,7 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /kea/mppi_omav_interaction/debug/hook_pos
+      Marker Topic: /stork/mppi_omav_interaction/debug/hook_pos
       Name: hook_position
       Namespaces:
         "": true
@@ -304,7 +288,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /kea/mppi_omav_interaction/debug/normalized_forces
+      Marker Topic: /stork/mppi_omav_interaction/debug/normalized_forces
       Name: normalized_interaction_forces
       Namespaces:
         "": true
@@ -323,7 +307,7 @@ Visualization Manager:
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Axes
-      Topic: /kea/mppi_omav_interaction/debug/mppi_reference
+      Topic: /stork/mppi_omav_interaction/debug/mppi_reference
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -340,7 +324,7 @@ Visualization Manager:
       Shaft Length: 0.23000000417232513
       Shaft Radius: 0.009999999776482582
       Shape: Arrow (3D)
-      Topic: /kea/mppi_omav_interaction/debug/optimal_rollout/pose_array
+      Topic: /stork/mppi_omav_interaction/debug/optimal_rollout/pose_array
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -357,7 +341,7 @@ Visualization Manager:
       Shaft Length: 0.23000000417232513
       Shaft Radius: 0.009999999776482582
       Shape: Axes
-      Topic: /kea/reference_trajectory_poses
+      Topic: /stork/reference_trajectory_poses
       Unreliable: false
       Value: true
   Enabled: true
@@ -388,7 +372,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.351834774017334
+      Distance: 3.0898983478546143
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -404,9 +388,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6903983950614929
+      Pitch: 0.8753983974456787
       Target Frame: <Fixed Frame>
-      Yaw: 0.760397732257843
+      Yaw: 1.58040189743042
     Saved: ~
 Window Geometry:
   Displays:
