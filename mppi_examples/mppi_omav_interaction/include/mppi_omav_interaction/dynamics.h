@@ -31,7 +31,7 @@ struct force_t {
 
 struct OmavDynamicsSettings {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  double mass = 4.337;
+  double mass = 5.54;
   double damping = 5.0;
   Eigen::Matrix<double, 6, 1> pGains;
   Eigen::Matrix<double, 6, 1> dGains;

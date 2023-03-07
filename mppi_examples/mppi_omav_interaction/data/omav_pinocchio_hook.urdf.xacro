@@ -2,43 +2,47 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omav_pinocchio_hook">
 
     <!-- Properties -->
-    <xacro:property name="manipulator_length" value="$(arg manipulator_length)"/>   <!-- [m] -->
-    <xacro:property name="manipulator_radius" value="0.0075"/>  <!-- [m] -->
+    <xacro:property name="manipulator_length" value="$(arg manipulator_length)" />
+    <!-- [m] -->
+    <xacro:property name="manipulator_radius" value="0.0075" />
+    <!-- [m] -->
 
-    <xacro:property name="tool_length" value="0.04"/>         <!-- [m] -->
-    <xacro:property name="tool_radius" value="0.0075"/>         <!-- [m] -->
+    <xacro:property name="tool_length" value="0.04" />
+    <!-- [m] -->
+    <xacro:property name="tool_radius" value="0.0075" />
+    <!-- [m] -->
 
-    <xacro:property name="mass_ouzel" value="4.337"/>
-    <xacro:property name="ixx_ouzel" value="0.078359"/>
-    <xacro:property name="iyy_ouzel" value="0.081797"/>
-    <xacro:property name="izz_ouzel" value="0.153355"/>
-    <xacro:property name="radius_ouzel" value="0.2"/>
-    <xacro:property name="height_ouzel" value="0.3"/>
+    <xacro:property name="mass_ouzel" value="5.54" />
+    <xacro:property name="ixx_ouzel" value="0.1712" />
+    <xacro:property name="iyy_ouzel" value="0.1866" />
+    <xacro:property name="izz_ouzel" value="0.3253" />
+    <xacro:property name="radius_ouzel" value="0.48" />
+    <xacro:property name="height_ouzel" value="0.3" />
 
-    <link name="world"/>
-    <link name="odom"/>
+    <link name="world" />
+    <link name="odom" />
     <joint name="odom_to_world" type="fixed">
-        <parent link="world"/>
-        <child link="odom"/>
+        <parent link="world" />
+        <child link="odom" />
     </joint>
 
     <joint name="odom_to_omav" type="floating">
-        <parent link="odom"/>
-        <child link="omav"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <parent link="odom" />
+        <child link="omav" />
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
     </joint>
 
 
     <link name="omav">
         <inertial>
-            <mass value="${mass_ouzel}"/>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <inertia ixx="${ixx_ouzel}" ixy="0" ixz="0" iyy="${iyy_ouzel}" iyz="0" izz="${izz_ouzel}"/>
+            <mass value="${mass_ouzel}" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="${ixx_ouzel}" ixy="0" ixz="0" iyy="${iyy_ouzel}" iyz="0" izz="${izz_ouzel}" />
         </inertial>
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${radius_ouzel}" length="${height_ouzel}"/>
+                <cylinder radius="${radius_ouzel}" length="${height_ouzel}" />
             </geometry>
         </collision>
         <!-- <visual>
@@ -53,19 +57,19 @@
     </link>
 
     <joint name="omav_to_rod" type="fixed">
-        <parent link="omav"/>
-        <child link="rod"/>
-        <origin rpy="$(arg omav_to_rod_angle) 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
+        <parent link="omav" />
+        <child link="rod" />
+        <origin rpy="$(arg omav_to_rod_angle) 0 0" xyz="${manipulator_length/2} 0.0 0.0" />
     </joint>
 
     <link name="rod">
         <collision>
-            <origin rpy="0 1.5708 0" xyz="0 0 0"/>
+            <origin rpy="0 1.5708 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${manipulator_radius}" length="${manipulator_length}"/>
+                <cylinder radius="${manipulator_radius}" length="${manipulator_length}" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
         <!-- <visual>
@@ -80,19 +84,19 @@
     </link>
 
     <joint name="rod_to_tip" type="fixed">
-        <parent link="rod"/>
-        <child link="tip"/>
-        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 0.0"/>
+        <parent link="rod" />
+        <child link="tip" />
+        <origin rpy="0 0 0" xyz="${manipulator_length/2} 0.0 0.0" />
     </joint>
 
     <link name="tip">
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <sphere radius="${manipulator_radius}"/>
+                <sphere radius="${manipulator_radius}" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
         <!-- <visual>
@@ -107,19 +111,19 @@
     </link>
 
     <joint name="tip_to_hook" type="fixed">
-        <parent link="tip"/>
-        <child link="hook"/>
-        <origin rpy="0 0 0" xyz="0.0 0.0 -${tool_length/2}"/>
+        <parent link="tip" />
+        <child link="hook" />
+        <origin rpy="0 0 0" xyz="0.0 0.0 -${tool_length/2}" />
     </joint>
 
     <link name="hook">
         <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <cylinder radius="${tool_radius}" length="${tool_length}"/>
+                <cylinder radius="${tool_radius}" length="${tool_length}" />
             </geometry>
             <material name="">
-                <contact name="rubber"/>
+                <contact name="rubber" />
             </material>
         </collision>
         <!-- <visual>
