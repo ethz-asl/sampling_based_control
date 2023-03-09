@@ -19,6 +19,7 @@
 // ros
 #include <dynamic_reconfigure/server.h>
 #include <ros/ros.h>
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 
 namespace omav_interaction {
 
@@ -50,7 +51,7 @@ class InteractionControlNode {
   bool initialize_integrators(observation_t& x);
   void odometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
   void objectStateCallback(const sensor_msgs::JointState& object_msg);
-  void objectPoseCallback(const geometry_msgs::Pose& pose_msg);
+  void objectPoseCallback(const geometry_msgs::PoseWithCovarianceStamped& pose_msg);
 
   void costShelfParamCallback(mppi_omav_interaction::MPPIOmavCostShelfConfig& config,
                          uint32_t level);

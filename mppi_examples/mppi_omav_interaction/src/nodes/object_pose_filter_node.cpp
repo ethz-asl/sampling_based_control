@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "message_filters/subscriber.h"
 #include "ros/ros.h"
@@ -28,7 +29,7 @@ class ObjectPoseFilter {
 
     object_pose_subscriber_.subscribe(nh_, object_pose_topic, 10);
     object_pose_publisher_ =
-        private_nh_.advertise<geometry_msgs::PoseStamped>("pose_filtered", 1);
+        private_nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose_filtered", 1);
 
     tf2_filter_.setTargetFrame(target_frame_);
     tf2_filter_.registerCallback(
@@ -36,15 +37,15 @@ class ObjectPoseFilter {
   }
 
   void callback(const geometry_msgs::PoseStampedConstPtr pose_msg_ptr_in) {
-    geometry_msgs::PoseStamped pose_msg_out;
+    geometry_msgs::PoseStamped pose_msg_transformed;
     try {
-      tf2_buffer_.transform(*pose_msg_ptr_in, pose_msg_out, target_frame_);
+      tf2_buffer_.transform(*pose_msg_ptr_in, pose_msg_transformed, target_frame_);
 
-      Eigen::Vector3d current_position = mav_msgs::vector3FromPointMsg(pose_msg_out.pose.position);
+      Eigen::Vector3d current_position = mav_msgs::vector3FromPointMsg(pose_msg_transformed.pose.position);
 
       float factor = filter_factor_;
-      ros::Duration dt = pose_msg_out.header.stamp - previous_timestamp_;
-      previous_timestamp_ = pose_msg_out.header.stamp;
+      ros::Duration dt = pose_msg_transformed.header.stamp - previous_timestamp_;
+      previous_timestamp_ = pose_msg_transformed.header.stamp;
 
       if (dt.toSec() > 0.5) {
         factor = 1.0f;
@@ -52,19 +53,21 @@ class ObjectPoseFilter {
 
       filtered_position_ = filter_factor_*current_position + (1.0f - filter_factor_) * filtered_position_;
 
-      Eigen::Quaterniond current_orientation = mav_msgs::quaternionFromMsg(pose_msg_out.pose.orientation);
+      Eigen::Quaterniond current_orientation = mav_msgs::quaternionFromMsg(pose_msg_transformed.pose.orientation);
       double current_yaw = mav_msgs::yawFromQuaternion(current_orientation);
       filtered_yaw_ = filter_factor_*current_yaw + (1.0f - filter_factor_) * filtered_yaw_;
 
-      pose_msg_out.pose.position.x = filtered_position_.x();
-      pose_msg_out.pose.position.y = filtered_position_.y();
-      pose_msg_out.pose.position.z = filtered_position_.z();
-      pose_msg_out.pose.orientation.w = std::cos(filtered_yaw_/2.0);
-      pose_msg_out.pose.orientation.x = 0.0;
-      pose_msg_out.pose.orientation.y = 0.0;
-      pose_msg_out.pose.orientation.z = std::sin(filtered_yaw_/2.0);
+      geometry_msgs::PoseWithCovarianceStamped pose_msg_filtered;
+      pose_msg_filtered.header = pose_msg_transformed.header;
+      pose_msg_filtered.pose.pose.position.x = filtered_position_.x();
+      pose_msg_filtered.pose.pose.position.y = filtered_position_.y();
+      pose_msg_filtered.pose.pose.position.z = filtered_position_.z();
+      pose_msg_filtered.pose.pose.orientation.w = std::cos(filtered_yaw_/2.0);
+      pose_msg_filtered.pose.pose.orientation.x = 0.0;
+      pose_msg_filtered.pose.pose.orientation.y = 0.0;
+      pose_msg_filtered.pose.pose.orientation.z = std::sin(filtered_yaw_/2.0);
 
-      object_pose_publisher_.publish(pose_msg_out);
+      object_pose_publisher_.publish(pose_msg_filtered);
 
       
     } catch (tf2::TransformException &ex) {
