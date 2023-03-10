@@ -48,10 +48,11 @@ void OMAVVelocityDynamics::initialize_world(
 }
 
 void OMAVVelocityDynamics::initialize_pd() {
+  cmd_.setZero(7);
   cmdv_.setZero(6);
   omav_->setControlMode(raisim::ControlMode::PD_PLUS_FEEDFORWARD_TORQUE);
-
-  settings_.pGains.setZero();
+  
+  settings_.pGains << 20.0, 20.0, 20.0, 35.0, 35.0, 35.0;
   settings_.dGains << 4.0, 4.0, 4.0, 7.0, 7.0, 9.0;
 
   omav_->setPdGains(settings_.pGains, settings_.dGains);
@@ -64,10 +65,11 @@ mppi::DynamicsBase::observation_t OMAVVelocityDynamics::step(const input_t &u,
   integrate_internal(u, dt_);
 
   // Simulate system that is reset with odometry
-  Eigen::VectorXd cmd = Eigen::VectorXd::Zero(7);
+  cmd_ = x_.segment<7>(
+      omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD);
   cmdv_ = x_.segment<6>(
       omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
-  omav_->setPdTarget(cmd, cmdv_);
+  omav_->setPdTarget(cmd_, cmdv_);
   feedforward_acceleration_ << xd_.segment<3>(6), 0.0, 0.0, 0.0;
   nonLinearities_ = omav_->getNonlinearities(sim_.getGravity()).e();
   feedforward_force_ =
@@ -265,6 +267,21 @@ force_t OMAVVelocityDynamics::get_dominant_force() {
   return force;
 }
 
+inline void OMAVVelocityDynamics::integrate_quaternion(
+    const Eigen::Vector3d &omega_B, const Eigen::Quaterniond &q_WB_n,
+    Eigen::Quaterniond &q_WB_n_plus_one, const double &dt) const {
+  const double angVelNorm = omega_B.norm();
+  if (angVelNorm == 0) {
+    q_WB_n_plus_one = q_WB_n;
+  } else {
+    Eigen::Vector3d omega_W = q_WB_n * omega_B;
+    Eigen::Quaterniond q_tilde;
+    q_tilde.w() = std::cos(angVelNorm * dt / 2.0);
+    q_tilde.vec() = std::sin(angVelNorm * dt / 2.0) * omega_W / angVelNorm;
+    q_WB_n_plus_one = q_tilde * q_WB_n;
+  }
+}
+
 void OMAVVelocityDynamics::compute_velocities(
     const mppi::DynamicsBase::input_t &u) {
   // xd_ contains the derivatives of the reference trajectory, i.e. reference
@@ -287,8 +304,26 @@ void OMAVVelocityDynamics::integrate_internal(
        << "> " << dt_;
     throw std::runtime_error(ss.str());
   }
-
   compute_velocities(u);
+
+  // Integrate position and Quaternion
+  x_.segment<3>(
+      omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD) +=
+      xd_.head<3>() * dt;
+
+  Eigen::Quaterniond quat_n(
+      x_(omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD),
+      x_(omav_state_description_simulation::MAV_ORIENTATION_X_DESIRED_WORLD),
+      x_(omav_state_description_simulation::MAV_ORIENTATION_Y_DESIRED_WORLD),
+      x_(omav_state_description_simulation::MAV_ORIENTATION_Z_DESIRED_WORLD));
+  Eigen::Quaterniond quat_n_plus_one;
+
+  integrate_quaternion(xd_.segment<3>(3), quat_n, quat_n_plus_one, dt);
+
+  x_.segment<4>(
+      omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD)
+      << quat_n_plus_one.w(),
+      quat_n_plus_one.vec();
 
   // Integrate velocities
   x_.segment<6>(
