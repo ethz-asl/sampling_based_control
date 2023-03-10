@@ -485,6 +485,7 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
 
   // Structure:
   // tf[0] = position
+  // tf[1] = ref_position
   // tf[2] = object information
 
   for (size_t i = 0; i < xx_opt_.size(); i++) {
@@ -517,13 +518,22 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
     point.velocities.push_back(vel);
     point.accelerations.push_back(acc);
     tf::vectorEigenToMsg(
-        xx_opt_[i].segment<3>(omav_state_description_simulation::
-                                  MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
+        xx_opt_[i].segment<3>(
+            omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD),
+        tf.translation);
+    tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(
+                                 omav_state_description_simulation::
+                                     MAV_ORIENTATION_W_DESIRED_WORLD)),
+                             tf.rotation);
+    tf::vectorEigenToMsg(
+        xx_opt_[i].segment<3>(omav_state_description_simulation
+                              : MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
         vel.linear);
     tf::vectorEigenToMsg(
         xx_opt_[i].segment<3>(omav_state_description_simulation::
                                   MAV_ANGULAR_VELOCITY_X_DESIRED_BODY),
         vel.angular);
+    point.transforms.push_back(tf);
     point.velocities.push_back(vel);
     // Contact force:
     tf::vectorEigenToMsg(

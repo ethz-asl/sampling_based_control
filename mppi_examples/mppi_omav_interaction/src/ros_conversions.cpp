@@ -162,6 +162,13 @@ void InterpolateTrajectoryPoints(
 void EigenTrajectoryPointFromState(
     const observation_t &state, const input_t &input,
     mav_msgs::EigenTrajectoryPoint &trajectorypoint) {
+  trajectorypoint.position_W =
+      state.segment<3>(omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD);
+  trajectorypoint.orientation_W_B = Eigen::Quaternion(
+      state(omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD),
+      state(omav_state_description_simulation::MAV_ORIENTATION_X_DESIRED_WORLD),
+      state(omav_state_description_simulation::MAV_ORIENTATION_Y_DESIRED_WORLD),
+      state(omav_state_description_simulation::MAV_ORIENTATION_Z_DESIRED_WORLD));
   trajectorypoint.velocity_W = state.segment<3>(
       omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD);
   trajectorypoint.angular_velocity_W = state.segment<3>(
@@ -199,6 +206,21 @@ void MultiDofJointTrajectoryPointFromState(
       state(omav_state_description_simulation::MAV_ORIENTATION_Y_WORLD);
   pos.rotation.z =
       state(omav_state_description_simulation::MAV_ORIENTATION_Z_WORLD);
+  point.transforms.push_back(pos);
+  pos.translation.x =
+      state(omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD);
+  pos.translation.y =
+      state(omav_state_description_simulation::MAV_POSITION_Y_DESIRED_WORLD);
+  pos.translation.z =
+      state(omav_state_description_simulation::MAV_POSITION_Z_DESIRED_WORLD);
+  pos.rotation.w =
+      state(omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD);
+  pos.rotation.x =
+      state(omav_state_description_simulation::MAV_ORIENTATION_X_DESIRED_WORLD);
+  pos.rotation.y =
+      state(omav_state_description_simulation::MAV_ORIENTATION_Y_DESIRED_WORLD);
+  pos.rotation.z =
+      state(omav_state_description_simulation::MAV_ORIENTATION_Z_DESIRED_WORLD);
   point.transforms.push_back(pos);
 }
 

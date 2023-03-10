@@ -199,6 +199,12 @@ bool InteractionControlNode::getState(observation_t &x) {
       current_odometry_.angular_velocity_B;
   x.segment<2>(omav_state_description::OBJECT_HINGE_ORIENTATION) =
       object_state_;
+  x.segment<3>(omav_state_description::MAV_POSITION_X_DESIRED_WORLD) =
+      target_state_.position_W;
+  x(omav_state_description::MAV_ORIENTATION_W_DESIRED_WORLD) =
+      target_state_.orientation_W_B.w();
+  x.segment<3>(omav_state_description::MAV_ORIENTATION_X_DESIRED_WORLD) =
+      target_state_.orientation_W_B.vec();
   x.segment<3>(omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD) =
       target_state_.velocity_W;
   x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY) =
@@ -286,6 +292,12 @@ bool InteractionControlNode::initialize_integrators(observation_t &x) {
   if (!odometry_valid_) {
     return false;
   }
+  x.segment<3>(omav_state_description::MAV_POSITION_X_DESIRED_WORLD) =
+      current_odometry_.position_W;
+  x(omav_state_description::MAV_ORIENTATION_W_DESIRED_WORLD) =
+      current_odometry_.orientation_W_B.w();
+  x.segment<3>(omav_state_description::MAV_ORIENTATION_X_DESIRED_WORLD) =
+      current_odometry_.orientation_W_B.vec();
   x.segment<3>(omav_state_description::MAV_LINEAR_VELOCITY_X_DESIRED_WORLD) =
       current_odometry_.getVelocityWorld();
   x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY) =
