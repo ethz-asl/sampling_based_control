@@ -37,8 +37,8 @@ if __name__ == "__main__":
 
     rospy.sleep(3.0)
     reference_pose.header.frame_id = "world"
-    reference_pose.pose.position.x = -0.1
-    reference_pose.pose.position.y = 0.1
+    reference_pose.pose.position.x = 0.1
+    reference_pose.pose.position.y = 0.3
     reference_pose.pose.position.z = 1.2
     reference_pose.pose.orientation.w = 0.68
     reference_pose.pose.orientation.x = 0.002
