@@ -526,8 +526,8 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
                                      MAV_ORIENTATION_W_DESIRED_WORLD)),
                              tf.rotation);
     tf::vectorEigenToMsg(
-        xx_opt_[i].segment<3>(omav_state_description_simulation
-                              : MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
+        xx_opt_[i].segment<3>(omav_state_description_simulation::
+                                  MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
         vel.linear);
     tf::vectorEigenToMsg(
         xx_opt_[i].segment<3>(omav_state_description_simulation::
