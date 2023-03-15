@@ -643,4 +643,32 @@ void OMAVControllerInterface::publishCostInfo(const T &cost,
   cost_publisher_.publish(cost_array_message);
 }
 
+void OMAVControllerInterface::publish_emergency_command() {
+  trajectory_msgs::MultiDOFJointTrajectory emergency_command_msg;
+  geometry_msgs::Transform transform_msg;
+  tf::vectorEigenToMsg(current_observation_.segment<3>(
+                           omav_state_description::MAV_POSITION_X_WORLD),
+                       transform_msg.translation);
+  transform_msg.rotation.w =
+      current_observation_(omav_state_description::MAV_ORIENTATION_W_WORLD);
+  transform_msg.rotation.x =
+      current_observation_(omav_state_description::MAV_ORIENTATION_X_WORLD);
+  transform_msg.rotation.y =
+      current_observation_(omav_state_description::MAV_ORIENTATION_Y_WORLD);
+  transform_msg.rotation.z =
+      current_observation_(omav_state_description::MAV_ORIENTATION_Z_WORLD);
+
+  trajectory_msgs::MultiDOFJointTrajectoryPoint trajectory_point;
+  trajectory_point.transforms.push_back(transform_msg);
+  trajectory_point.velocities.emplace_back();
+  trajectory_point.accelerations.emplace_back();
+
+  emergency_command_msg.header.stamp = ros::Time::now();
+  emergency_command_msg.header.frame_id = "world";
+  emergency_command_msg.joint_names.push_back("base_link");
+  emergency_command_msg.points.push_back(trajectory_point);
+
+  cmd_multi_dof_joint_trajectory_pub_.publish(emergency_command_msg);
+}
+
 // namespace omav_interaction

@@ -435,7 +435,7 @@ void PathIntegral::sample_trajectories_batch(dynamics_ptr& dynamics,
                   cost->get_stage_cost(x, t0_internal_ + t * config_.step_size);
 
       if (std::isnan(cost_temp)) {
-        throw std::runtime_error("Something went wrong ... dynamics diverged?");
+        throw DynamicsDivergedError();
       }
 
       // store data

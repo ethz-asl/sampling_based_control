@@ -7,6 +7,7 @@
  */
 #pragma once
 #include <mppi/controller/mppi.h>
+#include <mppi/exceptions.h>
 
 #include <ros/node_handle.h>
 #include <mppi_ros/threading/WorkerManager.hpp>
@@ -84,7 +85,13 @@ class ControllerRos {
   virtual void publish_optimal_rollout(){};
   virtual void publish_all_trajectories(){};
 
-private:
+  /**
+   * @brief Publishes emergency command in case the mppi controller crashes.
+   * Needs to be implemented to have an effect!!!
+   */
+  virtual void publish_emergency_command();
+
+ private:
   void init_default_ros();
   bool init_default_params();
 
@@ -131,6 +138,7 @@ private:
 
    std::shared_mutex input_mutex_;
    mppi::input_t input_ = mppi::input_t::Zero(1);
+   mppi::observation_t current_observation_;
    std_msgs::Float32MultiArray input_ros_;
    mppi::observation_array_t optimal_rollout_states_;
    mppi::input_array_t optimal_rollout_inputs_;

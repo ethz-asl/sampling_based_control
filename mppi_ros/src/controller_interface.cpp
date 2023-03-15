@@ -124,7 +124,16 @@ bool ControllerRos::update_policy_thread(
     const mppi::threading::WorkerEvent &event) {
   // ROS_INFO("Updating policy.");
   if (!observation_set_) return true;
-  controller_->update_policy();
+  try {
+    controller_->update_policy();
+  } catch (const mppi::DynamicsDivergedError &e) {
+    ROS_ERROR("[%s] crashed. Caught exception: %s",
+              ros::this_node::getName().c_str(), e.what());
+    ROS_ERROR("[%s] Publish last odometry as reference and shutdown...",
+              ros::this_node::getName().c_str());
+    publish_emergency_command();
+    ros::shutdown();
+  }
 
   if (controller_->config_.logging) {
     mppi_ros::to_msg(controller_->get_data(), data_ros_);
@@ -182,8 +191,13 @@ void ControllerRos::publish_input() {
   input_publisher_.publish(input_ros_);
 }
 
+void ControllerRos::publish_emergency_command() {
+  ROS_WARN("No emergency command set!");
+}
+
 void ControllerRos::set_observation(const mppi::observation_t &x,
                                     const double &t) {
+  current_observation_ = x;
   controller_->set_observation(x, t);
   observation_set_ = true;
 }

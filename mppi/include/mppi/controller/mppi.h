@@ -22,6 +22,7 @@
 #include "mppi/controller/rollout.h"
 #include "mppi/cost/cost_base.h"
 #include "mppi/dynamics/dynamics_base.h"
+#include "mppi/exceptions.h"
 #include "mppi/experts/expert.h"
 #include "mppi/filters/savgol_filter.h"
 #include "mppi/sampler/gaussian_sampler.h"

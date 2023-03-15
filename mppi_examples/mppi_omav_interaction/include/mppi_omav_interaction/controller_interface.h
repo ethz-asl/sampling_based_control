@@ -56,6 +56,8 @@ class OMAVControllerInterface : public mppi_ros::ControllerRos {
 
   void publish_optimal_rollout() override;
 
+  void publish_emergency_command() override;
+
   bool update_reference() override;
 
   void getCostParamShelf(OMAVInteractionCostShelfParam &cost_param) const;
