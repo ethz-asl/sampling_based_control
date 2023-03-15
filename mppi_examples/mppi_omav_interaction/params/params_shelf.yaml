@@ -64,5 +64,6 @@ initial_configuration: [ 0.0, 0.0, 1.0,      # Position OMAV
                          1.0, 0.0, 0.0, 0.0, # Orientation OMAV_des
                          0.0, 0.0, 0.0,      # Linear Velocity OMAV_des
                          0.0, 0.0, 0.0,      # Angular Velocity OMAV_des
+                         0.0,                # Flag for object pose timeout
                          0.0, 0.0, 0.0,      # Position Object
                          1.0, 0.0, 0.0, 0.0] # Orientation Object

@@ -109,7 +109,10 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   x_ = x;
 
   // reset omav and object in raisim
-  set_object_base_pose(x);
+  if (static_cast<bool>(
+          x(omav_state_description_simulation::VALID_OBJECT_POSE_FLAG))) {
+    set_object_base_pose(x);
+  }
 
   omav_->setState(
       x_.head<7>(),

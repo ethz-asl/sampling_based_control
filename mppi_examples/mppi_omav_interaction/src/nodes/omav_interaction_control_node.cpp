@@ -132,6 +132,7 @@ void InteractionControlNode::objectStateCallback(
 void InteractionControlNode::objectPoseCallback(
     const geometry_msgs::PoseWithCovarianceStamped &pose_msg) {
   conversions::vectorFromPoseMsg(pose_msg.pose.pose, object_pose_);
+  object_pose_valid_ = true;
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first object pose message");
 }
 
@@ -209,7 +210,10 @@ bool InteractionControlNode::getState(observation_t &x) {
       target_state_.velocity_W;
   x.segment<3>(omav_state_description::MAV_ANGULAR_VELOCITY_X_DESIRED_BODY) =
       target_state_.angular_velocity_W;
+  x(omav_state_description::VALID_OBJECT_POSE_FLAG) =
+      static_cast<double>(object_pose_valid_);
   x.segment<7>(omav_state_description::OBJECT_POSITION_X_WORLD) = object_pose_;
+  object_pose_valid_ = false;
 
   ROS_INFO_ONCE("[mppi_omav_interaction] MPPI got first state message");
   if (ros::Time::now() - object_state_time_ > ros::Duration(0.5)) {

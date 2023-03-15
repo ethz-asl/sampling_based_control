@@ -84,6 +84,7 @@ class InteractionControlNode {
   // Odometry Variable
   mav_msgs::EigenOdometry current_odometry_;
   bool object_valid_ = false;
+  bool object_pose_valid_ = false;
   bool odometry_valid_ = false;
   bool trajectory_available_ = false;
 
