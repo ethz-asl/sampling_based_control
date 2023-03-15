@@ -493,10 +493,13 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
         xx_opt_[i].segment<3>(
             omav_state_description_simulation::MAV_POSITION_X_WORLD),
         tf.translation);
-    tf::quaternionEigenToMsg(
-        Eigen::Quaterniond(xx_opt_[i].segment<4>(
-            omav_state_description_simulation::MAV_ORIENTATION_W_WORLD)),
-        tf.rotation);
+    Eigen::Quaterniond q_mav{
+        xx_opt_[i](omav_state_description_simulation::MAV_ORIENTATION_W_WORLD),
+        xx_opt_[i](omav_state_description_simulation::MAV_ORIENTATION_X_WORLD),
+        xx_opt_[i](omav_state_description_simulation::MAV_ORIENTATION_Y_WORLD),
+        xx_opt_[i](omav_state_description_simulation::MAV_ORIENTATION_Z_WORLD),
+    };
+    tf::quaternionEigenToMsg(q_mav, tf.rotation);
     tf::vectorEigenToMsg(
         xx_opt_[i].segment<3>(
             omav_state_description_simulation::MAV_LINEAR_VELOCITY_X_WORLD),
@@ -521,10 +524,17 @@ void OMAVControllerInterface::toMultiDofJointTrajectory(
         xx_opt_[i].segment<3>(
             omav_state_description_simulation::MAV_POSITION_X_DESIRED_WORLD),
         tf.translation);
-    tf::quaternionEigenToMsg(Eigen::Quaterniond(xx_opt_[i].segment<4>(
-                                 omav_state_description_simulation::
-                                     MAV_ORIENTATION_W_DESIRED_WORLD)),
-                             tf.rotation);
+    Eigen::Quaterniond q_mav_desired{
+        xx_opt_[i](
+            omav_state_description_simulation::MAV_ORIENTATION_W_DESIRED_WORLD),
+        xx_opt_[i](
+            omav_state_description_simulation::MAV_ORIENTATION_X_DESIRED_WORLD),
+        xx_opt_[i](
+            omav_state_description_simulation::MAV_ORIENTATION_Y_DESIRED_WORLD),
+        xx_opt_[i](
+            omav_state_description_simulation::MAV_ORIENTATION_Z_DESIRED_WORLD),
+    };
+    tf::quaternionEigenToMsg(q_mav_desired, tf.rotation);
     tf::vectorEigenToMsg(
         xx_opt_[i].segment<3>(omav_state_description_simulation::
                                   MAV_LINEAR_VELOCITY_X_DESIRED_WORLD),
