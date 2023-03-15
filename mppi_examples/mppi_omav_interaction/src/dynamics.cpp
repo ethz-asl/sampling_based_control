@@ -109,16 +109,7 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
   x_ = x;
 
   // reset omav and object in raisim
-  Eigen::Vector3d base_position = x_.segment<3>(
-      omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD);
-  raisim::Vec<4> base_orientation = {
-      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_W_WORLD),
-      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_X_WORLD),
-      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Y_WORLD),
-      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Z_WORLD)};
-
-  object_->setBasePos_e(base_position);
-  object_->setBaseOrientation(base_orientation);
+  set_object_base_pose(x);
 
   omav_->setState(
       x_.head<7>(),
@@ -131,6 +122,19 @@ void OMAVVelocityDynamics::reset(const observation_t &x) {
       x_.segment<1>(omav_state_description_simulation::OBJECT_HINGE_VELOCITY));
 }
 
+void OMAVVelocityDynamics::set_object_base_pose(const observation_t &x) {
+  Eigen::Vector3d base_position = x.segment<3>(
+      omav_state_description_simulation::OBJECT_BASE_POSITION_X_WORLD);
+  raisim::Vec<4> base_orientation = {
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_W_WORLD),
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_X_WORLD),
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Y_WORLD),
+      x(omav_state_description_simulation::OBJECT_BASE_ORIENTATION_Z_WORLD)};
+
+  object_->setBasePos_e(base_position);
+  object_->setBaseOrientation(base_orientation);
+}
+
 OMAVVelocityDynamics::observation_t
 OMAVVelocityDynamics::get_extended_state_from_observation(
     const observation_t &x) const {
@@ -139,47 +143,7 @@ OMAVVelocityDynamics::get_extended_state_from_observation(
   extended_state.setZero();
   extended_state.head<omav_state_description::SIZE_OMAV_STATE>() = x;
 
-  Eigen::Affine3d transform_world_object;
-  transform_world_object.translation() =
-      x.segment<3>(omav_state_description::OBJECT_POSITION_X_WORLD);
-  Eigen::Quaterniond q_world_object = {
-      x(omav_state_description::OBJECT_ORIENTATION_W_WORLD),
-      x(omav_state_description::OBJECT_ORIENTATION_X_WORLD),
-      x(omav_state_description::OBJECT_ORIENTATION_Y_WORLD),
-      x(omav_state_description::OBJECT_ORIENTATION_Z_WORLD),
-  };
-
-  // extract yaw angle
-  double siny_cosp = 2 * (q_world_object.w() * q_world_object.z() +
-                          q_world_object.x() * q_world_object.y());
-  double cosy_cosp = 1 - 2 * (q_world_object.y() * q_world_object.y() +
-                              q_world_object.z() * q_world_object.z());
-  double yaw_world_object = std::atan2(siny_cosp, cosy_cosp);
-  Eigen::Quaterniond q_world_object_aligned = {
-      std::cos(yaw_world_object / 2.0), 0.0, 0.0,
-      std::sin(yaw_world_object / 2.0)};
-  transform_world_object.linear() = q_world_object_aligned.toRotationMatrix();
-
-  // reset object (hinge angle)
-  object_->setBasePos_e(Eigen::Vector3d::Zero());
-  object_->setBaseOrientation(raisim::Mat<3, 3>::getIdentity());
-  object_->setState(
-      x.segment<1>(omav_state_description::OBJECT_HINGE_ORIENTATION),
-      x.segment<1>(omav_state_description::OBJECT_HINGE_VELOCITY));
-
-  auto object_frame_index = object_->getFrameIdxByName(frames_.handle_ref);
-  raisim::Vec<3> translation_base_object_sim;
-  object_->getFramePosition(object_frame_index, translation_base_object_sim);
-  raisim::Mat<3, 3> orientation_base_object_sim;
-  object_->getFrameOrientation(object_frame_index, orientation_base_object_sim);
-
-  Eigen::Affine3d transform_base_object_sim;
-  transform_base_object_sim.translation() = translation_base_object_sim.e();
-  transform_base_object_sim.linear() = orientation_base_object_sim.e();
-
-  Eigen::Affine3d transform_world_base =
-      transform_world_object * transform_base_object_sim.inverse();
-
+  Eigen::Affine3d transform_world_base = get_object_base_pose(x);
   Eigen::Vector3d base_position = transform_world_base.translation();
   Eigen::Quaterniond base_orientation(transform_world_base.linear());
 
@@ -200,6 +164,80 @@ OMAVVelocityDynamics::get_extended_state_from_observation(
       base_orientation.z();
 
   return extended_state;
+}
+
+Eigen::Affine3d OMAVVelocityDynamics::get_object_base_pose(
+    const observation_t &x) const {
+  Eigen::Affine3d transform_world_object_measured =
+      get_measured_transform_from_world_to_object(x);
+
+  Eigen::Affine3d transform_world_base_sim =
+      get_transform_from_world_to_raisim_frame(frames_.object_base, x);
+
+  Eigen::Affine3d transform_world_object_sim =
+      get_transform_from_world_to_raisim_frame(frames_.handle_ref, x);
+
+  Eigen::Affine3d transform_base_object_sim =
+      transform_world_base_sim.inverse() * transform_world_object_sim;
+
+  Eigen::Affine3d transform_world_base =
+      transform_world_object_measured * transform_base_object_sim.inverse();
+
+  return transform_world_base;
+}
+
+Eigen::Affine3d
+OMAVVelocityDynamics::get_measured_transform_from_world_to_object(
+    const observation_t &x) const {
+  Eigen::Vector3d object_position_world =
+      x.segment<3>(omav_state_description::OBJECT_POSITION_X_WORLD);
+  Eigen::Quaterniond object_orientation_world = {
+      x(omav_state_description::OBJECT_ORIENTATION_W_WORLD),
+      x(omav_state_description::OBJECT_ORIENTATION_X_WORLD),
+      x(omav_state_description::OBJECT_ORIENTATION_Y_WORLD),
+      x(omav_state_description::OBJECT_ORIENTATION_Z_WORLD),
+  };
+
+  double object_yaw_world =
+      get_yaw_angle_from_quaternion(object_orientation_world);
+
+  Eigen::Quaterniond object_orientation_world_aligned = {
+      std::cos(object_yaw_world / 2.0), 0.0, 0.0,
+      std::sin(object_yaw_world / 2.0)};
+
+  Eigen::Affine3d transform_world_to_object;
+  transform_world_to_object.translation() = object_position_world;
+  transform_world_to_object.linear() =
+      object_orientation_world_aligned.toRotationMatrix();
+  return transform_world_to_object;
+}
+
+double OMAVVelocityDynamics::get_yaw_angle_from_quaternion(
+    const Eigen::Quaterniond &q) const {
+  double siny_cosp = 2.0 * (q.w() * q.z() + q.x() * q.y());
+  double cosy_cosp = 1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
+  double yaw = std::atan2(siny_cosp, cosy_cosp);
+  return yaw;
+}
+
+Eigen::Affine3d OMAVVelocityDynamics::get_transform_from_world_to_raisim_frame(
+    const std::string &frame, const observation_t &current_state) const {
+  object_->setState(
+      current_state.segment<1>(
+          omav_state_description::OBJECT_HINGE_ORIENTATION),
+      current_state.segment<1>(omav_state_description::OBJECT_HINGE_VELOCITY));
+
+  auto frame_index = object_->getFrameIdxByName(frame);
+  raisim::Vec<3> translation_world_to_frame;
+  object_->getFramePosition(frame_index, translation_world_to_frame);
+  raisim::Mat<3, 3> orientation_world_to_frame;
+  object_->getFrameOrientation(frame_index, orientation_world_to_frame);
+
+  Eigen::Affine3d transform_world_to_frame;
+  transform_world_to_frame.translation() = translation_world_to_frame.e();
+  transform_world_to_frame.linear() = orientation_world_to_frame.e();
+
+  return transform_world_to_frame;
 }
 
 mppi::DynamicsBase::input_t OMAVVelocityDynamics::get_zero_input(

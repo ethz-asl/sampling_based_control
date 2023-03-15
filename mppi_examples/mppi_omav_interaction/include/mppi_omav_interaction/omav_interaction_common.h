@@ -164,12 +164,14 @@ struct Frames {
   std::string hook;         //!< Frame positioned in the middle of the hook
   std::string handle_link;  //!< Frame positioned on the handle
   std::string handle_ref;   //!< Frame positioned inside the handle (open space)
+  std::string object_base;  //!< Frame positioned at base of whole object
   Frames()
       : omav("omav"),
         tip("tip"),
         hook("hook"),
         handle_link("handle_link"),
-        handle_ref("handle_ref") {}
+        handle_ref("handle_ref"),
+        object_base("base") {}
 };
 
 namespace cost_description {

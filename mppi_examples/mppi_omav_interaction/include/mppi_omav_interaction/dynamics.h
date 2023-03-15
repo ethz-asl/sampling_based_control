@@ -63,6 +63,13 @@ class OMAVVelocityDynamics : public mppi::DynamicsBase {
                                    const double &dt) const;
   void compute_velocities(const input_t &u);
   void integrate_internal(const input_t &u, double dt);
+  Eigen::Affine3d get_object_base_pose(const observation_t &x) const;
+  Eigen::Affine3d get_transform_from_world_to_raisim_frame(
+      const std::string &frame, const observation_t &current_state) const;
+  void set_object_base_pose(const observation_t &x);
+  Eigen::Affine3d get_measured_transform_from_world_to_object(
+      const observation_t &x) const;
+  double get_yaw_angle_from_quaternion(const Eigen::Quaterniond &q) const;
 
  public:
   double get_dt() { return dt_; }
