@@ -665,7 +665,7 @@ void OMAVControllerInterface::publish_emergency_command() {
 
   emergency_command_msg.header.stamp = ros::Time::now();
   emergency_command_msg.header.frame_id = "world";
-  emergency_command_msg.joint_names.push_back("base_link");
+  emergency_command_msg.joint_names.emplace_back("base_link");
   emergency_command_msg.points.push_back(trajectory_point);
 
   cmd_multi_dof_joint_trajectory_pub_.publish(emergency_command_msg);
