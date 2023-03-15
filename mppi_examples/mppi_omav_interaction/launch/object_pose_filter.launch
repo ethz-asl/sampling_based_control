@@ -3,6 +3,10 @@
     <node name="object_pose_filter_node" type="object_pose_filter_node" pkg="mppi_omav_interaction" output="screen">
         <param name="target_frame" value="world" />
         <param name="object_pose_topic" value="/object_pose_estimation_node/object_pose" />
-        <param name="filter_factor" value="0.2" />
+        <param name="position_filter_coeff" value="0.4" />
+        <param name="orientation_filter_coeff" value="0.7" />
+        <param name="filter_timeout" value="0.5" />
+        <param name="position_threshold" value="1.0" />
+        <param name="orientation_threshold" value="1.57" />
     </node>
 </launch>
