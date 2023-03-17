@@ -10,7 +10,6 @@
     <depend>eigen</depend>
     <depend>eigen_conversions</depend>
     <depend>geometry_msgs</depend>
-    <depend>message_filters</depend>
     <depend>mppi</depend>
     <depend>mppi_ros</depend>
     <depend>mppi_pinocchio</depend>
@@ -18,7 +17,6 @@
     <depend>roslib</depend>
     <depend>std_msgs</depend>
     <depend>mav_msgs</depend>
-    <depend>tf2_geometry_msgs</depend>
     <depend>tf2_ros</depend>
     <depend>tf</depend>
     <depend>kdl_parser</depend>
